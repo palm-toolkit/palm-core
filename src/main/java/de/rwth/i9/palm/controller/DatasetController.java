@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import de.rwth.i9.palm.model.Algorithm;
+import de.rwth.i9.palm.analytics.api.IAnalytics;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Controller
@@ -20,6 +20,9 @@ public class DatasetController
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private IAnalytics analytics;
 
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
@@ -34,9 +37,7 @@ public class DatasetController
 		// pub.setAbstractOriginal( "something" );
 		// persistenceStrategy.getPublicationDAO().persist( pub );
 
-		Algorithm alg = new Algorithm();
-		alg.setDescription( "something" );
-		persistenceStrategy.getAlgorithmDAO().persist( alg );
+		System.out.println( analytics.getCValueAlgorithm().test( "cvaluetest" ) );
 
 		return model;
 	}
