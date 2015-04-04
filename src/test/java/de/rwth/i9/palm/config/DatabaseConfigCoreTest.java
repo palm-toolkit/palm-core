@@ -19,7 +19,7 @@ import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import de.rwth.i9.palm.analytics.api.AnalyticsImpl;
+//import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
 import de.rwth.i9.palm.model.Algorithm;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
@@ -159,12 +159,13 @@ public class DatabaseConfigCoreTest
 	}
 
 	/* analytics */
+	/*
 	@Bean
 	@Scope( "singleton" )
-	public AnalyticsImpl configAnalyticsImpl()
+	public PalmAnalyticsImpl configAnalyticsImpl()
 	{
-		AnalyticsImpl analyticsImpl = new AnalyticsImpl();
+		PalmAnalyticsImpl analyticsImpl = new PalmAnalyticsImpl();
 		return analyticsImpl;
-	}
+	}*/
 
 }

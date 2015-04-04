@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import de.rwth.i9.palm.analytics.api.IAnalytics;
+//import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.PublicationOld;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -24,8 +24,8 @@ public class DatasetController
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	@Autowired
-	private IAnalytics analytics;
+	/*@Autowired
+	private PalmAnalytics analytics;*/
 
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
