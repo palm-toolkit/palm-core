@@ -190,12 +190,6 @@
 		<version>${org.apache.commons.dbcp2.version}</version>
 	</dependency>
 	
-	<dependency>
-		<groupId>commons-io</groupId>
-		<artifactId>commons-io</artifactId>
-		<version>${commonsio.version}</version>
-	</dependency>
-	
 	<!-- 
 	<dependency>
 		<groupId>org.hibernate</groupId>
@@ -319,6 +313,13 @@
 		<version>${tomcat.servlet.api.version}</version>
 		<scope>provided</scope>
 	</dependency>
+		
+		<!-- freemarker -->
+	<dependency>
+		<groupId>org.freemarker</groupId>
+		<artifactId>freemarker</artifactId>
+		<version>${freemarker.version}</version>
+	</dependency>
 	
 	<!--  Library for json -->
 	
@@ -343,15 +344,28 @@
 	</dependency>
 	
 	<dependency>
+		<groupId>commons-io</groupId>
+		<artifactId>commons-io</artifactId>
+		<version>${commonsio.version}</version>
+	</dependency>
+	
+	
+	<dependency>
 		<groupId>xml-apis</groupId>
 		<artifactId>xml-apis</artifactId>
 		<version>${xml-apis.version}</version>
 	</dependency>
 	
 	<dependency>
-		<groupId>org.apache.pdfbox</groupId>
-		<artifactId>pdfbox</artifactId>
-		<version>${pdfbox.version}</version>
+		<groupId>org.apache.tika</groupId>
+		<artifactId>tika-core</artifactId>
+		<version>${apache.tika.version}</version>
+	</dependency>
+
+	<dependency>
+		<groupId>org.apache.tika</groupId>
+		<artifactId>tika-parsers</artifactId>
+		<version>${apache.tika.version}</version>
 	</dependency>
 		
 	

@@ -1,15 +1,27 @@
 package de.rwth.i9.palm.controller;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Iterator;
+
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.tika.exception.TikaException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
+import org.xml.sax.SAXException;
 
+import de.rwth.i9.palm.helper.PdfParser;
+import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 //import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 
@@ -34,6 +46,78 @@ public class AnalyticsController
 			response.setHeader( "SESSION_INVALID", "yes" );
 
 		return model;
+	}
+
+	/**
+	 * Upload article via jquery ajax file upload saved to database
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 * @throws TikaException
+	 * @throws SAXException
+	 */
+	@RequestMapping( value = "/upload", method = RequestMethod.POST )
+	public @ResponseBody String multiUpload( MultipartHttpServletRequest request, HttpServletResponse response ) throws IOException, SAXException, TikaException
+	{
+		return uploadTest( request, true, false );
+	}
+
+	/**
+	 * Upload article via jquery ajax file upload saved to database
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 * @throws TikaException
+	 * @throws SAXException
+	 */
+	@RequestMapping( value = "/uploadpreview", method = RequestMethod.POST )
+	public @ResponseBody String multiUploadPreview( MultipartHttpServletRequest request, HttpServletResponse response ) throws IOException, SAXException, TikaException
+	{
+		return uploadTest( request, false, false );
+	}
+
+	private String uploadTest( MultipartHttpServletRequest request, boolean saveToDb, boolean saveToSystem ) throws IOException, SAXException, TikaException
+	{
+		// get full path
+		String fullPath = request.getSession().getServletContext().getRealPath( "/" );
+
+		// build an iterator
+		Iterator<String> itr = request.getFileNames();
+		MultipartFile mpf = null;
+
+		Publication publication = new Publication();
+
+		// get each file
+		while ( itr.hasNext() )
+		{
+			// get next MultipartFile
+			mpf = request.getFile( itr.next() );
+			// upload file and get the file back
+
+			File convFile = convert( mpf );
+
+			PdfParser.parsePdf( convFile );
+
+			if ( saveToDb )
+			{
+				// persist publication here
+			}
+		}
+		return "success";
+	}
+
+	public File convert( MultipartFile file ) throws IOException
+	{
+		File convFile = new File( file.getOriginalFilename() );
+		convFile.createNewFile();
+		FileOutputStream fos = new FileOutputStream( convFile );
+		fos.write( file.getBytes() );
+		fos.close();
+		return convFile;
 	}
 
 }
