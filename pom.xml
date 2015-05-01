@@ -286,19 +286,6 @@
       <version>${org.apache.jena.tdb-iri-text.version}</version>
     </dependency>
     
-    <!-- virtuoso -->
-    <dependency>
-        <groupId>virtuoso.jdbc4</groupId>
-        <artifactId>virtuoso-jdbc4</artifactId>
-        <version>${virtuoso.jdbc4.version}</version>
-    </dependency>
-	
-	<dependency>
-        <groupId>virtuoso.jena2</groupId>
-        <artifactId>virtuoso-jena2</artifactId>
-        <version>${virtuoso.jena2.version}</version>
-    </dependency>
-    
     <!-- metadata analysis -->
     <dependency>
          <groupId>org.reflections</groupId>
