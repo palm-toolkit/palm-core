@@ -58,6 +58,7 @@ public class ITextTest
 	}
 
 	@Test
+	@Ignore
 	public void test1pdfExtract() throws IOException
 	{
 		String src = PREFACE;
