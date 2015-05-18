@@ -33,7 +33,7 @@ public class ManageWidgetController
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		ModelAndView model = new ModelAndView( "widgetLayout", "link", "widget-add" );
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidgetByWidgetTypeAndGroup( WidgetType.ADMINISTRATION, urlType );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.ADMINISTRATION, urlType );
 		
 		model.addObject( "widgets" , widgets );
 		return model;
