@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Color;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetSource;
@@ -75,7 +76,7 @@ public class ManageWidgetController
 		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
 
 		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "widgetLayout", LINK_NAME, sessionDataSet );
+		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "widgetLayoutAjax", LINK_NAME, sessionDataSet );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.ADMINISTRATION, "add" );
 		
 		// get all widget enums
@@ -83,14 +84,17 @@ public class ManageWidgetController
 		List<WidgetSource> widgetSources = new ArrayList<WidgetSource>( Arrays.asList( WidgetSource.values() ) );
 		List<WidgetWidth> widgetWidths = new ArrayList<WidgetWidth>( Arrays.asList( WidgetWidth.values() ) );
 		List<WidgetStatus> widgetStatuss = new ArrayList<WidgetStatus>( Arrays.asList( WidgetStatus.values() ) );
+		List<Color> colors = new ArrayList<Color>( Arrays.asList( Color.values() ) );
 
 		// TODO: widget group based on widgetTypes
 
+		// assign the model
 		model.addObject( "widgets" , widgets );
 		model.addObject( "widgetTypes", widgetTypes );
 		model.addObject( "widgetSources", widgetSources );
 		model.addObject( "widgetWidths", widgetWidths );
 		model.addObject( "widgetStatuss", widgetStatuss );
+		model.addObject( "widgetColors", colors );
 
 		return model;
 	}
@@ -104,9 +108,12 @@ public class ManageWidgetController
 			@RequestParam( value="widgetSource" ) String widgetSource,
 			@RequestParam( value="widgetSourcePath" ) String widgetSourcePath,
 			@RequestParam( value="widgetWidth" ) String widgetWidth,
+			@RequestParam( value="widgetColor" ) String widgetColor,
 			@RequestParam( value="widgetInfo" ) String widgetInfo,
 			@RequestParam( value="widgetClose" ) boolean widgetClose,
 			@RequestParam( value="widgetMinimize" ) boolean widgetMinimize,
+			@RequestParam( value="widgetResize" ) boolean widgetResize,
+			@RequestParam( value="widgetColorEnable" ) boolean widgetColorEnable,
 			@RequestParam( value="widgetStatus" ) String widgetStatus,
 			final HttpServletResponse response 
 			)
@@ -119,9 +126,12 @@ public class ManageWidgetController
 		widget.setWidgetSource( WidgetSource.valueOf( widgetSource ) );
 		widget.setSourcePath( widgetSourcePath );
 		widget.setWidgetWidth( WidgetWidth.valueOf( widgetWidth ) );
+		widget.setColor( Color.valueOf( widgetColor ) );
 		widget.setInformation( widgetInfo );
 		widget.setCloseEnabled( widgetClose );
 		widget.setMinimizeEnabled( widgetMinimize );
+		widget.setResizeEnabled( widgetResize );
+		widget.setColorEnabled( widgetColorEnable );
 		widget.setWidgetStatus( WidgetStatus.valueOf( widgetStatus ) );
 		// save into database
 		persistenceStrategy.getWidgetDAO().persist( widget );
