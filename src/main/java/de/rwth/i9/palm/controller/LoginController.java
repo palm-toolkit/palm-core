@@ -1,32 +1,22 @@
 package de.rwth.i9.palm.controller;
 
 
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.ModelAndView;
-
-import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Controller
 @RequestMapping( value = "/login" )
 public class LoginController
 {
-	@Autowired
-	private PersistenceStrategy persistenceStrategy;
 
 	@RequestMapping( method = RequestMethod.GET )
-	public ModelAndView home( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response )
+	public String login(
+			@RequestParam(value="form", required = false) String formMode)
 	{
-		ModelAndView mav = new ModelAndView( "login", "link", "login" );
-
-		if ( sessionId != null && sessionId.equals( "0" ) )
-			response.setHeader( "SESSION_INVALID", "yes" );
-
-		return mav;
+		if( formMode != null && formMode.equals( "true" ) )
+			return "loginForm";
+		return "login";
 	}
 }
