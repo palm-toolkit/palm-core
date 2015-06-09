@@ -20,11 +20,13 @@ import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 
+
 //import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
 import de.rwth.i9.palm.model.Algorithm;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.Concept;
+import de.rwth.i9.palm.model.ConferenceGroup;
 import de.rwth.i9.palm.model.Dataset;
 import de.rwth.i9.palm.model.Function;
 import de.rwth.i9.palm.model.Institution;
@@ -143,6 +145,7 @@ public class DatabaseConfigCoreTest
 						User.class,
 						UserWidget.class,
 						Conference.class,
+						ConferenceGroup.class,
 						Widget.class
 				} );
 		return sessionFactoryBean;
