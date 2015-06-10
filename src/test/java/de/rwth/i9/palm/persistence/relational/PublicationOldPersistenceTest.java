@@ -16,7 +16,7 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
-import de.rwth.i9.palm.model.PublicationOld;
+//import de.rwth.i9.palm.model.PublicationOld;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @RunWith( SpringJUnit4ClassRunner.class )
@@ -37,6 +37,7 @@ public class PublicationOldPersistenceTest extends AbstractTransactionalJUnit4Sp
 
 	@Test
 	@Rollback( false )
+	@Ignore
 	public void test()
 	{
 		//List<PublicationOld> pubOlds = persistenceStrategy.getPublicationOldDAO().getAll();
@@ -57,9 +58,9 @@ public class PublicationOldPersistenceTest extends AbstractTransactionalJUnit4Sp
 	//		System.out.println( s );
 		//}
 		
-		PublicationOld pubOld = new PublicationOld();
-		pubOld.setAbstractText( "something" );
-		persistenceStrategy.getPublicationOldDAO().persist( pubOld );
+		// PublicationOld pubOld = new PublicationOld();
+		// pubOld.setAbstractText( "something" );
+		// persistenceStrategy.getPublicationOldDAO().persist( pubOld );
 	}
 
 	@Test
@@ -67,9 +68,9 @@ public class PublicationOldPersistenceTest extends AbstractTransactionalJUnit4Sp
 	@Ignore
 	public void testInsert()
 	{
-		PublicationOld pubOld = new PublicationOld();
-		pubOld.setAuthors( "test" );
-		persistenceStrategy.getPublicationOldDAO().persist( pubOld );
+		// PublicationOld pubOld = new PublicationOld();
+		// pubOld.setAuthors( "test" );
+		// persistenceStrategy.getPublicationOldDAO().persist( pubOld );
 	}
 
 	@AfterTransaction
