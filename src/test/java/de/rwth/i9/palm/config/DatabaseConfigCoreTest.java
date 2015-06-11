@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import de.rwth.i9.palm.model.Algorithm;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
-import de.rwth.i9.palm.model.Concept;
 import de.rwth.i9.palm.model.Conference;
 import de.rwth.i9.palm.model.ConferenceGroup;
 import de.rwth.i9.palm.model.Dataset;
@@ -31,6 +30,8 @@ import de.rwth.i9.palm.model.Function;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Location;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationHistory;
+import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.Reference;
 import de.rwth.i9.palm.model.Role;
 import de.rwth.i9.palm.model.RunTime;
@@ -126,22 +127,23 @@ public class DatabaseConfigCoreTest
 						Algorithm.class,
 						Author.class,
 						AuthorAlias.class,
-						Concept.class,
+						Conference.class,
+						ConferenceGroup.class,
 						Dataset.class,
 						Function.class,
 						Institution.class,
-						Subject.class,
 						Location.class,
 						Publication.class,
+						PublicationHistory.class,
+						PublicationSource.class,
 						Reference.class,
 						Role.class,
 						RunTime.class, 
 		 				Source.class,
+		 				Subject.class,
 						Topic.class,
 						User.class,
 						UserWidget.class,
-						Conference.class,
-						ConferenceGroup.class,
 						Widget.class
 				} );
 		return sessionFactoryBean;
