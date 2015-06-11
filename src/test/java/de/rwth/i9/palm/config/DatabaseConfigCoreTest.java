@@ -20,7 +20,7 @@ import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 //import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
-import de.rwth.i9.palm.model.Algorithm;
+import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.Conference;
@@ -34,10 +34,10 @@ import de.rwth.i9.palm.model.PublicationHistory;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.Reference;
 import de.rwth.i9.palm.model.Role;
-import de.rwth.i9.palm.model.RunTime;
+import de.rwth.i9.palm.model.ExtractionRuntime;
 import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.Subject;
-import de.rwth.i9.palm.model.Topic;
+import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
@@ -124,7 +124,7 @@ public class DatabaseConfigCoreTest
 		sessionFactoryBean.setHibernateProperties( hibProperties() );
 		sessionFactoryBean.setAnnotatedClasses( new Class<?>[] { 
 				/* model class here */
-						Algorithm.class,
+						ExtractionService.class,
 						Author.class,
 						AuthorAlias.class,
 						Conference.class,
@@ -138,10 +138,10 @@ public class DatabaseConfigCoreTest
 						PublicationSource.class,
 						Reference.class,
 						Role.class,
-						RunTime.class, 
+						ExtractionRuntime.class, 
 		 				Source.class,
 		 				Subject.class,
-						Topic.class,
+						PublicationTopic.class,
 						User.class,
 						UserWidget.class,
 						Widget.class
