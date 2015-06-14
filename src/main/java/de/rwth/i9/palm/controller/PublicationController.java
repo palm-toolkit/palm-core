@@ -14,27 +14,42 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.ApplicationContextService;
 
 @Controller
+@SessionAttributes( { "sessionDataSet" } )
 @RequestMapping( value = "/publication" )
 public class PublicationController
 {
+	private static final String LINK_NAME = "publication";
+
+	@Autowired
+	private ApplicationContextService appService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
-	public ModelAndView mainPage( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response ) throws InterruptedException
+	public ModelAndView mainPage( 
+			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
+			final HttpServletResponse response ) throws InterruptedException
 	{
-		ModelAndView model = new ModelAndView( "researcher", "link", "researcher" );
+		// get current session object
+		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+
+		// set model and view
+		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "publication", LINK_NAME, sessionDataSet );
 
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.PUBLICATION, WidgetStatus.DEFAULT );
 		// assign the model
@@ -57,7 +72,7 @@ public class PublicationController
 			page = 0;
 		
 		if ( maxresult == null )
-			maxresult = 20;
+			maxresult = 50;
 
 		// get the publication
 		Map<String, Object> publicationMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( query, page, maxresult );
