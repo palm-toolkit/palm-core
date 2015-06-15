@@ -60,7 +60,9 @@ public class PublicationController
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getPublicationList( 
-			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "query", required = false ) String query,
+			@RequestParam( value = "conference", required = false ) String conferenceName,
+			@RequestParam( value = "conferenceid", required = false ) String conferenceId,
 			@RequestParam( value = "page", required = false ) Integer page, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
 			final HttpServletResponse response )
