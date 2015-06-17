@@ -371,6 +371,20 @@
 		<artifactId>tika-parsers</artifactId>
 		<version>${apache.tika.version}</version>
 	</dependency>
+
+	<!-- HTML parser -->
+	<dependency>
+	  	<groupId>org.jsoup</groupId>
+	  	<artifactId>jsoup</artifactId>
+	  	<version>${jsoup.version}</version>
+	</dependency>
+	
+	<!-- multi thread pool asynchronous -->
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-pool2</artifactId>
+		<version>${org.apache.commons.pool2.version}</version>
+	</dependency>
 	
 	<dependency>
 	<groupId>com.itextpdf</groupId>
