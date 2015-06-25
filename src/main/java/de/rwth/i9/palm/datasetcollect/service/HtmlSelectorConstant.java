@@ -21,4 +21,42 @@ public class HtmlSelectorConstant
 	public static final String GS_PUBLICATION_DETAIL_PROP = ".gs_scl";
 	public static final String GS_PUBLICATION_DETAIL_PROP_LABEL = ".gsc_field";
 	public static final String GS_PUBLICATION_DETAIL_PROP_VALUE = ".gsc_value";
+
+	// ================ CiteSeerX ===================
+	// first phase get the author list
+	public static final String CSX_AUTHOR_LIST = ".result";
+	public static final String CSX_AUTHOR_ROW_DETAIL = ".authInfo";
+
+	// second phase get the publication list
+	public static final String CSX_PUBLICATION_ROW_LIST = "table.refs tr";
+	public static final String CSX_PUBLICATION_COAUTHOR_AND_VENUE = ".gs_gray";
+	public static final String CSX_PUBLICATION_NOCITATION = ".gsc_a_c";
+	public static final String CSX_PUBLICATION_YEAR = ".gsc_a_y";
+
+	// third phase get the publication details
+	public static final String CSX_PUBLICATION_DETAIL_HEADER = "#viewHeader";
+	public static final String CSX_PUBLICATION_DETAIL_DOWNLOAD = "#downloads";
+	public static final String CSX_PUBLICATION_DETAIL_COAUTHOR = "#docAuthors";
+	public static final String CSX_PUBLICATION_DETAIL_VENUE = "#docVenue";
+	public static final String CSX_PUBLICATION_DETAIL_ABSTRACT = "#abstract";
+	public static final String CSX_PUBLICATION_DETAIL_CITATION = "#citations";
+
+	// ================ DBLP ===================
+	// first phase get the author list
+	public static final String DBLP_AUTHOR_LIST = ".result";
+	public static final String DBLP_AUTHOR_ROW_DETAIL = ".authInfo";
+
+	// second phase get the publication list
+	public static final String DBLP_PUBLICATION_ROW_LIST = "table.refs tr";
+	public static final String DBLP_PUBLICATION_COAUTHOR_AND_VENUE = ".gs_gray";
+	public static final String DBLP_PUBLICATION_NOCITATION = ".gsc_a_c";
+	public static final String DBLP_PUBLICATION_YEAR = ".gsc_a_y";
+
+	// third phase get the publication details
+	public static final String DBLP_PUBLICATION_DETAIL_HEADER = "#viewHeader";
+	public static final String DBLP_PUBLICATION_DETAIL_DOWNLOAD = "#downloads";
+	public static final String DBLP_PUBLICATION_DETAIL_COAUTHOR = "#docAuthors";
+	public static final String DBLP_PUBLICATION_DETAIL_VENUE = "#docVenue";
+	public static final String DBLP_PUBLICATION_DETAIL_ABSTRACT = "#abstract";
+	public static final String DBLP_PUBLICATION_DETAIL_CITATION = "#citations";
 }
