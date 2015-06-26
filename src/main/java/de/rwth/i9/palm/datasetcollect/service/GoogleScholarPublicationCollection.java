@@ -20,11 +20,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 	public GoogleScholarPublicationCollection()
 	{
-	}
-
-	public String getLocation()
-	{
-		return "googleLocation";
+		super();
 	}
 
 	public static Map<String, Map<String, String>> getListOfAuthors( String authorName ) throws IOException

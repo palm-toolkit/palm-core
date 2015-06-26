@@ -1,44 +1,23 @@
 package de.rwth.i9.palm.datasetcollect.service;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 public class PublicationCollection
 {
-	private String location;
-
-	private long processNo = 0;
-
-	public PublicationCollection()
+	public static Map<String, Map<String, String>> getListOfAuthors( String authorName ) throws IOException
 	{
+		return null;
 	}
 
-	public PublicationCollection( String location, long processNo )
+	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException
 	{
-		this.location = location;
-		this.processNo = processNo;
-
-		// doing some time expensive calls / tasks
-		// ...
-
-		// for-loop is just for simulation
-		for ( int i = 0; i < Integer.MAX_VALUE; i++ )
-		{
-		}
-
-		System.out.println( "Object with process no. " + processNo + " was created" );
+		return null;
 	}
 
-	public String getLocation()
+	public static Map<String, String> getPublicationDetailByPublicationUrl( String url ) throws IOException
 	{
-		return location;
-	}
-
-	public long getProcessNo()
-	{
-		return processNo;
-	}
-
-	@Override
-	public String toString()
-	{
-		return "ExportingProcess{" + "processNo=" + processNo + '}';
+		return null;
 	}
 }
