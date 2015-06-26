@@ -19,6 +19,7 @@ import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+
 //import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
 import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.Author;
@@ -39,6 +40,7 @@ import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.Subject;
 import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserRequest;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.persistence.relational.PersistenceStrategyImpl;
@@ -143,6 +145,7 @@ public class DatabaseConfigCoreTest
 		 				Subject.class,
 						PublicationTopic.class,
 						User.class,
+						UserRequest.class,
 						UserWidget.class,
 						Widget.class
 				} );

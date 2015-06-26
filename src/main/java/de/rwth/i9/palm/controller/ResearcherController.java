@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.controller;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,9 +17,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.RequestType;
 import de.rwth.i9.palm.model.SessionDataSet;
+import de.rwth.i9.palm.model.UserRequest;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
@@ -66,6 +70,38 @@ public class ResearcherController
 
 		if ( maxresult == null )
 			maxresult = 50;
+
+		// check whether the author query ever executed before
+		UserRequest userRequest = persistenceStrategy.getUserRequestDAO().getByTypeAndQuery( RequestType.SEARCHAUTHOR, query );
+		boolean collectFromNetwork = false;
+
+		// get current timestamp
+		java.util.Date date = new java.util.Date();
+		Timestamp currentTimestamp = new Timestamp( date.getTime() );
+
+		if ( userRequest == null )
+		{ // there is no kind of request before
+			// perform fetching data through academic network
+			collectFromNetwork = true;
+			// persist current request
+			userRequest = new UserRequest();
+			userRequest.setQueryString( query );
+			userRequest.setRequestDate( currentTimestamp );
+			userRequest.setRequestType( RequestType.SEARCHAUTHOR );
+			persistenceStrategy.getUserRequestDAO().persist( userRequest );
+		}
+		else
+		{
+			// check if the existing userRequest obsolete (longer than a week)
+			if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, userRequest.getRequestDate() ) > 24 * 7 )
+				collectFromNetwork = true;
+		}
+
+		// collect author from network
+		if ( collectFromNetwork )
+		{
+
+		}
 
 		// get the researcher
 		Map<String, Object> researcherMap = persistenceStrategy.getAuthorDAO().getAuthorByFullTextSearchWithPaging( query, page, maxresult );
