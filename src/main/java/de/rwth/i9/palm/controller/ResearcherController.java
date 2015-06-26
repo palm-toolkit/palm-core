@@ -20,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.RequestType;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.UserRequest;
@@ -126,7 +127,23 @@ public class ResearcherController
 			{
 				Map<String, String> pub = new LinkedHashMap<String, String>();
 				pub.put( "id", researcher.getId() );
-				pub.put( "title", researcher.getName() );
+				pub.put( "name", researcher.getName() );
+				if ( researcher.getPhotoUrl() != null )
+					pub.put( "photo", researcher.getPhotoUrl() );
+				if ( researcher.getOtherDetail() != null || researcher.getDepartment() != null )
+					pub.put( "detail", researcher.getOtherDetail() + " " + researcher.getDepartment() );
+				if ( researcher.getInstitution() != null && !researcher.getInstitution().isEmpty() )
+				{
+					String institut = "";
+					int counter = 0;
+					for ( Institution institution : researcher.getInstitution() )
+					{
+						if ( counter > 0 )
+							institut += ", ";
+						institut += institution.getName();
+					}
+					pub.put( "aff", institut );
+				}
 
 				researcherList.add( pub );
 			}

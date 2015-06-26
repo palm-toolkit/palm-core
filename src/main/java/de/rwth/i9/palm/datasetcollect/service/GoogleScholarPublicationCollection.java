@@ -53,9 +53,9 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			// get author name
 			eachAuthorMap.put( "name", name );
 			// get author photo
-			eachAuthorMap.put( "photo", authorListNodes.select( "img" ).first().absUrl( "src" ) );
+			eachAuthorMap.put( "photo", authorListNode.select( "img" ).first().absUrl( "src" ) );
 			// get author affiliation
-			eachAuthorMap.put( "affiliation", authorListNodes.select( HtmlSelectorConstant.GS_AUTHOR_LIST_AFFILIATION ).html() );
+			eachAuthorMap.put( "affiliation", authorListNode.select( HtmlSelectorConstant.GS_AUTHOR_LIST_AFFILIATION ).html() );
 
 			authorMaps.put( name, eachAuthorMap );
 		}
