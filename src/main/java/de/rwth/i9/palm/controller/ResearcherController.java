@@ -1,10 +1,13 @@
 package de.rwth.i9.palm.controller;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -17,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.google.common.base.Stopwatch;
+
+import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
@@ -43,6 +49,9 @@ public class ResearcherController
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	@Autowired
+	private PublicationCollectionService publicationCollectionService;
+
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
 	public ModelAndView mainPage( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response ) throws InterruptedException
@@ -59,10 +68,37 @@ public class ResearcherController
 		return model;
 	}
 
+	@RequestMapping( value = "/view", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> authorDetail( @RequestParam( value = "id", required = false ) final String id, @RequestParam( value = "name", required = false ) final String name, @RequestParam( value = "uri", required = false ) final String uri, final HttpServletResponse response ) throws InterruptedException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( id == null && name == null && uri == null )
+		{
+			responseMap.put( "result", "error" );
+			responseMap.put( "reason", "no author selected" );
+			return responseMap;
+		}
+		else
+		{
+			Author author = null;
+			if ( id != null )
+				author = persistenceStrategy.getAuthorDAO().getById( id );
+
+			// check author source
+
+		}
+
+		return null;
+	}
+
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> getAuthorList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "page", required = false ) Integer page, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response )
+	public @ResponseBody Map<String, Object> getAuthorList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "page", required = false ) Integer page, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException
 	{
+		boolean collectFromNetwork = false;
+		
 		if ( query == null )
 			query = "";
 
@@ -72,40 +108,83 @@ public class ResearcherController
 		if ( maxresult == null )
 			maxresult = 50;
 
-		// check whether the author query ever executed before
-		UserRequest userRequest = persistenceStrategy.getUserRequestDAO().getByTypeAndQuery( RequestType.SEARCHAUTHOR, query );
-		boolean collectFromNetwork = false;
-
-		// get current timestamp
-		java.util.Date date = new java.util.Date();
-		Timestamp currentTimestamp = new Timestamp( date.getTime() );
-
-		if ( userRequest == null )
-		{ // there is no kind of request before
-			// perform fetching data through academic network
-			collectFromNetwork = true;
-			// persist current request
-			userRequest = new UserRequest();
-			userRequest.setQueryString( query );
-			userRequest.setRequestDate( currentTimestamp );
-			userRequest.setRequestType( RequestType.SEARCHAUTHOR );
-			persistenceStrategy.getUserRequestDAO().persist( userRequest );
-		}
-		else
+		if ( !query.equals( "" ) && page == 0 )
 		{
-			// check if the existing userRequest obsolete (longer than a week)
-			if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, userRequest.getRequestDate() ) > 24 * 7 )
+			// check whether the author query ever executed before
+			UserRequest userRequest = persistenceStrategy.getUserRequestDAO().getByTypeAndQuery( RequestType.SEARCHAUTHOR, query );
+
+			// get current timestamp
+			java.util.Date date = new java.util.Date();
+			Timestamp currentTimestamp = new Timestamp( date.getTime() );
+
+			if ( userRequest == null )
+			{ // there is no kind of request before
+				// perform fetching data through academic network
 				collectFromNetwork = true;
-		}
+				// persist current request
+				userRequest = new UserRequest();
+				userRequest.setQueryString( query );
+				userRequest.setRequestDate( currentTimestamp );
+				userRequest.setRequestType( RequestType.SEARCHAUTHOR );
+				persistenceStrategy.getUserRequestDAO().persist( userRequest );
+			}
+			else
+			{
+				// check if the existing userRequest obsolete (longer than a
+				// week)
+				if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, userRequest.getRequestDate() ) > 24 * 7 )
+				{
+					// update current timestamp
+					userRequest.setRequestDate( currentTimestamp );
+					persistenceStrategy.getUserRequestDAO().persist( userRequest );
+					collectFromNetwork = true;
+				}
+			}
 
-		// collect author from network
-		if ( collectFromNetwork )
-		{
+			// collectFromNetwork = false;
+			// persistenceStrategy.getAuthorDAO().doReindexing();
+			// collect author from network
+			if ( collectFromNetwork )
+			{
+				// extract dataset from academic network concurrently
+				Stopwatch stopwatch = Stopwatch.createStarted();
 
+				List<Future<List<Map<String, String>>>> authorFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
+
+				// ( if google scholar )
+				authorFutureLists.add( publicationCollectionService.getListOfAuthorsGoogleScholar( query ) );
+
+				// if( citeseer )
+				authorFutureLists.add( publicationCollectionService.getListOfAuthorsCiteseerX( query ) );
+
+				// Wait until they are all done
+				boolean processIsDone = true;
+				do
+				{
+					processIsDone = true;
+					for ( Future<List<Map<String, String>>> futureList : authorFutureLists )
+					{
+						if ( !futureList.isDone() )
+						{
+							processIsDone = false;
+							break;
+						}
+					}
+					// 10-millisecond pause between each check
+					Thread.sleep( 10 );
+				} while ( !processIsDone );
+
+				// merge the result
+				publicationCollectionService.mergeAuthorInformation( authorFutureLists );
+			}
 		}
 
 		// get the researcher
-		Map<String, Object> researcherMap = persistenceStrategy.getAuthorDAO().getAuthorByFullTextSearchWithPaging( query, page, maxresult );
+		Map<String, Object> researcherMap = null;
+		if ( collectFromNetwork )
+			researcherMap = persistenceStrategy.getAuthorDAO().getAuthorWithPaging( query, page, maxresult );
+		else
+			researcherMap = persistenceStrategy.getAuthorDAO().getAuthorByFullTextSearchWithPaging( query, page, maxresult );
 
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -130,13 +209,19 @@ public class ResearcherController
 				pub.put( "name", researcher.getName() );
 				if ( researcher.getPhotoUrl() != null )
 					pub.put( "photo", researcher.getPhotoUrl() );
-				if ( researcher.getOtherDetail() != null || researcher.getDepartment() != null )
-					pub.put( "detail", researcher.getOtherDetail() + " " + researcher.getDepartment() );
-				if ( researcher.getInstitution() != null && !researcher.getInstitution().isEmpty() )
+
+				String otherDetail = "";
+				if ( researcher.getOtherDetail() != null )
+					otherDetail += researcher.getOtherDetail();
+				if ( researcher.getDepartment() != null )
+					otherDetail += ", " + researcher.getDepartment();
+				if ( !otherDetail.equals( "" ) )
+					pub.put( "detail", otherDetail );
+				if ( researcher.getInstitutions() != null && !researcher.getInstitutions().isEmpty() )
 				{
 					String institut = "";
 					int counter = 0;
-					for ( Institution institution : researcher.getInstitution() )
+					for ( Institution institution : researcher.getInstitutions() )
 					{
 						if ( counter > 0 )
 							institut += ", ";

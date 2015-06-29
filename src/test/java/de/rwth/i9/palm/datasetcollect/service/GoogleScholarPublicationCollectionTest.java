@@ -19,12 +19,11 @@ public class GoogleScholarPublicationCollectionTest
 	@Test
 	public void getListOfAuthorsTest() throws IOException
 	{
-		Map<String, Map<String, String>> authorMaps = GoogleScholarPublicationCollection.getListOfAuthors( "chatti" );
+		List<Map<String, String>> authorList = GoogleScholarPublicationCollection.getListOfAuthors( "chatti" );
 
-		for ( Entry<String, Map<String, String>> eachAuthor : authorMaps.entrySet() )
+		for ( Map<String, String> eachAuthor : authorList )
 		{
-			System.out.println( "author name : " + eachAuthor.getKey() );
-			for ( Entry<String, String> eachAuthorDetail : eachAuthor.getValue().entrySet() )
+			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
 				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
 			System.out.println();
 		}

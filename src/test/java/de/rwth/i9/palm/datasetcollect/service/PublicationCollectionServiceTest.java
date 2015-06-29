@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.datasetcollect.service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
@@ -56,21 +57,19 @@ public class PublicationCollectionServiceTest
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 
-		Future<Map<String, Map<String, String>>> authorGoogleScholar = publicationCollectionService.getListOfAuthorsGoogleScholar( "chatti" );
-		Future<Map<String, Map<String, String>>> authorCiteseerX = publicationCollectionService.getListOfAuthorsCiteseerX( "chatti" );
+		Future<List<Map<String, String>>> authorGoogleScholar = publicationCollectionService.getListOfAuthorsGoogleScholar( "chatti" );
+		Future<List<Map<String, String>>> authorCiteseerX = publicationCollectionService.getListOfAuthorsCiteseerX( "chatti" );
 
-		for ( Entry<String, Map<String, String>> eachAuthor : authorGoogleScholar.get().entrySet() )
+		for ( Map<String, String> eachAuthor : authorGoogleScholar.get() )
 		{
-			System.out.println( "author name : " + eachAuthor.getKey() );
-			for ( Entry<String, String> eachAuthorDetail : eachAuthor.getValue().entrySet() )
+			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
 				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
 			System.out.println();
 		}
 
-		for ( Entry<String, Map<String, String>> eachAuthor : authorCiteseerX.get().entrySet() )
+		for ( Map<String, String> eachAuthor : authorCiteseerX.get() )
 		{
-			System.out.println( "author name : " + eachAuthor.getKey() );
-			for ( Entry<String, String> eachAuthorDetail : eachAuthor.getValue().entrySet() )
+			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
 				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
 			System.out.println();
 		}

@@ -23,9 +23,9 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		super();
 	}
 
-	public static Map<String, Map<String, String>> getListOfAuthors( String authorName ) throws IOException
+	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
 	{
-		Map<String, Map<String, String>> authorMaps = new LinkedHashMap<String, Map<String, String>>();
+		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "https://scholar.google.com/citations?view_op=search_authors&mauthors=" + authorName.replace( " ", "-" );
 		// Using jsoup java html parser library
@@ -36,7 +36,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		if ( authorListNodes.size() == 0 )
 		{
 			log.info( "No author with name '{}' with selector '{}' on google scholar '{}'", authorName, HtmlSelectorConstant.GS_AUTHOR_LIST_CONTAINER, url );
-			return Collections.emptyMap();
+			return Collections.emptyList();
 		}
 
 		// if the authors is present
@@ -44,19 +44,23 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		{
 			Map<String, String> eachAuthorMap = new LinkedHashMap<String, String>();
 			String name = authorListNode.select( HtmlSelectorConstant.GS_AUTHOR_LIST_NAME ).text();
-			// get author url
-			eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
 			// get author name
 			eachAuthorMap.put( "name", name );
+			// set source
+			eachAuthorMap.put( "source", "googlescholar" );
+			// get author url
+			eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
 			// get author photo
-			eachAuthorMap.put( "photo", authorListNode.select( "img" ).first().absUrl( "src" ) );
+			String photoUrl = authorListNode.select( "img" ).first().absUrl( "src" );
+			if ( !photoUrl.contains( "avatar_scholar" ) )
+				eachAuthorMap.put( "photo", photoUrl );
 			// get author affiliation
-			eachAuthorMap.put( "affiliation", authorListNode.select( HtmlSelectorConstant.GS_AUTHOR_LIST_AFFILIATION ).html() );
+			eachAuthorMap.put( "affiliation", authorListNode.select( HtmlSelectorConstant.GS_AUTHOR_LIST_AFFILIATION ).html().replace( "&#x2026;", "" ).trim() );
 
-			authorMaps.put( name, eachAuthorMap );
+			authorList.add( eachAuthorMap );
 		}
 
-		return authorMaps;
+		return authorList;
 	}
 
 	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException

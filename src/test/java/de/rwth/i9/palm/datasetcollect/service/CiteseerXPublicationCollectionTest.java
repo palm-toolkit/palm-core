@@ -20,12 +20,11 @@ public class CiteseerXPublicationCollectionTest
 	@Ignore
 	public void getListOfAuthorsTest() throws IOException
 	{
-		Map<String, Map<String, String>> authorMaps = CiteseerXPublicationCollection.getListOfAuthors( "chatti" );
+		List<Map<String, String>> authorList = CiteseerXPublicationCollection.getListOfAuthors( "chatti" );
 
-		for ( Entry<String, Map<String, String>> eachAuthor : authorMaps.entrySet() )
+		for ( Map<String, String> eachAuthor : authorList )
 		{
-			System.out.println( "author name : " + eachAuthor.getKey() );
-			for ( Entry<String, String> eachAuthorDetail : eachAuthor.getValue().entrySet() )
+			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
 				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
 			System.out.println();
 		}

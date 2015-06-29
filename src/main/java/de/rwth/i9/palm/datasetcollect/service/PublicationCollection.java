@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class PublicationCollection
 {
-	public static Map<String, Map<String, String>> getListOfAuthors( String authorName ) throws IOException
+	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
 	{
 		return null;
 	}

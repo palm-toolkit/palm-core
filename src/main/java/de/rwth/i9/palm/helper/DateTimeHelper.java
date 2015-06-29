@@ -12,4 +12,15 @@ public class DateTimeHelper
 
 		return diffHours;
 	}
+
+	public static long substractTimeStampToMinutes( final java.sql.Timestamp currentTime, final java.sql.Timestamp oldTime )
+	{
+		long milliseconds1 = oldTime.getTime();
+		long milliseconds2 = currentTime.getTime();
+
+		long diff = milliseconds2 - milliseconds1;
+		long diffMinutes = diff / ( 60 * 1000 );
+
+		return diffMinutes;
+	}
 }

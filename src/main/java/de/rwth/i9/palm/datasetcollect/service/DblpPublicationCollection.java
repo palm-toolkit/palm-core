@@ -23,9 +23,9 @@ public class DblpPublicationCollection extends PublicationCollection
 		super();
 	}
 
-	public static Map<String, Map<String, String>> getListOfAuthors( String authorName ) throws IOException
+	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
 	{
-		Map<String, Map<String, String>> authorMaps = new LinkedHashMap<String, Map<String, String>>();
+		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "http://dblp.uni-trier.de/search/author?q=" + authorName.replace( " ", "+" );
 		// Using jsoup java html parser library
@@ -36,7 +36,7 @@ public class DblpPublicationCollection extends PublicationCollection
 		if ( authorListNodes.size() == 0 )
 		{
 			log.info( "No author with name '{}' with selector '{}' on google scholar '{}'", authorName, HtmlSelectorConstant.GS_AUTHOR_LIST_CONTAINER, url );
-			return Collections.emptyMap();
+			return Collections.emptyList();
 		}
 
 		// if the authors is present
@@ -53,10 +53,10 @@ public class DblpPublicationCollection extends PublicationCollection
 			// get author affiliation
 			eachAuthorMap.put( "affiliation", authorListNodes.select( HtmlSelectorConstant.GS_AUTHOR_LIST_AFFILIATION ).html() );
 
-			authorMaps.put( name, eachAuthorMap );
+			authorList.add( eachAuthorMap );
 		}
 
-		return authorMaps;
+		return authorList;
 	}
 
 	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException

@@ -24,9 +24,9 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		super();
 	}
 
-	public static Map<String, Map<String, String>> getListOfAuthors( String authorName ) throws IOException
+	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
 	{
-		Map<String, Map<String, String>> authorMaps = new LinkedHashMap<String, Map<String, String>>();
+		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "http://citeseerx.ist.psu.edu/search?q=" + authorName.replace( " ", "+" ) + "&submit=Search&uauth=1&sort=ndocs&t=auth";
 		// Using jsoup java html parser library
@@ -40,7 +40,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		if ( authorListNodes.size() == 0 )
 		{
 			log.info( "No author with name '{}' with selector '{}' on CiteSeerX '{}'", authorName, HtmlSelectorConstant.CSX_AUTHOR_LIST, url );
-			return Collections.emptyMap();
+			return Collections.emptyList();
 		}
 
 		// if the authors is present
@@ -48,19 +48,21 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		{
 			Map<String, String> eachAuthorMap = new LinkedHashMap<String, String>();
 			String name = authorListNode.select( "a" ).first().text();
-			// get author url
-			eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
 			// get author name
 			eachAuthorMap.put( "name", name );
+			// set source
+			eachAuthorMap.put( "source", "citeseerx" );
+			// get author url
+			eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
 			// get author photo
-			eachAuthorMap.put( "aliases", authorListNodes.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).first().select( "td" ).get( 1 ).text() );
+			eachAuthorMap.put( "aliases", authorListNode.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).first().select( "td" ).get( 1 ).text() );
 			// get author affiliation
-			eachAuthorMap.put( "affiliation", authorListNodes.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).get( 1 ).select( "td" ).get( 1 ).text() );
+			eachAuthorMap.put( "affiliation", authorListNode.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).get( 1 ).select( "td" ).get( 1 ).text() );
 
-			authorMaps.put( name, eachAuthorMap );
+			authorList.add( eachAuthorMap );
 		}
 
-		return authorMaps;
+		return authorList;
 	}
 
 	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException
