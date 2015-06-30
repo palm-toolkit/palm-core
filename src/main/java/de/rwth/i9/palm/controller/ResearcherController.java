@@ -223,7 +223,7 @@ public class ResearcherController
 				}
 			}
 
-			collectFromNetwork = true;
+			// collectFromNetwork = true;
 			// persistenceStrategy.getAuthorDAO().doReindexing();
 			// collect author from network
 			if ( collectFromNetwork )
