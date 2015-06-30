@@ -27,7 +27,6 @@ import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.RequestType;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.SourceType;
@@ -300,18 +299,8 @@ public class ResearcherController
 					otherDetail += ", " + researcher.getDepartment();
 				if ( !otherDetail.equals( "" ) )
 					pub.put( "detail", otherDetail );
-				if ( researcher.getInstitutions() != null && !researcher.getInstitutions().isEmpty() )
-				{
-					String institut = "";
-					int counter = 0;
-					for ( Institution institution : researcher.getInstitutions() )
-					{
-						if ( counter > 0 )
-							institut += ", ";
-						institut += institution.getName();
-					}
-					pub.put( "aff", institut );
-				}
+				if ( researcher.getInstitution() != null )
+					pub.put( "aff", researcher.getInstitution().getName() );
 
 				researcherList.add( pub );
 			}

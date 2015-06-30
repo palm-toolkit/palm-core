@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.base.Stopwatch;
 
@@ -93,7 +94,7 @@ public class PublicationCollectionService
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
 
-
+	@Transactional
 	public void mergeAuthorInformation( List<Future<List<Map<String, String>>>> authorFutureLists ) throws InterruptedException, ExecutionException
 	{
 		if ( authorFutureLists.size() > 0 )
@@ -161,7 +162,7 @@ public class PublicationCollectionService
 					for ( int i = 0; i < authorDetails.length; i++ )
 					{
 						// from word U"nivers"ity
-						if ( authorDetails[i].contains( "nivers" ) )
+						if ( authorDetails[i].contains( "nivers" ) || authorDetails[i].contains( "nstit" ) )
 							institution = authorDetails[i].trim().toLowerCase();
 						else
 						{
@@ -189,7 +190,7 @@ public class PublicationCollectionService
 							institutionObject.setURI( institution.replace( " ", "-" ) );
 						}
 
-						author.addInstitution( institutionObject );
+						author.setInstitution( institutionObject );
 					}
 
 				}
@@ -204,12 +205,8 @@ public class PublicationCollectionService
 
 				if ( !otherDetail.equals( "" ) )
 					author.setOtherDetail( otherDetail );
-				
-				// remove old sources
-				if( author.getAuthorSources() != null )
-					for( AuthorSource oldAuthorSource : author.getAuthorSources() )
-						persistenceStrategy.getAuthorSourceDAO().delete( oldAuthorSource );
 
+				List<AuthorSource> oldAuthorSources = author.getAuthorSources();
 				// insert source
 				List<AuthorSource> authorSources = new ArrayList<AuthorSource>();
 				String[] sources = mergedAuthor.get( "source" ).split( " " );
@@ -230,10 +227,8 @@ public class PublicationCollectionService
 				author.setAuthorSources( authorSources );
 
 				persistenceStrategy.getAuthorDAO().persist( author );
-
 			}
 			
-			// persistenceStrategy.getAuthorDAO().doReindexing();
 		}
 		
 	}
