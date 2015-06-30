@@ -30,10 +30,20 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 
 		String url = "http://citeseerx.ist.psu.edu/search?q=" + authorName.replace( " ", "+" ) + "&submit=Search&uauth=1&sort=ndocs&t=auth";
 		// Using jsoup java html parser library
-		Document document = Jsoup.connect( url )
-				.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
-                .timeout(10000)
-				.get();
+		Document document = null;
+		try
+		{
+			document = Jsoup.connect( url )
+					.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
+	                .timeout(10000)
+					.get();
+		}
+		catch ( Exception e )
+		{
+			return Collections.emptyList();
+		}
+		if( document == null )
+			return Collections.emptyList();
 
 		Elements authorListNodes = document.select( HtmlSelectorConstant.CSX_AUTHOR_LIST );
 

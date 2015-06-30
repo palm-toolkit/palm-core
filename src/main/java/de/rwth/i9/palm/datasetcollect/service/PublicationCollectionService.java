@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.base.Stopwatch;
 
@@ -32,23 +32,6 @@ public class PublicationCollectionService
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
-
-	@Async
-	public Future<Long> callAsync( int taskCall ) throws InterruptedException
-	{
-
-		Stopwatch stopwatch = Stopwatch.createStarted();
-
-		log.info( "task " + taskCall + " starting" );
-
-		Thread.sleep( 500 );
-
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-
-		log.info( "task " + taskCall + "completed in " + stopwatch );
-
-		return new AsyncResult<Long>( stopwatch.elapsed( TimeUnit.MILLISECONDS ) );
-	}
 
 	@Async
 	public Future<List<Map<String, String>>> getListOfAuthorsGoogleScholar( String authorName ) throws IOException
@@ -80,7 +63,37 @@ public class PublicationCollectionService
 		return new AsyncResult<List<Map<String, String>>>( authorMap );
 	}
 
-	@Transactional
+	@Async
+	public Future<List<Map<String, String>>> getListOfPublicationsGoogleScholar( String url ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+
+		log.info( "get publication from google scholar with url " + url + " starting" );
+
+		List<Map<String, String>> publicationMapList = GoogleScholarPublicationCollection.getPublicationListByAuthorUrl( url );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		log.info( "get author from google scholar with url " + url + " complete in " + stopwatch );
+		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
+	}
+
+	@Async
+	public Future<List<Map<String, String>>> getListOfPublicationCiteseerX( String url ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+
+		log.info( "get publication list from citeseerX with query " + url + " starting" );
+
+		List<Map<String, String>> publicationMapList = CiteseerXPublicationCollection.getPublicationListByAuthorUrl( url );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		log.info( "get publication list from citeSeerX with url " + url + " complete in " + stopwatch );
+		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
+	}
+
+
 	public void mergeAuthorInformation( List<Future<List<Map<String, String>>>> authorFutureLists ) throws InterruptedException, ExecutionException
 	{
 		if ( authorFutureLists.size() > 0 )
@@ -209,6 +222,7 @@ public class PublicationCollectionService
 						as.setName( sources[i] );
 						as.setSourceUrl( sourceUrls[i] );
 						as.setSourceType( SourceType.valueOf( sources[i].toUpperCase() ) );
+						as.setAuthor( author );
 
 						authorSources.add( as );
 					}
@@ -222,6 +236,26 @@ public class PublicationCollectionService
 			// persistenceStrategy.getAuthorDAO().doReindexing();
 		}
 		
+	}
+
+	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists ) throws InterruptedException, ExecutionException
+	{
+		if ( publicationFutureLists.size() > 0 )
+		{
+			for ( Future<List<Map<String, String>>> publicationFutureList : publicationFutureLists )
+			{
+				if ( publicationFutureList.isDone() )
+				{
+					List<Map<String, String>> publicationMapLists = publicationFutureList.get();
+					for ( Map<String, String> publicationMap : publicationMapLists )
+					{
+						for ( Entry<String, String> eachPublicationDetail : publicationMap.entrySet() )
+							System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
+						System.out.println();
+					}
+				}
+			}
+		}
 	}
 
 }
