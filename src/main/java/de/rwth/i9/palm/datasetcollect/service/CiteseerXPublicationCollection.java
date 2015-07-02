@@ -79,12 +79,23 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 	{
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
-		// Using jsoup java html parser library
-		Document document = Jsoup.connect( url )
+		Document document = null;
+		
+		try
+		{
+			// Using jsoup java html parser library
+			document = Jsoup.connect( url )
 				.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
                 .timeout(10000)
 				.get();
-
+		}
+		catch ( Exception e )
+		{
+			return Collections.emptyList();
+		}
+		if( document == null )
+			return Collections.emptyList();
+		
 		Elements publicationRowList = document.select( HtmlSelectorConstant.CSX_PUBLICATION_ROW_LIST );
 
 		if ( publicationRowList.size() == 0 )

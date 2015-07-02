@@ -109,7 +109,7 @@ public class PublicationCollectionService
 					for ( Map<String, String> authorMap : authorListMap )
 					{
 						String authorName = authorMap.get( "name" ).replaceAll( "[^a-zA-Z ]", "" ).toLowerCase().trim();
-						// check if authro already on array list
+						// check if author already on array list
 						Integer authorIndex = indexHelper.get( authorName );
 						if ( authorIndex == null )
 						{
@@ -121,7 +121,7 @@ public class PublicationCollectionService
 						{
 							Map<String, String> mapFromMergerList = mergedAuthorList.get( authorIndex );
 							for ( Map.Entry<String, String> entry : authorMap.entrySet() )
-							{
+							{// merge everything else 
 								if ( mapFromMergerList.get( entry.getKey() ) == null )
 								{
 									mapFromMergerList.put( entry.getKey(), entry.getValue() );
@@ -179,6 +179,14 @@ public class PublicationCollectionService
 				{
 					author = new Author();
 					author.setName( name );
+					
+					String[] splitName = name.split( " " );
+					String lastName = splitName[ splitName.length - 1];
+					author.setLastName( lastName );
+					String firstName = name.substring( 0, name.length() - lastName.length()).trim();
+					if( !firstName.equals( "" ))
+						author.setFirstName( firstName );
+					
 					if ( !institution.equals( "" ) )
 					{
 						// find institution on database
@@ -205,6 +213,9 @@ public class PublicationCollectionService
 
 				if ( !otherDetail.equals( "" ) )
 					author.setOtherDetail( otherDetail );
+				
+				if( mergedAuthor.get( "citedby" ) != null )
+					author.setCitedBy( Integer.parseInt( mergedAuthor.get( "citedby" ) ) );
 
 				List<AuthorSource> oldAuthorSources = author.getAuthorSources();
 				// insert source

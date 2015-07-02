@@ -7,6 +7,7 @@ public class HtmlSelectorConstant
 	public static final String GS_AUTHOR_LIST_CONTAINER = ".gsc_1usr";
 	public static final String GS_AUTHOR_LIST_NAME = ".gsc_1usr_name";
 	public static final String GS_AUTHOR_LIST_AFFILIATION = ".gsc_1usr_aff";
+	public static final String GS_AUTHOR_LIST_NOCITATION = ".gsc_1usr_cby";
 
 	// second phase get the publication list
 	public static final String GS_PUBLICATION_ROW_LIST = "tr.gsc_a_tr";

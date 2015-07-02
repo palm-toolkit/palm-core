@@ -14,15 +14,20 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
+import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
+import de.rwth.i9.palm.feature.researcher.ResearcherInterest;
+import de.rwth.i9.palm.feature.researcher.ResearcherInterestEvolution;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
@@ -52,10 +57,15 @@ public class ResearcherController
 
 	@Autowired
 	private PublicationCollectionService publicationCollectionService;
-
+	
+	@Autowired
+	private ResearcherFeature researcherFeature;
+	
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
-	public ModelAndView mainPage( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response ) throws InterruptedException
+	public ModelAndView mainPage( 
+			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
+			final HttpServletResponse response ) throws InterruptedException
 	{
 		// get current session object
 		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
@@ -69,115 +79,13 @@ public class ResearcherController
 		return model;
 	}
 
-	@RequestMapping( value = "/view", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> authorDetail( @RequestParam( value = "id", required = false ) final String id, @RequestParam( value = "name", required = false ) final String name, @RequestParam( value = "uri", required = false ) final String uri, final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException
-	{
-		// create JSON mapper for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-		if ( id == null && name == null && uri == null )
-		{
-			responseMap.put( "result", "error" );
-			responseMap.put( "reason", "no author selected" );
-			return responseMap;
-		}
-		else
-		{
-			Author author = null;
-			if ( id != null )
-				author = persistenceStrategy.getAuthorDAO().getById( id );
-			else if ( uri != null )
-				author = persistenceStrategy.getAuthorDAO().getById( uri );
-			else if ( name != null )
-				author = persistenceStrategy.getAuthorDAO().getById( name );
-
-			if ( author == null )
-			{
-				responseMap.put( "result", "error" );
-				responseMap.put( "reason", "no author found" );
-				return responseMap;
-			}
-
-			// get current timestamp
-			java.util.Date date = new java.util.Date();
-			Timestamp currentTimestamp = new Timestamp( date.getTime() );
-
-			boolean collectFromNetwork = false;
-			if ( author.getRequestDate() != null )
-			{
-				// check if the existing author publication is obsolete
-				if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, author.getRequestDate() ) > 24 * 7 )
-				{
-					// update current timestamp
-					author.setRequestDate( currentTimestamp );
-					// persistenceStrategy.getAuthorDAO().persist( author );
-					collectFromNetwork = true;
-				}
-			}
-			else
-			{
-				// update current timestamp
-				author.setRequestDate( currentTimestamp );
-				// persistenceStrategy.getAuthorDAO().persist( author );
-				collectFromNetwork = true;
-			}
-
-			collectFromNetwork = true;
-
-			if ( collectFromNetwork )
-			{
-				// get author sources
-				List<AuthorSource> authorSources = author.getAuthorSources();
-				if ( authorSources == null )
-				{
-					// TODO update author sources
-					responseMap.put( "result", "error" );
-					responseMap.put( "reason", "no author sources found" );
-					return responseMap;
-				}
-
-				// future list for publication list
-				// extract dataset from academic network concurrently
-				Stopwatch stopwatch = Stopwatch.createStarted();
-
-				List<Future<List<Map<String, String>>>> publicationFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
-				for ( AuthorSource authorSource : authorSources )
-				{
-					if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR )
-						publicationFutureLists.add( publicationCollectionService.getListOfPublicationsGoogleScholar( authorSource.getSourceUrl() ) );
-					else if ( authorSource.getSourceType() == SourceType.CITESEERX )
-						publicationFutureLists.add( publicationCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl() ) );
-				}
-
-				// Wait until they are all done
-				boolean processIsDone = true;
-				do
-				{
-					processIsDone = true;
-					for ( Future<List<Map<String, String>>> futureList : publicationFutureLists )
-					{
-						if ( !futureList.isDone() )
-						{
-							processIsDone = false;
-							break;
-						}
-					}
-					// 10-millisecond pause between each check
-					Thread.sleep( 10 );
-				} while ( !processIsDone );
-
-				// merge the result
-				publicationCollectionService.mergePublicationInformation( publicationFutureLists );
-			}
-
-		}
-
-		return null;
-	}
-
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> getAuthorList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "page", required = false ) Integer page, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException
+	public @ResponseBody Map<String, Object> getAuthorList( 
+			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "page", required = false ) Integer page, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
+			final HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException
 	{
 		boolean collectFromNetwork = false;
 		
@@ -229,7 +137,7 @@ public class ResearcherController
 			if ( collectFromNetwork )
 			{
 				// extract dataset from academic network concurrently
-				Stopwatch stopwatch = Stopwatch.createStarted();
+				//Stopwatch stopwatch = Stopwatch.createStarted();
 
 				List<Future<List<Map<String, String>>>> authorFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
 
@@ -301,6 +209,8 @@ public class ResearcherController
 					pub.put( "detail", otherDetail );
 				if ( researcher.getInstitution() != null )
 					pub.put( "aff", researcher.getInstitution().getName() );
+				if ( researcher.getCitedBy() > 0 )
+					pub.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
 
 				researcherList.add( pub );
 			}
@@ -313,5 +223,208 @@ public class ResearcherController
 		}
 
 		return responseMap;
+	}
+	
+	@RequestMapping( value = "/fetchNetworkDataset", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherFetchNetworkDataset( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "name", required = false ) final String name, 
+			@RequestParam( value = "uri", required = false ) final String uri,
+			@RequestParam( value = "affiliation", required = false ) final String affiliation,
+			@RequestParam( value = "force", required = false ) final String force,
+			final HttpServletResponse response ) 
+					throws InterruptedException, IOException, ExecutionException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		
+		// get author
+		Author author = this.getTargetAuthor( responseMap, id, name, uri, affiliation );
+		if( author == null )
+			return responseMap;
+
+		// check whether it is necessary to collect information from network
+		if ( this.isFetchDatasetFromNetwork( author) || force.equals( "true" ) )
+			this.fetchDatasetFromNetwork( responseMap, author );
+
+		return responseMap;
+	}
+	
+	@RequestMapping( value = "/interest", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherInterest( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "name", required = false ) final String name, 
+			@RequestParam( value = "uri", required = false ) final String uri,
+			@RequestParam( value = "affiliation", required = false ) final String affiliation,
+			final HttpServletResponse response ) 
+					throws InterruptedException, IOException, ExecutionException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		
+		// get author
+		Author author = this.getTargetAuthor( responseMap, id, name, uri, affiliation );
+		if( author == null )
+			return responseMap;
+		
+		// get the object and set properties
+		ResearcherInterest researcherInterest = researcherFeature.getResearcherInterest();
+		researcherInterest.setResearcher( author );
+		researcherInterest.setResultMap( responseMap );
+
+		return researcherInterest.getResultMap();
+	}
+	
+	@RequestMapping( value = "/interestEvolution", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherInterestEvolution( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "name", required = false ) final String name, 
+			@RequestParam( value = "uri", required = false ) final String uri,
+			@RequestParam( value = "affiliation", required = false ) final String affiliation,
+			final HttpServletResponse response ) 
+					throws InterruptedException, IOException, ExecutionException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		
+		// get author
+		Author author = this.getTargetAuthor( responseMap, id, name, uri, affiliation );
+		if( author == null )
+			return responseMap;
+		
+		// get the object and set properties
+		ResearcherInterestEvolution researcherInterestEvolution = researcherFeature.getResearcherInterestEvolution();
+		researcherInterestEvolution.setResearcher( author );
+		researcherInterestEvolution.setResultMap( responseMap );
+
+		return researcherInterestEvolution.getResultMap();
+	}
+	
+	/**
+	 * Get author object based on query
+	 * @param responseMap
+	 * @param id
+	 * @param name
+	 * @param uri
+	 * @param affiliation
+	 * @return
+	 */
+	private Author getTargetAuthor(Map<String, Object> responseMap, String id, String name, String uri, String affiliation){
+		Author author = null;
+		if ( id == null && name == null && uri == null )
+		{
+			responseMap.put( "result", "error" );
+			responseMap.put( "reason", "no author selected" );
+		}
+		else
+		{
+			
+			if ( id != null )
+				author = persistenceStrategy.getAuthorDAO().getById( id );
+			else if ( uri != null )
+				author = persistenceStrategy.getAuthorDAO().getByUri( uri );
+			else if ( name != null && affiliation != null){
+				List<Author> authors = persistenceStrategy.getAuthorDAO().getAuthorByNameAndInstitution( name, affiliation );
+				if( !authors.isEmpty())
+					author = authors.get( 0 );
+			}
+				 
+
+			if ( author == null )
+			{
+				responseMap.put( "result", "error" );
+				responseMap.put( "reason", "no author found" );
+			}
+			// add author information
+			responseMap.put( "id", author.getId() );
+			responseMap.put( "name", author.getName() );
+		}
+		return author;
+	}
+	
+	/**
+	 * Check whether fetching to network is necessary
+	 * @param author
+	 * @return
+	 */
+	private boolean isFetchDatasetFromNetwork( Author author ){
+		// get current timestamp
+		java.util.Date date = new java.util.Date();
+		Timestamp currentTimestamp = new Timestamp( date.getTime() );
+		if ( author.getRequestDate() != null )
+		{
+			// check if the existing author publication is obsolete
+			if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, author.getRequestDate() ) > 24 * 7 )
+			{
+				// update current timestamp
+				author.setRequestDate( currentTimestamp );
+				persistenceStrategy.getAuthorDAO().persist( author );
+				return true;
+			}
+		}
+		else
+		{
+			// update current timestamp
+			author.setRequestDate( currentTimestamp );
+			persistenceStrategy.getAuthorDAO().persist( author );
+			return true;
+		}
+
+		return false;
+	}
+	
+	/**
+	 * Fetch author publication from network
+	 * @param responseMap
+	 * @param author
+	 * @throws IOException 
+	 * @throws InterruptedException 
+	 * @throws ExecutionException 
+	 */
+	private void fetchDatasetFromNetwork( Map<String, Object> responseMap, Author author ) throws IOException, InterruptedException, ExecutionException{
+		// get author sources
+		List<AuthorSource> authorSources = author.getAuthorSources();
+		if ( authorSources == null )
+		{
+			// TODO update author sources
+			responseMap.put( "result", "error" );
+			responseMap.put( "reason", "no author sources found" );
+		}
+
+		// future list for publication list
+		// extract dataset from academic network concurrently
+		//Stopwatch stopwatch = Stopwatch.createStarted();
+
+		List<Future<List<Map<String, String>>>> publicationFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
+		for ( AuthorSource authorSource : authorSources )
+		{
+			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR )
+				publicationFutureLists.add( publicationCollectionService.getListOfPublicationsGoogleScholar( authorSource.getSourceUrl() ) );
+			else if ( authorSource.getSourceType() == SourceType.CITESEERX )
+				publicationFutureLists.add( publicationCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl() ) );
+		}
+
+		// Wait until they are all done
+		boolean processIsDone = true;
+		do
+		{
+			processIsDone = true;
+			for ( Future<List<Map<String, String>>> futureList : publicationFutureLists )
+			{
+				if ( !futureList.isDone() )
+				{
+					processIsDone = false;
+					break;
+				}
+			}
+			// 10-millisecond pause between each check
+			Thread.sleep( 10 );
+		} while ( !processIsDone );
+
+		// merge the result
+		publicationCollectionService.mergePublicationInformation( publicationFutureLists );
 	}
 }

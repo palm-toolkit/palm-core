@@ -56,6 +56,10 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 				eachAuthorMap.put( "photo", photoUrl );
 			// get author affiliation
 			eachAuthorMap.put( "affiliation", authorListNode.select( HtmlSelectorConstant.GS_AUTHOR_LIST_AFFILIATION ).html().replace( "&#x2026;", "" ).trim() );
+			
+			String citedBy = authorListNode.select( HtmlSelectorConstant.GS_AUTHOR_LIST_NOCITATION ).html();
+			if( citedBy != null && citedBy.length() > 10)
+				eachAuthorMap.put( "citedby", citedBy.substring( "Cited by".length() ).trim() );
 
 			authorList.add( eachAuthorMap );
 		}

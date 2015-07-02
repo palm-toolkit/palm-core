@@ -4,10 +4,6 @@ import java.util.Comparator;
 
 import de.rwth.i9.palm.model.Conference;
 
-/**
- * @author matthaeus
- * 
- */
 public class ConferenceByNotationComparator implements Comparator<Conference>
 {
 
