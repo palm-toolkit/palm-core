@@ -131,7 +131,7 @@ public class ResearcherController
 				}
 			}
 
-			// collectFromNetwork = true;
+			collectFromNetwork = true;
 			// persistenceStrategy.getAuthorDAO().doReindexing();
 			// collect author from network
 			if ( collectFromNetwork )
@@ -373,7 +373,8 @@ public class ResearcherController
 			return true;
 		}
 
-		return false;
+		//return false;
+		return true;
 	}
 	
 	/**
@@ -425,6 +426,6 @@ public class ResearcherController
 		} while ( !processIsDone );
 
 		// merge the result
-		publicationCollectionService.mergePublicationInformation( publicationFutureLists );
+		publicationCollectionService.mergePublicationInformation( publicationFutureLists , author);
 	}
 }

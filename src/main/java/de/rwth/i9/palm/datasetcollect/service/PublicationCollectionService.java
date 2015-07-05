@@ -2,6 +2,7 @@ package de.rwth.i9.palm.datasetcollect.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.base.Stopwatch;
 
+import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Institution;
+import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -33,6 +37,9 @@ public class PublicationCollectionService
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+	
+	@Autowired
+	private PalmAnalytics palmAnalitics;
 
 	@Async
 	public Future<List<Map<String, String>>> getListOfAuthorsGoogleScholar( String authorName ) throws IOException
@@ -94,6 +101,12 @@ public class PublicationCollectionService
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
 
+	/**
+	 * Merging author information from multiple resources
+	 * @param authorFutureLists
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	@Transactional
 	public void mergeAuthorInformation( List<Future<List<Map<String, String>>>> authorFutureLists ) throws InterruptedException, ExecutionException
 	{
@@ -217,7 +230,6 @@ public class PublicationCollectionService
 				if( mergedAuthor.get( "citedby" ) != null )
 					author.setCitedBy( Integer.parseInt( mergedAuthor.get( "citedby" ) ) );
 
-				List<AuthorSource> oldAuthorSources = author.getAuthorSources();
 				// insert source
 				List<AuthorSource> authorSources = new ArrayList<AuthorSource>();
 				String[] sources = mergedAuthor.get( "source" ).split( " " );
@@ -244,10 +256,12 @@ public class PublicationCollectionService
 		
 	}
 
-	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists ) throws InterruptedException, ExecutionException
+	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists , Author author) throws InterruptedException, ExecutionException
 	{
 		if ( publicationFutureLists.size() > 0 )
 		{
+			// list/set of selected publication, either from database or completely new 
+			List<Publication> selectedPublications = new ArrayList<Publication>();
 			for ( Future<List<Map<String, String>>> publicationFutureList : publicationFutureLists )
 			{
 				if ( publicationFutureList.isDone() )
@@ -255,13 +269,67 @@ public class PublicationCollectionService
 					List<Map<String, String>> publicationMapLists = publicationFutureList.get();
 					for ( Map<String, String> publicationMap : publicationMapLists )
 					{
+						Publication publication = null;
+						String publicationTitle = publicationMap.get( "title" );
+						
+						if( publicationTitle == null )
+							continue;
+						
+						// get the publication object
+						List<Publication> fromDbPublication = persistenceStrategy.getPublicationDAO().getPublicationViaFuzzyQuery( publicationTitle, .8f, 1 );
+						// check publication from database
+						if( !fromDbPublication.isEmpty()){
+							if( fromDbPublication.size()>1 ){
+								// check with year
+								for(Publication pub : fromDbPublication){
+									Calendar cal = Calendar.getInstance();
+									cal.setTime( pub.getPublicationDate() );
+									if( Integer.toString(cal.get(Calendar.YEAR)).equals( publicationMap.get( "year" ) )){
+										publication = pub;
+										publication.addCoAuthor( author );
+										break;
+									}
+								}
+							}
+						}
+						
+						// check publication with the current selected list.
+						if( !selectedPublications.isEmpty()){
+							for( Publication pub : selectedPublications){
+								if( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle(), publicationTitle ) > .9f){
+									publication = pub;
+									publication.addCoAuthor( author );
+									break;
+								}
+							}
+						}
+						
+						// check if null ( really new publication )
+						if( publication == null ){
+							publication = new Publication();
+							publication.setTitle( publicationTitle );
+							publication.addCoAuthor( author );
+							selectedPublications.add( publication );
+						}
+						
+						// create publication sources and assign it to publication
+						PublicationSource publicationSource = new PublicationSource();
+						publicationSource.setTitle( publicationTitle );
+						publicationSource.setSourceUrl( publicationMap.get( "url" ) );
+						publication.addPublicationSource( publicationSource );
+						
+						
+						
+						// check  print 
 						for ( Entry<String, String> eachPublicationDetail : publicationMap.entrySet() )
 							System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
 						System.out.println();
 					}
 				}
 			}
+			int i = 0;
 		}
+		
 	}
 
 }

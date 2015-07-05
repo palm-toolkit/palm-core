@@ -114,6 +114,9 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 				if ( !noCitation.equals( "" ) )
 					publicationDetails.put( "nocitation", noCitation );
 
+				// set source
+				publicationDetails.put( "source", "citeseerx" );
+				
 				publicationDetails.put( "url", eachPublicationRow.select( "a" ).first().absUrl( "href" ) );
 				
 				String title = eachPublicationRow.select( "a" ).first().text();

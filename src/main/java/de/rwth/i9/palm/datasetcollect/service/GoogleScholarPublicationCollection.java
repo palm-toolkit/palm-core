@@ -72,7 +72,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
 		// Using jsoup java html parser library
-		Document document = Jsoup.connect( url ).get();
+		Document document = Jsoup.connect( url + "&cstart=0&pagesize=1000" ).get();
 
 		Elements publicationRowList = document.select( HtmlSelectorConstant.GS_PUBLICATION_ROW_LIST );
 
@@ -85,12 +85,20 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		for ( Element eachPublicationRow : publicationRowList )
 		{
 			Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
+			// set source
+			publicationDetails.put( "source", "googlescholar" );
 			publicationDetails.put( "url", eachPublicationRow.select( "a" ).first().absUrl( "href" ) );
 			publicationDetails.put( "title", eachPublicationRow.select( "a" ).first().text() );
 			publicationDetails.put( "coauthor", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).first().text() );
-			publicationDetails.put( "venue", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).get( 1 ).text() );
-			publicationDetails.put( "nocitation", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_NOCITATION ).text() );
-			publicationDetails.put( "year", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_YEAR ).text() );
+			String venue = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).get( 1 ).text().trim();
+			if( !venue.equals( "" ))
+				publicationDetails.put( "venue", venue );
+			String noCitation = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_NOCITATION ).text().replaceAll( "[^\\d]", "" );
+			if( !noCitation.equals( "" ))
+				publicationDetails.put( "nocitation", noCitation );
+			String year = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_YEAR ).text().trim();
+			if( !year.equals( "" ))
+				publicationDetails.put( "year", year );
 
 			publicationMapLists.add( publicationDetails );
 		}
