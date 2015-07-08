@@ -27,6 +27,7 @@ import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationSource;
+import de.rwth.i9.palm.model.SourceMethod;
 import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -40,6 +41,23 @@ public class PublicationCollectionService
 	
 	@Autowired
 	private PalmAnalytics palmAnalitics;
+
+	@Async
+	public Future<Long> callAsync( int taskCall ) throws InterruptedException
+	{
+
+		Stopwatch stopwatch = Stopwatch.createStarted();
+
+		log.info( "task " + taskCall + " starting" );
+
+		Thread.sleep( 5000 );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		log.info( "task " + taskCall + "completed in " + stopwatch );
+
+		return new AsyncResult<Long>( stopwatch.elapsed( TimeUnit.MILLISECONDS ) );
+	}
 
 	@Async
 	public Future<List<Map<String, String>>> getListOfAuthorsGoogleScholar( String authorName ) throws IOException
@@ -76,13 +94,13 @@ public class PublicationCollectionService
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 
-		log.info( "get publication from google scholar with url " + url + " starting" );
+		log.info( "get publication list from google scholar with url " + url + " starting" );
 
 		List<Map<String, String>> publicationMapList = GoogleScholarPublicationCollection.getPublicationListByAuthorUrl( url );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
-		log.info( "get author from google scholar with url " + url + " complete in " + stopwatch );
+		log.info( "get publication list from google scholar with url " + url + " complete in " + stopwatch );
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
 
@@ -100,6 +118,109 @@ public class PublicationCollectionService
 		log.info( "get publication list from citeSeerX with url " + url + " complete in " + stopwatch );
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
+	
+	@Async
+	public Future<PublicationSource> getListOfPublicationsDetailGoogleScholar( PublicationSource publicationSource ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+
+		log.info( "get publication detail from google scholar with url " + publicationSource.getSourceUrl() + " starting" );
+
+		// scrap the webpage
+		Map<String, String> publicationDetailMap = GoogleScholarPublicationCollection.getPublicationDetailByPublicationUrl( publicationSource.getSourceUrl() );
+		
+		// assign the information gathered into publicationSource object
+		//this.assignInformationFromGoogleScholar(publicationSource, publicationDetailMap);
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		log.info( "get publication detail from google scholar with url " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
+		return new AsyncResult<PublicationSource>( publicationSource );
+	}
+
+	@Async
+	public Future<PublicationSource> getListOfPublicationDetailCiteseerX( PublicationSource publicationSource ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+
+		log.info( "get publication detail from citeseerX with query " + publicationSource.getSourceUrl() + " starting" );
+
+		// scrap the webpage
+		Map<String, String> publicationDetailMap = CiteseerXPublicationCollection.getPublicationDetailByPublicationUrl( publicationSource.getSourceUrl() );
+
+		// assign the information gathered into publicationSource object
+		//this.assignInformationFromCiteseerx(publicationSource, publicationDetailMap);
+				
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		log.info( "get publication detail from citeSeerX with url " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
+		return new AsyncResult<PublicationSource>( publicationSource );
+	}
+	
+	@Async
+	public Future<Publication> asyncWalkOverSelectedPublication( Publication publication ) throws IOException, InterruptedException
+	{
+		// multithread publication source
+		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();
+		
+		for ( PublicationSource publicationSource : publication.getPublicationSources() )
+		{
+			// handling publication source 
+			if ( publicationSource.getSourceMethod() == SourceMethod.PARSEPAGE )
+			{
+				if ( publicationSource.getSourceType() == SourceType.GOOGLESCHOLAR )
+					publicationSourceFutureList.add( this.getListOfPublicationsDetailGoogleScholar( publicationSource ) );
+				else if ( publicationSource.getSourceType() == SourceType.CITESEERX )
+					publicationSourceFutureList.add( this.getListOfPublicationDetailCiteseerX( publicationSource ) );
+			}
+		}
+		
+		// Wait until they are all done
+//				boolean walkingPublicationSourceIsDone = true;
+//				do
+//				{
+//					walkingPublicationSourceIsDone = true;
+//					for ( Future<PublicationSource> publicationSourceFuture : publicationSourceFutureList )
+//					{
+//						if ( !publicationSourceFuture.isDone() ){
+//							walkingPublicationSourceIsDone = false;
+//							break;
+//						}
+//					}
+//					// 10-millisecond pause between each check
+//					Thread.sleep( 10 );
+//				} while ( !walkingPublicationSourceIsDone );
+		
+		return new AsyncResult<Publication>( publication );
+	}
+	
+	/**
+	 * Assign publicationSource value to specific academic network
+	 * @param publicationSource
+	 * @param publicationMapList
+	 */
+	private void assignInformationFromGoogleScholar(PublicationSource publicationSource, Map<String, String> publicationDetailMap){
+		System.out.println( "GS" );
+		for ( Entry<String, String> eachPublicationDetail : publicationDetailMap.entrySet() )
+			System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
+		System.out.println(  );
+	}
+	
+	/**
+	 * Assign publicationSource value to specific academic network
+	 * @param publicationSource
+	 * @param publicationMapList
+	 */
+	private void assignInformationFromCiteseerx(PublicationSource publicationSource, Map<String, String> publicationDetailMap){
+		
+		System.out.println( "CX" );
+		for ( Entry<String, String> eachPublicationDetail : publicationDetailMap.entrySet() )
+			System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
+		System.out.println(  );
+	}
+	
+	
+	
 
 	/**
 	 * Merging author information from multiple resources
@@ -256,80 +377,145 @@ public class PublicationCollectionService
 		
 	}
 
-	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists , Author author) throws InterruptedException, ExecutionException
+	/**
+	 * THis function collect publication information and combine it into publication object
+	 * @param publicationFutureLists
+	 * @param author
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 * @throws IOException 
+	 */
+	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists , Author author ) throws InterruptedException, ExecutionException, IOException
 	{
 		if ( publicationFutureLists.size() > 0 )
 		{
 			// list/set of selected publication, either from database or completely new 
 			List<Publication> selectedPublications = new ArrayList<Publication>();
-			for ( Future<List<Map<String, String>>> publicationFutureList : publicationFutureLists )
+			
+			// first construct the publication
+			// get it from database or create new if still doesn't exist
+			constructPublicationWithSources( selectedPublications, publicationFutureLists , author );
+			
+			// extract and combine information from multiple sources
+			getPublicationInformationFromSources( selectedPublications );
+		}
+		
+	}
+	
+	/**
+	 * Cunstrucnt the publication and publicationSources
+	 * @param selectedPublications
+	 * @param publicationFutureLists
+	 * @param author
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	public void constructPublicationWithSources( List<Publication> selectedPublications,  List<Future<List<Map<String, String>>>> publicationFutureLists , Author author ) throws InterruptedException, ExecutionException{
+		for ( Future<List<Map<String, String>>> publicationFutureList : publicationFutureLists )
+		{
+			if ( publicationFutureList.isDone() )
 			{
-				if ( publicationFutureList.isDone() )
+				List<Map<String, String>> publicationMapLists = publicationFutureList.get();
+				for ( Map<String, String> publicationMap : publicationMapLists )
 				{
-					List<Map<String, String>> publicationMapLists = publicationFutureList.get();
-					for ( Map<String, String> publicationMap : publicationMapLists )
-					{
-						Publication publication = null;
-						String publicationTitle = publicationMap.get( "title" );
-						
-						if( publicationTitle == null )
-							continue;
-						
-						// get the publication object
-						List<Publication> fromDbPublication = persistenceStrategy.getPublicationDAO().getPublicationViaFuzzyQuery( publicationTitle, .8f, 1 );
-						// check publication from database
-						if( !fromDbPublication.isEmpty()){
-							if( fromDbPublication.size()>1 ){
-								// check with year
-								for(Publication pub : fromDbPublication){
-									Calendar cal = Calendar.getInstance();
-									cal.setTime( pub.getPublicationDate() );
-									if( Integer.toString(cal.get(Calendar.YEAR)).equals( publicationMap.get( "year" ) )){
-										publication = pub;
-										publication.addCoAuthor( author );
-										break;
-									}
-								}
-							}
-						}
-						
-						// check publication with the current selected list.
-						if( !selectedPublications.isEmpty()){
-							for( Publication pub : selectedPublications){
-								if( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle(), publicationTitle ) > .9f){
+					Publication publication = null;
+					String publicationTitle = publicationMap.get( "title" );
+					
+					if( publicationTitle == null )
+						continue;
+					
+					// get the publication object
+					List<Publication> fromDbPublication = persistenceStrategy.getPublicationDAO().getPublicationViaFuzzyQuery( publicationTitle, .8f, 1 );
+					// check publication from database
+					if( !fromDbPublication.isEmpty()){
+						if( fromDbPublication.size()>1 ){
+							// check with year
+							for(Publication pub : fromDbPublication){
+								Calendar cal = Calendar.getInstance();
+								cal.setTime( pub.getPublicationDate() );
+								if( Integer.toString(cal.get(Calendar.YEAR)).equals( publicationMap.get( "year" ) )){
 									publication = pub;
 									publication.addCoAuthor( author );
 									break;
 								}
 							}
 						}
-						
-						// check if null ( really new publication )
-						if( publication == null ){
-							publication = new Publication();
-							publication.setTitle( publicationTitle );
-							publication.addCoAuthor( author );
-							selectedPublications.add( publication );
-						}
-						
-						// create publication sources and assign it to publication
-						PublicationSource publicationSource = new PublicationSource();
-						publicationSource.setTitle( publicationTitle );
-						publicationSource.setSourceUrl( publicationMap.get( "url" ) );
-						publication.addPublicationSource( publicationSource );
-						
-						
-						
-						// check  print 
-						for ( Entry<String, String> eachPublicationDetail : publicationMap.entrySet() )
-							System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
-						System.out.println();
 					}
+					
+					// check publication with the current selected list.
+					if( !selectedPublications.isEmpty()){
+						for( Publication pub : selectedPublications){
+							if( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle(), publicationTitle ) > .9f){
+								publication = pub;
+								publication.addCoAuthor( author );
+								break;
+							}
+						}
+					}
+					
+					// check if null ( really new publication )
+					if( publication == null ){
+						publication = new Publication();
+						publication.setTitle( publicationTitle );
+						publication.addCoAuthor( author );
+						selectedPublications.add( publication );
+					}
+					
+					// create publication sources and assign it to publication
+					PublicationSource publicationSource = new PublicationSource();
+					publicationSource.setTitle( publicationTitle );
+					publicationSource.setSourceUrl( publicationMap.get( "url" ) );
+					publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
+					publicationSource.setSourceType( SourceType.valueOf(publicationMap.get( "source" ).toUpperCase() ) );
+					publication.addPublicationSource( publicationSource );
+								
+					// combine information from multiple sources;
+					
+					// check  print 
+//					for ( Entry<String, String> eachPublicationDetail : publicationMap.entrySet() )
+//						System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
+//					System.out.println();
 				}
 			}
-			int i = 0;
+		}
+	}
+	
+	/**
+	 * combine publication information from multiple publication sources
+	 * @param selectedPublications
+	 * @throws IOException 
+	 * @throws InterruptedException 
+	 */
+	public void getPublicationInformationFromSources( List<Publication> selectedPublications ) throws IOException, InterruptedException{
+		//multi thread future publication detail
+		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
+		for( Publication publication : selectedPublications){
+			selectedPublicationFutureList.add( this.asyncWalkOverSelectedPublication( publication ) );
+			System.out.println( "walking" + publication.getTitle() );
 		}
 		
+		// Wait until they are all done
+		Thread.sleep( 1000 );
+		boolean walkingPublicationIsDone = true;
+		do
+		{
+			walkingPublicationIsDone = true;
+			for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
+			{
+				if ( !selectedPublicationFuture.isDone() )
+					walkingPublicationIsDone = false;
+				else
+				{
+					// combine from sources to publication
+
+				}
+
+			}
+			// 10-millisecond pause between each check
+			Thread.sleep( 10 );
+		} while ( !walkingPublicationIsDone );
+		
+		int i=0;
 	}
 
 }

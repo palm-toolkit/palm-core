@@ -35,7 +35,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		{
 			document = Jsoup.connect( url )
 					.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
-	                .timeout(10000)
+	                .timeout(5000)
 					.get();
 		}
 		catch ( Exception e )
@@ -84,9 +84,9 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		try
 		{
 			// Using jsoup java html parser library
-			document = Jsoup.connect( url )
+			document = Jsoup.connect( url + "&list=full" )
 				.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
-                .timeout(10000)
+                .timeout(5000)
 				.get();
 		}
 		catch ( Exception e )
@@ -147,8 +147,22 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 	{
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
 
-		// Using jsoup java html parser library
-		Document document = Jsoup.connect( url ).get();
+		Document document = null;
+		
+		try
+		{
+			// Using jsoup java html parser library
+			document = Jsoup.connect( url )
+				.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
+                .timeout(5000)
+				.get();
+		}
+		catch ( Exception e )
+		{
+			return Collections.emptyMap();
+		}
+		if( document == null )
+			return Collections.emptyMap();
 
 		Elements publicationDetailHeader = document.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_HEADER );
 
@@ -171,7 +185,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 
 		Elements venue = publicationDetailHeader.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_VENUE );
 
-		if ( venue != null )
+		if ( venue != null && venue.select( "td" ).size()>1)
 			publicationDetailMaps.put( "venue", venue.select( "td" ).get( 1 ).text() );
 
 		publicationDetailMaps.put( "abstract", document.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_ABSTRACT ).select( "p" ).text() );

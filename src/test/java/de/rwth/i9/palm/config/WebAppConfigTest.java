@@ -20,6 +20,8 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
+import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
+import de.rwth.i9.palm.feature.researcher.ResearcherFeatureImpl;
 
 //import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
 
@@ -71,15 +73,23 @@ public class WebAppConfigTest extends WebMvcConfigurerAdapter implements AsyncCo
 		return new PalmAnalyticsImpl();
 	}
 
+	/* palm researcher feature */
+	@Bean
+	@Scope( "singleton" )
+	public ResearcherFeature researcherFeature()
+	{
+		return new ResearcherFeatureImpl();
+	}
+
 	/* Scheduling and ThreadPool */
 
 	@Override
 	public Executor getAsyncExecutor()
 	{
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setMaxPoolSize( 10 );
-		taskExecutor.setCorePoolSize( 5 );
-		taskExecutor.setQueueCapacity( 25 );
+		taskExecutor.setMaxPoolSize( 100 );
+		taskExecutor.setCorePoolSize( 20 );
+		taskExecutor.setQueueCapacity( 1000 );
 		taskExecutor.setThreadNamePrefix( "PALMExecutor-" );
 		taskExecutor.initialize();
 		return taskExecutor;
