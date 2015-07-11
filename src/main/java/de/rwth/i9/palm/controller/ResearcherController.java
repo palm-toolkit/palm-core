@@ -2,6 +2,7 @@ package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -230,7 +231,7 @@ public class ResearcherController
 			@RequestParam( value = "affiliation", required = false ) final String affiliation,
 			@RequestParam( value = "force", required = false ) final String force,
 			final HttpServletResponse response ) 
-					throws InterruptedException, IOException, ExecutionException
+ throws InterruptedException, IOException, ExecutionException, ParseException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -375,13 +376,16 @@ public class ResearcherController
 	
 	/**
 	 * Fetch author publication from network
+	 * 
 	 * @param responseMap
 	 * @param author
-	 * @throws IOException 
-	 * @throws InterruptedException 
-	 * @throws ExecutionException 
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 * @throws ParseException
 	 */
-	private void fetchDatasetFromNetwork( Map<String, Object> responseMap, Author author ) throws IOException, InterruptedException, ExecutionException{
+	private void fetchDatasetFromNetwork( Map<String, Object> responseMap, Author author ) throws IOException, InterruptedException, ExecutionException, ParseException
+	{
 		// get author sources
 		List<AuthorSource> authorSources = author.getAuthorSources();
 		if ( authorSources == null )

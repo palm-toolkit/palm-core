@@ -33,17 +33,17 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		Document document = null;
 
 		Map<String, String> cookies = new HashMap<String, String>();
-		cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
-		cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
-		cookies.put( "GMAIL_RTT", "37" );
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=a0a9f8f6fb947995:TM=1436344558:C=c:IP=176.199.94.165-:S=APGng0upi39Hsb3eWsXs_Q2IEd_YYD9cnw" );
-		cookies.put( "GSP", "LM=1433157152:S=fBNl8D8DB4mscJp8" );
-		cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
-		cookies.put( "NID", "69=p_DVuxDbtO38Wf1evTSPIRzZRHMzB-v8wxJYULrDJo2HI7JRuFksVZYU_FIgouVpeY2WAvCalNSk3_SV0CfY4IhRAF8cRv9krdzeYnhX0AajwHV1YBOcundZLottvztwpW7ohLDjOkA52lKTmQyWVaMKgWsCERvo6C35u-6zSfad-lHgi3w" );
-		cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
-		cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
-		cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
-		cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
+		//cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
+		//cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
+		//cookies.put( "GMAIL_RTT", "37" );
+		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=fa65dde10e5f2287:TM=1436573722:C=c:IP=176.199.94.165-:S=APGng0v4tWp9_ysY6ijS-jMM-u5MUpyObg" );
+		cookies.put( "GSP", "LM=1436571835:S=c2JZ0VQSeYJS29B8" );
+		//cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
+		cookies.put( "NID", "69=HKnTNXQ9u1QkzeUca9kJaoElMJSRyHpuv_EKsGzSvXqfZK1KrMhjZBRBLPThFBKLKDucaW19RnfDYJ16x1CkvfCtRtDPMTChy_HdUH9dvDTYDgXxfdpq3bTtRxczd4mK" );
+		//cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
+		//cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
+		//cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
+		//cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
 
 //		try
 //		{
@@ -104,23 +104,23 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		Document document = null;
 
 		Map<String, String> cookies = new HashMap<String, String>();
-		cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
-		cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
-		cookies.put( "GMAIL_RTT", "37" );
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=a0a9f8f6fb947995:TM=1436344558:C=c:IP=176.199.94.165-:S=APGng0upi39Hsb3eWsXs_Q2IEd_YYD9cnw" );
-		cookies.put( "GSP", "LM=1433157152:S=fBNl8D8DB4mscJp8" );
-		cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
-		cookies.put( "NID", "69=p_DVuxDbtO38Wf1evTSPIRzZRHMzB-v8wxJYULrDJo2HI7JRuFksVZYU_FIgouVpeY2WAvCalNSk3_SV0CfY4IhRAF8cRv9krdzeYnhX0AajwHV1YBOcundZLottvztwpW7ohLDjOkA52lKTmQyWVaMKgWsCERvo6C35u-6zSfad-lHgi3w" );
-		cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
-		cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
-		cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
-		cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
+		//cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
+		//cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
+		//cookies.put( "GMAIL_RTT", "37" );
+		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=fa65dde10e5f2287:TM=1436573722:C=c:IP=176.199.94.165-:S=APGng0v4tWp9_ysY6ijS-jMM-u5MUpyObg" );
+		cookies.put( "GSP", "LM=1436571835:S=c2JZ0VQSeYJS29B8" );
+		//cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
+		cookies.put( "NID", "69=HKnTNXQ9u1QkzeUca9kJaoElMJSRyHpuv_EKsGzSvXqfZK1KrMhjZBRBLPThFBKLKDucaW19RnfDYJ16x1CkvfCtRtDPMTChy_HdUH9dvDTYDgXxfdpq3bTtRxczd4mK" );
+		//cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
+		//cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
+		//cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
+		//cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
 
 //				try
 //				{
 			// Using jsoup java html parser library
 			document = Jsoup
-					.connect( url )
+					.connect( url + "&cstart=0&pagesize=1000")
 					.userAgent( "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" )
 .header( "Accept", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ).cookies( cookies )
 					.timeout( 5000 ).get();
@@ -172,17 +172,17 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		Document document = null;
 
 		Map<String, String> cookies = new HashMap<String, String>();
-		cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
-		cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
-		cookies.put( "GMAIL_RTT", "37" );
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=a0a9f8f6fb947995:TM=1436344558:C=c:IP=176.199.94.165-:S=APGng0upi39Hsb3eWsXs_Q2IEd_YYD9cnw" );
-		cookies.put( "GSP", "LM=1433157152:S=fBNl8D8DB4mscJp8" );
-		cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
-		cookies.put( "NID", "69=p_DVuxDbtO38Wf1evTSPIRzZRHMzB-v8wxJYULrDJo2HI7JRuFksVZYU_FIgouVpeY2WAvCalNSk3_SV0CfY4IhRAF8cRv9krdzeYnhX0AajwHV1YBOcundZLottvztwpW7ohLDjOkA52lKTmQyWVaMKgWsCERvo6C35u-6zSfad-lHgi3w" );
-		cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
-		cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
-		cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
-		cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
+		//cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
+		//cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
+		//cookies.put( "GMAIL_RTT", "37" );
+		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=fa65dde10e5f2287:TM=1436573722:C=c:IP=176.199.94.165-:S=APGng0v4tWp9_ysY6ijS-jMM-u5MUpyObg" );
+		cookies.put( "GSP", "LM=1436571835:S=c2JZ0VQSeYJS29B8" );
+		//cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
+		cookies.put( "NID", "69=HKnTNXQ9u1QkzeUca9kJaoElMJSRyHpuv_EKsGzSvXqfZK1KrMhjZBRBLPThFBKLKDucaW19RnfDYJ16x1CkvfCtRtDPMTChy_HdUH9dvDTYDgXxfdpq3bTtRxczd4mK" );
+		//cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
+		//cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
+		//cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
+		//cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
 
 //				try
 //				{
