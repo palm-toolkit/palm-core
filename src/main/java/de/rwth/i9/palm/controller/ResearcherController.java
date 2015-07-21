@@ -7,9 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -23,16 +21,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
+import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.feature.researcher.ResearcherInterest;
 import de.rwth.i9.palm.feature.researcher.ResearcherInterestEvolution;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.RequestType;
 import de.rwth.i9.palm.model.SessionDataSet;
-import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.model.UserRequest;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -56,6 +53,9 @@ public class ResearcherController
 	@Autowired
 	private PublicationCollectionService publicationCollectionService;
 	
+	@Autowired
+	private ResearcherCollectionService researcherCollectionService;
+
 	@Autowired
 	private ResearcherFeature researcherFeature;
 	
@@ -130,41 +130,9 @@ public class ResearcherController
 			}
 
 			collectFromNetwork = true;
-			// persistenceStrategy.getAuthorDAO().doReindexing();
 			// collect author from network
 			if ( collectFromNetwork )
-			{
-				// extract dataset from academic network concurrently
-				//Stopwatch stopwatch = Stopwatch.createStarted();
-
-				List<Future<List<Map<String, String>>>> authorFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
-
-				// ( if google scholar )
-				authorFutureLists.add( publicationCollectionService.getListOfAuthorsGoogleScholar( query ) );
-
-				// if( citeseer )
-				authorFutureLists.add( publicationCollectionService.getListOfAuthorsCiteseerX( query ) );
-
-				// Wait until they are all done
-				boolean processIsDone = true;
-				do
-				{
-					processIsDone = true;
-					for ( Future<List<Map<String, String>>> futureList : authorFutureLists )
-					{
-						if ( !futureList.isDone() )
-						{
-							processIsDone = false;
-							break;
-						}
-					}
-					// 10-millisecond pause between each check
-					Thread.sleep( 10 );
-				} while ( !processIsDone );
-
-				// merge the result
-				publicationCollectionService.mergeAuthorInformation( authorFutureLists );
-			}
+				researcherCollectionService.collectAuthorInformationFromNetwork( query );
 		}
 
 		// get the researcher
@@ -244,7 +212,7 @@ public class ResearcherController
 
 		// check whether it is necessary to collect information from network
 		if ( this.isFetchDatasetFromNetwork( author) || force.equals( "true" ) )
-			this.fetchDatasetFromNetwork( responseMap, author );
+			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author );
 
 		return responseMap;
 	}
@@ -375,58 +343,5 @@ public class ResearcherController
 		return true;
 	}
 	
-	/**
-	 * Fetch author publication from network
-	 * 
-	 * @param responseMap
-	 * @param author
-	 * @throws IOException
-	 * @throws InterruptedException
-	 * @throws ExecutionException
-	 * @throws ParseException
-	 */
-	private void fetchDatasetFromNetwork( Map<String, Object> responseMap, Author author ) throws IOException, InterruptedException, ExecutionException, ParseException
-	{
-		// get author sources
-		Set<AuthorSource> authorSources = author.getAuthorSources();
-		if ( authorSources == null )
-		{
-			// TODO update author sources
-			responseMap.put( "result", "error" );
-			responseMap.put( "reason", "no author sources found" );
-		}
 
-		// future list for publication list
-		// extract dataset from academic network concurrently
-		//Stopwatch stopwatch = Stopwatch.createStarted();
-
-		List<Future<List<Map<String, String>>>> publicationFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
-		for ( AuthorSource authorSource : authorSources )
-		{
-			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR )
-				publicationFutureLists.add( publicationCollectionService.getListOfPublicationsGoogleScholar( authorSource.getSourceUrl() ) );
-			else if ( authorSource.getSourceType() == SourceType.CITESEERX )
-				publicationFutureLists.add( publicationCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl() ) );
-		}
-
-		// Wait until they are all done
-		boolean processIsDone = true;
-		do
-		{
-			processIsDone = true;
-			for ( Future<List<Map<String, String>>> futureList : publicationFutureLists )
-			{
-				if ( !futureList.isDone() )
-				{
-					processIsDone = false;
-					break;
-				}
-			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !processIsDone );
-
-		// merge the result
-		publicationCollectionService.mergePublicationInformation( publicationFutureLists , author);
-	}
 }

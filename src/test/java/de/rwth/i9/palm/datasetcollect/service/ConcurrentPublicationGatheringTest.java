@@ -28,7 +28,7 @@ public class ConcurrentPublicationGatheringTest
 	private final static Logger log = LoggerFactory.getLogger( ConcurrentPublicationGatheringTest.class );
 
 	@Autowired
-	private PublicationCollectionService publicationCollectionService;
+	private AsynchronousCollectionService asynchronousCollectionService;
 
 	@Test
 	@Ignore
@@ -40,7 +40,7 @@ public class ConcurrentPublicationGatheringTest
 
 		for ( int i = 0; i < 20; i++ )
 		{
-			asyncResult.add( publicationCollectionService.callAsync( i ) );
+			asyncResult.add( asynchronousCollectionService.callAsync( i ) );
 		}
 
 		boolean processIsDone = true;
@@ -86,9 +86,9 @@ public class ConcurrentPublicationGatheringTest
 
 		for( String sourceUrl: sourceUrls){
 			if( sourceUrl.startsWith( "https" ))
-				asyncResult.add( publicationCollectionService.getListOfPublicationsDetailGoogleScholarForTesting( sourceUrl ) );
+				asyncResult.add( asynchronousCollectionService.getListOfPublicationsDetailGoogleScholarForTesting( sourceUrl ) );
 			else
-				asyncResult.add( publicationCollectionService.getListOfPublicationsDetailCiteseerForTesting( sourceUrl ) );
+				asyncResult.add( asynchronousCollectionService.getListOfPublicationsDetailCiteseerForTesting( sourceUrl ) );
 		}
 
 		boolean processIsDone = true;

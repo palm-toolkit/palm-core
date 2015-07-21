@@ -30,7 +30,7 @@ public class PublicationCollectionServiceTest
 	private final static Logger log = LoggerFactory.getLogger( PublicationCollectionServiceTest.class );
 
 	@Autowired
-	private PublicationCollectionService publicationCollectionService;
+	private AsynchronousCollectionService asynchronousCollectionService;
 
 	@Test
 	@Ignore
@@ -38,18 +38,18 @@ public class PublicationCollectionServiceTest
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 
-		Future<Long> asyncResult1 = publicationCollectionService.callAsync( 1 );
-		Future<Long> asyncResult2 = publicationCollectionService.callAsync( 2 );
-		Future<Long> asyncResult3 = publicationCollectionService.callAsync( 3 );
-		Future<Long> asyncResult4 = publicationCollectionService.callAsync( 4 );
-		Future<Long> asyncResult5 = publicationCollectionService.callAsync( 5 );
-		Future<Long> asyncResult6 = publicationCollectionService.callAsync( 6 );
-		Future<Long> asyncResult7 = publicationCollectionService.callAsync( 7 );
-		Future<Long> asyncResult8 = publicationCollectionService.callAsync( 8 );
-		Future<Long> asyncResult9 = publicationCollectionService.callAsync( 9 );
-		Future<Long> asyncResult10 = publicationCollectionService.callAsync( 10 );
-		Future<Long> asyncResult11 = publicationCollectionService.callAsync( 11 );
-		Future<Long> asyncResult12 = publicationCollectionService.callAsync( 12 );
+		Future<Long> asyncResult1 = asynchronousCollectionService.callAsync( 1 );
+		Future<Long> asyncResult2 = asynchronousCollectionService.callAsync( 2 );
+		Future<Long> asyncResult3 = asynchronousCollectionService.callAsync( 3 );
+		Future<Long> asyncResult4 = asynchronousCollectionService.callAsync( 4 );
+		Future<Long> asyncResult5 = asynchronousCollectionService.callAsync( 5 );
+		Future<Long> asyncResult6 = asynchronousCollectionService.callAsync( 6 );
+		Future<Long> asyncResult7 = asynchronousCollectionService.callAsync( 7 );
+		Future<Long> asyncResult8 = asynchronousCollectionService.callAsync( 8 );
+		Future<Long> asyncResult9 = asynchronousCollectionService.callAsync( 9 );
+		Future<Long> asyncResult10 = asynchronousCollectionService.callAsync( 10 );
+		Future<Long> asyncResult11 = asynchronousCollectionService.callAsync( 11 );
+		Future<Long> asyncResult12 = asynchronousCollectionService.callAsync( 12 );
 
 
 		log.info( "result 1 took: " + asyncResult1.get() );
@@ -78,21 +78,21 @@ public class PublicationCollectionServiceTest
 		List<Future<Long>> asyncResult = new ArrayList<Future<Long>>();
 		
 		for( int i=0;i<20;i++){
-			asyncResult.add( publicationCollectionService.callAsync( i ) );
+			asyncResult.add( asynchronousCollectionService.callAsync( i ) );
 		}
 //
-//		asyncResult.add( publicationCollectionService.callAsync( 1 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 2 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 3 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 4 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 5 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 6 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 7 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 8 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 9 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 10 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 11 ) );
-//		asyncResult.add( publicationCollectionService.callAsync( 12 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 1 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 2 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 3 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 4 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 5 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 6 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 7 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 8 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 9 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 10 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 11 ) );
+		// asyncResult.add( asynchronousCollectionService.callAsync( 12 ) );
 		
 		boolean processIsDone = true;
 		do
@@ -137,8 +137,8 @@ public class PublicationCollectionServiceTest
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 
-		Future<List<Map<String, String>>> authorGoogleScholar = publicationCollectionService.getListOfAuthorsGoogleScholar( "chatti" );
-		Future<List<Map<String, String>>> authorCiteseerX = publicationCollectionService.getListOfAuthorsCiteseerX( "chatti" );
+		Future<List<Map<String, String>>> authorGoogleScholar = asynchronousCollectionService.getListOfAuthorsGoogleScholar( "chatti" );
+		Future<List<Map<String, String>>> authorCiteseerX = asynchronousCollectionService.getListOfAuthorsCiteseerX( "chatti" );
 
 		for ( Map<String, String> eachAuthor : authorGoogleScholar.get() )
 		{
