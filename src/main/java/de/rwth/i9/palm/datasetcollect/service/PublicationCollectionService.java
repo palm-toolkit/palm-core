@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +29,7 @@ import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Conference;
 import de.rwth.i9.palm.model.ConferenceGroup;
@@ -126,6 +129,42 @@ public class PublicationCollectionService
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
 	
+	@Async
+	public Future<Long> getListOfPublicationsDetailGoogleScholarForTesting( String sourceUrl ) throws IOException, InterruptedException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+
+		log.info( "get publication detail from google scholar with url " + sourceUrl + " starting" );
+
+		// scrap the webpage
+		Map<String, String> publicationDetailMap = GoogleScholarPublicationCollection.getPublicationDetailByPublicationUrl( sourceUrl );
+
+		Thread.sleep( 5000 );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		log.info( "get publication detail from google scholar with url " + sourceUrl + " complete in " + stopwatch );
+		return new AsyncResult<Long>( stopwatch.elapsed( TimeUnit.MILLISECONDS ) );
+	}
+
+	@Async
+	public Future<Long> getListOfPublicationsDetailCiteseerForTesting( String sourceUrl ) throws IOException, InterruptedException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+
+		log.info( "get publication detail from google scholar with url " + sourceUrl + " starting" );
+
+		// scrap the webpage
+		Map<String, String> publicationDetailMap = CiteseerXPublicationCollection.getPublicationDetailByPublicationUrl( sourceUrl );
+
+		Thread.sleep( 5000 );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		log.info( "get publication detail from google scholar with url " + sourceUrl + " complete in " + stopwatch );
+		return new AsyncResult<Long>( stopwatch.elapsed( TimeUnit.MILLISECONDS ) );
+	}
+
 	@Async
 	public Future<PublicationSource> getListOfPublicationsDetailGoogleScholar( PublicationSource publicationSource ) throws IOException
 	{
@@ -311,7 +350,7 @@ public class PublicationCollectionService
 					List<Map<String, String>> authorListMap = authorFutureList.get();
 					for ( Map<String, String> authorMap : authorListMap )
 					{
-						String authorName = authorMap.get( "name" ).replaceAll( "[^a-zA-Z ]", "" ).toLowerCase().trim();
+						String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim();
 						// check if author already on array list
 						Integer authorIndex = indexHelper.get( authorName );
 						if ( authorIndex == null )
@@ -353,9 +392,10 @@ public class PublicationCollectionService
 			// update database
 			for ( Map<String, String> mergedAuthor : mergedAuthorList )
 			{
-				String name = mergedAuthor.get( "name" );
+				String name = mergedAuthor.get( "name" ).toLowerCase().replace( ".", "" ).trim();
 				String institution = "";
 				String otherDetail = "";
+
 
 				String affliliation = mergedAuthor.get( "affiliation" );
 				// looking for university
@@ -382,11 +422,11 @@ public class PublicationCollectionService
 				{
 					author = new Author();
 					author.setName( name );
-					
+
 					String[] splitName = name.split( " " );
 					String lastName = splitName[ splitName.length - 1];
 					author.setLastName( lastName );
-					String firstName = name.substring( 0, name.length() - lastName.length()).trim();
+					String firstName = name.substring( 0, name.length() - lastName.length() ).replace( ".", "" ).trim();
 					if( !firstName.equals( "" ))
 						author.setFirstName( firstName );
 					
@@ -410,6 +450,24 @@ public class PublicationCollectionService
 					author = authors.get( 0 );
 				}
 
+				// author alias if exist
+				if ( mergedAuthor.get( "aliases" ) != null )
+				{
+					String authorAliasesString = mergedAuthor.get( "aliases" );
+					// remove '[...]' sign at start and end.
+					authorAliasesString = authorAliasesString.substring( 1, authorAliasesString.length() - 1 );
+					for ( String authorAliasString : authorAliasesString.split( "," ) )
+					{
+						authorAliasString = authorAliasString.toLowerCase().replace( ".", "" ).trim();
+						if ( !name.equals( authorAliasString ) )
+						{
+							AuthorAlias authorAlias = new AuthorAlias();
+							authorAlias.setCompleteName( authorAliasString );
+							authorAlias.setAuthor( author );
+							author.addAlias( authorAlias );
+						}
+					}
+				}
 				String photo = mergedAuthor.get( "photo" );
 				if ( photo != null )
 					author.setPhotoUrl( photo );
@@ -421,7 +479,7 @@ public class PublicationCollectionService
 					author.setCitedBy( Integer.parseInt( mergedAuthor.get( "citedby" ) ) );
 
 				// insert source
-				List<AuthorSource> authorSources = new ArrayList<AuthorSource>();
+				Set<AuthorSource> authorSources = new LinkedHashSet<AuthorSource>();
 				String[] sources = mergedAuthor.get( "source" ).split( " " );
 				String[] sourceUrls = mergedAuthor.get( "url" ).split( " " );
 				for ( int i = 0; i < sources.length; i++ )
@@ -497,12 +555,18 @@ public class PublicationCollectionService
 						continue;
 					
 					// get the publication object
-					List<Publication> fromDbPublication = persistenceStrategy.getPublicationDAO().getPublicationViaFuzzyQuery( publicationTitle.toLowerCase(), .8f, 1 );
+					List<Publication> fromDbPublications = persistenceStrategy.getPublicationDAO().getPublicationViaPhraseSlopQuery( publicationTitle.toLowerCase(), 2 );
 					// check publication from database
-					if( !fromDbPublication.isEmpty()){
-						if( fromDbPublication.size()>1 ){
+					if ( !fromDbPublications.isEmpty() )
+					{
+						if ( fromDbPublications.size() > 1 )
+						{
 							// check with year
-							for(Publication pub : fromDbPublication){
+							for ( Publication pub : fromDbPublications )
+							{
+								if ( pub.getPublicationDate() == null )
+									continue;
+
 								Calendar cal = Calendar.getInstance();
 								cal.setTime( pub.getPublicationDate() );
 								if( Integer.toString(cal.get(Calendar.YEAR)).equals( publicationMap.get( "year" ) )){
@@ -511,13 +575,19 @@ public class PublicationCollectionService
 									break;
 								}
 							}
+							// if publication still null, due to publication
+							// date is null
+							if ( publication == null )
+								publication = fromDbPublications.get( 0 );
+
 						}
 					}
 					
 					// check publication with the current selected list.
 					if( !selectedPublications.isEmpty()){
 						for( Publication pub : selectedPublications){
-							if( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle(), publicationTitle ) > .9f){
+							if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
+							{
 								publication = pub;
 								publication.addCoAuthor( author );
 								break;
@@ -580,6 +650,8 @@ public class PublicationCollectionService
 		// Wait until they are all done
 		Thread.sleep( 1000 );
 		boolean walkingPublicationIsDone = true;
+		// list coauthor of pivotauthor
+		/*List<Author> coAuthors = new ArrayList<Author>();*/
 		do
 		{
 			walkingPublicationIsDone = true;
@@ -590,7 +662,7 @@ public class PublicationCollectionService
 				else
 				{
 					// combine from sources to publication
-					mergingPublicationInformation( selectedPublicationFuture.get(), pivotAuthor );
+					mergingPublicationInformation( selectedPublicationFuture.get(), pivotAuthor/*, coAuthors*/ );
 				}
 
 			}
@@ -605,10 +677,11 @@ public class PublicationCollectionService
 	 * @param selectedPublications
 	 * @throws ParseException
 	 */
-	public void mergingPublicationInformation( Publication pub, Author pivotAuthor ) throws ParseException
+	public void mergingPublicationInformation( Publication pub, Author pivotAuthor/*, List<Author> coAuthors*/ ) throws ParseException
 	{
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/u", Locale.ENGLISH );
 		Calendar calendar = Calendar.getInstance();
+
 		for ( PublicationSource pubSource : pub.getPublicationSources() )
 		{
 			Date publicationDate = null;
@@ -654,52 +727,112 @@ public class PublicationCollectionService
 				{
 					for ( String authorString : authorsArray )
 					{
+						authorString = authorString.toLowerCase().replace( ".", "" ).trim();
+						String[] splitName = authorString.split( " " );
+						String lastName = splitName[splitName.length - 1];
+						String firstName = authorString.substring( 0, authorString.length() - lastName.length() ).trim();
+						
 						Author author = null;
 						if ( pivotAuthor.getName().toLowerCase().equals( authorString.toLowerCase() ) )
 							author = pivotAuthor;
 						else
 						{
+							// first check from database by full name
+							List<Author> coAuthorsDb = persistenceStrategy.getAuthorDAO().getByName( authorString );
+							if( !coAuthorsDb.isEmpty() ){
+								// TODO: check other properties
+								// for now just get the first element
+								// later check whether there is already a connection with pivotAuthor
+								// if not check institution
+								author = coAuthorsDb.get( 0 );
+							}
+							
+							// if there is no exact name, check for ambiguity,
+							// start from lastname
+							// and then check whether there is abbreviation name on first name
+							if( author == null ){
+								coAuthorsDb = persistenceStrategy.getAuthorDAO().getByLastName( lastName );
+								if( !coAuthorsDb.isEmpty() ){
+									String[] firstNameSplit = firstName.split( " " );
+									for ( Author coAuthorDb : coAuthorsDb )
+									{
+										if ( coAuthorDb.isAliasNameFromFirstName( firstNameSplit ) )
+										{
+											if ( coAuthorDb.getFirstName().length() > firstName.length() )
+											{
+												AuthorAlias authorAlias = new AuthorAlias();
+												authorAlias.setCompleteName( authorString );
+												authorAlias.setAuthor( coAuthorDb );
+												coAuthorDb.addAlias( authorAlias );
+												persistenceStrategy.getAuthorDAO().persist( coAuthorDb );
+											}
+											else
+											{
+												// change name with longer name
+												String tempName = coAuthorDb.getName();
+												coAuthorDb.setName( authorString );
+												coAuthorDb.setFirstName( firstName );
 
-							// check and insert coauthor
+												AuthorAlias authorAlias = new AuthorAlias();
+												authorAlias.setCompleteName( tempName );
+												authorAlias.setAuthor( coAuthorDb );
+												coAuthorDb.addAlias( authorAlias );
+												persistenceStrategy.getAuthorDAO().persist( coAuthorDb );
+											}
+
+											author = coAuthorDb;
+											break;
+										}
+									}
+								}
+							}
+							// first check from coauthorList
+//							for ( Author coAuthor : coAuthors )
+//							{
+								// check from the last name first
+								// get coauthor with same last name
+								
+								
+//								
+//								if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( coAuthor.getName().toLowerCase(), authorString.toLowerCase() ) > .9f )
+//								{
+//									author = coAuthor;
+//									break;
+//								}
+//								if ( coAuthor.getAliases() != null )
+//									for ( AuthorAlias authorAlias : coAuthor.getAliases() )
+//									{
+//										if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( authorAlias.getName().toLowerCase(), authorString.toLowerCase() ) > .8f )
+//										{
+//											author = coAuthor;
+//											break;
+//										}
+//								}
+
+//							}
 							// TODO : this probably not correct, since author
 							// name are ambigous, the best way is to check their
 							// relation and their affiliation
-							List<Author> authors = persistenceStrategy.getAuthorDAO().getAuthorViaFuzzyQuery( authorString.trim(), 0.9f, 1 );
-							// for now if authors contains more than 1 object,
-							// then the program is doom.
-							if ( !authors.isEmpty() )
-							{
-								// this time select the first element and ignore
-								// the rest
-								author = authors.get( 0 );
-							}
-							else
-							{
-								author = new Author();
-								author.setName( authorString );
-								String[] splitName = authorString.split( " " );
-								String lastName = splitName[splitName.length - 1];
-								author.setLastName( lastName );
-								String firstName = authorString.substring( 0, authorString.length() - lastName.length() ).trim();
-								if ( !firstName.equals( "" ) )
-									author.setFirstName( firstName );
-
-								// save author
-								persistenceStrategy.getAuthorDAO().persist( author );
-
-								author.addPublication( pub );
-								pub.addCoAuthor( author );
-
-								for ( Author pubCoAuthor : pub.getCoAuthors() )
-								{
-									author.addCoAuthor( pubCoAuthor );
-									pubCoAuthor.addCoAuthor( author );
-								}
+							if( author == null ){
+								// create new author
+									author = new Author();
+								// set for all possible name
+								author.setPossibleNames( authorString );
+	
+									// save new author
+									persistenceStrategy.getAuthorDAO().persist( author );
+	
+									author.addPublication( pub );
+									pub.addCoAuthor( author );
+//								}
+//								if ( !coAuthors.contains( author ) )
+//									coAuthors.add( author );
 							}
 						}
 					}
 				}
 			}
+
 			// abstract ( searching the longest)
 			if ( pubSource.getAbstractText() != null )
 				if ( pub.getAbstractText() == null || pub.getAbstractText().length() < pubSource.getAbstractText().length() )
@@ -718,6 +851,9 @@ public class PublicationCollectionService
 			// pdf sourceUrl ( probably need list of it)
 			if ( pubSource.getPdfSourceUrl() != null && pub.getPdfSourceUrl() == null )
 				pub.setPdfSourceUrl( pubSource.getPdfSourceUrl() );
+
+			if ( pubSource.getCitedBy() > 0 && pubSource.getCitedBy() > pub.getCitedBy() )
+				pub.setCitedBy( pubSource.getCitedBy() );
 
 			// venuetype
 			if ( pubSource.getPublicationType() != null )

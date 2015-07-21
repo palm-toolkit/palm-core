@@ -20,6 +20,7 @@ import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.Conference;
 import de.rwth.i9.palm.model.ConferenceGroup;
 import de.rwth.i9.palm.model.Dataset;
@@ -124,11 +125,12 @@ public class DatabaseConfigCoreTest
 		sessionFactoryBean.setHibernateProperties( hibProperties() );
 		sessionFactoryBean.setAnnotatedClasses( new Class<?>[] { 
 				/* model class here */
-						ExtractionService.class,
 						Author.class,
+						AuthorAlias.class,
 						Conference.class,
 						ConferenceGroup.class,
 						Dataset.class,
+						ExtractionService.class,
 						Function.class,
 						Institution.class,
 						Location.class,

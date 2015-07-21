@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -387,7 +388,7 @@ public class ResearcherController
 	private void fetchDatasetFromNetwork( Map<String, Object> responseMap, Author author ) throws IOException, InterruptedException, ExecutionException, ParseException
 	{
 		// get author sources
-		List<AuthorSource> authorSources = author.getAuthorSources();
+		Set<AuthorSource> authorSources = author.getAuthorSources();
 		if ( authorSources == null )
 		{
 			// TODO update author sources

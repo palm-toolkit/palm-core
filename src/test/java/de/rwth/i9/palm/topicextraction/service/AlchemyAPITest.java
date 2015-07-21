@@ -17,14 +17,13 @@ import org.springframework.web.client.RestTemplate;
 public class AlchemyAPITest
 {
 	@Test
-	@Ignore
 	public void getListOfAuthorsTest() throws RestClientException, UnsupportedEncodingException
 	{
 		String endpoint = "http://access.alchemyapi.com/calls/text/TextGetRankedKeywords";
 		String apikey = "apikey=dc59f0b1685b54093b73725f900335f9684343d8";
 		String outputMode = "outputMode=json";
 		String keywordExtractMode = "keywordExtractMode=strict";
-		String text = "";
+		String text = "The main aim of Knowledge Management (KM) is to connect people to quality knowledge as well as people to people in order to peak performance. This is also the primary goal of Learning Management (LM). In fact, in the world of e-learning, it is more widely recognised that how learning content is used and distributed by learners might be more important than how it is designed. In the last few years, there has been an increasing focus on social software applications and services as a result of the rapid development of Web 2.0 concepts. In this paper, we argue that LM and KM can be viewed as two sides of the same coin, and explore how Web 2.0 technologies can leverage knowledge sharing and learning and enhance individual performance whereas previous models of LM and KM have failed, and present a social software driven approach to LM and KM";
 
 		String encodedText = cutToLength( URLEncoder.encode( text, "UTF-8" ), 6000 );
 
@@ -35,6 +34,7 @@ public class AlchemyAPITest
 	}
 
 	@Test
+	@Ignore
 	public void extractWebTest() throws RestClientException, UnsupportedEncodingException
 	{
 		String endpoint = "http://access.alchemyapi.com/calls/url/URLGetRankedKeywords";
