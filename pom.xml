@@ -5,6 +5,7 @@
     <groupId>de.rwth.i9</groupId>
     <artifactId>palm-project</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../palm-project/pom.xml</relativePath>
   </parent>
   
   <groupId>de.rwth.i9.palm</groupId>
@@ -15,6 +16,11 @@
   
   <dependencies>
   	<!--  internal dependency -->
+  	<dependency>
+		<groupId>de.rwth.i9.palm</groupId>
+		<artifactId>palm-analytics</artifactId>
+		<version>${project.version}</version>
+	</dependency>
   	<dependency>
 		<groupId>de.rwth.i9.palm</groupId>
 		<artifactId>palm-model</artifactId>
@@ -176,18 +182,29 @@
 	  <scope>test</scope>
 	</dependency>
 	
+	<!-- spring security -->
+	<dependency>
+		<groupId>org.springframework.security</groupId>
+		<artifactId>spring-security-core</artifactId>
+		<version>${spring.security.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.security</groupId>
+		<artifactId>spring-security-web</artifactId>
+		<version>${spring.security.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.security</groupId>
+		<artifactId>spring-security-config</artifactId>
+		<version>${spring.security.version}</version>
+	</dependency>
+	
 	
 	<!-- Apache Database Connection Pool -->
 	<dependency>
 		<groupId>org.apache.commons</groupId>
 		<artifactId>commons-dbcp2</artifactId>
 		<version>${org.apache.commons.dbcp2.version}</version>
-	</dependency>
-	
-	<dependency>
-		<groupId>commons-io</groupId>
-		<artifactId>commons-io</artifactId>
-		<version>${commonsio.version}</version>
 	</dependency>
 	
 	<!-- 
@@ -286,19 +303,6 @@
       <version>${org.apache.jena.tdb-iri-text.version}</version>
     </dependency>
     
-    <!-- virtuoso -->
-    <dependency>
-        <groupId>virtuoso.jdbc4</groupId>
-        <artifactId>virtuoso-jdbc4</artifactId>
-        <version>${virtuoso.jdbc4.version}</version>
-    </dependency>
-	
-	<dependency>
-        <groupId>virtuoso.jena2</groupId>
-        <artifactId>virtuoso-jena2</artifactId>
-        <version>${virtuoso.jena2.version}</version>
-    </dependency>
-    
     <!-- metadata analysis -->
     <dependency>
          <groupId>org.reflections</groupId>
@@ -306,12 +310,19 @@
          <version>${org.reflections.version}</version>
      </dependency>
 	  
-	<!-- tomcat servlet api -->
+	<!-- servlet api -->
 	<dependency>
-		<groupId>org.apache.tomcat</groupId>
-		<artifactId>servlet-api</artifactId>
-		<version>${tomcat.servlet.api.version}</version>
+		<groupId>javax.servlet</groupId>
+		<artifactId>javax.servlet-api</artifactId>
+		<version>${javax.servlet.api.version}</version>
 		<scope>provided</scope>
+	</dependency>
+		
+		<!-- freemarker -->
+	<dependency>
+		<groupId>org.freemarker</groupId>
+		<artifactId>freemarker</artifactId>
+		<version>${freemarker.version}</version>
 	</dependency>
 	
 	<!--  Library for json -->
@@ -337,9 +348,53 @@
 	</dependency>
 	
 	<dependency>
+		<groupId>commons-io</groupId>
+		<artifactId>commons-io</artifactId>
+		<version>${commonsio.version}</version>
+	</dependency>
+	
+	
+	<dependency>
 		<groupId>xml-apis</groupId>
 		<artifactId>xml-apis</artifactId>
 		<version>${xml-apis.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.apache.tika</groupId>
+		<artifactId>tika-core</artifactId>
+		<version>${apache.tika.version}</version>
+	</dependency>
+
+	<dependency>
+		<groupId>org.apache.tika</groupId>
+		<artifactId>tika-parsers</artifactId>
+		<version>${apache.tika.version}</version>
+	</dependency>
+
+	<!-- HTML parser -->
+	<dependency>
+	  	<groupId>org.jsoup</groupId>
+	  	<artifactId>jsoup</artifactId>
+	  	<version>${jsoup.version}</version>
+	</dependency>
+	
+	<dependency>
+	    <groupId>com.google.guava</groupId>
+	    <artifactId>guava</artifactId>
+	    <version>${com.google.guava.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.itextpdf</groupId>
+		<artifactId>itextpdf</artifactId>
+		<version>5.0.6</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-lang3</artifactId>
+		<version>3.4</version>
 	</dependency>
 	
 	<!--
