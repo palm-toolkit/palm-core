@@ -30,6 +30,7 @@ import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.Function;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Location;
+import de.rwth.i9.palm.model.PalmConfiguration;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationHistory;
 import de.rwth.i9.palm.model.PublicationSource;
@@ -134,6 +135,7 @@ public class DatabaseConfigCoreTest
 						Function.class,
 						Institution.class,
 						Location.class,
+						PalmConfiguration.class,
 						Publication.class,
 						PublicationHistory.class,
 						PublicationSource.class,
