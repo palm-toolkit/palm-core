@@ -21,5 +21,8 @@ Access token
 MSwxNDM3NTg5NzI0Mjk3LDQ0NTI3OTA2MSwxMDI4LGFsbCwsRmd3RmhaUktBUkpOM192Uk1YeGp6Zmt0S1BJ
 Refresh token
 MSw0NDUyNzkwNjEsMTAyOCxhbGwsLCwsRjVNNU1HZ0UtbTB2d01yM3NjcHNXTGl0TUVr>
+
+$config['mendeleyclientid'] = '392';
+$config['mendeleykey'] = 'VWheQe6qKEGeUXQcLj1NDTCqxkP29PyJ';
 	 */
 }

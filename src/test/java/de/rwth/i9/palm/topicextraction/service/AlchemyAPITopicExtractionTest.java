@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 @RunWith( SpringJUnit4ClassRunner.class )
 @ContextConfiguration( loader = AnnotationConfigContextLoader.class )
-public class AlchemyAPITest
+public class AlchemyAPITopicExtractionTest
 {
 	@Test
 	@Ignore
