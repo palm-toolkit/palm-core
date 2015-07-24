@@ -1,4 +1,4 @@
-package de.rwth.i9.palm.pdfextract;
+package de.rwth.i9.palm.pdfextraction.service;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,8 +14,7 @@ import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 import com.itextpdf.text.pdf.parser.SimpleTextExtractionStrategy;
 import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
 
-import de.rwth.i9.palm.helper.AcademicPublicationStructure;
-import de.rwth.i9.palm.helper.CustomTextExtractionStrategy;
+import de.rwth.i9.palm.pdfextraction.service.CustomTextExtractionStrategy;
 
 public class ITextTest
 {
@@ -58,17 +57,16 @@ public class ITextTest
 	}
 
 	@Test
-	@Ignore
 	public void test1pdfExtract() throws IOException
 	{
-		String src = PREFACE;
+		String src = "http://faculty.mu.edu.sa/public/uploads/1432459953.0715%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%85%20%D8%A8%D8%A7%D9%84%D9%81%D9%8A%D8%AF%D9%8A%D9%88.pdf";
 
 		PdfReader reader = new PdfReader( src );
 
 		CustomTextExtractionStrategy customTextExtractionStrategy = new CustomTextExtractionStrategy();
 		customTextExtractionStrategy.setPageMargin( 50f );
 
-		PrintWriter out = new PrintWriter( new FileOutputStream( src + ".txt" ) );
+		PrintWriter out = new PrintWriter( new FileOutputStream( "C:\\Users\\nifry\\Desktop\\test.txt" ) );
 		// Rectangle rect = new Rectangle( 70, 80, 490, 580 );
 		// RenderFilter filter = new RegionTextRenderFilter( rect );
 		System.out.println( "===================== TEST TWO ======================" );

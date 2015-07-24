@@ -1,7 +1,9 @@
-package de.rwth.i9.palm.helper;
+package de.rwth.i9.palm.pdfextraction.service;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import de.rwth.i9.palm.helper.AcademicPublicationSection;
 
 /**
  * 
