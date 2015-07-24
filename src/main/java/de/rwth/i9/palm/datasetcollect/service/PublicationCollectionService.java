@@ -157,7 +157,6 @@ public class PublicationCollectionService
 							if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 							{
 								publication = pub;
-								publication.addCoAuthor( author );
 								break;
 							}
 						}
@@ -183,35 +182,32 @@ public class PublicationCollectionService
 									if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "year" ) ) )
 									{
 										publication = pub;
-										publication.addCoAuthor( author );
 										break;
 									}
 								}
 								// if publication still null, due to publication
 								// date is null
 								if ( publication == null )
-								{
 									publication = fromDbPublications.get( 0 );
-									publication.addCoAuthor( author );
-								}
 							}
 							else
-							{
 								publication = fromDbPublications.get( 0 );
-								publication.addCoAuthor( author );
-							}
 							// added to selected list
 							selectedPublications.add( publication );
 						}
+						// remove old publicationSource
+						if ( publication != null )
+							publication.removeNonUserInputPublicationSource();
 					}
 
 					// check if null ( really new publication )
 					if( publication == null ){
 						publication = new Publication();
 						publication.setTitle( publicationTitle );
-						publication.addCoAuthor( author );
 						selectedPublications.add( publication );
 					}
+					// add coauthor
+					publication.addCoAuthor( author );
 					
 					// create publication sources and assign it to publication
 					PublicationSource publicationSource = new PublicationSource();
@@ -219,6 +215,7 @@ public class PublicationCollectionService
 					publicationSource.setSourceUrl( publicationMap.get( "url" ) );
 					publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
 					publicationSource.setSourceType( SourceType.valueOf(publicationMap.get( "source" ).toUpperCase() ) );
+					publicationSource.setPublication( publication );
 
 					if ( publicationMap.get( "nocitation" ) != null )
 						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "nocitation" ) ) );

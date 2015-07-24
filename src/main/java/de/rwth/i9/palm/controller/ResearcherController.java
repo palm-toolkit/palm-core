@@ -36,6 +36,7 @@ import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.topicextraction.service.TopicExtractionService;
 
 @Controller
 @RequestMapping( value = "/researcher" )
@@ -55,6 +56,9 @@ public class ResearcherController
 	
 	@Autowired
 	private ResearcherCollectionService researcherCollectionService;
+
+	@Autowired
+	private TopicExtractionService topicExtractionService;
 
 	@Autowired
 	private ResearcherFeature researcherFeature;
@@ -235,6 +239,9 @@ public class ResearcherController
 		if( author == null )
 			return responseMap;
 		
+		// TODO - fix code position
+		topicExtractionService.extractTopicFromPublicationByAuthor( author );
+
 		// get the object and set properties
 		ResearcherInterest researcherInterest = researcherFeature.getResearcherInterest();
 		researcherInterest.setResearcher( author );
@@ -340,7 +347,7 @@ public class ResearcherController
 		}
 
 		//return false;
-		return true;
+		return false;
 	}
 	
 

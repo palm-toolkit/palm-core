@@ -1,10 +1,12 @@
-package de.rwth.i9.palm.helper;
+package de.rwth.i9.palm.pdfextraction.service;
 
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.parser.ImageRenderInfo;
 import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
 import com.itextpdf.text.pdf.parser.TextRenderInfo;
 import com.itextpdf.text.pdf.parser.Vector;
+
+import de.rwth.i9.palm.helper.AcademicPublicationSection;
 
 /**
  * This class is customized iTextPdf TextExtractionStrategy, designed for
