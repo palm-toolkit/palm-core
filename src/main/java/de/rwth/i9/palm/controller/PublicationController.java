@@ -1,9 +1,11 @@
 package de.rwth.i9.palm.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
@@ -110,6 +113,52 @@ public class PublicationController
 		{
 			responseMap.put( "count", 0 );
 		}
+
+		return responseMap;
+	}
+
+	@RequestMapping( value = "/detail", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherInterest( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "uri", required = false ) final String uri, 
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// get author
+		Publication publication = persistenceStrategy.getPublicationDAO().getById( id );
+		if ( publication == null )
+		{
+			responseMap.put( "status", "Error - publication not found" );
+			return responseMap;
+		}
+
+		responseMap.put( "status", "OK" );
+
+		// put publication detail
+		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
+		publicationMap.put( "title", publication.getTitle() );
+		if ( publication.getAbstractText() != null )
+			publicationMap.put( "abstract", publication.getAbstractText() );
+		// coauthor
+		List<Map<String, Object>> coathorList = new ArrayList<Map<String, Object>>();
+		for ( Author author : publication.getCoAuthors() )
+		{
+			Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
+			authorMap.put( "id", author.getId() );
+			authorMap.put( "name", author.getName() );
+			if ( author.getInstitution() != null )
+				authorMap.put( "aff", author.getInstitution().getName() );
+			if ( author.getPhotoUrl() != null )
+				authorMap.put( "photo", author.getPhotoUrl() );
+
+			coathorList.add( authorMap );
+		}
+		publicationMap.put( "coauthor", coathorList );
+		
+		responseMap.put( "publication", publicationMap );
 
 		return responseMap;
 	}
