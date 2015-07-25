@@ -10,8 +10,10 @@ import org.springframework.web.client.RestTemplate;
 
 public class AlchemyAPITopicExtraction
 {
-	public static Map<String, Double> getTextRankedKeywords( String text )
+	public static Map<String, Object> getTextRankedKeywords( String text )
 	{
+		Map<String, Object> mapResults = new LinkedHashMap<String, Object>();
+
 		Map<String, Double> termsMapResults = new LinkedHashMap<String, Double>();
 		
 		RestTemplate restTemplate = new RestTemplate();
@@ -31,30 +33,25 @@ public class AlchemyAPITopicExtraction
 		@SuppressWarnings( "unchecked" )
 		Map<String, Object> resultsMap = restTemplate.getForObject( endpoint + "?" + apikey + "&" + outputMode + "&" + keywordExtractMode + "&text=" + text, Map.class );
 
-		// check print
-		for ( Entry<String, Object> results : resultsMap.entrySet() )
+
+		if ( resultsMap.get( "status" ).equals( "OK" ) )
 		{
-			if ( results.getKey().equals( "keywords" ) )
-			{
-				//System.out.println( "Keyword:" );
+			@SuppressWarnings( "unchecked" )
+			List<Map<String, String>> termsList = (List<Map<String, String>>) resultsMap.get( "keywords" );
 
-				@SuppressWarnings( "unchecked" )
-				List<Map<String, String>> termsList = (List<Map<String, String>>) results.getValue();
+			if ( termsList == null || termsList.isEmpty() )
+				return Collections.emptyMap();
 
-				if ( termsList == null || termsList.isEmpty() )
-					return Collections.emptyMap();
+			for ( Map<String, String> termsMap : termsList )
+				termsMapResults.put( termsMap.get( "text" ), Double.parseDouble( termsMap.get( "relevance" ) ) );
 
-				for ( Map<String, String> termsMap : termsList )
-					termsMapResults.put( termsMap.get( "text" ), Double.parseDouble( termsMap.get( "relevance" ) ) );
-
-			}
-			else
-				//System.out.println( result.getKey() + " : " + result.getValue().toString() );
-				if( results.getKey().equals( "text" ))
-					if( !results.getValue().toString().equals( "Ok" ))
-						return Collections.emptyMap();
+			mapResults.put( "language", resultsMap.get( "language" ) );
+			mapResults.put( "termvalue", termsMapResults );
 		}
-		return termsMapResults;
+		else
+			return Collections.emptyMap();
+
+		return mapResults;
 	}
 	
 	public static Map<String, Double> getUrlRankedKeywords( String url )

@@ -19,8 +19,9 @@ import de.rwth.i9.palm.model.PublicationTopic;
 public class AsynchronousTopicExtractionService
 {
 	private final static Logger log = LoggerFactory.getLogger( AsynchronousTopicExtractionService.class );
-	private final String TOPIC_EXTRACTION_SERVOCE_TYPE = "ALCHEMYAPI";
+	private final String TOPIC_EXTRACTION_SERVICE_TYPE = "ALCHEMYAPI";
 
+	@SuppressWarnings( "unchecked" )
 	@Async
 	public Future<PublicationTopic> getTopicsByAlchemyApi( Publication publication, PublicationTopic publicationTopic, int maxTextLength )
 	{
@@ -36,11 +37,13 @@ public class AsynchronousTopicExtractionService
 
 		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
 
-		Map<String, Double> topicsWithValue = AlchemyAPITopicExtraction.getTextRankedKeywords( text );
+		Map<String, Object> alchemyResultsMap = AlchemyAPITopicExtraction.getTextRankedKeywords( text );
 
-		if ( topicsWithValue != null )
+		if ( alchemyResultsMap != null )
 		{
-			publicationTopic.setTermValues( topicsWithValue );
+			publication.setLanguage( alchemyResultsMap.get( "language" ).toString() );
+
+			publicationTopic.setTermValues( (Map<String, Double>) alchemyResultsMap.get( "termvalue" ) );
 			publicationTopic.setValid( true );
 		}
 		else
