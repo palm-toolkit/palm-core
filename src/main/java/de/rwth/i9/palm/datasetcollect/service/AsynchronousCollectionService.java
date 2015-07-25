@@ -195,7 +195,14 @@ public class AsynchronousCollectionService
 			publicationSource.setIssue( publicationDetailMap.get( "Issue" ) );
 
 		if ( publicationDetailMap.get( "Description" ) != null )
-			publicationSource.setAbstractText( publicationDetailMap.get( "Description" ) );
+		{
+			String abstractText = publicationDetailMap.get( "Description" );
+			if ( abstractText.substring( 0, 8 ).equalsIgnoreCase( "abstract" ) )
+				abstractText = abstractText.substring( 9 );
+			if ( abstractText.endsWith( "..." ) )
+				abstractText = abstractText.substring( 0, abstractText.length() - 4 );
+			publicationSource.setAbstractText( abstractText );
+		}
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
@@ -230,7 +237,12 @@ public class AsynchronousCollectionService
 			publicationSource.setPublicationEvent( publicationDetailMap.get( "venue" ) );
 
 		if ( publicationDetailMap.get( "abstract" ) != null )
-			publicationSource.setAbstractText( publicationDetailMap.get( "abstract" ) );
+		{
+			String abstractText = publicationDetailMap.get( "abstract" );
+			if ( abstractText.substring( 0, 8 ).equalsIgnoreCase( "abstract" ) )
+				abstractText = abstractText.substring( 9 );
+			publicationSource.setAbstractText( abstractText );
+		}
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
