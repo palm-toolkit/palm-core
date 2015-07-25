@@ -1,8 +1,6 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -19,9 +17,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
-import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -41,6 +38,9 @@ public class PublicationController
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private PublicationFeature publicationFeature;
 
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
@@ -70,96 +70,26 @@ public class PublicationController
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
 			final HttpServletResponse response )
 	{
-		if ( query == null )
-			query = "";
-
-		if ( page == null )
-			page = 0;
-		
-		if ( maxresult == null )
-			maxresult = 50;
-
-		// get the publication
-		Map<String, Object> publicationMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( query, page, maxresult );
-
-		// create JSON mapper for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-
-		responseMap.put( "query", query );
-		responseMap.put( "page", page );
-		responseMap.put( "maxresult", maxresult );
-
-		// create the json structure for publication list
-		if ( publicationMap != null )
-		{
-			responseMap.put( "count", publicationMap.get( "count" ) );
-
-			@SuppressWarnings( "unchecked" )
-			List<Publication> publications = (List<Publication>) publicationMap.get( "result" );
-			List<Map<String, String>> publicationList = new ArrayList<Map<String, String>>();
-
-			for ( Publication publication : publications )
-			{
-				Map<String, String> pub = new LinkedHashMap<String, String>();
-				pub.put( "id", publication.getId() );
-				pub.put( "title", publication.getTitle() );
-
-				publicationList.add( pub );
-			}
-			responseMap.put( "publication", publicationList );
-
-		}
-		else
-		{
-			responseMap.put( "count", 0 );
-		}
-
-		return responseMap;
+		return publicationFeature.getPublicationSearch().getPublicationListByQueryAndConference( query, conferenceName, conferenceId, page, maxresult );
 	}
 
 	@RequestMapping( value = "/detail", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> researcherInterest( 
+	public @ResponseBody Map<String, Object> getPublicationDetail( 
 			@RequestParam( value = "id", required = false ) final String id, 
 			@RequestParam( value = "uri", required = false ) final String uri, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		// create JSON mapper for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-
-		// get author
-		Publication publication = persistenceStrategy.getPublicationDAO().getById( id );
-		if ( publication == null )
-		{
-			responseMap.put( "status", "Error - publication not found" );
-			return responseMap;
-		}
-
-		responseMap.put( "status", "OK" );
-
-		// put publication detail
-		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
-		publicationMap.put( "title", publication.getTitle() );
-		if ( publication.getAbstractText() != null )
-			publicationMap.put( "abstract", publication.getAbstractText() );
-		// coauthor
-		List<Map<String, Object>> coathorList = new ArrayList<Map<String, Object>>();
-		for ( Author author : publication.getCoAuthors() )
-		{
-			Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
-			authorMap.put( "id", author.getId() );
-			authorMap.put( "name", author.getName() );
-			if ( author.getInstitution() != null )
-				authorMap.put( "aff", author.getInstitution().getName() );
-			if ( author.getPhotoUrl() != null )
-				authorMap.put( "photo", author.getPhotoUrl() );
-
-			coathorList.add( authorMap );
-		}
-		publicationMap.put( "coauthor", coathorList );
-		
-		responseMap.put( "publication", publicationMap );
-
-		return responseMap;
+		return publicationFeature.getPublicationDetail().getPublicationDetailById( id );
+	}
+	
+	@RequestMapping( value = "/basicstatistic", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "uri", required = false ) final String uri, 
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
 	}
 }
