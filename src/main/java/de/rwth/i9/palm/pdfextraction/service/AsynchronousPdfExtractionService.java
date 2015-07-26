@@ -12,9 +12,6 @@ import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Stopwatch;
-import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.pdf.PdfReader;
-import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 
 @Service
 public class AsynchronousPdfExtractionService
@@ -28,24 +25,7 @@ public class AsynchronousPdfExtractionService
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "Download and Extract pdf " + pdfPath + " starting" );
 
-		PdfReader reader = new PdfReader( pdfPath );
-
-		Rectangle pdfPageSize = reader.getPageSize( 1 );
-		PalmPdfExtractionStrategy palmPdfExtractionStrategy = new PalmPdfExtractionStrategy();
-
-		// set margin and page size
-		palmPdfExtractionStrategy.setPageMargin( 50f );
-		palmPdfExtractionStrategy.setPageSize( pdfPageSize );
-
-		for ( int i = 1; i <= reader.getNumberOfPages(); i++ )
-		{
-			// update the current page size
-			palmPdfExtractionStrategy.setPageNumber( i );
-			// read perpage
-			PdfTextExtractor.getTextFromPage( reader, i, palmPdfExtractionStrategy );
-		}
-
-		List<TextSection> textSections = palmPdfExtractionStrategy.getTextSection();
+		List<TextSection> textSections = ItextPdfExtraction.extractPdf( pdfPath );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
