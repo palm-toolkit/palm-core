@@ -64,6 +64,9 @@ public class ITextTest
 		CustomTextExtractionStrategy customTextExtractionStrategy = new CustomTextExtractionStrategy();
 		customTextExtractionStrategy.setPageMargin( 50f );
 
+		Rectangle pdfPageSize = reader.getPageSize( 1 );
+		customTextExtractionStrategy.setPageSize( pdfPageSize );
+
 		PrintWriter out = new PrintWriter( new FileOutputStream( "C:\\Users\\nifry\\Desktop\\test.txt" ) );
 		// Rectangle rect = new Rectangle( 70, 80, 490, 580 );
 		// RenderFilter filter = new RegionTextRenderFilter( rect );
@@ -74,7 +77,7 @@ public class ITextTest
 			// strategy = new FilteredTextRenderListener(new
 			// LocationTextExtractionStrategy(), filter);
 			// update the current page size
-			Rectangle pdfPageSize = reader.getPageSize( i );
+
 			customTextExtractionStrategy.setPageNumber( i );
 			customTextExtractionStrategy.setPageSize( pdfPageSize );
 
