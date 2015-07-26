@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * This code is not used
  * 
- * @author sigit
+ * @author Sigit
  *
  */
 public class AcademicPublicationStructure

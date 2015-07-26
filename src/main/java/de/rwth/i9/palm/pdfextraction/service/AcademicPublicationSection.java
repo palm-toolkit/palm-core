@@ -3,6 +3,12 @@ package de.rwth.i9.palm.pdfextraction.service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This code is not used
+ * 
+ * @author Sigit
+ *
+ */
 public class AcademicPublicationSection
 {
 	private String header;

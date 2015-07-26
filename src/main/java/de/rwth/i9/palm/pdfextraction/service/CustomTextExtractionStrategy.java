@@ -7,6 +7,8 @@ import com.itextpdf.text.pdf.parser.TextRenderInfo;
 import com.itextpdf.text.pdf.parser.Vector;
 
 /**
+ * This code is not used
+ * 
  * This class is customized iTextPdf TextExtractionStrategy, designed for
  * detecting the structure of academic publication
  * 
