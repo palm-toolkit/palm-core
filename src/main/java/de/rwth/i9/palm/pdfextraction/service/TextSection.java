@@ -8,6 +8,7 @@ import com.itextpdf.text.pdf.parser.Vector;
 public class TextSection
 {
 	private float fontHeight;
+	private String name;
 	private String fontType;
 	private String content;
 	private List<String> contentlines;
@@ -113,6 +114,16 @@ public class TextSection
 	public void setPageNumber( int pageNumber )
 	{
 		this.pageNumber = pageNumber;
+	}
+
+	public String getName()
+	{
+		return name;
+	}
+
+	public void setName( String name )
+	{
+		this.name = name;
 	}
 
 }

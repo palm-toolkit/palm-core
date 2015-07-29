@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.pdfextraction.service;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import com.itextpdf.text.Rectangle;
@@ -11,7 +12,15 @@ public class ItextPdfExtraction
 {
 	public static List<TextSection> extractPdf( String pdfPath ) throws IOException
 	{
-		PdfReader reader = new PdfReader( pdfPath );
+		PdfReader reader = null;
+		try
+		{
+			reader = new PdfReader( pdfPath );
+		}
+		catch ( Exception e )
+		{
+			return Collections.emptyList();
+		}
 
 		Rectangle pdfPageSize = reader.getPageSize( 1 );
 		PalmPdfExtractionStrategy palmPdfExtractionStrategy = new PalmPdfExtractionStrategy();
@@ -28,6 +37,6 @@ public class ItextPdfExtraction
 			PdfTextExtractor.getTextFromPage( reader, i, palmPdfExtractionStrategy );
 		}
 
-		return palmPdfExtractionStrategy.getTextSection();
+		return palmPdfExtractionStrategy.getTextSections();
 	}
 }

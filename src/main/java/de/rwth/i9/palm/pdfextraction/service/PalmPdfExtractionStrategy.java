@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.pdfextraction.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.itextpdf.text.Rectangle;
@@ -20,6 +21,17 @@ import de.rwth.i9.palm.utils.NumberUtils;
  */
 public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 {
+	// extraction phase
+	private List<String> readingPhase = new ArrayList<String>( Arrays.asList( "title", "author", "abstract", "keyword", "content" ) );
+	// extraction phase index
+	private int readingPhaseIndex;
+	private int titleIndex;
+	// typically largest font size is on title;
+	private float largestFontHeight;
+	private float contentHeaderFontHeight;
+	private float contentFontHeight;
+	private float contentBlockSize;
+	private boolean contentSplitted;
 	// check whether pdf can be read or not
 	private boolean isPdfReadable;
 
@@ -37,9 +49,6 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 
 	// the textResultant test
 	private StringBuilder textResult;
-
-	// store characters from previous loop
-	private String lastTextCharacter;
 
 	// document page number
 	private int pageNumber;
@@ -96,7 +105,8 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 		this.isPdfReadable = true;
 		this.textSections = new ArrayList<TextSection>();
 		this.lastPageNumber = 0;
-		this.lastTextCharacter = "";
+		this.readingPhaseIndex = 0;
+		this.titleIndex = 0;
 	}
 
 	@Override
@@ -183,53 +193,93 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 				{
 					curSpaceWidth = currentCoordinateBottomLeft.get( 0 ) - lastCoordinateBottomRight.get( 0 );
 					// if detect spacing
-					if ( curSpaceWidth > 1f && curSpaceWidth < 3 * currentFontHeight )
+					if ( curSpaceWidth > 0.1 * currentFontHeight && curSpaceWidth < 3 * currentFontHeight )
 						currentCharacters.append( ' ' );
 					// detect huge spacing on same line
 					else if ( curSpaceWidth > currentFontHeight )
 						isSectionComplete = true;
 
+					// detect text differences on the beginning of section 
+					// only check first 20 letter
+					// only check on author and abstract phases
+					if ( this.lastLine.length() < 20 && this.lastContentSection.length() == 0 && !this.readingPhase.get( this.readingPhaseIndex ).equals( "content" ) )
+					{
+						// check if there is significant distance with previous section
+						// indication the beginning of new section
+//						if ( this.lastCoordinateBottomRight.get( 1 ) - currentCoordinateBottomRight.get( 1 ) > 2 * currentFontHeight )
+//						{
+						if ( currentFontHeight != this.lastFontHeight || !currentFontType.equals( this.lastFontType ) )
+								isSectionComplete = true;
+//						}
+					}
 				}
 				// in different line
 				else{
 					// y coordinate difference value
-					float yPosDifference = lastCoordinateBottomRight.get( 1 ) - currentCoordinateBottomRight.get( 1 );
+					float yPosDifference = this.lastCoordinateBottomRight.get( 1 ) - currentCoordinateBottomRight.get( 1 );
 					
 					// -positive value, indicating
 					// -- new line or new section
-					if( yPosDifference > 0){
-						// check for new line within paragraph
-						if( yPosDifference < 2 * currentFontHeight )
+					// -- superscript
+					if ( Math.abs( yPosDifference ) > this.contentFontHeight )
+					{
+						if ( yPosDifference > 0 )
 						{
-							if ( currentFontHeight != this.lastFontHeight )
+							// check for new line within paragraph
+							if ( yPosDifference < 2 * currentFontHeight )
 							{
-								isSectionComplete = true;
-							} else {
-								isLastLineComplete = true;
-								// check whether a word is not complete
-								if ( this.lastLine.charAt( this.lastLine.length() - 1 ) == '-' )
-									isWordSplitted = true;
+								if ( currentFontHeight != this.lastFontHeight )
+								{// check whether 2 section on same line
+									// superscript detected
+									if ( currentFontHeight > this.lastFontHeight )
+									{
+										// if just a superscript then
+										if ( this.lastFontHeight + this.lastCoordinateBottomRight.get( 1 ) > 1.5 * currentFontHeight + currentCoordinateBottomRight.get( 1 ) )
+											isSectionComplete = true;
+									}
+									else
+									{
+										isSectionComplete = true;
+									}
+								}
 								else
 								{
-									currentCharacters.append( ' ' );
+									isLastLineComplete = true;
+									// check whether a word is not complete
+									if ( this.lastLine.charAt( this.lastLine.length() - 1 ) == '-' )
+										isWordSplitted = true;
+									else
+									{
+										currentCharacters.append( ' ' );
+									}
 								}
 							}
+							else if ( yPosDifference > 2 * currentFontHeight )
+								isSectionComplete = true;
 						}
-						else if ( yPosDifference > 2 * currentFontHeight )
-							isSectionComplete = true;
+						// - negative value, indicating
+						// -- subscript
+						// -- new column
+						else
+						{
+							// check if it#s not a subscript
+							if ( Math.abs( yPosDifference ) > currentFontHeight )
+								isSectionComplete = true;
+							else
+								currentCharacters.append( ' ' );
+						}
+
+						// second, checking paragraph base on end indentation
+						if ( !isSectionComplete && this.lastContentSection.length() > 0 && this.readingPhase.get( this.readingPhaseIndex ).equals( "content" ) )
+						{
+							if ( Math.abs( this.lastCoordinateBottomRight.get( 0 ) - this.textSection.getBottomRightBoundary().get( 0 ) ) > 2 * this.contentFontHeight )
+								isSectionComplete = true;
+						}
 					}
-					// - negative value, indicating
-					// -- subscript/superscript
-					// -- new column
-					else{
-						// check for column change
-						if ( Math.abs( yPosDifference ) > currentFontHeight )
-							isSectionComplete = true;
-					}
-					
+
 				}
 
-				// if word is splitted, remove split sign "-"
+				// if word is split, remove split sign "-"
 				if ( isWordSplitted )
 					this.lastLine.setLength( this.lastLine.length() - 1 );
 
@@ -247,12 +297,24 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 							this.textSection.setBottomRightBoundary( this.lastCoordinateBottomRight );
 
 						// update left most boundary( find lowest x)
-						if ( this.textSection.getTopLeftBoundary().get( 0 ) > currentCoordinateBottomLeft.get( 0 ) )
+						if ( !isSectionComplete && this.textSection.getTopLeftBoundary().get( 0 ) > currentCoordinateBottomLeft.get( 0 ) )
 						{
+							// detect paragraph indent start
+//							if ( this.textSection.getTopLeftBoundary().get( 0 ) - currentCoordinateBottomLeft.get( 0 ) > 1.5 * currentFontHeight )
+//								isSectionComplete = true;
+							// update left most boundary
 							float topBoundary = this.textSection.getTopLeftBoundary().get( 1 );
 							this.textSection.setTopLeftBoundary( new Vector( currentCoordinateBottomLeft.get( 0 ), topBoundary, 1f ) );
 						}
-
+						// check for paragraph or not
+						if ( this.readingPhase.get( this.readingPhaseIndex ).equals( "content" ) )
+						{
+							float currentSectionBlockSize = NumberUtils.round( this.textSection.getBottomRightBoundary().get( 0 ) - this.textSection.getTopLeftBoundary().get( 0 ), 0 );
+							// check if block size not identical to previous
+							// paragraph
+							if ( currentSectionBlockSize > this.contentBlockSize + 10 || currentSectionBlockSize < this.contentBlockSize - 10 )
+								isSectionComplete = true;
+						}
 					}
 					// reset
 					this.lastLine.setLength( 0 );
@@ -261,8 +323,12 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 
 				if ( isSectionComplete )
 				{
-					if ( this.lastContentSection.length() > 0 )
+					if ( this.lastContentSection.toString().trim().length() > 0 )
 					{
+						// remove section name if content too short
+						if ( this.lastContentSection.length() < 7 )
+							this.textSection.setName( null );
+
 						// assign content and other properties
 						this.textSection.setContent( this.lastContentSection.toString() );
 						this.textSection.setIndentEnd( this.lastCoordinateBottomRight.get( 0 ) );
@@ -274,9 +340,6 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 							this.textSection.setBottomRightBoundary( new Vector( rightBoundary, this.lastCoordinateBottomRight.get( 1 ), 1f ) );
 						}
 
-						// reset
-						this.lastContentSection.setLength( 0 );
-
 						this.textSections.add( textSection );
 					}
 					// create new one and assign some properties
@@ -286,6 +349,155 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 					this.textSection.setFontHeight( currentFontHeight );
 					this.textSection.setFontType( currentFontType );
 					this.textSection.setIndentStart( currentCoordinateBottomLeft.get( 0 ) );
+
+					// finding introduction/content loop through keyword phase
+					if ( this.readingPhase.get( this.readingPhaseIndex ).equals( "content" ) )
+					{
+						if ( this.textSections.get( this.textSections.size() - 1 ).getFontHeight() == this.contentFontHeight )
+						{
+							float prevSectionBlockSize = NumberUtils.round( this.textSections.get( this.textSections.size() - 1 ).getBottomRightBoundary().get( 0 ) - this.textSections.get( this.textSections.size() - 1 ).getTopLeftBoundary().get( 0 ), 0 );
+							// check if block size identical, give 10 pixel as
+							// threshold
+							if ( prevSectionBlockSize < this.contentBlockSize + 10 && prevSectionBlockSize > this.contentBlockSize - 10 )
+							{
+								if ( this.contentSplitted )
+								{
+									this.textSections.get( this.textSections.size() - 1 ).setName( "content-cont" );
+									this.contentSplitted = false;
+								}
+								else
+									this.textSections.get( this.textSections.size() - 1 ).setName( "content" );
+
+								if ( NumberUtils.round( this.textSections.get( this.textSections.size() - 1 ).getBottomRightBoundary().get( 0 ), 0 ) - NumberUtils.round( this.textSections.get( this.textSections.size() - 1 ).getIndentEnd(), 0 ) < 5 )
+								{
+									this.contentSplitted = true;
+								}
+							}
+							else
+							{
+								if ( this.textSections.get( this.textSections.size() - 1 ).getFontType().contains( "Bold" ) )
+									this.textSections.get( this.textSections.size() - 1 ).setName( "content-header" );
+							}
+						}
+						else
+						{
+							if ( this.textSections.get( this.textSections.size() - 1 ).getFontHeight() >= this.contentHeaderFontHeight && this.textSections.get( this.textSections.size() - 1 ).getContent().length() > 6 )
+								this.textSections.get( this.textSections.size() - 1 ).setName( "content-header" );
+						}
+					}
+
+					// finding introduction/content loop through keyword phase
+					else if ( this.readingPhase.get( this.readingPhaseIndex ).equals( "keyword" ) )
+					{
+						if ( this.textSection.getFontHeight() >= this.contentFontHeight )
+						{
+							this.textSection.setName( "keyword" );
+							if ( this.textSection.getFontHeight() == this.contentHeaderFontHeight )
+							{
+								this.textSection.setName( "keyword-header" );
+							}
+						}
+
+						// found large text section
+						if ( this.lastContentSection.length() > 300 )
+						{
+							// set initial content fontHeight
+							this.contentFontHeight = this.textSections.get( this.textSections.size() - 1 ).getFontHeight();
+
+
+							// get column width
+							this.contentBlockSize = NumberUtils.round( this.textSections.get( this.textSections.size() - 1 ).getBottomRightBoundary().get( 0 ) - this.textSections.get( this.textSections.size() - 1 ).getTopLeftBoundary().get( 0 ), 0 );
+							this.readingPhaseIndex = 4;// set to content
+							// check previous section
+							for ( int i = this.textSections.size() - 2; i > 0; i-- )
+							{
+								if ( this.textSections.get( i ).getFontHeight() == this.contentFontHeight )
+								{
+									float prevSectionBlockSize = NumberUtils.round( this.textSections.get( i ).getBottomRightBoundary().get( 0 ) - this.textSections.get( i ).getTopLeftBoundary().get( 0 ), 0 );
+									// check if block size identical, give 10 pixel as threshold
+									if ( prevSectionBlockSize < this.contentBlockSize + 10 && prevSectionBlockSize > this.contentBlockSize - 10 )
+									{
+										if ( NumberUtils.round( this.textSections.get( i ).getBottomRightBoundary().get( 0 ), 0 ) - NumberUtils.round( this.textSections.get( i ).getIndentEnd(), 0 ) < 5 )
+										{
+											this.textSections.get( i ).setName( "content-cont" );
+											this.contentSplitted = true;
+										}
+									}
+								}
+								else if ( this.textSections.get( i ).getFontHeight() > this.contentFontHeight )
+								{
+									this.textSections.get( i ).setName( "content-header" );
+									this.textSections.get( i + 1 ).setName( "content" );
+									break;
+								}
+							}
+
+							if ( contentSplitted )
+							{
+								this.textSections.get( this.textSections.size() - 1 ).setName( "content-cont" );
+								this.contentSplitted = false;
+							}
+							else
+								this.textSections.get( this.textSections.size() - 1 ).setName( "content" );
+						}
+					}
+
+					// finding abstract loop at author section
+					else if ( this.readingPhase.get( this.readingPhaseIndex ).equals( "author" ) )
+					{
+						this.textSection.setName( "author" );
+						// found large text section
+						if ( this.lastContentSection.length() > 300 )
+						{
+							// set last section label
+							this.textSections.get( this.textSections.size() - 1 ).setName( "abstract" );
+							// set initial content fontHeight
+							this.contentFontHeight = this.textSections.get( this.textSections.size() - 1 ).getFontHeight();
+
+							if ( this.textSections.size() > 2 )
+							{
+								// set abstract header with 2 condition
+								if ( this.textSections.get( this.textSections.size() - 2 ).getFontHeight() > this.textSections.get( this.textSections.size() - 1 ).getFontHeight() )
+								{
+									this.textSections.get( this.textSections.size() - 2 ).setName( "abstract-header" );
+									//currentHeader = this.textSections.get( this.textSections.size() - 2 ).getContent();
+								}
+								if ( this.textSections.get( this.textSections.size() - 2 ).getFontHeight() == this.textSections.get( this.textSections.size() - 1 ).getFontHeight() && !this.textSections.get( this.textSections.size() - 2 ).getFontType().equals( this.textSections.get( this.textSections.size() - 1 ).getFontType() ) )
+								{
+									this.textSections.get( this.textSections.size() - 2 ).setName( "abstract-header" );
+									//currentHeader = this.textSections.get( this.textSections.size() - 2 ).getContent();
+								}
+								// detect another reading phase
+								if ( this.textSection.getFontHeight() > this.contentFontHeight )
+								{
+									this.textSection.setName( "keyword-header" );
+									this.contentHeaderFontHeight = this.textSection.getFontHeight();
+									this.readingPhaseIndex = 3;// set to keyword phase
+								} else
+									this.readingPhaseIndex = 1;// set to author phase
+							}
+						}
+					}
+
+					// finding the title
+					else if ( pageNumber == 1 && currentFontHeight < this.lastFontHeight && this.lastContentSection.length() > 10 )
+					{
+						if ( this.lastFontHeight > this.largestFontHeight )
+						{
+							this.largestFontHeight = this.lastFontHeight;
+							// reset previous title, if any
+							this.textSections.get( titleIndex ).setName( null );
+							// set title to section
+							this.titleIndex = this.textSections.size() - 1;
+							this.textSections.get( titleIndex ).setName( "title" );
+
+							this.textSection.setName( "author" );
+							this.readingPhaseIndex = 1;
+						}
+					}
+					// reset
+					this.lastContentSection.setLength( 0 );
+
 				}
 				// Append the current text
 				currentCharacters.append( renderInfo.getText() );
@@ -295,7 +507,6 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 				// Set currently used properties
 				this.lastFontHeight = currentFontHeight;
 				this.lastFontType = currentFontType;
-				this.lastTextCharacter = currentCharacters.toString();
 				this.lastPageNumber = pageNumber;
 	
 				this.lastCoordinateBottomRight = currentCoordinateBottomRight;
@@ -314,7 +525,6 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 	{
 		this.pageNumber = pageNumber;
 		// reset some properties
-		this.lastTextCharacter = null;
 		this.textResult.setLength( 0 );
 	}
 
@@ -333,9 +543,36 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 		this.pageMargin = pageMargin;
 	}
 
-	public List<TextSection> getTextSection()
+	public List<TextSection> getTextSections()
 	{
+		// put last text-section
+		// assign content and other properties
+		this.textSection.setContent( this.lastContentSection.toString() );
+		this.textSection.setIndentEnd( this.lastCoordinateBottomRight.get( 0 ) );
+
+		// update bottom right boundary ( find lowest y)
+		if ( this.textSection.getBottomRightBoundary().get( 1 ) > this.lastCoordinateBottomRight.get( 1 ) )
+		{
+			float rightBoundary = this.textSection.getBottomRightBoundary().get( 0 );
+			this.textSection.setBottomRightBoundary( new Vector( rightBoundary, this.lastCoordinateBottomRight.get( 1 ), 1f ) );
+		}
+
+		float prevSectionBlockSize = NumberUtils.round( this.textSection.getBottomRightBoundary().get( 0 ) - this.textSection.getTopLeftBoundary().get( 0 ), 0 );
+		// check if block size identical, give 10 pixel as threshold
+		if ( prevSectionBlockSize < this.contentBlockSize + 10 && prevSectionBlockSize > this.contentBlockSize - 10 )
+		{
+			this.textSection.setName( "content" );
+		}
+
+		this.textSections.add( textSection );
 		return this.textSections;
 	}
+
+	public TextSection getTextSection()
+	{
+
+		return this.textSection;
+	}
+
 
 }

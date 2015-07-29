@@ -13,23 +13,25 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Stopwatch;
 
+import de.rwth.i9.palm.model.Publication;
+
 @Service
 public class AsynchronousPdfExtractionService
 {
 	private final static Logger log = LoggerFactory.getLogger( AsynchronousPdfExtractionService.class );
 
 	@Async
-	public Future<List<TextSection>> extractPdfIntoTextSections( String pdfPath ) throws IOException
+	public Future<List<TextSection>> extractPublicationPdfIntoTextSections( Publication publication ) throws IOException
 	{
 
 		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "Download and Extract pdf " + pdfPath + " starting" );
+		log.info( "Download and Extract pdf " + publication.getTitle() + " starting" );
 
-		List<TextSection> textSections = ItextPdfExtraction.extractPdf( pdfPath );
+		List<TextSection> textSections = ItextPdfExtraction.extractPdf( publication.getPdfSourceUrl() );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
-		log.info( "Download and Extract pdf " + pdfPath + " complete in " + stopwatch );
+		log.info( "Download and Extract pdf " + publication.getTitle() + " complete in " + stopwatch );
 
 		return new AsyncResult<List<TextSection>>( textSections );
 	}
