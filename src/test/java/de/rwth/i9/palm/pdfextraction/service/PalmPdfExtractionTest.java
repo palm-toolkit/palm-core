@@ -28,6 +28,7 @@ public class PalmPdfExtractionTest
 		src = "http://dspace.learningnetworks.org/bitstream/1820/3180/1/Chatti_ETS.pdf";
 		src = "http://www.irrodl.org/index.php/irrodl/article/download/2032/3322";
 		src = "http://honne.learning-context.de/upload/files/publications/DeLFI14_HT.pdf";
+		src = "http://orbi.ulg.ac.be/bitstream/2268/151963/1/Verpoorten%20LICE%20orbi.pdf";
 
 		PdfReader reader = new PdfReader( src );
 

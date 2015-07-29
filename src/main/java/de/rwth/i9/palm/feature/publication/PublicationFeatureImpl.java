@@ -14,6 +14,9 @@ public class PublicationFeatureImpl implements PublicationFeature
 	@Autowired( required = false )
 	private PublicationSearch publicationSearch;
 
+	@Autowired( required = false )
+	private PublicationManage publicationManage;
+
 	@Override
 	public PublicationBasicStatistic getPublicationBasicStatistic()
 	{
@@ -39,6 +42,15 @@ public class PublicationFeatureImpl implements PublicationFeature
 			this.publicationSearch = new PublicationSearchImpl();
 
 		return this.publicationSearch;
+	}
+
+	@Override
+	public PublicationManage getPublicationManage()
+	{
+		if ( this.publicationManage == null )
+			this.publicationManage = new PublicationManageImpl();
+
+		return this.publicationManage;
 	}
 
 }

@@ -25,7 +25,7 @@ public class PublicationDetailImpl implements PublicationDetail
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
-		// get author
+		// get publication
 		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
 		if ( publication == null )
 		{
@@ -37,6 +37,7 @@ public class PublicationDetailImpl implements PublicationDetail
 
 		// put publication detail
 		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
+		publicationMap.put( "id", publication.getId() );
 		publicationMap.put( "title", publication.getTitle() );
 		if ( publication.getAbstractText() != null )
 			publicationMap.put( "abstract", publication.getAbstractText() );
@@ -55,6 +56,18 @@ public class PublicationDetailImpl implements PublicationDetail
 			coathorList.add( authorMap );
 		}
 		publicationMap.put( "coauthor", coathorList );
+		if ( publication.getContentText() != null )
+			publicationMap.put( "content", publication.getContentText() );
+		if( publication.getPdfSource() != null )
+			publicationMap.put( "pdf", publication.getPdfSource() );
+		if( publication.getPdfSourceUrl() != null ){
+			publicationMap.put( "pdfurl", publication.getPdfSourceUrl() );
+			publicationMap.put( "pdfextract", publication.isPdfExtracted() );
+		}
+		if ( publication.getKeywordText() != null )
+			publicationMap.put( "keyword", publication.getKeywordText() );
+		if ( publication.getReferenceText() != null )
+			publicationMap.put( "reference", publication.getReferenceText() );
 
 		responseMap.put( "publication", publicationMap );
 

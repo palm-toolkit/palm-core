@@ -7,4 +7,6 @@ public interface PublicationFeature
 	public PublicationDetail getPublicationDetail();
 
 	public PublicationSearch getPublicationSearch();
+
+	public PublicationManage getPublicationManage();
 }

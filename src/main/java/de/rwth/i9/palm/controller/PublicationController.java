@@ -92,4 +92,13 @@ public class PublicationController
 	{
 		return publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
 	}
+	
+	@RequestMapping( value = "/pdfExtract", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> doPdfExtraction( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return publicationFeature.getPublicationManage().extractPublicationFromPdf( id );
+	}
 }

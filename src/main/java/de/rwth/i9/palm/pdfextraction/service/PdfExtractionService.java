@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -28,6 +29,9 @@ public class PdfExtractionService
 
 	@Autowired
 	private AsynchronousPdfExtractionService asynchronousPdfExtractionService;
+
+	@Autowired
+	private PalmAnalytics palmAnalitics;
 
 	/**
 	 * Batch extraction of publications from pdf files on specific author
@@ -78,9 +82,8 @@ public class PdfExtractionService
 		this.processExtractedPublication( extractedPfdFutureMap, null );
 	}
 
-	public Map<String, Object> extractPdfFromSpecificPublication( Publication publication ) throws IOException, InterruptedException, ExecutionException
+	public void extractPdfFromSpecificPublication( Publication publication, Map<String, Object> responseMap ) throws IOException, InterruptedException, ExecutionException
 	{
-		Map<String, Object> resultMap = new LinkedHashMap<String, Object>();
 
 		Map<Publication, Future<List<TextSection>>> extractedPfdFutureMap = new LinkedHashMap<Publication, Future<List<TextSection>>>();
 		extractedPfdFutureMap.put( publication, this.asynchronousPdfExtractionService.extractPublicationPdfIntoTextSections( publication ) );
@@ -106,9 +109,8 @@ public class PdfExtractionService
 		} while ( !processIsDone );
 
 		// process the extracted text sections further
-		this.processExtractedPublication( extractedPfdFutureMap, resultMap );
+		this.processExtractedPublication( extractedPfdFutureMap, responseMap );
 
-		return resultMap;
 	}
 
 	/**
@@ -117,27 +119,88 @@ public class PdfExtractionService
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	public void processExtractedPublication( Map<Publication, Future<List<TextSection>>> extractedPfdFutureMap, Map<String, Object> resultMap ) throws InterruptedException, ExecutionException
+	public void processExtractedPublication( Map<Publication, Future<List<TextSection>>> extractedPfdFutureMap, Map<String, Object> responseMap ) throws InterruptedException, ExecutionException
 	{
 
 		for ( Entry<Publication, Future<List<TextSection>>> extractedPfdFuture : extractedPfdFutureMap.entrySet() )
 		{
 			Publication publication = extractedPfdFuture.getKey();
 			List<TextSection> textSections = extractedPfdFuture.getValue().get();
-			// ==list of variables==
-			float titleFontSize = 0f;
-			float abstractHeaderFontSize = 0f;
-			float sectionHeaderFontSize = 0f;
-			float contentFontSize = 0f;
-			boolean titleFound = false;
-			
-			// column size will be calculated after introduction section found
-			float columnSize = 0f;
-			
-			// loop, searching 0817svnugraha
+			StringBuilder publicationAbstract = new StringBuilder();
+			StringBuilder publicationContent = new StringBuilder();
+			StringBuilder publicationKeyword = new StringBuilder();
+			StringBuilder contentSection = new StringBuilder();
+			StringBuilder contentSectionWithName = new StringBuilder();
+
 			for( TextSection textSection : textSections ){
-				// if( textSection)
+				if ( textSection.getName() != null )
+				{
+					if ( textSection.getName().equals( "content" ) )
+					{
+						publicationContent.append( textSection.getContent() + "\n" );
+						contentSectionWithName.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "content-header" ) )
+					{
+						publicationContent.append( "\t\n" + textSection.getContent() + "\n\t" );
+						contentSection.setLength( 0 );
+						contentSectionWithName.setLength( 0 );
+						contentSectionWithName.append( "\t\n" + textSection.getContent() + "\n\t" );
+					}
+					else if ( textSection.getName().equals( "content-cont" ) )
+					{
+						publicationContent.setLength( publicationContent.length() - 1 );
+
+						if ( publicationContent.toString().endsWith( "-" ) )
+							publicationContent.setLength( publicationContent.length() - 1 );
+
+						publicationContent.append( textSection.getContent() + "\n" );
+						contentSectionWithName.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "keyword" ) )
+					{
+						publicationKeyword.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "abstract" ) )
+					{
+						publicationAbstract.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "abstract-header" ) )
+					{
+						if ( textSection.getContent().length() > 100 )
+							publicationAbstract.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "author" ) )
+					{
+						// TODO process author
+					}
+					else if ( textSection.getName().equals( "title" ) )
+					{
+						if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( textSection.getContent().toLowerCase(), publication.getTitle().toLowerCase() ) > 0.8f )
+						{
+							publication.setTitle( textSection.getContent() );
+							responseMap.put( "status", "Ok" );
+						}
+						else
+						{
+							responseMap.put( "status", "Error - publication not found" );
+							break;
+						}
+					}
+				}
+				else
+				{
+					if ( textSection.getContent().length() > 5 )
+						contentSection.append( textSection.getContent() );
+				}
 			}
+			publicationContent.setLength( publicationContent.length() - contentSectionWithName.length() );
+			publication.setContentText( publicationContent.toString() );
+			publication.setAbstractText( publicationAbstract.toString() );
+			publication.setReferenceText( contentSection.toString() );
+			if ( publicationKeyword.length() > 0 )
+				publication.setKeywordText( publicationKeyword.toString() );
+
 		}
 	}
 
