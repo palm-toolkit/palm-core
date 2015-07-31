@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -195,9 +196,9 @@ public class PdfExtractionService
 				}
 			}
 			publicationContent.setLength( publicationContent.length() - contentSectionWithName.length() );
-			publication.setContentText( publicationContent.toString() );
-			publication.setAbstractText( publicationAbstract.toString() );
-			publication.setReferenceText( contentSection.toString() );
+			publication.setContentText( Jsoup.parse( publicationContent.toString() ).text() );
+			publication.setAbstractText( Jsoup.parse( publicationAbstract.toString() ).text() );
+			publication.setReferenceText( Jsoup.parse( contentSection.toString() ).text() );
 			if ( publicationKeyword.length() > 0 )
 				publication.setKeywordText( publicationKeyword.toString() );
 

@@ -29,6 +29,7 @@ public class PalmPdfExtractionTest
 		src = "http://www.irrodl.org/index.php/irrodl/article/download/2032/3322";
 		src = "http://honne.learning-context.de/upload/files/publications/DeLFI14_HT.pdf";
 		src = "http://orbi.ulg.ac.be/bitstream/2268/151963/1/Verpoorten%20LICE%20orbi.pdf";
+		src = "http://ieeexplore.ieee.org/ielx5/4620076/6213193/06095503.pdf?tp=&amp;arnumber=6095503&amp;isnumber=6213193";
 
 		PdfReader reader = new PdfReader( src );
 
