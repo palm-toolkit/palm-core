@@ -350,5 +350,14 @@ public class ResearcherController
 		return false;
 	}
 	
+	@RequestMapping( value = "/getResearcherAutocomplete", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
+			@RequestParam( value = "name", required = false ) final String name, 
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return researcherFeature.getResearcherApi().getAuthorAutoComplete( name );
+	}
+	
 
 }

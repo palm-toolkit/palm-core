@@ -71,6 +71,7 @@ public class PublicationCollectionServiceTest
 	}
 
 	@Test
+	@Ignore
 	public void testList() throws IOException, InterruptedException, ExecutionException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();

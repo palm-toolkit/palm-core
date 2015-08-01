@@ -33,31 +33,23 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		Document document = null;
 
 		Map<String, String> cookies = new HashMap<String, String>();
-		//cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
-		//cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
-		//cookies.put( "GMAIL_RTT", "37" );
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=964f5a83b97f292a:TM=1437640196:C=c:IP=95.223.161.25-:S=APGng0vCH0HfwpnqD8P5QDwXNaSNQvK9tQ" );
-		cookies.put( "GSP", "LM=1437638747:S=yGIL9JRwNlNlm4t5" );
-		//cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
-		cookies.put( "NID", "69=c4S-xS8vl9KJw4QfmFYZwY5NpTpaACuSa2hGMQALMhf7Xz6XH4B8JuyMs3hO5M7A1x003toBv_Syxhgwq_gsXnM3KvyXXN2xvYA-8SsiWSjqYapc4RtWTO1an7QGmsOl" );
-		//cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
-		//cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
-		//cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
-		//cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
+//		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=e133d8fc1a60cbef:TM=1437750978:C=c:IP=95.223.161.25-:S=APGng0t9aTVbQjQDfpwQkxtuHIHPzo5sVw" );
+//		cookies.put( "GSP", "LM=1437750985:S=AtGJUBHkX-SMu4ng" );
+//		cookies.put( "NID", "69=rni1FRZ6T7GTp9U2-BAjCnUh_y9wsLy49aBRIZELPbpQwISqvdz0xw3g4e9J-xUGcfczwkcPZbpJFKsT0ENyVbc3d4w0dues_iJtT2AxWsVM9PM41kWlLbUFC2wA9TsH" );
 
-//		try
-//		{
+		try
+		{
 			// Using jsoup java html parser library
 			document = Jsoup
 					.connect( url )
 					.userAgent( "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" )
 .header( "Accept", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ).cookies( cookies )
 					.timeout( 5000 ).get();
-//		}
-//		catch ( Exception e )
-//		{
-//			return Collections.emptyList();
-//		}
+		}
+		catch ( Exception e )
+		{
+			return Collections.emptyList();
+		}
 		if ( document == null )
 			return Collections.emptyList();
 		Elements authorListNodes = document.select( HtmlSelectorConstant.GS_AUTHOR_LIST_CONTAINER );
@@ -104,31 +96,23 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		Document document = null;
 
 		Map<String, String> cookies = new HashMap<String, String>();
-		//cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
-		//cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
-		//cookies.put( "GMAIL_RTT", "37" );
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=964f5a83b97f292a:TM=1437640196:C=c:IP=95.223.161.25-:S=APGng0vCH0HfwpnqD8P5QDwXNaSNQvK9tQ" );
-		cookies.put( "GSP", "LM=1437638747:S=yGIL9JRwNlNlm4t5" );
-		//cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
-		cookies.put( "NID", "69=c4S-xS8vl9KJw4QfmFYZwY5NpTpaACuSa2hGMQALMhf7Xz6XH4B8JuyMs3hO5M7A1x003toBv_Syxhgwq_gsXnM3KvyXXN2xvYA-8SsiWSjqYapc4RtWTO1an7QGmsOl" );
-		//cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
-		//cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
-		//cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
-		//cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
+//		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=e133d8fc1a60cbef:TM=1437750978:C=c:IP=95.223.161.25-:S=APGng0t9aTVbQjQDfpwQkxtuHIHPzo5sVw" );
+//		cookies.put( "GSP", "LM=1437750985:S=AtGJUBHkX-SMu4ng" );
+//		cookies.put( "NID", "69=rni1FRZ6T7GTp9U2-BAjCnUh_y9wsLy49aBRIZELPbpQwISqvdz0xw3g4e9J-xUGcfczwkcPZbpJFKsT0ENyVbc3d4w0dues_iJtT2AxWsVM9PM41kWlLbUFC2wA9TsH" );
 
-//				try
-//				{
+		try
+		{
 			// Using jsoup java html parser library
 			document = Jsoup
 					.connect( url + "&cstart=0&pagesize=1000")
 					.userAgent( "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" )
 .header( "Accept", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ).cookies( cookies )
 					.timeout( 5000 ).get();
-//				}
-//				catch ( Exception e )
-//				{
-//					return Collections.emptyList();
-//				}
+		}
+		catch ( Exception e )
+		{
+			return Collections.emptyList();
+		}
 		if ( document == null )
 			return Collections.emptyList();
 
@@ -172,31 +156,24 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		Document document = null;
 
 		Map<String, String> cookies = new HashMap<String, String>();
-		//cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
-		//cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
-		//cookies.put( "GMAIL_RTT", "37" );
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=964f5a83b97f292a:TM=1437640196:C=c:IP=95.223.161.25-:S=APGng0vCH0HfwpnqD8P5QDwXNaSNQvK9tQ" );
-		cookies.put( "GSP", "LM=1437638747:S=yGIL9JRwNlNlm4t5" );
-		//cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
-		cookies.put( "NID", "69=c4S-xS8vl9KJw4QfmFYZwY5NpTpaACuSa2hGMQALMhf7Xz6XH4B8JuyMs3hO5M7A1x003toBv_Syxhgwq_gsXnM3KvyXXN2xvYA-8SsiWSjqYapc4RtWTO1an7QGmsOl" );
-		//cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
-		//cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
-		//cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
-		//cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
+//		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=e133d8fc1a60cbef:TM=1437750978:C=c:IP=95.223.161.25-:S=APGng0t9aTVbQjQDfpwQkxtuHIHPzo5sVw" );
+//		cookies.put( "GSP", "LM=1437750985:S=AtGJUBHkX-SMu4ng" );
+//		cookies.put( "NID", "69=rni1FRZ6T7GTp9U2-BAjCnUh_y9wsLy49aBRIZELPbpQwISqvdz0xw3g4e9J-xUGcfczwkcPZbpJFKsT0ENyVbc3d4w0dues_iJtT2AxWsVM9PM41kWlLbUFC2wA9TsH" );
 
-//				try
-//				{
+
+		try
+		{
 			// Using jsoup java html parser library
 			document = Jsoup
 					.connect( url )
 					.userAgent( "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" )
 .header( "Accept", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ).cookies( cookies )
 					.timeout( 5000 ).get();
-//				}
-//				catch ( Exception e )
-//				{
-//					return Collections.emptyList();
-//				}
+		}
+		catch ( Exception e )
+		{
+			return Collections.emptyMap();
+		}
 		if ( document == null )
 			return Collections.emptyMap();
 

@@ -14,8 +14,6 @@ import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 import com.itextpdf.text.pdf.parser.SimpleTextExtractionStrategy;
 import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
 
-import de.rwth.i9.palm.pdfextraction.service.CustomTextExtractionStrategy;
-
 public class ITextTest
 {
 	/** The original PDF that will be parsed. */
@@ -59,12 +57,15 @@ public class ITextTest
 	@Test
 	public void test1pdfExtract() throws IOException
 	{
-		String src = "http://faculty.mu.edu.sa/public/uploads/1432459953.0715%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%85%20%D8%A8%D8%A7%D9%84%D9%81%D9%8A%D8%AF%D9%8A%D9%88.pdf";
+		String src = "http://dspace.learningnetworks.org/bitstream/1820/3180/1/Chatti_ETS.pdf";
 
 		PdfReader reader = new PdfReader( src );
 
 		CustomTextExtractionStrategy customTextExtractionStrategy = new CustomTextExtractionStrategy();
 		customTextExtractionStrategy.setPageMargin( 50f );
+
+		Rectangle pdfPageSize = reader.getPageSize( 1 );
+		customTextExtractionStrategy.setPageSize( pdfPageSize );
 
 		PrintWriter out = new PrintWriter( new FileOutputStream( "C:\\Users\\nifry\\Desktop\\test.txt" ) );
 		// Rectangle rect = new Rectangle( 70, 80, 490, 580 );
@@ -76,7 +77,7 @@ public class ITextTest
 			// strategy = new FilteredTextRenderListener(new
 			// LocationTextExtractionStrategy(), filter);
 			// update the current page size
-			Rectangle pdfPageSize = reader.getPageSize( i );
+
 			customTextExtractionStrategy.setPageNumber( i );
 			customTextExtractionStrategy.setPageSize( pdfPageSize );
 
@@ -84,12 +85,22 @@ public class ITextTest
 			// System.out.println( PdfTextExtractor.getTextFromPage( reader, i,
 			// customTextExtractionStrategy ) );
 			System.out.println( "============= End Of Page Number " + i + " ===========" );
-			System.out.println( "========================================================" );
-			System.out.println( "========================================================" );
 		}
 		out.flush();
 		out.close();
 		AcademicPublicationStructure aps = customTextExtractionStrategy.getAcademicPublicationStructure();
+
+		for ( AcademicPublicationSection as : aps.getAcademicPublicationSections() )
+		{
+			System.out.println( "header : " + as.getHeader() );
+			if ( as.getContents() != null )
+				for ( String ctn : as.getContents() )
+					System.out.println( "content : " + ctn );
+
+			System.out.println();
+			System.out.println();
+		}
+
 		int i = 0;
 	}
 }

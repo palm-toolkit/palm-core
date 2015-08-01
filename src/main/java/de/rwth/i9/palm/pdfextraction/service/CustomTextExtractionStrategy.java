@@ -6,9 +6,9 @@ import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
 import com.itextpdf.text.pdf.parser.TextRenderInfo;
 import com.itextpdf.text.pdf.parser.Vector;
 
-import de.rwth.i9.palm.helper.AcademicPublicationSection;
-
 /**
+ * This code is not used
+ * 
  * This class is customized iTextPdf TextExtractionStrategy, designed for
  * detecting the structure of academic publication
  * 
@@ -136,7 +136,7 @@ public class CustomTextExtractionStrategy implements TextExtractionStrategy
 			isPdfReadable = false;
 
 		// proceed only if pdf readable
-		if ( isPdfReadable )
+		if ( isPdfReadable && !renderInfo.getText().equals( " " ) )
 		{
 
 			// IText read pdf file based on letter/chunk coordinate in rectangle
@@ -179,6 +179,7 @@ public class CustomTextExtractionStrategy implements TextExtractionStrategy
 				if ( currentCoordinateBottomRight.get( 1 ) == this.lastCoordinateBottomRight.get( 1 ) )
 					curSpaceWidth = currentCoordinateBottomLeft.get( 0 ) - lastCoordinateBottomRight.get( 0 );
 				else{
+					// y coordinate
 					if ( this.lastCoordinateBottomRight.get( 1 ) > 0 )
 					{
 
@@ -197,6 +198,8 @@ public class CustomTextExtractionStrategy implements TextExtractionStrategy
 				
 
 				// if there is blank line
+				// if space between last coordinate x and current x, larger than
+				// 2x font size
 				if ( lastCoordinateBottomRight.get( 1 ) - currentCoordinateBottomRight.get( 1 ) > 2 * currentFontHeight )
 				{
 					currentCharacters.append( "\n" );

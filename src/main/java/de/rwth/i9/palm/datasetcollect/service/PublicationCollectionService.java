@@ -286,7 +286,7 @@ public class PublicationCollectionService
 	 */
 	public void mergingPublicationInformation( Publication pub, Author pivotAuthor/*, List<Author> coAuthors*/ ) throws ParseException
 	{
-		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/u", Locale.ENGLISH );
+		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/d", Locale.ENGLISH );
 		Calendar calendar = Calendar.getInstance();
 
 		for ( PublicationSource pubSource : pub.getPublicationSources() )
@@ -482,6 +482,8 @@ public class PublicationCollectionService
 			}
 
 		}
+		// set is updated true
+		pub.setContentUpdated( true );
 		// last save publication, this will save allrelated objects
 		persistenceStrategy.getPublicationDAO().persist( pub );
 	}
