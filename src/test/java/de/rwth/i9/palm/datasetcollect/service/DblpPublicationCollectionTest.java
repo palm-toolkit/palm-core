@@ -17,10 +17,9 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 public class DblpPublicationCollectionTest
 {
 	@Test
-	@Ignore
 	public void getListOfAuthorsTest() throws IOException
 	{
-		List<Map<String, String>> authorList = GoogleScholarPublicationCollection.getListOfAuthors( "chatti" );
+		List<Map<String, String>> authorList = DblpPublicationCollection.getListOfAuthors( "mohamed amine chatti" );
 
 		for ( Map<String, String> eachAuthor : authorList )
 		{
@@ -34,7 +33,7 @@ public class DblpPublicationCollectionTest
 	@Ignore
 	public void getListOfPublicationTest() throws IOException
 	{
-		List<Map<String, String>> publicationMapLists = GoogleScholarPublicationCollection.getPublicationListByAuthorUrl( "https://scholar.google.com/citations?user=gyLI8FYAAAAJ&hl=en" );
+		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "https://scholar.google.com/citations?user=gyLI8FYAAAAJ&hl=en" );
 
 		for ( Map<String, String> eachPublicationMap : publicationMapLists )
 		{
@@ -45,9 +44,10 @@ public class DblpPublicationCollectionTest
 	}
 
 	@Test
+	@Ignore
 	public void getPublicationDetailByPublicationUrlTest() throws IOException
 	{
-		Map<String, String> publicationDetailMaps = GoogleScholarPublicationCollection.getPublicationDetailByPublicationUrl( "https://scholar.google.com/citations?view_op=view_citation&hl=en&user=gyLI8FYAAAAJ&citation_for_view=gyLI8FYAAAAJ:u5HHmVD_uO8C" );
+		Map<String, String> publicationDetailMaps = DblpPublicationCollection.getPublicationDetailByPublicationUrl( "https://scholar.google.com/citations?view_op=view_citation&hl=en&user=gyLI8FYAAAAJ&citation_for_view=gyLI8FYAAAAJ:u5HHmVD_uO8C" );
 
 		for ( Entry<String, String> eachPublicationDetail : publicationDetailMaps.entrySet() )
 			System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );

@@ -3,6 +3,7 @@ package de.rwth.i9.palm.datasetcollect.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,9 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.rwth.i9.palm.model.PublicationType;
+import de.rwth.i9.palm.model.SourceType;
+
 public class DblpPublicationCollection extends PublicationCollection
 {
 	private final static Logger log = LoggerFactory.getLogger( DblpPublicationCollection.class );
@@ -23,117 +27,193 @@ public class DblpPublicationCollection extends PublicationCollection
 		super();
 	}
 
+	/**
+	 * Get possible author
+	 * 
+	 * @param authorName
+	 * @return
+	 * @throws IOException
+	 */
 	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
 	{
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "http://dblp.uni-trier.de/search/author?q=" + authorName.replace( " ", "+" );
 		// Using jsoup java html parser library
-		Document document = null;
-		try
-		{
-			document = Jsoup.connect( url ).userAgent( "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21" ).timeout( 10000 ).get();
-		}
-		catch ( Exception e )
-		{
-			return Collections.emptyList();
-		}
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie() );
+
 		if ( document == null )
 			return Collections.emptyList();
 
-		Elements authorListNodes = document.select( HtmlSelectorConstant.CSX_AUTHOR_LIST );
-
-		if ( authorListNodes.size() == 0 )
+		// find out page is author page or search page
+		String pageTitle = document.select( "title" ).text();
+		if ( pageTitle.toLowerCase().contains( "author search" ) )
 		{
-			log.info( "No author with name '{}' with selector '{}' on CiteSeerX '{}'", authorName, HtmlSelectorConstant.CSX_AUTHOR_LIST, url );
-			return Collections.emptyList();
-		}
 
-		// if the authors is present
-		for ( Element authorListNode : authorListNodes )
+			Element authorContainer = document.select( "header.nowrap" ).first();
+
+			Elements authorListNodes = authorContainer.nextElementSibling().select( "ul" ).first().select( "li" );
+
+			if ( authorListNodes.size() == 0 )
+			{
+				log.info( "No author with name '{}' with selector '{}' on CiteSeerX '{}'", authorName, HtmlSelectorConstant.CSX_AUTHOR_LIST, url );
+				return Collections.emptyList();
+			}
+
+			// if the authors is present
+			for ( Element authorListNode : authorListNodes )
+			{
+				Map<String, String> eachAuthorMap = new LinkedHashMap<String, String>();
+				String name = authorListNode.select( "a" ).first().text();
+				// get author name
+				eachAuthorMap.put( "name", name );
+				// set source
+				eachAuthorMap.put( "source", SourceType.CITESEERX.toString() );
+				// get author url
+				eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
+
+				authorList.add( eachAuthorMap );
+			}
+
+			return authorList;
+		}
+		else
 		{
-			Map<String, String> eachAuthorMap = new LinkedHashMap<String, String>();
-			String name = authorListNode.select( "a" ).first().text();
-			// get author name
-			eachAuthorMap.put( "name", name );
-			// set source
-			eachAuthorMap.put( "source", "citeseerx" );
-			// get author url
-			eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
-			// get author photo
-			eachAuthorMap.put( "aliases", authorListNode.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).first().select( "td" ).get( 1 ).text() );
-			// get author affiliation
-			eachAuthorMap.put( "affiliation", authorListNode.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).get( 1 ).select( "td" ).get( 1 ).text() );
-
-			authorList.add( eachAuthorMap );
+			return getPublicationListByAuthorUrl( "none", document );
 		}
-
-		return authorList;
 	}
 
+	/**
+	 * get author page and publication list
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
 	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException
+	{
+		return getPublicationListByAuthorUrl( url, null );
+	}
+
+	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url, Document document ) throws IOException
 	{
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
-		Document document = null;
-
-		try
-		{
+		if ( document == null )
 			// Using jsoup java html parser library
-			document = Jsoup.connect( url + "&list=full" ).userAgent( "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21" ).timeout( 10000 ).get();
-		}
-		catch ( Exception e )
-		{
-			return Collections.emptyList();
-		}
+			document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie() );
+
 		if ( document == null )
 			return Collections.emptyList();
 
-		Elements publicationRowList = document.select( HtmlSelectorConstant.CSX_PUBLICATION_ROW_LIST );
+		Element publicationContainer = document.select( "#publ-section" ).first();
 
-		if ( publicationRowList.size() == 0 )
+		if ( publicationContainer == null )
 		{
 			log.info( "No publication found " );
 			return Collections.emptyList();
 		}
 
-		int index = 0;
-		for ( Element eachPublicationRow : publicationRowList )
+		// get publication categories
+		Elements publicationSections = publicationContainer.select( "div.hideable" );
+
+		for ( Element publicationSection : publicationSections )
 		{
-			if ( index > 0 )
+
+			Element sectionHeader = publicationSection.select( "header" ).first();
+
+			if ( sectionHeader.attr( "id" ).equals( "book" ) )
 			{
-				Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
 
-				String noCitation = eachPublicationRow.select( "td" ).first().text();
-				if ( !noCitation.equals( "" ) )
-					publicationDetails.put( "nocitation", noCitation );
+				Elements publicationList = publicationSection.select( "ul.publ-list li.book" );
 
-				// set source
-				publicationDetails.put( "source", "citeseerx" );
-
-				publicationDetails.put( "url", eachPublicationRow.select( "a" ).first().absUrl( "href" ) );
-
-				String title = eachPublicationRow.select( "a" ).first().text();
-				publicationDetails.put( "title", title );
-
-				String venueAndYear = eachPublicationRow.select( "td" ).get( 1 ).text().substring( title.length() );
-				if ( venueAndYear.length() > 5 )
+				for ( Element eachPublication : publicationList )
 				{
-					if ( venueAndYear.substring( venueAndYear.length() - 4 ).matches( "^\\d{4}" ) )
+					Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
+					publicationDetails.put( "type", PublicationType.BOOK.toString() );
+
+					Element pdfElement = publicationList.select( "nav.publ" ).select( "li" ).first();
+					if ( pdfElement.select( "div.head" ).select( "a" ).first() != null )
 					{
-						publicationDetails.put( "year", venueAndYear.substring( venueAndYear.length() - 4 ) );
-						if ( venueAndYear.length() > 10 )
-							publicationDetails.put( "venue", venueAndYear.substring( 0, venueAndYear.length() - 4 ).replace( "-", "" ).trim() );
+						publicationDetails.put( "doc_url", pdfElement.select( "div.head" ).select( "a" ).first().absUrl( "href" ) );
+						publicationDetails.put( "doc", pdfElement.select( "div.body" ).select( "a" ).text() );
 					}
-					else
-						publicationDetails.put( "venue", venueAndYear.replace( "-", "" ).trim() );
+					Element dataElement = eachPublication.select( "div.data" ).first();
+
+					Elements authorElements = dataElement.select( "[itemprop=author]" );
+					String authorNames = "";
+					for ( Element authorElement : authorElements )
+						authorNames += authorElement.text() + ", ";
+					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 2 ) );
+
+					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
+					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+
+					publicationMapLists.add( publicationDetails );
 				}
 
-				publicationMapLists.add( publicationDetails );
 			}
-			index++;
-		}
+			else if ( sectionHeader.attr( "id" ).equals( "article" ) )
+			{
+				Elements publicationList = publicationSection.select( "ul.publ-list li.article" );
 
+				for ( Element eachPublication : publicationList )
+				{
+					Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
+					publicationDetails.put( "type", PublicationType.JOURNAL.toString() );
+
+					Element pdfElement = publicationList.select( "nav.publ" ).select( "li" ).first();
+					if ( pdfElement.select( "div.head" ).select( "a" ).first() != null )
+					{
+						publicationDetails.put( "doc_url", pdfElement.select( "div.head" ).select( "a" ).first().absUrl( "href" ) );
+						publicationDetails.put( "doc", pdfElement.select( "div.body" ).select( "a" ).text() );
+					}
+					Element dataElement = eachPublication.select( "div.data" ).first();
+
+					Elements authorElements = dataElement.select( "[itemprop=author]" );
+					String authorNames = "";
+					for ( Element authorElement : authorElements )
+						authorNames += authorElement.text() + ", ";
+					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 2 ) );
+
+					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
+					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+
+					publicationMapLists.add( publicationDetails );
+				}
+
+			}
+			else if ( sectionHeader.attr( "id" ).equals( "inproceedings" ) )
+			{
+
+				Elements publicationList = publicationSection.select( "ul.publ-list li.inproceedings" );
+
+				for ( Element eachPublication : publicationList )
+				{
+					Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
+					publicationDetails.put( "type", PublicationType.CONFERENCE.toString() );
+
+					Element pdfElement = publicationList.select( "nav.publ" ).select( "li" ).first();
+					if ( pdfElement.select( "div.head" ).select( "a" ).first() != null )
+					{
+						publicationDetails.put( "doc_url", pdfElement.select( "div.head" ).select( "a" ).first().absUrl( "href" ) );
+						publicationDetails.put( "doc", pdfElement.select( "div.body" ).select( "a" ).text() );
+					}
+					Element dataElement = eachPublication.select( "div.data" ).first();
+
+					Elements authorElements = dataElement.select( "[itemprop=author]" );
+					String authorNames = "";
+					for ( Element authorElement : authorElements )
+						authorNames += authorElement.text() + ", ";
+					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 2 ) );
+
+					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
+					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+
+					publicationMapLists.add( publicationDetails );
+				}
+			}
+		}
 		return publicationMapLists;
 	}
 
@@ -184,6 +264,14 @@ public class DblpPublicationCollection extends PublicationCollection
 		return publicationDetailMaps;
 	}
 	
+	private static Map<String, String> getDblpCookie()
+	{
+		Map<String, String> cookies = new HashMap<String, String>();
+		cookies.put( "dblp-search-mode", "c" );
+		cookies.put( "dblp-view", "t" );
+		return cookies;
+	}
+
 	/**
 	 * There is an API available, but not really useful for getting the complete
 	 * information of author and venue
