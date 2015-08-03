@@ -3,6 +3,8 @@ package de.rwth.i9.palm.topicextraction.service;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.ExtractionService;
+import de.rwth.i9.palm.model.ExtractionServiceType;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -110,7 +113,22 @@ public class TopicExtractionService
 		for ( Publication publication : author.getPublications() )
 		{
 			publication.setContentUpdated( false );
+			System.out.println( publication.getId() + "pub title : " + publication.getTitle() );
+			Set<PublicationTopic> topics = publication.getPublicationTopics();
+
+			for ( PublicationTopic topic : topics )
+			{
+				if ( topic.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
+					if ( topic.getTermValues() != null )
+					{
+						System.out.print( topic.getId() + " > " );
+						for ( Entry<String, Double> termValue : topic.getTermValues().entrySet() )
+							System.out.print( termValue.getKey() + " : " + termValue.getValue() + " | " );
+					}
+			}
+
 			persistenceStrategy.getPublicationDAO().persist( publication );
 		}
 	}
+
 }
