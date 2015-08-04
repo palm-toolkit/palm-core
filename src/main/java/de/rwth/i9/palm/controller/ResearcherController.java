@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -23,8 +24,6 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
 import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
-import de.rwth.i9.palm.feature.researcher.ResearcherInterest;
-import de.rwth.i9.palm.feature.researcher.ResearcherInterestEvolution;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
@@ -36,7 +35,6 @@ import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationContextService;
-import de.rwth.i9.palm.topicextraction.service.TopicExtractionService;
 
 @Controller
 @RequestMapping( value = "/researcher" )
@@ -56,9 +54,6 @@ public class ResearcherController
 	
 	@Autowired
 	private ResearcherCollectionService researcherCollectionService;
-
-	@Autowired
-	private TopicExtractionService topicExtractionService;
 
 	@Autowired
 	private ResearcherFeature researcherFeature;
@@ -224,56 +219,40 @@ public class ResearcherController
 	@RequestMapping( value = "/interest", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterest( 
-			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "id", required = false ) final String authorId, 
 			@RequestParam( value = "name", required = false ) final String name, 
-			@RequestParam( value = "uri", required = false ) final String uri,
-			@RequestParam( value = "affiliation", required = false ) final String affiliation,
+			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
+			@RequestParam( value = "startDate", required = false ) final String startDate,
+			@RequestParam( value = "endDate", required = false ) final String endDate,
 			final HttpServletResponse response ) 
-					throws InterruptedException, IOException, ExecutionException
+ throws InterruptedException, IOException, ExecutionException, URISyntaxException
 	{
-		// create JSON mapper for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-		
-		// get author
-		Author author = this.getTargetAuthor( responseMap, id, name, uri, affiliation );
-		if( author == null )
-			return responseMap;
-		
-		// TODO - fix code position
-		topicExtractionService.extractTopicFromPublicationByAuthor( author );
-
-		// get the object and set properties
-		ResearcherInterest researcherInterest = researcherFeature.getResearcherInterest();
-		researcherInterest.setResearcher( author );
-		researcherInterest.setResultMap( responseMap );
-
-		return researcherInterest.getResultMap();
+		if( name != null )
+			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
+		else
+			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
 	}
 	
 	@RequestMapping( value = "/interestEvolution", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterestEvolution( 
-			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "id", required = false ) final String authorId, 
 			@RequestParam( value = "name", required = false ) final String name, 
-			@RequestParam( value = "uri", required = false ) final String uri,
-			@RequestParam( value = "affiliation", required = false ) final String affiliation,
+			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
+			@RequestParam( value = "startDate", required = false ) final String startDate,
+			@RequestParam( value = "endDate", required = false ) final String endDate,
 			final HttpServletResponse response ) 
 					throws InterruptedException, IOException, ExecutionException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
-		// get author
-		Author author = this.getTargetAuthor( responseMap, id, name, uri, affiliation );
-		if( author == null )
-			return responseMap;
-		
-		// get the object and set properties
-		ResearcherInterestEvolution researcherInterestEvolution = researcherFeature.getResearcherInterestEvolution();
-		researcherInterestEvolution.setResearcher( author );
-		researcherInterestEvolution.setResultMap( responseMap );
+//		// get author
+//		Author author = this.getTargetAuthor( responseMap, id, name, uri, affiliation );
+//		if( author == null )
+//			return responseMap;
 
-		return researcherInterestEvolution.getResultMap();
+		return null;
 	}
 	
 	/**

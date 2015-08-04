@@ -1,5 +1,7 @@
 package de.rwth.i9.palm.topicextraction.service;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -30,7 +32,7 @@ public class TopicExtractionService
 	@Autowired
 	private AsynchronousTopicExtractionService asynchronousTopicExtractionService;
 
-	public void extractTopicFromPublicationByAuthor( Author author ) throws InterruptedException
+	public void extractTopicFromPublicationByAuthor( Author author ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException
 	{
 		List<Future<PublicationTopic>> publicationTopicFutureList = new ArrayList<Future<PublicationTopic>>();
 		List<ExtractionService> extractionServices = persistenceStrategy.getExtractionServiceDAO().getAllActiveExtractionService();
@@ -41,7 +43,10 @@ public class TopicExtractionService
 		// loop through available extraction services
 		for ( ExtractionService extractionService : extractionServices )
 		{
-			// check extraction service
+			if ( !extractionService.isActive() )
+				continue;
+
+			// check extraction service limitation (number of queries per day)
 			if ( extractionService.getLastQueryDate() != null )
 			{
 				if ( extractionService.getLastQueryDate().equals( calendar.getTime() ) )
@@ -85,7 +90,10 @@ public class TopicExtractionService
 
 					publication.addPublicationTopic( publicationTopic );
 
-					publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+					if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
+						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
+						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
 				}
 				
 			}
@@ -113,19 +121,22 @@ public class TopicExtractionService
 		for ( Publication publication : author.getPublications() )
 		{
 			publication.setContentUpdated( false );
-			System.out.println( publication.getId() + "pub title : " + publication.getTitle() );
+			System.out.println( publication.getId() + " > " + publication.getTitle() );
 			Set<PublicationTopic> topics = publication.getPublicationTopics();
 
 			for ( PublicationTopic topic : topics )
 			{
-				if ( topic.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
+	//			if ( topic.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
 					if ( topic.getTermValues() != null )
 					{
+					System.out.println( topic.getExtractionServiceType().toString() + " : " );
 						System.out.print( topic.getId() + " > " );
 						for ( Entry<String, Double> termValue : topic.getTermValues().entrySet() )
 							System.out.print( termValue.getKey() + " : " + termValue.getValue() + " | " );
+					System.out.println();
 					}
 			}
+			System.out.println();
 
 			persistenceStrategy.getPublicationDAO().persist( publication );
 		}
