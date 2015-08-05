@@ -88,7 +88,7 @@ public class AsynchronousTopicExtractionService
 		log.info( "Yahoo Content Analysis extract publication " + publication.getTitle() + " starting" );
 
 		String text = getPublicationText( publication );
-		// free alchemy has certain text limitation in length
+
 		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
 
 		Map<String, Object> ycaResultsMap = YahooContentAnalysisAPITopicExtraction.getTextContentAnalysis( text );
@@ -110,6 +110,38 @@ public class AsynchronousTopicExtractionService
 		return new AsyncResult<PublicationTopic>( publicationTopic );
 	}
 
+	@SuppressWarnings( "unchecked" )
+	@Async
+	public Future<PublicationTopic> getTopicsByFiveFilters( Publication publication, PublicationTopic publicationTopic, int maxTextLength ) throws UnsupportedEncodingException, URISyntaxException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+
+		log.info( "Five Filters extract publication " + publication.getTitle() + " starting" );
+
+		String text = getPublicationText( publication );
+
+		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
+
+		Map<String, Object> fiveFiltersResultsMap = FiveFiltersAPITopicExtraction.getTextTermExtract( text );
+
+		if ( fiveFiltersResultsMap != null )
+		{
+			publicationTopic.setTermValues( (Map<String, Double>) fiveFiltersResultsMap.get( "termvalue" ) );
+
+			// remove duplicated keys
+			filterFiveFiltersResult( publicationTopic.getTermValues() );
+
+			publicationTopic.setValid( true );
+		}
+		else
+			publicationTopic.setValid( false );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		log.info( "Five Filters extract publication " + publication.getTitle() + " complete in " + stopwatch );
+		return new AsyncResult<PublicationTopic>( publicationTopic );
+	}
+
 	/**
 	 * Filtering alchemyAPI result, due to accented character on terms caused
 	 * error on saving process
@@ -125,6 +157,30 @@ public class AsynchronousTopicExtractionService
 			Map.Entry<String, Double> entry = it.next();
 			// filter the accented character
 			String mapKey = deAccent( entry.getKey() );
+			// if there is similar key, remove resultmap
+			if ( mapKeys.contains( mapKey ) )
+				it.remove();
+			else
+				mapKeys.add( mapKey );
+		}
+
+	}
+
+	/**
+	 * Filtering alchemyAPI result, due to accented character on terms caused
+	 * error on saving process
+	 * 
+	 * @param alchemyResultsMap
+	 */
+	private void filterFiveFiltersResult( Map<String, Double> fiveFiltersResultsMap )
+	{
+		Set<String> mapKeys = new HashSet<String>();
+
+		for ( Iterator<Map.Entry<String, Double>> it = fiveFiltersResultsMap.entrySet().iterator(); it.hasNext(); )
+		{
+			Map.Entry<String, Double> entry = it.next();
+			// filter the accented character
+			String mapKey = entry.getKey().toLowerCase();
 			// if there is similar key, remove resultmap
 			if ( mapKeys.contains( mapKey ) )
 				it.remove();

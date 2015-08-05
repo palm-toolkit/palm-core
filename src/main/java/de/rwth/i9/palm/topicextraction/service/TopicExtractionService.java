@@ -94,6 +94,8 @@ public class TopicExtractionService
 						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
 					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
 						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) )
+						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
 				}
 				
 			}
