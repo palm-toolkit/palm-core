@@ -30,6 +30,8 @@ import de.rwth.i9.palm.model.Dataset;
 import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.Function;
 import de.rwth.i9.palm.model.Institution;
+import de.rwth.i9.palm.model.Interest;
+import de.rwth.i9.palm.model.InterestAuthor;
 import de.rwth.i9.palm.model.Location;
 import de.rwth.i9.palm.model.PalmConfiguration;
 import de.rwth.i9.palm.model.Publication;
@@ -137,6 +139,8 @@ public class DatabaseConfigCoreTest
 						Dataset.class,
 						ExtractionService.class,
 						Function.class,
+						Interest.class,
+						InterestAuthor.class,
 						Institution.class,
 						Location.class,
 						PalmConfiguration.class,
@@ -171,15 +175,4 @@ public class DatabaseConfigCoreTest
 	{
 		return new PropertySourcesPlaceholderConfigurer();
 	}
-
-	/* analytics */
-	/*
-	@Bean
-	@Scope( "singleton" )
-	public PalmAnalyticsImpl configAnalyticsImpl()
-	{
-		PalmAnalyticsImpl analyticsImpl = new PalmAnalyticsImpl();
-		return analyticsImpl;
-	}*/
-
 }
