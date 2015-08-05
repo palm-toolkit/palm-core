@@ -8,4 +8,13 @@ public class TextUtils
 			return text.substring( 0, maxTextLength );
 		return text;
 	}
+
+	public static String normalizeText( String text )
+	{
+		// to lower case
+		// remove all number
+		// remove
+		text = text.toLowerCase().replaceAll( "\\d", "" ).replaceAll( "[_\\-()]", " " );
+		return text;
+	}
 }

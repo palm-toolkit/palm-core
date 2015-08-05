@@ -52,7 +52,6 @@ public class ResearcherInterestImpl extends AcademicFeatureImpl implements Resea
 
 		// check whether publication has been extracted
 		// later add extractionServiceType checking
-		// TODO - fix code position
 		topicExtractionService.extractTopicFromPublicationByAuthor( author );
 
 		// put the publication into arrayLiat
