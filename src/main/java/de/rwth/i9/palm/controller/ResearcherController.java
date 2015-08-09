@@ -225,7 +225,7 @@ public class ResearcherController
 			@RequestParam( value = "startDate", required = false ) final String startDate,
 			@RequestParam( value = "endDate", required = false ) final String endDate,
 			final HttpServletResponse response ) 
- throws InterruptedException, IOException, ExecutionException, URISyntaxException
+ throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
 		if( name != null )
 			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );

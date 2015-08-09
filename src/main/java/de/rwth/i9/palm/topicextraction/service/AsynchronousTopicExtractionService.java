@@ -95,7 +95,7 @@ public class AsynchronousTopicExtractionService
 
 		if ( ycaResultsMap != null )
 		{
-			publication.setLanguage( ycaResultsMap.get( "language" ).toString() );
+			//publication.setLanguage( ycaResultsMap.get( "language" ).toString() );
 
 			publicationTopic.setTermValues( (Map<String, Double>) ycaResultsMap.get( "termvalue" ) );
 

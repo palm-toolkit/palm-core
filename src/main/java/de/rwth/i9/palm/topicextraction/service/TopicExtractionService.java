@@ -40,6 +40,8 @@ public class TopicExtractionService
 		// get current date
 		Calendar calendar = Calendar.getInstance();
 
+		boolean topicExtractionUpdated = false;
+
 		// loop through available extraction services
 		for ( ExtractionService extractionService : extractionServices )
 		{
@@ -47,6 +49,7 @@ public class TopicExtractionService
 				continue;
 
 			// check extraction service limitation (number of queries per day)
+			// TODO this is still not correct
 			if ( extractionService.getLastQueryDate() != null )
 			{
 				if ( extractionService.getLastQueryDate().equals( calendar.getTime() ) )
@@ -75,8 +78,11 @@ public class TopicExtractionService
 			// publications on specific user
 			for ( Publication publication : author.getPublications() )
 			{
+				if ( publication.getAbstractText() == null )
+					continue;
+
 				// at least have an abstract
-				if ( publication.isContentUpdated() && publication.getAbstractText() != null )
+				if ( publication.isContentUpdated() )
 				{
 					// // remove old extracted source
 					// if ( publication.getPublicationTopics() != null )
@@ -96,6 +102,38 @@ public class TopicExtractionService
 						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
 					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) )
 						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+				}
+				else
+				{
+					// if something fails on last run
+					PublicationTopic publicationTopic = null;
+					for ( PublicationTopic publicationTopicEach : publication.getPublicationTopics() )
+					{
+						if ( publicationTopicEach.getExtractionServiceType().equals( extractionService.getExtractionServiceType() ) )
+						{
+							publicationTopic = publicationTopicEach;
+						}
+					}
+
+					if ( publicationTopic == null )
+					{
+						publicationTopic = new PublicationTopic();
+						publicationTopic.setExtractionServiceType( extractionService.getExtractionServiceType() );
+						publicationTopic.setExtractionDate( calendar.getTime() );
+						publicationTopic.setPublication( publication );
+
+						publication.addPublicationTopic( publicationTopic );
+					}
+					if ( publicationTopic.getTermValues() == null || publicationTopic.getTermValues().isEmpty() )
+					{
+						if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
+							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+						else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
+							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+						else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) )
+							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+					}
+
 				}
 				
 			}
@@ -123,22 +161,22 @@ public class TopicExtractionService
 		for ( Publication publication : author.getPublications() )
 		{
 			publication.setContentUpdated( false );
-			System.out.println( publication.getId() + " > " + publication.getTitle() );
-			Set<PublicationTopic> topics = publication.getPublicationTopics();
-
-			for ( PublicationTopic topic : topics )
-			{
-	//			if ( topic.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
-					if ( topic.getTermValues() != null )
-					{
-					System.out.println( topic.getExtractionServiceType().toString() + " : " );
-						System.out.print( topic.getId() + " > " );
-						for ( Entry<String, Double> termValue : topic.getTermValues().entrySet() )
-							System.out.print( termValue.getKey() + " : " + termValue.getValue() + " | " );
-					System.out.println();
-					}
-			}
-			System.out.println();
+//			System.out.println( publication.getId() + " > " + publication.getTitle() );
+//			Set<PublicationTopic> topics = publication.getPublicationTopics();
+//
+//			for ( PublicationTopic topic : topics )
+//			{
+//				if ( topic.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
+//					if ( topic.getTermValues() != null )
+//					{
+//					System.out.println( topic.getExtractionServiceType().toString() + " : " );
+//						System.out.print( topic.getId() + " > " );
+//						for ( Entry<String, Double> termValue : topic.getTermValues().entrySet() )
+//							System.out.print( termValue.getKey() + " : " + termValue.getValue() + " | " );
+//					System.out.println();
+//					}
+//			}
+//			System.out.println();
 
 			persistenceStrategy.getPublicationDAO().persist( publication );
 		}

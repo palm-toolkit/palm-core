@@ -14,7 +14,7 @@ public class TextUtils
 		// to lower case
 		// remove all number
 		// remove
-		text = text.toLowerCase().replaceAll( "\\d", "" ).replaceAll( "[_\\-()]", " " );
+		text = text.toLowerCase().replaceAll( "\\d", "" ).replaceAll( "\\w$", "" ).replaceAll( "[_\\-()]", " " );
 		return text;
 	}
 }

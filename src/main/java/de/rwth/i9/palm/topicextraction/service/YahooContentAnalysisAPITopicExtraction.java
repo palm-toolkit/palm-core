@@ -38,11 +38,11 @@ public class YahooContentAnalysisAPITopicExtraction
 		@SuppressWarnings( "unchecked" )
 		Map<String, Object> queryMap = (Map<String, Object>) resultsMap.get( "query" );
 
-		String language = (String) queryMap.get( "lang" );
-		if ( language.equalsIgnoreCase( "en-US" ) )
-			language = "english";
-		else if ( language.equalsIgnoreCase( "de" ) )
-			language = "german";
+//		String language = (String) queryMap.get( "lang" );
+//		if ( language.equalsIgnoreCase( "en-US" ) )
+//			language = "english";
+//		else if ( language.equalsIgnoreCase( "de" ) )
+//			language = "german";
 
 		if ( queryMap.get( "results" ) != null )
 		{
@@ -70,7 +70,7 @@ public class YahooContentAnalysisAPITopicExtraction
 			}
 		}
 
-		mapResults.put( "language", language );
+//		mapResults.put( "language", language );
 		mapResults.put( "termvalue", termsMapResults );
 
 		return mapResults;
