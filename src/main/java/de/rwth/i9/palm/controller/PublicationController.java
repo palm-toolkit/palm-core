@@ -42,9 +42,17 @@ public class PublicationController
 	@Autowired
 	private PublicationFeature publicationFeature;
 
+	/**
+	 * Get the publication page
+	 * 
+	 * @param sessionId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
-	public ModelAndView mainPage( 
+	public ModelAndView publicationPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
 			final HttpServletResponse response ) throws InterruptedException
 	{
@@ -60,6 +68,17 @@ public class PublicationController
 		return model;
 	}
 
+	/**
+	 * Get the list of publications based on the following parameters
+	 * 
+	 * @param query
+	 * @param conferenceName
+	 * @param conferenceId
+	 * @param page
+	 * @param maxresult
+	 * @param response
+	 * @return JSON Map
+	 */
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getPublicationList( 
@@ -73,6 +92,18 @@ public class PublicationController
 		return publicationFeature.getPublicationSearch().getPublicationListByQueryAndConference( query, conferenceName, conferenceId, page, maxresult );
 	}
 
+	/**
+	 * Get details( publication content ) from a publication
+	 * 
+	 * @param id
+	 *            of publication
+	 * @param uri
+	 * @param response
+	 * @return JSON Map
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 */
 	@RequestMapping( value = "/detail", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationDetail( 
@@ -83,6 +114,19 @@ public class PublicationController
 		return publicationFeature.getPublicationDetail().getPublicationDetailById( id );
 	}
 	
+	/**
+	 * Get the basic statistic (publication type, language, etc) from a
+	 * publication
+	 * 
+	 * @param id
+	 *            of publication
+	 * @param uri
+	 * @param response
+	 * @return JSON Map
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 */
 	@RequestMapping( value = "/basicstatistic", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
@@ -93,6 +137,17 @@ public class PublicationController
 		return publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
 	}
 	
+	/**
+	 * Extract Pdf on a specific publication
+	 * 
+	 * @param id
+	 *            of publication
+	 * @param response
+	 * @return JSON Map
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 */
 	@RequestMapping( value = "/pdfExtract", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> doPdfExtraction( 
