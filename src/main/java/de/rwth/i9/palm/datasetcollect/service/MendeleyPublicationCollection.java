@@ -1,6 +1,6 @@
 package de.rwth.i9.palm.datasetcollect.service;
 
-public class MendeleyPublicationCollection
+public class MendeleyPublicationCollection extends PublicationCollection
 {
 	/**
 	 * Logged in as sigit nugraha

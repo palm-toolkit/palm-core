@@ -1,6 +1,6 @@
 package de.rwth.i9.palm.datasetcollect.service;
 
-public class MicrosoftAcademicSearchPublicationCollection
+public class MicrosoftAcademicSearchPublicationCollection extends PublicationCollection
 {
 	/**
 API url
