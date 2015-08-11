@@ -83,13 +83,13 @@ public class PublicationController
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getPublicationList( 
 			@RequestParam( value = "query", required = false ) String query,
-			@RequestParam( value = "conference", required = false ) String conferenceName,
-			@RequestParam( value = "conferenceid", required = false ) String conferenceId,
+			@RequestParam( value = "event", required = false ) String eventName,
+			@RequestParam( value = "eventid", required = false ) String eventId,
 			@RequestParam( value = "page", required = false ) Integer page, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
 			final HttpServletResponse response )
 	{
-		return publicationFeature.getPublicationSearch().getPublicationListByQueryAndConference( query, conferenceName, conferenceId, page, maxresult );
+		return publicationFeature.getPublicationSearch().getPublicationListByQueryAndEvent( query, eventName, eventId, page, maxresult );
 	}
 
 	/**

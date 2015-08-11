@@ -22,7 +22,7 @@ public class PublicationSearchImpl implements PublicationSearch
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public Map<String, Object> getPublicationListByQueryAndConference( String query, String conferenceName, String conferenceId, Integer page, Integer maxresult )
+	public Map<String, Object> getPublicationListByQueryAndEvent( String query, String eventName, String eventId, Integer page, Integer maxresult )
 	{
 		if ( query == null )
 			query = "";

@@ -4,5 +4,5 @@ import java.util.Map;
 
 public interface PublicationSearch
 {
-	public Map<String, Object> getPublicationListByQueryAndConference( String query, String conferenceName, String conferenceId, Integer page, Integer maxresult );
+	public Map<String, Object> getPublicationListByQueryAndEvent( String query, String eventName, String eventId, Integer page, Integer maxresult );
 }

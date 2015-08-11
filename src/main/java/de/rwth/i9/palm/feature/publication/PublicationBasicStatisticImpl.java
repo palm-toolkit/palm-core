@@ -55,12 +55,12 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 			publicationMap.put( "type", publicationType );
 		}
 
-		if ( publication.getConference() != null )
+		if ( publication.getEvent() != null )
 		{
-			Map<String, Object> conferenceMap = new LinkedHashMap<String, Object>();
-			conferenceMap.put( "id", publication.getConference().getId() );
-			conferenceMap.put( "name", publication.getConference().getConferenceGroup().getName() );
-			publicationMap.put( "event", conferenceMap );
+			Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
+			eventMap.put( "id", publication.getEvent().getId() );
+			eventMap.put( "name", publication.getEvent().getEventGroup().getName() );
+			publicationMap.put( "event", eventMap );
 		}
 
 		if ( publication.getVolume() != null )

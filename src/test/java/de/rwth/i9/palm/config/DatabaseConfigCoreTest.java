@@ -23,8 +23,8 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
-import de.rwth.i9.palm.model.Conference;
-import de.rwth.i9.palm.model.ConferenceGroup;
+import de.rwth.i9.palm.model.Event;
+import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Dataset;
 //import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
 import de.rwth.i9.palm.model.ExtractionService;
@@ -134,8 +134,8 @@ public class DatabaseConfigCoreTest
 						AuthorAlias.class,
 						AuthorInterest.class,
 						AuthorInterestProfile.class,
-						Conference.class,
-						ConferenceGroup.class,
+						Event.class,
+						EventGroup.class,
 						Dataset.class,
 						ExtractionService.class,
 						Function.class,

@@ -22,7 +22,7 @@ public class WidgetController
 	@RequestMapping( value = "/wizard", method = RequestMethod.GET )
 	public ModelAndView landing( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response ) throws InterruptedException
 	{
-		ModelAndView model = new ModelAndView( "conference", "link", "visualization" );
+		ModelAndView model = new ModelAndView( "widget", "link", "visualization" );
 
 		if ( sessionId != null && sessionId.equals( "0" ) )
 			response.setHeader( "SESSION_INVALID", "yes" );
