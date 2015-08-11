@@ -7,4 +7,6 @@ public interface ResearcherFeature
 	public ResearcherInterest getResearcherInterest();
 	
 	public ResearcherInterestEvolution getResearcherInterestEvolution();
+
+	public ResearcherSearch getResearcherSearch();
 }
