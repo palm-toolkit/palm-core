@@ -34,6 +34,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 		if ( document == null )
 			return Collections.emptyList();
+
 		Elements authorListNodes = document.select( HtmlSelectorConstant.GS_AUTHOR_LIST_CONTAINER );
 
 		if ( authorListNodes.size() == 0 )

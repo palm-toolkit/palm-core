@@ -128,6 +128,9 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		// Using jsoup java html parser library
 		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 10000 );
 
+		if ( document == null )
+			return Collections.emptyMap();
+
 		Elements publicationDetailHeader = document.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_HEADER );
 
 		if ( publicationDetailHeader.size() == 0 )
