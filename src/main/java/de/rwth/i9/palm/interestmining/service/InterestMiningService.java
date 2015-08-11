@@ -50,7 +50,7 @@ public class InterestMiningService
 		
 		if( !authorInterestProfiles.isEmpty() ){
 			if ( (author.getAuthorInterestProfiles() == null && author.getAuthorInterestProfiles().isEmpty())  ||
-				 author.getAuthorInterestProfiles().size() != author.getAuthorInterestProfiles().size() || updateAuthorInterest)
+				 author.getAuthorInterestProfiles().size() != authorInterestProfiles.size() || updateAuthorInterest)
 			{
 				calculateAuthorInterestBasedOnActiveInterestProfile( author, authorInterestProfiles);
 			}
@@ -375,6 +375,10 @@ public class InterestMiningService
 		for( PublicationTopic publicationTopic : publication.getPublicationTopics()){
 			Map<String, Double> termValues = publicationTopic.getTermValues();
 			
+			// if term values not valid
+			if ( termValues == null || termValues.isEmpty() )
+				continue;
+
 			// iterate over hashmap
 			if ( language.equals( "english" ) )
 			{
