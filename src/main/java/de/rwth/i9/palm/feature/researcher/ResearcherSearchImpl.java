@@ -2,6 +2,7 @@ package de.rwth.i9.palm.feature.researcher;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
 import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.model.Author;
@@ -27,6 +29,9 @@ public class ResearcherSearchImpl implements ResearcherSearch
 
 	@Autowired
 	private ResearcherCollectionService researcherCollectionService;
+
+	@Autowired
+	private PublicationCollectionService publicationCollectionService;
 
 	@Override
 	public Map<String, Object> getResearcherListByQuery( String query, Integer page, Integer maxresult ) throws IOException, InterruptedException, ExecutionException
@@ -135,6 +140,102 @@ public class ResearcherSearchImpl implements ResearcherSearch
 		}
 
 		return responseMap;// TODO Auto-generated method stub
+	}
+
+	@Override
+	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String force ) throws IOException, InterruptedException, ExecutionException, ParseException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// get author
+		Author author = this.getTargetAuthor( responseMap, id, name, uri, affiliation );
+		if ( author == null )
+			return responseMap;
+
+		// check whether it is necessary to collect information from network
+		if ( this.isFetchDatasetFromNetwork( author ) || force.equals( "true" ) )
+			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author );
+
+		return responseMap;
+	}
+
+	/**
+	 * Get author object based on query
+	 * 
+	 * @param responseMap
+	 * @param id
+	 * @param name
+	 * @param uri
+	 * @param affiliation
+	 * @return
+	 */
+	private Author getTargetAuthor( Map<String, Object> responseMap, String id, String name, String uri, String affiliation )
+	{
+		Author author = null;
+		if ( id == null && name == null && uri == null )
+		{
+			responseMap.put( "result", "error" );
+			responseMap.put( "reason", "no author selected" );
+		}
+		else
+		{
+
+			if ( id != null )
+				author = persistenceStrategy.getAuthorDAO().getById( id );
+			else if ( uri != null )
+				author = persistenceStrategy.getAuthorDAO().getByUri( uri );
+			else if ( name != null && affiliation != null )
+			{
+				List<Author> authors = persistenceStrategy.getAuthorDAO().getAuthorByNameAndInstitution( name, affiliation );
+				if ( !authors.isEmpty() )
+					author = authors.get( 0 );
+			}
+
+			if ( author == null )
+			{
+				responseMap.put( "result", "error" );
+				responseMap.put( "reason", "no author found" );
+			}
+			// add author information
+			responseMap.put( "id", author.getId() );
+			responseMap.put( "name", author.getName() );
+		}
+		return author;
+	}
+
+	/**
+	 * Check whether fetching to network is necessary
+	 * 
+	 * @param author
+	 * @return
+	 */
+	private boolean isFetchDatasetFromNetwork( Author author )
+	{
+		// get current timestamp
+		java.util.Date date = new java.util.Date();
+		Timestamp currentTimestamp = new Timestamp( date.getTime() );
+		if ( author.getRequestDate() != null )
+		{
+			// check if the existing author publication is obsolete
+			if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, author.getRequestDate() ) > 24 * 7 )
+			{
+				// update current timestamp
+				author.setRequestDate( currentTimestamp );
+				persistenceStrategy.getAuthorDAO().persist( author );
+				return true;
+			}
+		}
+		else
+		{
+			// update current timestamp
+			author.setRequestDate( currentTimestamp );
+			persistenceStrategy.getAuthorDAO().persist( author );
+			return true;
+		}
+
+		// return false;
+		return false;
 	}
 
 }
