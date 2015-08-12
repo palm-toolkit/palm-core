@@ -19,6 +19,7 @@ import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.SourceMethod;
 import de.rwth.i9.palm.model.SourceType;
+import de.rwth.i9.palm.utils.TextUtils;
 
 @Service
 public class AsynchronousCollectionService
@@ -167,19 +168,19 @@ public class AsynchronousCollectionService
 		if ( publicationDetailMap.get( "Journal" ) != null )
 		{
 			publicationSource.setPublicationType( "JOURNAL" );
-			publicationSource.setPublicationEvent( publicationDetailMap.get( "Journal" ) );
+			publicationSource.setPublicationEvent( TextUtils.cutTextToLength( publicationDetailMap.get( "Journal" ), 200 ) );
 		}
 
 		if ( publicationDetailMap.get( "Book" ) != null )
 		{
 			publicationSource.setPublicationType( "BOOK" );
-			publicationSource.setPublicationEvent( publicationDetailMap.get( "Book" ) );
+			publicationSource.setPublicationEvent( TextUtils.cutTextToLength( publicationDetailMap.get( "Book" ), 200 ) );
 		}
 
 		if ( publicationDetailMap.get( "Conference" ) != null )
 		{
 			publicationSource.setPublicationType( "CONFERENCE" );
-			publicationSource.setPublicationEvent( publicationDetailMap.get( "Conference" ) );
+			publicationSource.setPublicationEvent( TextUtils.cutTextToLength( publicationDetailMap.get( "Conference" ), 200 ) );
 		}
 
 		if ( publicationDetailMap.get( "Pages" ) != null )
@@ -195,7 +196,17 @@ public class AsynchronousCollectionService
 			publicationSource.setIssue( publicationDetailMap.get( "Issue" ) );
 
 		if ( publicationDetailMap.get( "Description" ) != null )
-			publicationSource.setAbstractText( publicationDetailMap.get( "Description" ) );
+		{
+			String abstractText = publicationDetailMap.get( "Description" );
+			if ( abstractText.length() > 200 )
+			{
+				if ( abstractText.substring( 0, 8 ).equalsIgnoreCase( "abstract" ) )
+					abstractText = abstractText.substring( 9 );
+				if ( abstractText.endsWith( "..." ) )
+					abstractText = abstractText.substring( 0, abstractText.length() - 4 );
+				publicationSource.setAbstractText( abstractText );
+			}
+		}
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
@@ -227,10 +238,19 @@ public class AsynchronousCollectionService
 			publicationSource.setAuthorString( publicationDetailMap.get( "coauthor" ) );
 
 		if ( publicationDetailMap.get( "venue" ) != null )
-			publicationSource.setPublicationEvent( publicationDetailMap.get( "venue" ) );
+			publicationSource.setPublicationEvent( TextUtils.cutTextToLength( publicationDetailMap.get( "venue" ), 200 ) );
 
 		if ( publicationDetailMap.get( "abstract" ) != null )
-			publicationSource.setAbstractText( publicationDetailMap.get( "abstract" ) );
+		{
+
+			String abstractText = publicationDetailMap.get( "abstract" );
+			if ( abstractText.length() > 200 )
+			{
+				if ( abstractText.substring( 0, 8 ).equalsIgnoreCase( "abstract" ) )
+					abstractText = abstractText.substring( 9 );
+				publicationSource.setAbstractText( abstractText );
+			}
+		}
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 

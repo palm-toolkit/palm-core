@@ -70,6 +70,7 @@ public class ConcurrentPublicationGatheringTest
 	}
 
 	@Test
+	@Ignore
 	public void concurrentJsoupTest() throws IOException, InterruptedException, ExecutionException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();

@@ -11,15 +11,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.Scope;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
+import de.rwth.i9.palm.feature.publication.PublicationFeature;
+import de.rwth.i9.palm.feature.publication.PublicationFeatureImpl;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeatureImpl;
 
@@ -44,6 +48,22 @@ public class WebAppConfigTest extends WebMvcConfigurerAdapter implements AsyncCo
 		registry.addResourceHandler( "/resources/**" ).addResourceLocations( "/resources/" );
 	}
 
+
+	// <mvc:default-servlet-handler/>
+	@Override
+	public void configureDefaultServletHandling( DefaultServletHandlerConfigurer configurer )
+	{
+		configurer.enable();
+	}
+
+	// Provides internationalization of messages
+	@Bean
+	public ResourceBundleMessageSource messageSource()
+	{
+		ResourceBundleMessageSource source = new ResourceBundleMessageSource();
+		source.setBasename( "messages" );
+		return source;
+	}
 
 	/* fileupload */
 
@@ -79,6 +99,14 @@ public class WebAppConfigTest extends WebMvcConfigurerAdapter implements AsyncCo
 	public ResearcherFeature researcherFeature()
 	{
 		return new ResearcherFeatureImpl();
+	}
+
+	/* palm publication feature */
+	@Bean
+	@Scope( "singleton" )
+	public PublicationFeature publicationFeature()
+	{
+		return new PublicationFeatureImpl();
 	}
 
 	/* Scheduling and ThreadPool */

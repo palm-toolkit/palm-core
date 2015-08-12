@@ -1,11 +1,12 @@
-package de.rwth.i9.palm.helper;
+package de.rwth.i9.palm.pdfextraction.service;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * This code is not used
  * 
- * @author sigit
+ * @author Sigit
  *
  */
 public class AcademicPublicationStructure

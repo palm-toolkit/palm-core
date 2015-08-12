@@ -23,8 +23,8 @@ import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorSource;
-import de.rwth.i9.palm.model.Conference;
-import de.rwth.i9.palm.model.ConferenceGroup;
+import de.rwth.i9.palm.model.Event;
+import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.PublicationType;
@@ -157,7 +157,6 @@ public class PublicationCollectionService
 							if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 							{
 								publication = pub;
-								publication.addCoAuthor( author );
 								break;
 							}
 						}
@@ -183,35 +182,32 @@ public class PublicationCollectionService
 									if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "year" ) ) )
 									{
 										publication = pub;
-										publication.addCoAuthor( author );
 										break;
 									}
 								}
 								// if publication still null, due to publication
 								// date is null
 								if ( publication == null )
-								{
 									publication = fromDbPublications.get( 0 );
-									publication.addCoAuthor( author );
-								}
 							}
 							else
-							{
 								publication = fromDbPublications.get( 0 );
-								publication.addCoAuthor( author );
-							}
 							// added to selected list
 							selectedPublications.add( publication );
 						}
+						// remove old publicationSource
+						if ( publication != null )
+							publication.removeNonUserInputPublicationSource();
 					}
 
 					// check if null ( really new publication )
 					if( publication == null ){
 						publication = new Publication();
 						publication.setTitle( publicationTitle );
-						publication.addCoAuthor( author );
 						selectedPublications.add( publication );
 					}
+					// add coauthor
+					publication.addCoAuthor( author );
 					
 					// create publication sources and assign it to publication
 					PublicationSource publicationSource = new PublicationSource();
@@ -219,6 +215,7 @@ public class PublicationCollectionService
 					publicationSource.setSourceUrl( publicationMap.get( "url" ) );
 					publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
 					publicationSource.setSourceType( SourceType.valueOf(publicationMap.get( "source" ).toUpperCase() ) );
+					publicationSource.setPublication( publication );
 
 					if ( publicationMap.get( "nocitation" ) != null )
 						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "nocitation" ) ) );
@@ -289,7 +286,7 @@ public class PublicationCollectionService
 	 */
 	public void mergingPublicationInformation( Publication pub, Author pivotAuthor/*, List<Author> coAuthors*/ ) throws ParseException
 	{
-		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/u", Locale.ENGLISH );
+		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/d", Locale.ENGLISH );
 		Calendar calendar = Calendar.getInstance();
 
 		for ( PublicationSource pubSource : pub.getPublicationSources() )
@@ -447,44 +444,46 @@ public class PublicationCollectionService
 				pub.setPublicationType( publicationType );
 			}
 
-			if ( pubSource.getPublicationEvent() != null && pub.getConference() == null )
+			if ( pubSource.getPublicationEvent() != null && pub.getEvent() == null )
 			{
 				String eventName = pubSource.getPublicationEvent();
-				ConferenceGroup conferenceGroup = null;
-				Conference conference = null;
-				List<ConferenceGroup> conferenceGroups = persistenceStrategy.getConferenceDAO().getConferenceViaFuzzyQuery( eventName, .8f, 1 );
-				if ( conferenceGroups.isEmpty() )
+				EventGroup eventGroup = null;
+				Event event = null;
+				List<EventGroup> eventGroups = persistenceStrategy.getEventDAO().getEventViaFuzzyQuery( eventName, .8f, 1 );
+				if ( eventGroups.isEmpty() )
 				{
 					if ( publicationType != null )
 					{
-						// create conference group
-						conferenceGroup = new ConferenceGroup();
-						conferenceGroup.setName( eventName );
+						// create event group
+						eventGroup = new EventGroup();
+						eventGroup.setName( eventName );
 						String notationName = null;
 						String[] eventNameSplit = eventName.split( " " );
 						for ( String eachEventName : eventNameSplit )
 							if ( !eachEventName.equals( "" ) && Character.isUpperCase( eachEventName.charAt( 0 ) ) )
 								notationName += eachEventName.substring( 0, 1 );
-						conferenceGroup.setNotation( notationName );
-						conferenceGroup.setConferenceType( publicationType );
-						// create conference
+						eventGroup.setNotation( notationName );
+						eventGroup.setPublicationType( publicationType );
+						// create event
 						if ( publicationDate != null )
 						{
-							// save conference group
-							persistenceStrategy.getConferenceGroupDAO().persist( conferenceGroup );
+							// save event group
+							persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 
 							calendar.setTime( publicationDate );
-							conference = new Conference();
-							conference.setDate( publicationDate );
-							conference.setYear( Integer.toString( calendar.get( Calendar.YEAR ) ) );
-							conference.setConferenceGroup( conferenceGroup );
-							pub.setConference( conference );
+							event = new Event();
+							event.setDate( publicationDate );
+							event.setYear( Integer.toString( calendar.get( Calendar.YEAR ) ) );
+							event.setEventGroup( eventGroup );
+							pub.setEvent( event );
 						}
 					}
 				}
 			}
 
 		}
+		// set is updated true
+		pub.setContentUpdated( true );
 		// last save publication, this will save allrelated objects
 		persistenceStrategy.getPublicationDAO().persist( pub );
 	}

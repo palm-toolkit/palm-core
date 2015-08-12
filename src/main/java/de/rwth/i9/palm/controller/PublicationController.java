@@ -1,9 +1,9 @@
 package de.rwth.i9.palm.controller;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
-import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -39,9 +39,20 @@ public class PublicationController
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	@Autowired
+	private PublicationFeature publicationFeature;
+
+	/**
+	 * Get the publication page
+	 * 
+	 * @param sessionId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
-	public ModelAndView mainPage( 
+	public ModelAndView publicationPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
 			final HttpServletResponse response ) throws InterruptedException
 	{
@@ -57,60 +68,92 @@ public class PublicationController
 		return model;
 	}
 
+	/**
+	 * Get the list of publications based on the following parameters
+	 * 
+	 * @param query
+	 * @param conferenceName
+	 * @param conferenceId
+	 * @param page
+	 * @param maxresult
+	 * @param response
+	 * @return JSON Map
+	 */
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getPublicationList( 
 			@RequestParam( value = "query", required = false ) String query,
-			@RequestParam( value = "conference", required = false ) String conferenceName,
-			@RequestParam( value = "conferenceid", required = false ) String conferenceId,
+			@RequestParam( value = "event", required = false ) String eventName,
+			@RequestParam( value = "eventid", required = false ) String eventId,
 			@RequestParam( value = "page", required = false ) Integer page, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
 			final HttpServletResponse response )
 	{
-		if ( query == null )
-			query = "";
+		return publicationFeature.getPublicationSearch().getPublicationListByQueryAndEvent( query, eventName, eventId, page, maxresult );
+	}
 
-		if ( page == null )
-			page = 0;
-		
-		if ( maxresult == null )
-			maxresult = 50;
-
-		// get the publication
-		Map<String, Object> publicationMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( query, page, maxresult );
-
-		// create JSON mapper for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-
-		responseMap.put( "query", query );
-		responseMap.put( "page", page );
-		responseMap.put( "maxresult", maxresult );
-
-		// create the json structure for publication list
-		if ( publicationMap != null )
-		{
-			responseMap.put( "count", publicationMap.get( "count" ) );
-
-			@SuppressWarnings( "unchecked" )
-			List<Publication> publications = (List<Publication>) publicationMap.get( "result" );
-			List<Map<String, String>> publicationList = new ArrayList<Map<String, String>>();
-
-			for ( Publication publication : publications )
-			{
-				Map<String, String> pub = new LinkedHashMap<String, String>();
-				pub.put( "id", publication.getId() );
-				pub.put( "title", publication.getTitle() );
-
-				publicationList.add( pub );
-			}
-			responseMap.put( "publication", publicationList );
-
-		}
-		else
-		{
-			responseMap.put( "count", 0 );
-		}
-
-		return responseMap;
+	/**
+	 * Get details( publication content ) from a publication
+	 * 
+	 * @param id
+	 *            of publication
+	 * @param uri
+	 * @param response
+	 * @return JSON Map
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 */
+	@RequestMapping( value = "/detail", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationDetail( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "uri", required = false ) final String uri, 
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return publicationFeature.getPublicationDetail().getPublicationDetailById( id );
+	}
+	
+	/**
+	 * Get the basic statistic (publication type, language, etc) from a
+	 * publication
+	 * 
+	 * @param id
+	 *            of publication
+	 * @param uri
+	 * @param response
+	 * @return JSON Map
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 */
+	@RequestMapping( value = "/basicstatistic", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "uri", required = false ) final String uri, 
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
+	}
+	
+	/**
+	 * Extract Pdf on a specific publication
+	 * 
+	 * @param id
+	 *            of publication
+	 * @param response
+	 * @return JSON Map
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 */
+	@RequestMapping( value = "/pdfExtract", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> doPdfExtraction( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return publicationFeature.getPublicationManage().extractPublicationFromPdf( id );
 	}
 }

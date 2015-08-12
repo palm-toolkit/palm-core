@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
-import de.rwth.i9.palm.helper.comparator.ConferenceByNotationComparator;
-import de.rwth.i9.palm.model.Conference;
+import de.rwth.i9.palm.helper.comparator.EventByNotationComparator;
+import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -71,7 +71,7 @@ public class ConferenceController
 			maxresult = 50;
 
 		// get the conference
-		Map<String, Object> conferenceMap = persistenceStrategy.getConferenceDAO().getConferenceByFullTextSearchWithPaging( query, page, maxresult );
+		Map<String, Object> conferenceMap = persistenceStrategy.getEventDAO().getEventByFullTextSearchWithPaging( query, page, maxresult );
 
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -86,20 +86,20 @@ public class ConferenceController
 			responseMap.put( "count", conferenceMap.get( "count" ) );
 
 			@SuppressWarnings( "unchecked" )
-			List<Conference> conferences = (List<Conference>) conferenceMap.get( "result" );
+			List<Event> events = (List<Event>) conferenceMap.get( "result" );
 			List<Map<String, String>> conferenceList = new ArrayList<Map<String, String>>();
 
 			// sort conference
-			Collections.sort( conferences, new ConferenceByNotationComparator() );
+			Collections.sort( events, new EventByNotationComparator() );
 
-			for ( Conference conference : conferences )
+			for ( Event event : events )
 			{
 				Map<String, String> conf = new LinkedHashMap<String, String>();
-				conf.put( "id", conference.getId() );
-				conf.put( "type", conference.getConferenceGroup().getConferenceType().toString() );
-				conf.put( "title", conference.getConferenceGroup().getName() );
-				conf.put( "year", conference.getYear() );
-				conf.put( "notation", conference.getConferenceGroup().getNotation() + conference.getYear() );
+				conf.put( "id", event.getId() );
+				conf.put( "type", event.getEventGroup().getPublicationType().toString() );
+				conf.put( "title", event.getEventGroup().getName() );
+				conf.put( "year", event.getYear() );
+				conf.put( "notation", event.getEventGroup().getNotation() + event.getYear() );
 
 				conferenceList.add( conf );
 			}

@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -29,37 +28,13 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "https://scholar.google.com/citations?view_op=search_authors&mauthors=" + authorName.replace( " ", "-" );
+
 		// Using jsoup java html parser library
-		Document document = null;
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie() );
 
-		Map<String, String> cookies = new HashMap<String, String>();
-		//cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
-		//cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
-		//cookies.put( "GMAIL_RTT", "37" );
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=47610198c160e6e3:TM=1437473233:C=c:IP=95.223.161.25-:S=APGng0vLuZnV6C6uygezIXLtKYgLQEknww" );
-		cookies.put( "GSP", "LM=1437473239:S=Yrlh3QwPbS54X8Ej" );
-		//cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
-		cookies.put( "NID", "69=JMPLG390_S8CKIa23HVj1Pw1yKrPmbHx5-gjSJzbvS7s0aGKQqMksga6fVxYRaC1RXrygvXy-W_aXPd4mN83ucAM_T6RP2FzDkrfpTbyDc3IAz-8VQtX7_Jj477CXA7b" );
-		//cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
-		//cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
-		//cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
-		//cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
-
-//		try
-//		{
-			// Using jsoup java html parser library
-			document = Jsoup
-					.connect( url )
-					.userAgent( "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" )
-.header( "Accept", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ).cookies( cookies )
-					.timeout( 5000 ).get();
-//		}
-//		catch ( Exception e )
-//		{
-//			return Collections.emptyList();
-//		}
 		if ( document == null )
 			return Collections.emptyList();
+
 		Elements authorListNodes = document.select( HtmlSelectorConstant.GS_AUTHOR_LIST_CONTAINER );
 
 		if ( authorListNodes.size() == 0 )
@@ -101,34 +76,8 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
 		// Using jsoup java html parser library
-		Document document = null;
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url + "&cstart=0&pagesize=1000", 5000, getGoogleScholarCookie() );
 
-		Map<String, String> cookies = new HashMap<String, String>();
-		//cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
-		//cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
-		//cookies.put( "GMAIL_RTT", "37" );
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=47610198c160e6e3:TM=1437473233:C=c:IP=95.223.161.25-:S=APGng0vLuZnV6C6uygezIXLtKYgLQEknww" );
-		cookies.put( "GSP", "LM=1437473239:S=Yrlh3QwPbS54X8Ej" );
-		//cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
-		cookies.put( "NID", "69=JMPLG390_S8CKIa23HVj1Pw1yKrPmbHx5-gjSJzbvS7s0aGKQqMksga6fVxYRaC1RXrygvXy-W_aXPd4mN83ucAM_T6RP2FzDkrfpTbyDc3IAz-8VQtX7_Jj477CXA7b" );
-		//cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
-		//cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
-		//cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
-		//cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
-
-//				try
-//				{
-			// Using jsoup java html parser library
-			document = Jsoup
-					.connect( url + "&cstart=0&pagesize=1000")
-					.userAgent( "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" )
-.header( "Accept", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ).cookies( cookies )
-					.timeout( 5000 ).get();
-//				}
-//				catch ( Exception e )
-//				{
-//					return Collections.emptyList();
-//				}
 		if ( document == null )
 			return Collections.emptyList();
 
@@ -167,36 +116,9 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 	public static Map<String, String> getPublicationDetailByPublicationUrl( String url ) throws IOException
 	{
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
-
 		// Using jsoup java html parser library
-		Document document = null;
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie() );
 
-		Map<String, String> cookies = new HashMap<String, String>();
-		//cookies.put( "APISID", "C3qs0OXHzPeJNxxT/At3gzfzcBTP87JOEM" );
-		//cookies.put( "CONSENT", "YES+DE.en+20150705-15-0" );
-		//cookies.put( "GMAIL_RTT", "37" );
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=47610198c160e6e3:TM=1437473233:C=c:IP=95.223.161.25-:S=APGng0vLuZnV6C6uygezIXLtKYgLQEknww" );
-		cookies.put( "GSP", "LM=1437473239:S=Yrlh3QwPbS54X8Ej" );
-		//cookies.put( "HSID", "AhDcQNKXGhrXqB3le" );
-		cookies.put( "NID", "69=JMPLG390_S8CKIa23HVj1Pw1yKrPmbHx5-gjSJzbvS7s0aGKQqMksga6fVxYRaC1RXrygvXy-W_aXPd4mN83ucAM_T6RP2FzDkrfpTbyDc3IAz-8VQtX7_Jj477CXA7b" );
-		//cookies.put( "PREF", "ID=1111111111111111:FF=0:LD=en:TM=1432735603:LM=1435079443:S=bbCHTr3G7UUpxJzf" );
-		//cookies.put( "SAPISID", "4ntbRtMKiBq1VQtx/AEl6RrM-kZjyLwUme" );
-		//cookies.put( "SID", "DQAAAAcBAADNotp_odfLi0c7wz1_nkP08ZWRbmW4BOAzsqRfec9zOOPHLHP-lCK0g1V37rtooroDTYkre4rc8tNP3A_qDGYjtog0Ex7SjTd-wkEL3NNuVROsEQmfwHcztQ9bQ7mFbVReNSo-UXehZFiEwODVTrm-QTW-mnMRUjEN8Li0ceuXnS1G1r2Q2Fzbq5aPZeEX5MHHJaClgS7n5hN3QvPKQXIkA8v_ZOrrJLRxHiAWe5vBd7nTrWvNE_fw-R3eNpanCQXxXyZDJsc-69DVGPdqrFz-LaMRhbCOkAWwMZah9mpF2kSgHHzFR-S319RlAfKYfVdpQJilomIApYCidOp9fxHgKXj44Gcq98NobZ3P5gVCmg	" );
-		//cookies.put( "SSID", "AmXTSbUMtFsE_VntY" );
-
-//				try
-//				{
-			// Using jsoup java html parser library
-			document = Jsoup
-					.connect( url )
-					.userAgent( "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" )
-.header( "Accept", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ).cookies( cookies )
-					.timeout( 5000 ).get();
-//				}
-//				catch ( Exception e )
-//				{
-//					return Collections.emptyList();
-//				}
 		if ( document == null )
 			return Collections.emptyMap();
 
@@ -231,5 +153,15 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			publicationDetailMaps.put( publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_LABEL ).text(), publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_VALUE ).text() );
 
 		return publicationDetailMaps;
+	}
+	
+	private static Map<String, String> getGoogleScholarCookie()
+	{
+		Map<String, String> cookies = new HashMap<String, String>();
+		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=df93c59979ded4c7:TM=1438589257:C=c:IP=95.223.161.25-:S=APGng0uX_nGeZZbVdG0c4vxsxbRwXg08fA" );
+		cookies.put( "GSP", "LM=1438509418:S=OsqfoXZicqz09iBT" );
+		cookies.put( "NID", "70=hcw9rL3hPrp4dWMkd4C4DeF_Q8BO7BpB-bo9z0Ix_WPeM7IwAmbYCR2jolHcJQW_Oy7cJQuEWuRg_CKaPku4MPHyu2ReS86KcCExepqy3GRJJPhVuYg42Z1ZrCbE26AC" );
+		cookies.put( "PREF", "ID=1111111111111111:FF=0:TM=1438520627:LM=1438520627:V=1:S=8w-e8EQt08Or09Lx" );
+		return cookies;
 	}
 }

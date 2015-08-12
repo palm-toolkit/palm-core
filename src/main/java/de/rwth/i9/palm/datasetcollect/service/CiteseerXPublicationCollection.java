@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -30,18 +29,8 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 
 		String url = "http://citeseerx.ist.psu.edu/search?q=" + authorName.replace( " ", "+" ) + "&submit=Search&uauth=1&sort=ndocs&t=auth";
 		// Using jsoup java html parser library
-		Document document = null;
-		try
-		{
-			document = Jsoup.connect( url )
-					.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
-.timeout( 5000 )
-					.get();
-		}
-		catch ( Exception e )
-		{
-			return Collections.emptyList();
-		}
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000 );
+
 		if( document == null )
 			return Collections.emptyList();
 
@@ -79,20 +68,9 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 	{
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
-		Document document = null;
+		// Using jsoup java html parser library
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url + "&list=full", 10000 );
 		
-		try
-		{
-			// Using jsoup java html parser library
-			document = Jsoup.connect( url + "&list=full" )
-				.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
-.timeout( 5000 )
-				.get();
-		}
-		catch ( Exception e )
-		{
-			return Collections.emptyList();
-		}
 		if( document == null )
 			return Collections.emptyList();
 		
@@ -147,21 +125,10 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 	{
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
 
-		Document document = null;
-		
-		try
-		{
-			// Using jsoup java html parser library
-			document = Jsoup.connect( url )
-				.userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
-.timeout( 5000 )
-				.get();
-		}
-		catch ( Exception e )
-		{
-			return Collections.emptyMap();
-		}
-		if( document == null )
+		// Using jsoup java html parser library
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 10000 );
+
+		if ( document == null )
 			return Collections.emptyMap();
 
 		Elements publicationDetailHeader = document.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_HEADER );
