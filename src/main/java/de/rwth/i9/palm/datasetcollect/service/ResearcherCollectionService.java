@@ -175,7 +175,7 @@ public class ResearcherCollectionService
 							institutionObject.setURI( institution.replace( " ", "-" ) );
 						}
 
-						author.setInstitution( institutionObject );
+						author.addInstitution( institutionObject );
 					}
 
 				}

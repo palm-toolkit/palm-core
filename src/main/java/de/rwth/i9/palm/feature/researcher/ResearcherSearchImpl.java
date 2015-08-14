@@ -16,6 +16,7 @@ import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
 import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.RequestType;
 import de.rwth.i9.palm.model.UserRequest;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -124,8 +125,14 @@ public class ResearcherSearchImpl implements ResearcherSearch
 					otherDetail += ", " + researcher.getDepartment();
 				if ( !otherDetail.equals( "" ) )
 					pub.put( "detail", otherDetail );
-				if ( researcher.getInstitution() != null )
-					pub.put( "aff", researcher.getInstitution().getName() );
+				if ( researcher.getInstitutions() != null )
+					for ( Institution institution : researcher.getInstitutions() )
+					{
+						if ( pub.get( "aff" ) != null )
+							pub.put( "aff", pub.get( "aff" ) + ", " + institution.getName() );
+						else
+							pub.put( "aff", institution.getName() );
+					}
 				if ( researcher.getCitedBy() > 0 )
 					pub.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
 
