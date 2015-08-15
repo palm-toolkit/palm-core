@@ -26,6 +26,7 @@ import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.PublicationType;
 import de.rwth.i9.palm.model.SourceMethod;
@@ -426,13 +427,28 @@ public class PublicationCollectionService
 				pub.setPublicationDate( publicationDate );
 			}
 
-			// pdf source ( probably need list of it)
-			if ( pubSource.getPdfSource() != null && pub.getPdfSource() == null )
-				pub.setPdfSource( pubSource.getPdfSource() );
+			// publication file (the pdf)
+			if ( pubSource.getPdfSourceUrl() != null )
+			{
+				PublicationFile publicationFile = new PublicationFile();
+				if ( pubSource.getPdfSource() != null )
+					publicationFile.setSource( pubSource.getPdfSource() );
+				else
+					publicationFile.setSource( pubSource.getSourceType().toString().toLowerCase() );
+				publicationFile.setSourceType( pubSource.getSourceType() );
+				publicationFile.setPublication( pub );
 
-			// pdf sourceUrl ( probably need list of it)
-			if ( pubSource.getPdfSourceUrl() != null && pub.getPdfSourceUrl() == null )
-				pub.setPdfSourceUrl( pubSource.getPdfSourceUrl() );
+				boolean duplicated = false;
+				if ( pub.getPublicationFiles() != null )
+					for ( PublicationFile pubFile : pub.getPublicationFiles() )
+					{
+						if ( pubFile.getUrl().equals( pubSource.getPdfSource() ) )
+							duplicated = true;
+					}
+
+				if ( !duplicated )
+					pub.addPublicationFile( publicationFile );
+			}
 
 			if ( pubSource.getCitedBy() > 0 && pubSource.getCitedBy() > pub.getCitedBy() )
 				pub.setCitedBy( pubSource.getCitedBy() );

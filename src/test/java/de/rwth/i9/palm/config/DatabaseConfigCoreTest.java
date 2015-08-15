@@ -35,6 +35,7 @@ import de.rwth.i9.palm.model.InterestAuthor;
 import de.rwth.i9.palm.model.Location;
 import de.rwth.i9.palm.model.PalmConfiguration;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationHistory;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.PublicationTopic;
@@ -145,6 +146,7 @@ public class DatabaseConfigCoreTest
 						Location.class,
 						PalmConfiguration.class,
 						Publication.class,
+						PublicationFile.class,
 						PublicationHistory.class,
 						PublicationSource.class,
 						PublicationTopic.class,

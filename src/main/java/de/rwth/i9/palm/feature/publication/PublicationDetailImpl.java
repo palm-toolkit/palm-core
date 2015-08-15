@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
+import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -65,12 +67,36 @@ public class PublicationDetailImpl implements PublicationDetail
 		publicationMap.put( "coauthor", coathorList );
 		if ( publication.getContentText() != null )
 			publicationMap.put( "content", publication.getContentText() );
-		if( publication.getPdfSource() != null )
-			publicationMap.put( "pdf", publication.getPdfSource() );
-		if( publication.getPdfSourceUrl() != null ){
-			publicationMap.put( "pdfurl", publication.getPdfSourceUrl() );
+
+		PublicationFile publicationFile = null;
+
+		if ( publication.getPublicationFiles() != null )
+		{
+			for ( PublicationFile pubFile : publication.getPublicationFiles() )
+			{
+				if ( publicationFile == null )
+					publicationFile = pubFile;
+				else
+				{
+					if ( pubFile.getSourceType().equals( SourceType.DBLP ) )
+						publicationFile = pubFile;
+				}
+
+				if ( pubFile.isCorrectlyExtracted() )
+				{
+					publicationFile = pubFile;
+					break;
+				}
+			}
+		}
+
+		if ( publicationFile != null )
+		{
+			publicationMap.put( "pdf", publicationFile.getUrl() );
+			publicationMap.put( "pdfurl", publicationFile.getSource() );
 			publicationMap.put( "pdfextract", publication.isPdfExtracted() );
 		}
+
 		if ( publication.getKeywordText() != null )
 			publicationMap.put( "keyword", publication.getKeywordText() );
 		if ( publication.getReferenceText() != null )

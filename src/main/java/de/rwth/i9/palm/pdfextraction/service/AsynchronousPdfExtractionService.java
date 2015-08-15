@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
 
 @Service
 public class AsynchronousPdfExtractionService
@@ -27,7 +28,22 @@ public class AsynchronousPdfExtractionService
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "Download and Extract pdf " + publication.getTitle() + " starting" );
 
-		List<TextSection> textSections = ItextPdfExtraction.extractPdf( publication.getPdfSourceUrl() );
+		List<TextSection> textSections = null;
+
+		// TODO: debugging this part
+		for ( PublicationFile publicationFile : publication.getPublicationFiles() )
+		{
+			try
+			{
+				textSections = ItextPdfExtraction.extractPdf( publicationFile.getUrl() );
+				if ( textSections != null || !textSections.isEmpty() )
+					break;
+			}
+			catch ( Exception e )
+			{
+				// TODO: handle exception
+			}
+		}
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
