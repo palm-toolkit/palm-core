@@ -431,6 +431,7 @@ public class PublicationCollectionService
 			if ( pubSource.getPdfSourceUrl() != null )
 			{
 				PublicationFile publicationFile = new PublicationFile();
+				publicationFile.setUrl( pubSource.getPdfSourceUrl() );
 				if ( pubSource.getPdfSource() != null )
 					publicationFile.setSource( pubSource.getPdfSource() );
 				else

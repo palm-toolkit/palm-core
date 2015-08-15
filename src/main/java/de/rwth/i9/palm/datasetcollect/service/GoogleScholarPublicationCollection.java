@@ -158,8 +158,8 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 	private static Map<String, String> getGoogleScholarCookie()
 	{
 		Map<String, String> cookies = new HashMap<String, String>();
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=df93c59979ded4c7:TM=1438589257:C=c:IP=95.223.161.25-:S=APGng0uX_nGeZZbVdG0c4vxsxbRwXg08fA" );
-		cookies.put( "GSP", "LM=1438509418:S=OsqfoXZicqz09iBT" );
+		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=7a6e80aa6b8f4b72:TM=1439671671:C=c:IP=95.223.161.25-:S=APGng0uT2VzxBOTxNpa0aheJnga798uHbw" );
+		cookies.put( "GSP", "LM=1439671692:S=vaddmF-x4K9EWhEj" );
 		cookies.put( "NID", "70=hcw9rL3hPrp4dWMkd4C4DeF_Q8BO7BpB-bo9z0Ix_WPeM7IwAmbYCR2jolHcJQW_Oy7cJQuEWuRg_CKaPku4MPHyu2ReS86KcCExepqy3GRJJPhVuYg42Z1ZrCbE26AC" );
 		cookies.put( "PREF", "ID=1111111111111111:FF=0:TM=1438520627:LM=1438520627:V=1:S=8w-e8EQt08Or09Lx" );
 		return cookies;
