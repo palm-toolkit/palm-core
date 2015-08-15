@@ -442,7 +442,7 @@ public class PublicationCollectionService
 				if ( pub.getPublicationFiles() != null )
 					for ( PublicationFile pubFile : pub.getPublicationFiles() )
 					{
-						if ( pubFile.getUrl().equals( pubSource.getPdfSource() ) )
+						if ( pubFile.getUrl().equals( pubSource.getPdfSourceUrl() ) )
 							duplicated = true;
 					}
 
