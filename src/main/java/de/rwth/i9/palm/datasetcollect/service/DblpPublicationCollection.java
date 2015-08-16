@@ -68,19 +68,42 @@ public class DblpPublicationCollection extends PublicationCollection
 				// get author name
 				eachAuthorMap.put( "name", name );
 				// set source
-				eachAuthorMap.put( "source", SourceType.CITESEERX.toString() );
+				eachAuthorMap.put( "source", SourceType.DBLP.toString() );
 				// get author url
 				eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
 
 				authorList.add( eachAuthorMap );
 			}
-
-			return authorList;
 		}
 		else
 		{
-			return getPublicationListByAuthorUrl( "none", document );
+			Map<String, String> eachAuthorMap = new LinkedHashMap<String, String>();
+
+			// e.g:http://dblp.uni-trier.de/pers/hd/c/Chatti:Mohamed_Amine?q=mohamed+amin+chatti
+			String[] urlAuthorQuery = document.baseUri().split( "\\?" );
+
+			// e.g:http://dblp.uni-trier.de/pers/hd/c/Chatti:Mohamed_Amine
+			String[] urlAuthor = urlAuthorQuery[0].split( "/" );
+
+			// Chatti:Mohamed_Amine
+			String[] authorSplitName = urlAuthor[urlAuthor.length - 1].split( ":" );
+
+			String firstName = authorSplitName[1].replace( "_", " " ).toLowerCase();
+			String lastName = authorSplitName[0].toLowerCase();
+
+			// get author name
+			eachAuthorMap.put( "name", firstName + " " + lastName );
+			eachAuthorMap.put( "lastName", lastName );
+			eachAuthorMap.put( "firstName", firstName );
+			// set source
+			eachAuthorMap.put( "source", SourceType.DBLP.toString() );
+			// get author url
+			eachAuthorMap.put( "url", urlAuthorQuery[0] );
+
+			authorList.add( eachAuthorMap );
 		}
+
+		return authorList;
 	}
 
 	/**
@@ -92,16 +115,10 @@ public class DblpPublicationCollection extends PublicationCollection
 	 */
 	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException
 	{
-		return getPublicationListByAuthorUrl( url, null );
-	}
-
-	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url, Document document ) throws IOException
-	{
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
-		if ( document == null )
 			// Using jsoup java html parser library
-			document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie() );
 
 		if ( document == null )
 			return Collections.emptyList();

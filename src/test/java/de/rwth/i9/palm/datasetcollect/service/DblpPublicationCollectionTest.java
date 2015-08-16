@@ -17,6 +17,7 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 public class DblpPublicationCollectionTest
 {
 	@Test
+	@Ignore
 	public void getListOfAuthorsTest() throws IOException
 	{
 		List<Map<String, String>> authorList = DblpPublicationCollection.getListOfAuthors( "mohamed amine chatti" );
@@ -30,10 +31,9 @@ public class DblpPublicationCollectionTest
 	}
 
 	@Test
-	@Ignore
 	public void getListOfPublicationTest() throws IOException
 	{
-		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "https://scholar.google.com/citations?user=gyLI8FYAAAAJ&hl=en" );
+		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/c/Chatti:Mohamed_Amine" );
 
 		for ( Map<String, String> eachPublicationMap : publicationMapLists )
 		{

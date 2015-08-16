@@ -30,18 +30,31 @@ public class ResearcherCollectionService
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	/**
+	 * Gather researcher from academic networks
+	 * 
+	 * @param query
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	public void collectAuthorInformationFromNetwork( String query ) throws IOException, InterruptedException, ExecutionException
 	{
-		// extract dataset from academic network concurrently
-		// Stopwatch stopwatch = Stopwatch.createStarted();
-
+		// container
 		List<Future<List<Map<String, String>>>> authorFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
 
-		// ( if google scholar )
-		authorFutureLists.add( asynchronousCollectionService.getListOfAuthorsGoogleScholar( query ) );
-
-		// if( citeseer )
-		authorFutureLists.add( asynchronousCollectionService.getListOfAuthorsCiteseerX( query ) );
+		// get sources and their flag "active/inactive" as Map
+		Map<SourceType, Boolean> activeSourceMap = persistenceStrategy.getSourceDAO().getActiveSourceMap();
+		// loop through all source which is active
+		for ( Map.Entry<SourceType, Boolean> sourceEntry : activeSourceMap.entrySet() )
+		{
+			if ( sourceEntry.getKey().equals( SourceType.GOOGLESCHOLAR ) && sourceEntry.getValue() )
+				authorFutureLists.add( asynchronousCollectionService.getListOfAuthorsGoogleScholar( query ) );
+			else if ( sourceEntry.getKey().equals( SourceType.CITESEERX ) && sourceEntry.getValue() )
+				authorFutureLists.add( asynchronousCollectionService.getListOfAuthorsCiteseerX( query ) );
+			else if ( sourceEntry.getKey().equals( SourceType.DBLP ) && sourceEntry.getValue() )
+				authorFutureLists.add( asynchronousCollectionService.getListOfAuthorsDblp( query ) );
+		}
 
 		// Wait until they are all done
 		boolean processIsDone = true;
