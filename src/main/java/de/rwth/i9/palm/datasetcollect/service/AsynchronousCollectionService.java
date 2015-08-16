@@ -144,6 +144,13 @@ public class AsynchronousCollectionService
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
 
+	/**
+	 * Asynchronously gather publication detail from google scholar
+	 * 
+	 * @param publicationSource
+	 * @return
+	 * @throws IOException
+	 */
 	@Async
 	public Future<PublicationSource> getListOfPublicationsDetailGoogleScholar( PublicationSource publicationSource ) throws IOException
 	{
@@ -219,6 +226,13 @@ public class AsynchronousCollectionService
 		return new AsyncResult<PublicationSource>( publicationSource );
 	}
 
+	/**
+	 * Asynchronously gather publication detail from citeseerx
+	 * 
+	 * @param publicationSource
+	 * @return
+	 * @throws IOException
+	 */
 	@Async
 	public Future<PublicationSource> getListOfPublicationDetailCiteseerX( PublicationSource publicationSource ) throws IOException
 	{
@@ -263,6 +277,15 @@ public class AsynchronousCollectionService
 		return new AsyncResult<PublicationSource>( publicationSource );
 	}
 
+	/**
+	 * Main method for collect publication detail from a publication from
+	 * multiple source
+	 * 
+	 * @param publication
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	@Async
 	public Future<Publication> asyncWalkOverSelectedPublication( Publication publication ) throws IOException, InterruptedException
 	{

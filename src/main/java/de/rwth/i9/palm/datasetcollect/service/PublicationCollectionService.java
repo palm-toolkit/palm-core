@@ -48,7 +48,7 @@ public class PublicationCollectionService
 	private PalmAnalytics palmAnalitics;
 
 	/**
-	 * Fetch author publication from network
+	 * Fetch author' publication list from academic networks
 	 * 
 	 * @param responseMap
 	 * @param author
@@ -68,6 +68,9 @@ public class PublicationCollectionService
 			responseMap.put( "reason", "no author sources found" );
 		}
 
+		// get source and its flag "active/inactive" as Map
+		Map<SourceType, Boolean> activeSourceMap = persistenceStrategy.getSourceDAO().getActiveSourceMap();
+
 		// future list for publication list
 		// extract dataset from academic network concurrently
 		// Stopwatch stopwatch = Stopwatch.createStarted();
@@ -75,9 +78,9 @@ public class PublicationCollectionService
 		List<Future<List<Map<String, String>>>> publicationFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
 		for ( AuthorSource authorSource : authorSources )
 		{
-			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR )
+			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR && activeSourceMap.get( SourceType.GOOGLESCHOLAR ) )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationsGoogleScholar( authorSource.getSourceUrl() ) );
-			else if ( authorSource.getSourceType() == SourceType.CITESEERX )
+			else if ( authorSource.getSourceType() == SourceType.CITESEERX && activeSourceMap.get( SourceType.CITESEERX ) )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl() ) );
 		}
 
@@ -103,8 +106,7 @@ public class PublicationCollectionService
 	}
 	
 	/**
-	 * THis function collect publication information and combine it into
-	 * publication object
+	 * Collect publication information and combine it into publication object
 	 * 
 	 * @param publicationFutureLists
 	 * @param author
@@ -131,7 +133,9 @@ public class PublicationCollectionService
 	}
 	
 	/**
-	 * Cunstrucnt the publication and publicationSources
+	 * Construct the publication and publicationSources, with the data gathered
+	 * from academic networks
+	 * 
 	 * @param selectedPublications
 	 * @param publicationFutureLists
 	 * @param author
@@ -501,7 +505,7 @@ public class PublicationCollectionService
 		}
 		// set is updated true
 		pub.setContentUpdated( true );
-		// last save publication, this will save allrelated objects
+		// last save publication, this will save all related objects
 		persistenceStrategy.getPublicationDAO().persist( pub );
 	}
 
