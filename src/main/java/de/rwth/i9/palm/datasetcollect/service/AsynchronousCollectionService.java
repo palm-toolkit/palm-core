@@ -21,11 +21,24 @@ import de.rwth.i9.palm.model.SourceMethod;
 import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.utils.TextUtils;
 
+/**
+ * 
+ * @author sigit
+ *
+ */
 @Service
 public class AsynchronousCollectionService
 {
 	private final static Logger log = LoggerFactory.getLogger( AsynchronousCollectionService.class );
 
+	/**
+	 * Only for testing purpose. This method has no functionality purpose over
+	 * PALM-project
+	 * 
+	 * @param taskCall
+	 * @return
+	 * @throws InterruptedException
+	 */
 	@Async
 	public Future<Long> callAsync( int taskCall ) throws InterruptedException
 	{
@@ -43,6 +56,13 @@ public class AsynchronousCollectionService
 		return new AsyncResult<Long>( stopwatch.elapsed( TimeUnit.MILLISECONDS ) );
 	}
 
+	/**
+	 * Asynchronously gather author list from google scholar
+	 * 
+	 * @param authorName
+	 * @return
+	 * @throws IOException
+	 */
 	@Async
 	public Future<List<Map<String, String>>> getListOfAuthorsGoogleScholar( String authorName ) throws IOException
 	{
@@ -58,6 +78,13 @@ public class AsynchronousCollectionService
 		return new AsyncResult<List<Map<String, String>>>( authorMap );
 	}
 
+	/**
+	 * Asynchronously gather author list from citeseerx
+	 * 
+	 * @param authorName
+	 * @return
+	 * @throws IOException
+	 */
 	@Async
 	public Future<List<Map<String, String>>> getListOfAuthorsCiteseerX( String authorName ) throws IOException
 	{
@@ -73,6 +100,13 @@ public class AsynchronousCollectionService
 		return new AsyncResult<List<Map<String, String>>>( authorMap );
 	}
 
+	/**
+	 * Asynchronously gather publication list from google scholar
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
 	@Async
 	public Future<List<Map<String, String>>> getListOfPublicationsGoogleScholar( String url ) throws IOException
 	{
@@ -88,6 +122,13 @@ public class AsynchronousCollectionService
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
 
+	/**
+	 * Asynchronously gather publication list from citeseerx
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
 	@Async
 	public Future<List<Map<String, String>>> getListOfPublicationCiteseerX( String url ) throws IOException
 	{
@@ -101,42 +142,6 @@ public class AsynchronousCollectionService
 
 		log.info( "get publication list from citeSeerX with url " + url + " complete in " + stopwatch );
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
-	}
-
-	@Async
-	public Future<Long> getListOfPublicationsDetailGoogleScholarForTesting( String sourceUrl ) throws IOException, InterruptedException
-	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-
-		log.info( "get publication detail from google scholar with url " + sourceUrl + " starting" );
-
-		// scrap the webpage
-		Map<String, String> publicationDetailMap = GoogleScholarPublicationCollection.getPublicationDetailByPublicationUrl( sourceUrl );
-
-		Thread.sleep( 5000 );
-
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-
-		log.info( "get publication detail from google scholar with url " + sourceUrl + " complete in " + stopwatch );
-		return new AsyncResult<Long>( stopwatch.elapsed( TimeUnit.MILLISECONDS ) );
-	}
-
-	@Async
-	public Future<Long> getListOfPublicationsDetailCiteseerForTesting( String sourceUrl ) throws IOException, InterruptedException
-	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-
-		log.info( "get publication detail from google scholar with url " + sourceUrl + " starting" );
-
-		// scrap the webpage
-		Map<String, String> publicationDetailMap = CiteseerXPublicationCollection.getPublicationDetailByPublicationUrl( sourceUrl );
-
-		Thread.sleep( 5000 );
-
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-
-		log.info( "get publication detail from google scholar with url " + sourceUrl + " complete in " + stopwatch );
-		return new AsyncResult<Long>( stopwatch.elapsed( TimeUnit.MILLISECONDS ) );
 	}
 
 	@Async
