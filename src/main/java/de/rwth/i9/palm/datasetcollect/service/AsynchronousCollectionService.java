@@ -161,6 +161,28 @@ public class AsynchronousCollectionService
 	}
 
 	/**
+	 * Asynchronously gather publication information (keywords and abstract)
+	 * from HtmlPage
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<Map<String, String>> getPublicationInfromationFromWebPage( String url ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "get publication list from Htmlpage " + url + " starting" );
+
+		Map<String, String> publicationInformationMap = HtmlPublicationCollection.getPublicationInformationFromHtmlPage( url );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "get publication list from Htmlpagel " + url + " complete in " + stopwatch );
+
+		return new AsyncResult<Map<String, String>>( publicationInformationMap );
+	}
+
+	/**
 	 * Asynchronously gather publication detail from google scholar
 	 * 
 	 * @param publicationSource
