@@ -11,6 +11,8 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,6 +167,24 @@ public class DblpPublicationCollection extends PublicationCollection
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
 					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+					if ( dataElement.select( "[itemprop=pagination]" ) != null )
+						publicationDetails.put( "page", dataElement.select( "[itemprop=pagination]" ).text() );
+
+					// other information
+					String otherInformation = "";
+					for ( Node child : dataElement.childNodes() )
+					{
+						if ( child instanceof TextNode )
+						{
+							otherInformation += ( (TextNode) child ).text() + " ";
+						}
+					}
+
+					otherInformation = otherInformation.replaceAll( "[\\.:]*", "" ).trim();
+					if ( !otherInformation.equals( "" ) )
+						publicationDetails.put( "otherInformation", otherInformation );
+
+					publicationDetails.put( "source", SourceType.DBLP.toString() );
 
 					publicationMapLists.add( publicationDetails );
 				}
@@ -195,6 +215,7 @@ public class DblpPublicationCollection extends PublicationCollection
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
 					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+					publicationDetails.put( "source", SourceType.DBLP.toString() );
 
 					publicationMapLists.add( publicationDetails );
 				}
@@ -226,6 +247,7 @@ public class DblpPublicationCollection extends PublicationCollection
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
 					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+					publicationDetails.put( "source", SourceType.DBLP.toString() );
 
 					publicationMapLists.add( publicationDetails );
 				}

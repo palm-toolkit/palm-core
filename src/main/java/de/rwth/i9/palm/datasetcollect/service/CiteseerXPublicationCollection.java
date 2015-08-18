@@ -13,6 +13,8 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.rwth.i9.palm.model.SourceType;
+
 public class CiteseerXPublicationCollection extends PublicationCollection
 {
 
@@ -50,7 +52,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 			// get author name
 			eachAuthorMap.put( "name", name );
 			// set source
-			eachAuthorMap.put( "source", "citeseerx" );
+			eachAuthorMap.put( "source", SourceType.CITESEERX.toString() );
 			// get author url
 			eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
 			// get author photo
@@ -93,7 +95,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 					publicationDetails.put( "nocitation", noCitation );
 
 				// set source
-				publicationDetails.put( "source", "citeseerx" );
+				publicationDetails.put( "source", SourceType.CITESEERX.toString() );
 				
 				publicationDetails.put( "url", eachPublicationRow.select( "a" ).first().absUrl( "href" ) );
 				
@@ -105,7 +107,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 				{
 					if ( venueAndYear.substring( venueAndYear.length() - 4 ).matches( "^\\d{4}" ) )
 					{
-						publicationDetails.put( "year", venueAndYear.substring( venueAndYear.length() - 4 ) );
+						publicationDetails.put( "date", venueAndYear.substring( venueAndYear.length() - 4 ) );
 						if ( venueAndYear.length() > 10 )
 							publicationDetails.put( "venue", venueAndYear.substring( 0, venueAndYear.length() - 4 ).replace( "-", "" ).trim() );
 					}

@@ -82,6 +82,8 @@ public class PublicationCollectionService
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationsGoogleScholar( authorSource.getSourceUrl() ) );
 			else if ( authorSource.getSourceType() == SourceType.CITESEERX && activeSourceMap.get( SourceType.CITESEERX ) )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl() ) );
+			else if ( authorSource.getSourceType() == SourceType.DBLP && activeSourceMap.get( SourceType.DBLP ) )
+				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDBLP( authorSource.getSourceUrl() ) );
 		}
 
 		// Wait until they are all done
@@ -226,7 +228,7 @@ public class PublicationCollectionService
 						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "nocitation" ) ) );
 
 					if ( publicationMap.get( "year" ) != null )
-						publicationSource.setYear( publicationMap.get( "year" ) );
+						publicationSource.setDate( publicationMap.get( "year" ) );
 
 					publication.addPublicationSource( publicationSource );
 								
@@ -305,12 +307,20 @@ public class PublicationCollectionService
 				if ( pubSource.getDate() != null )
 				{
 					String pubSourceDate = pubSource.getDate();
+					String publicationDateFormat = "yyyy/M/d";
 					if ( pubSourceDate.length() == 4 )
+					{
 						pubSourceDate += "/1/1";
+						publicationDateFormat = "yyyy";
+					}
 					else if ( pubSourceDate.length() < 8 )
+					{
 						pubSourceDate += "/1";
+						publicationDateFormat = "yyyy/M";
+					}
 					publicationDate = dateFormat.parse( pubSourceDate );
 					pub.setPublicationDate( publicationDate );
+					pub.setPublicationDateFormat( publicationDateFormat );
 				}
 
 				if ( pubSource.getPages() != null )
@@ -425,19 +435,20 @@ public class PublicationCollectionService
 				if ( pub.getAbstractText() == null || pub.getAbstractText().length() < pubSource.getAbstractText().length() )
 					pub.setAbstractText( pubSource.getAbstractText() );
 
-			if ( pub.getPublicationDate() == null && publicationDate == null && pubSource.getYear() != null )
+			if ( pub.getPublicationDate() == null && publicationDate == null && pubSource.getDate() != null )
 			{
-				publicationDate = dateFormat.parse( pubSource.getYear() + "/1/1" );
+				publicationDate = dateFormat.parse( pubSource.getDate() + "/1/1" );
 				pub.setPublicationDate( publicationDate );
+				pub.setPublicationDateFormat( "yyyy" );
 			}
 
 			// publication file (the pdf)
-			if ( pubSource.getPdfSourceUrl() != null )
+			if ( pubSource.getMainSourceUrl() != null )
 			{
 				PublicationFile publicationFile = new PublicationFile();
-				publicationFile.setUrl( pubSource.getPdfSourceUrl() );
-				if ( pubSource.getPdfSource() != null )
-					publicationFile.setSource( pubSource.getPdfSource() );
+				publicationFile.setUrl( pubSource.getMainSourceUrl() );
+				if ( pubSource.getMainSource() != null )
+					publicationFile.setSource( pubSource.getMainSource() );
 				else
 					publicationFile.setSource( pubSource.getSourceType().toString().toLowerCase() );
 				publicationFile.setSourceType( pubSource.getSourceType() );
@@ -447,7 +458,7 @@ public class PublicationCollectionService
 				if ( pub.getPublicationFiles() != null )
 					for ( PublicationFile pubFile : pub.getPublicationFiles() )
 					{
-						if ( pubFile.getUrl().equals( pubSource.getPdfSourceUrl() ) )
+						if ( pubFile.getUrl().equals( pubSource.getMainSourceUrl() ) )
 							duplicated = true;
 					}
 
@@ -463,40 +474,41 @@ public class PublicationCollectionService
 			{
 				publicationType = PublicationType.valueOf( pubSource.getPublicationType() );
 				pub.setPublicationType( publicationType );
-			}
 
-			if ( pubSource.getPublicationEvent() != null && pub.getEvent() == null )
-			{
-				String eventName = pubSource.getPublicationEvent();
-				EventGroup eventGroup = null;
-				Event event = null;
-				List<EventGroup> eventGroups = persistenceStrategy.getEventDAO().getEventViaFuzzyQuery( eventName, .8f, 1 );
-				if ( eventGroups.isEmpty() )
+
+				if ( ( publicationType.equals( "CONFERENCE" ) || publicationType.equals( "JOURNAL" ) ) && pubSource.getVenue() != null && pub.getEvent() == null )
 				{
-					if ( publicationType != null )
+					String eventName = pubSource.getVenue();
+					EventGroup eventGroup = null;
+					Event event = null;
+					List<EventGroup> eventGroups = persistenceStrategy.getEventDAO().getEventViaFuzzyQuery( eventName, .8f, 1 );
+					if ( eventGroups.isEmpty() )
 					{
-						// create event group
-						eventGroup = new EventGroup();
-						eventGroup.setName( eventName );
-						String notationName = null;
-						String[] eventNameSplit = eventName.split( " " );
-						for ( String eachEventName : eventNameSplit )
-							if ( !eachEventName.equals( "" ) && Character.isUpperCase( eachEventName.charAt( 0 ) ) )
-								notationName += eachEventName.substring( 0, 1 );
-						eventGroup.setNotation( notationName );
-						eventGroup.setPublicationType( publicationType );
-						// create event
-						if ( publicationDate != null )
+						if ( publicationType != null )
 						{
-							// save event group
-							persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+							// create event group
+							eventGroup = new EventGroup();
+							eventGroup.setName( eventName );
+							String notationName = null;
+							String[] eventNameSplit = eventName.split( " " );
+							for ( String eachEventName : eventNameSplit )
+								if ( !eachEventName.equals( "" ) && Character.isUpperCase( eachEventName.charAt( 0 ) ) )
+									notationName += eachEventName.substring( 0, 1 );
+							eventGroup.setNotation( notationName );
+							eventGroup.setPublicationType( publicationType );
+							// create event
+							if ( publicationDate != null )
+							{
+								// save event group
+								persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 
-							calendar.setTime( publicationDate );
-							event = new Event();
-							event.setDate( publicationDate );
-							event.setYear( Integer.toString( calendar.get( Calendar.YEAR ) ) );
-							event.setEventGroup( eventGroup );
-							pub.setEvent( event );
+								calendar.setTime( publicationDate );
+								event = new Event();
+								event.setDate( publicationDate );
+								event.setYear( Integer.toString( calendar.get( Calendar.YEAR ) ) );
+								event.setEventGroup( eventGroup );
+								pub.setEvent( event );
+							}
 						}
 					}
 				}

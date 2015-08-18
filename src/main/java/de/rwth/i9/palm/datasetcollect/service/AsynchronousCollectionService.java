@@ -161,6 +161,27 @@ public class AsynchronousCollectionService
 	}
 
 	/**
+	 * Asynchronously gather publication list from DBLP
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<List<Map<String, String>>> getListOfPublicationDBLP( String url ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "get publication list from DBLP with query " + url + " starting" );
+
+		List<Map<String, String>> publicationMapList = DblpPublicationCollection.getPublicationListByAuthorUrl( url );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "get publication list from DBLP with url " + url + " complete in " + stopwatch );
+
+		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
+	}
+
+	/**
 	 * Asynchronously gather publication information (keywords and abstract)
 	 * from HtmlPage
 	 * 
@@ -203,10 +224,10 @@ public class AsynchronousCollectionService
 		// publicationDetailMap );
 
 		if ( publicationDetailMap.get( "doc" ) != null )
-			publicationSource.setPdfSource( publicationDetailMap.get( "doc" ) );
+			publicationSource.setMainSource( publicationDetailMap.get( "doc" ) );
 
 		if ( publicationDetailMap.get( "doc_url" ) != null )
-			publicationSource.setPdfSourceUrl( publicationDetailMap.get( "doc_url" ) );
+			publicationSource.setMainSourceUrl( publicationDetailMap.get( "doc_url" ) );
 
 		if ( publicationDetailMap.get( "Authors" ) != null )
 			publicationSource.setAuthorString( publicationDetailMap.get( "Authors" ) );
@@ -217,19 +238,19 @@ public class AsynchronousCollectionService
 		if ( publicationDetailMap.get( "Journal" ) != null )
 		{
 			publicationSource.setPublicationType( "JOURNAL" );
-			publicationSource.setPublicationEvent( TextUtils.cutTextToLength( publicationDetailMap.get( "Journal" ), 200 ) );
+			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "Journal" ), 200 ) );
 		}
 
 		if ( publicationDetailMap.get( "Book" ) != null )
 		{
 			publicationSource.setPublicationType( "BOOK" );
-			publicationSource.setPublicationEvent( TextUtils.cutTextToLength( publicationDetailMap.get( "Book" ), 200 ) );
+			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "Book" ), 200 ) );
 		}
 
 		if ( publicationDetailMap.get( "Conference" ) != null )
 		{
 			publicationSource.setPublicationType( "CONFERENCE" );
-			publicationSource.setPublicationEvent( TextUtils.cutTextToLength( publicationDetailMap.get( "Conference" ), 200 ) );
+			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "Conference" ), 200 ) );
 		}
 
 		if ( publicationDetailMap.get( "Pages" ) != null )
@@ -284,16 +305,16 @@ public class AsynchronousCollectionService
 		// publicationDetailMap );
 
 		if ( publicationDetailMap.get( "doc" ) != null )
-			publicationSource.setPdfSource( publicationDetailMap.get( "doc" ) );
+			publicationSource.setMainSource( publicationDetailMap.get( "doc" ) );
 
 		if ( publicationDetailMap.get( "doc_url" ) != null )
-			publicationSource.setPdfSourceUrl( publicationDetailMap.get( "doc_url" ) );
+			publicationSource.setMainSourceUrl( publicationDetailMap.get( "doc_url" ) );
 
 		if ( publicationDetailMap.get( "coauthor" ) != null )
 			publicationSource.setAuthorString( publicationDetailMap.get( "coauthor" ) );
 
 		if ( publicationDetailMap.get( "venue" ) != null )
-			publicationSource.setPublicationEvent( TextUtils.cutTextToLength( publicationDetailMap.get( "venue" ), 200 ) );
+			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "venue" ), 200 ) );
 
 		if ( publicationDetailMap.get( "abstract" ) != null )
 		{
