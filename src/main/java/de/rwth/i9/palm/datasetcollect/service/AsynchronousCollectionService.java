@@ -230,7 +230,7 @@ public class AsynchronousCollectionService
 			publicationSource.setMainSourceUrl( publicationDetailMap.get( "doc_url" ) );
 
 		if ( publicationDetailMap.get( "Authors" ) != null )
-			publicationSource.setAuthorString( publicationDetailMap.get( "Authors" ) );
+			publicationSource.setCoAuthors( publicationDetailMap.get( "Authors" ) );
 
 		if ( publicationDetailMap.get( "Publication date" ) != null )
 			publicationSource.setDate( publicationDetailMap.get( "Publication date" ) );
@@ -311,7 +311,7 @@ public class AsynchronousCollectionService
 			publicationSource.setMainSourceUrl( publicationDetailMap.get( "doc_url" ) );
 
 		if ( publicationDetailMap.get( "coauthor" ) != null )
-			publicationSource.setAuthorString( publicationDetailMap.get( "coauthor" ) );
+			publicationSource.setCoAuthors( publicationDetailMap.get( "coauthor" ) );
 
 		if ( publicationDetailMap.get( "venue" ) != null )
 			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "venue" ), 200 ) );
