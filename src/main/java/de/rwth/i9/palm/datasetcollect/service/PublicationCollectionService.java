@@ -169,6 +169,7 @@ public class PublicationCollectionService
 						}
 					}
 					
+					// check with publication from database
 					if ( publication == null )
 					{
 						// get the publication object
@@ -207,7 +208,7 @@ public class PublicationCollectionService
 							publication.removeNonUserInputPublicationSource();
 					}
 
-					// check if null ( really new publication )
+					// if not exist any where create new publication
 					if( publication == null ){
 						publication = new Publication();
 						publication.setTitle( publicationTitle );
@@ -227,8 +228,17 @@ public class PublicationCollectionService
 					if ( publicationMap.get( "nocitation" ) != null )
 						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "nocitation" ) ) );
 
+					if ( publicationMap.get( "coauthorUrl" ) != null )
+						publicationSource.setCoAuthorsUrl( publicationMap.get( "coauthorUrl" ) );
+
 					if ( publicationMap.get( "year" ) != null )
 						publicationSource.setDate( publicationMap.get( "year" ) );
+
+					if ( publicationMap.get( "doc" ) != null )
+						publicationSource.setMainSource( publicationMap.get( "doc" ) );
+
+					if ( publicationMap.get( "doc_url" ) != null )
+						publicationSource.setMainSourceUrl( publicationMap.get( "doc_url" ) );
 
 					publication.addPublicationSource( publicationSource );
 								
@@ -342,9 +352,9 @@ public class PublicationCollectionService
 			}
 			// for general information
 			// author
-			if ( pubSource.getAuthorString() != null )
+			if ( pubSource.getCoAuthors() != null )
 			{
-				String[] authorsArray = pubSource.getAuthorString().split( "," );
+				String[] authorsArray = pubSource.getCoAuthors().split( "," );
 				if ( authorsArray.length > pub.getCoAuthors().size() )
 				{
 					for ( String authorString : authorsArray )
