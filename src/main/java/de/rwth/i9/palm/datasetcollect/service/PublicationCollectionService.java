@@ -39,6 +39,9 @@ public class PublicationCollectionService
 	private final static Logger log = LoggerFactory.getLogger( PublicationCollectionService.class );
 
 	@Autowired
+	private AsynchronousPublicationDetailCollectionService synchronousPublicationDetailCollectionService;
+
+	@Autowired
 	private AsynchronousCollectionService asynchronousCollectionService;
 
 	@Autowired
@@ -267,7 +270,7 @@ public class PublicationCollectionService
 		//multi thread future publication detail
 		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
 		for( Publication publication : selectedPublications){
-			selectedPublicationFutureList.add( asynchronousCollectionService.asyncWalkOverSelectedPublication( publication ) );
+			selectedPublicationFutureList.add( synchronousPublicationDetailCollectionService.asyncWalkOverSelectedPublication( publication ) );
 			System.out.println( "walking" + publication.getTitle() );
 		}
 		

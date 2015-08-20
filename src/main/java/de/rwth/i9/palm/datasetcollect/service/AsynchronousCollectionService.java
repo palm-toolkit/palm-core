@@ -1,7 +1,6 @@
 package de.rwth.i9.palm.datasetcollect.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -15,10 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Stopwatch;
 
-import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationSource;
-import de.rwth.i9.palm.model.SourceMethod;
-import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.utils.TextUtils;
 
 /**
@@ -354,33 +350,4 @@ public class AsynchronousCollectionService
 		return new AsyncResult<PublicationSource>( publicationSource );
 	}
 
-	/**
-	 * Main method for collect publication detail from a publication from
-	 * multiple source
-	 * 
-	 * @param publication
-	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	@Async
-	public Future<Publication> asyncWalkOverSelectedPublication( Publication publication ) throws IOException, InterruptedException
-	{
-		// multithread publication source
-		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();
-
-		for ( PublicationSource publicationSource : publication.getPublicationSources() )
-		{
-			// handling publication source
-			if ( publicationSource.getSourceMethod() == SourceMethod.PARSEPAGE )
-			{
-				if ( publicationSource.getSourceType() == SourceType.GOOGLESCHOLAR )
-					publicationSourceFutureList.add( this.getListOfPublicationsDetailGoogleScholar( publicationSource ) );
-				else if ( publicationSource.getSourceType() == SourceType.CITESEERX )
-					publicationSourceFutureList.add( this.getListOfPublicationDetailCiteseerX( publicationSource ) );
-			}
-		}
-
-		return new AsyncResult<Publication>( publication );
-	}
 }
