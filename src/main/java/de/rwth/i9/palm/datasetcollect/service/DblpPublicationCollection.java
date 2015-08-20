@@ -151,19 +151,36 @@ public class DblpPublicationCollection extends PublicationCollection
 					Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
 					publicationDetails.put( "type", PublicationType.BOOK.toString() );
 
-					Element pdfElement = publicationList.select( "nav.publ" ).select( "li" ).first();
-					if ( pdfElement.select( "div.head" ).select( "a" ).first() != null )
+					Element sourceElementContainer = eachPublication.select( "nav.publ" ).select( "li" ).first();
+					Elements sourceElements = sourceElementContainer.select( "div.body" ).first().select( "a" );
+					if ( sourceElements != null && sourceElements.size() > 0 )
 					{
-						publicationDetails.put( "doc_url", pdfElement.select( "div.head" ).select( "a" ).first().absUrl( "href" ) );
-						publicationDetails.put( "doc", pdfElement.select( "div.body" ).select( "a" ).text() );
+						String docUrl = "";
+						String doc = "";
+						for ( Element sourceElement : sourceElements )
+						{
+							docUrl += sourceElement.absUrl( "href" ) + " ";
+							doc += sourceElement.text().replace( ",", "" ) + ",";
+						}
+						publicationDetails.put( "doc_url", docUrl.substring( 0, docUrl.length() - 1 ) );
+						publicationDetails.put( "doc", doc.substring( 0, doc.length() - 1 ) );
 					}
 					Element dataElement = eachPublication.select( "div.data" ).first();
 
 					Elements authorElements = dataElement.select( "[itemprop=author]" );
 					String authorNames = "";
+					String authorUrl = "";
 					for ( Element authorElement : authorElements )
-						authorNames += authorElement.text() + ", ";
-					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 2 ) );
+					{
+						authorNames += authorElement.text().replace( ",", " " ) + ",";
+						Element authorUrlElement = authorElement.select( "a" ).first();
+						if ( authorUrlElement != null )
+							authorUrl += authorUrlElement.absUrl( "href" ) + " ";
+						else
+							authorUrl += "null ";
+					}
+					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 1 ) );
+					publicationDetails.put( "coauthorUrl", authorUrl );
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
 					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
@@ -199,23 +216,54 @@ public class DblpPublicationCollection extends PublicationCollection
 					Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
 					publicationDetails.put( "type", PublicationType.JOURNAL.toString() );
 
-					Element pdfElement = publicationList.select( "nav.publ" ).select( "li" ).first();
-					if ( pdfElement.select( "div.head" ).select( "a" ).first() != null )
+					Element sourceElementContainer = eachPublication.select( "nav.publ" ).select( "li" ).first();
+					Elements sourceElements = sourceElementContainer.select( "div.body" ).first().select( "a" );
+					if ( sourceElements != null && sourceElements.size() > 0 )
 					{
-						publicationDetails.put( "doc_url", pdfElement.select( "div.head" ).select( "a" ).first().absUrl( "href" ) );
-						publicationDetails.put( "doc", pdfElement.select( "div.body" ).select( "a" ).text() );
+						String docUrl = "";
+						String doc = "";
+						for ( Element sourceElement : sourceElements )
+						{
+							docUrl += sourceElement.absUrl( "href" ) + " ";
+							doc += sourceElement.text().replace( ",", "" ) + ",";
+						}
+						publicationDetails.put( "doc_url", docUrl.substring( 0, docUrl.length() - 1 ) );
+						publicationDetails.put( "doc", doc.substring( 0, doc.length() - 1 ) );
 					}
+
 					Element dataElement = eachPublication.select( "div.data" ).first();
 
 					Elements authorElements = dataElement.select( "[itemprop=author]" );
 					String authorNames = "";
+					String authorUrl = "";
 					for ( Element authorElement : authorElements )
-						authorNames += authorElement.text() + ", ";
-					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 2 ) );
+					{
+						authorNames += authorElement.text().replace( ",", " " ) + ",";
+						Element authorUrlElement = authorElement.select( "a" ).first();
+						if ( authorUrlElement != null )
+							authorUrl += authorUrlElement.absUrl( "href" ) + " ";
+						else
+							authorUrl += "null ";
+					}
+					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 1 ) );
+					publicationDetails.put( "coauthorUrl", authorUrl );
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
 					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
 					publicationDetails.put( "source", SourceType.DBLP.toString() );
+
+					Element eventElement = dataElement.select( "> a" ).first();
+					if ( eventElement != null )
+					{
+						publicationDetails.put( "event_url", eventElement.absUrl( "href" ) );
+						publicationDetails.put( "event_short", eventElement.select( "[itemprop=name]" ).text() );
+						publicationDetails.put( "event_volume", eventElement.select( "[itemprop=volumeNumber]" ).text() );
+						publicationDetails.put( "event_number", eventElement.select( "[itemprop=issueNumber]" ).text() );
+					}
+
+					String page = dataElement.select( "[itemprop=pagination]" ).text();
+					if ( page != null )
+						publicationDetails.put( "page", page );
 
 					publicationMapLists.add( publicationDetails );
 				}
@@ -231,23 +279,63 @@ public class DblpPublicationCollection extends PublicationCollection
 					Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
 					publicationDetails.put( "type", PublicationType.CONFERENCE.toString() );
 
-					Element pdfElement = publicationList.select( "nav.publ" ).select( "li" ).first();
-					if ( pdfElement.select( "div.head" ).select( "a" ).first() != null )
+					Element sourceElementContainer = eachPublication.select( "nav.publ" ).select( "li" ).first();
+					Elements sourceElements = sourceElementContainer.select( "div.body" ).first().select( "a" );
+					if ( sourceElements != null && sourceElements.size() > 0 )
 					{
-						publicationDetails.put( "doc_url", pdfElement.select( "div.head" ).select( "a" ).first().absUrl( "href" ) );
-						publicationDetails.put( "doc", pdfElement.select( "div.body" ).select( "a" ).text() );
+						String docUrl = "";
+						String doc = "";
+						for ( Element sourceElement : sourceElements )
+						{
+							docUrl += sourceElement.absUrl( "href" ) + " ";
+							doc += sourceElement.text().replace( ",", "" ) + ",";
+						}
+						publicationDetails.put( "doc_url", docUrl.substring( 0, docUrl.length() - 1 ) );
+						publicationDetails.put( "doc", doc.substring( 0, doc.length() - 1 ) );
 					}
+
 					Element dataElement = eachPublication.select( "div.data" ).first();
 
 					Elements authorElements = dataElement.select( "[itemprop=author]" );
 					String authorNames = "";
+					String authorUrl = "";
 					for ( Element authorElement : authorElements )
-						authorNames += authorElement.text() + ", ";
-					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 2 ) );
+					{
+						authorNames += authorElement.text().replace( ",", " " ) + ",";
+						Element authorUrlElement = authorElement.select( "a" ).first();
+						if ( authorUrlElement != null )
+							authorUrl += authorUrlElement.absUrl( "href" ) + " ";
+						else
+							authorUrl += "null ";
+					}
+					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 1 ) );
+					publicationDetails.put( "coauthorUrl", authorUrl );
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
 					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
 					publicationDetails.put( "source", SourceType.DBLP.toString() );
+
+					Element eventElement = dataElement.select( "> a" ).first();
+					if ( eventElement != null )
+					{
+						publicationDetails.put( "event_url", eventElement.absUrl( "href" ) );
+						String eventShort = eventElement.select( "[itemprop=name]" ).text();
+						if ( eventShort.contains( ")" ) )
+						{
+							eventShort = eventShort.replace( ")", "" );
+							String[] eventShortSplit = eventShort.split( "\\(" );
+							publicationDetails.put( "event_short", eventShortSplit[0].trim() );
+							publicationDetails.put( "event_volume", eventShortSplit[1].trim() );
+						}
+						else
+						{
+							publicationDetails.put( "event_short", eventShort.trim() );
+						}
+					}
+
+					String page = dataElement.select( "[itemprop=pagination]" ).text();
+					if ( page != null )
+						publicationDetails.put( "page", page );
 
 					publicationMapLists.add( publicationDetails );
 				}
@@ -289,7 +377,7 @@ public class DblpPublicationCollection extends PublicationCollection
 		String coAuthor = publicationDetailHeader.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_COAUTHOR ).text();
 		if ( coAuthor.startsWith( "by" ) )
 			coAuthor = coAuthor.substring( 2 );
-
+		// remove non-ASCII character
 		coAuthor = coAuthor.replaceAll( "[^\\x00-\\x7F]", " " ).trim();
 		publicationDetailMaps.put( "coauthor", coAuthor );
 
@@ -303,6 +391,21 @@ public class DblpPublicationCollection extends PublicationCollection
 		return publicationDetailMaps;
 	}
 	
+	public static Map<String, Object> getVenueDetail( String url, String venueType, String crawlType )
+	{
+		Map<String, Object> venueDetail = new LinkedHashMap<String, Object>();
+
+		if ( url == null )
+			return Collections.emptyMap();
+		// chack
+		if ( venueDetail == null )
+		{
+
+		}
+
+		return venueDetail;
+	}
+
 	private static Map<String, String> getDblpCookie()
 	{
 		Map<String, String> cookies = new HashMap<String, String>();
