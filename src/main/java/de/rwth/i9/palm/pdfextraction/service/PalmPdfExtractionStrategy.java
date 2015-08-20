@@ -447,7 +447,7 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 					{
 						this.textSection.setName( "author" );
 						// found large text section
-						if ( this.lastContentSection.length() > 300 )
+						if ( this.lastContentSection.length() > 250 )
 						{
 							// set last section label
 							this.textSections.get( this.textSections.size() - 1 ).setName( "abstract" );
