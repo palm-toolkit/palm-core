@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -16,6 +17,7 @@ public class HtmlPublicationCollectionTest
 {
 
 	@Test
+	@Ignore
 	public void getPublicationDetailByPublicationUrlTest() throws IOException
 	{
 		String input = "http://www.scitepress.org/DigitalLibrary/Link.aspx?doi=10.5220/0004791400090020";
@@ -28,11 +30,21 @@ public class HtmlPublicationCollectionTest
 		//input = "http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=1508758";
 		// input = "http://link.springer.com/chapter/10.1007%2F11575801_18";
 		//input = "http://www.computer.org/csdl/proceedings/icalt/2014/4038/00/4038a044-abs.html";
+		input = "http://honne.learning-context.de/upload/files/publications/DeLFI14_HT.pdf";
 
 		Map<String, String> publicationDetailMaps = HtmlPublicationCollection.getPublicationInformationFromHtmlPage( input );
 
 		for ( Entry<String, String> eachPublicationDetail : publicationDetailMaps.entrySet() )
 			System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
+
+	}
+
+	@Test
+	public void geteeePdfUrlTest() throws IOException
+	{
+		String input = "http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6095503";
+
+		System.out.println( HtmlPublicationCollection.getIeeePdfUrl( input ) );
 
 	}
 }

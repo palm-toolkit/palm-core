@@ -174,4 +174,21 @@ public class HtmlPublicationCollection
 
 		return publicationDetailMaps;
 	}
+
+	public static String getIeeePdfUrl( String url )
+	{
+		// Using jsoup java html parser library
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 10000 );
+
+		if ( document == null )
+			return null;
+
+		Element frameElement = document.select( "frame" ).get( 1 );
+
+		if ( frameElement == null )
+			return null;
+
+		return frameElement.absUrl( "src" );
+
+	}
 }
