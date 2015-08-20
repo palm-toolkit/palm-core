@@ -335,6 +335,26 @@ public class AsynchronousCollectionService
 	}
 
 	/**
+	 * Asynchronously gather publication detail from Dblp
+	 * 
+	 * @param publicationSource
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<PublicationSource> getListOfPublicationDetailDblp( PublicationSource publicationSource ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "get publication detail from Dblp with title " + publicationSource.getTitle() + " starting" );
+
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "get publication detail from DBLP with title " + publicationSource.getTitle() + " complete in " + stopwatch );
+
+		return new AsyncResult<PublicationSource>( publicationSource );
+	}
+
+	/**
 	 * Main method for collect publication detail from a publication from
 	 * multiple source
 	 * 
