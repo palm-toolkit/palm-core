@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +35,22 @@ public class HtmlPublicationCollection
 			return Collections.emptyMap();
 
 		// Special case
-		if ( url.contains( "http://ieeexplore.ieee.org/" ) )
+		if ( url.contains( "ieeexplore.ieee.org/" ) )
 		{
 			Element elementOfInterest = document.select( "div.article" ).first();
 			if ( elementOfInterest != null )
 			{
 				publicationDetailMaps.put( "abstract", elementOfInterest.text() );
+			}
+		}
+		else if ( url.contains( "igi-global.com/" ) )
+		{
+			Element elementOfInterest = document.select( "#abstract" ).first();
+			if ( elementOfInterest != null )
+			{
+				for ( Node child : elementOfInterest.childNodes() )
+					if ( child instanceof TextNode )
+						publicationDetailMaps.put( "abstract", ( (TextNode) child ).text() );
 			}
 		}
 		// General case
@@ -79,22 +91,46 @@ public class HtmlPublicationCollection
 
 			for ( int i = 0; i < numberOfCheckedSiblings; i++ )
 			{
+				// get text
+				String elementText = "";
 				// change element pointer to next sibling
 				if ( elementOfInterest.nextElementSibling() != null )
 					elementOfInterest = elementOfInterest.nextElementSibling();
 				else
 				{
 					// level up until next sibling not null
-					while ( elementOfInterest.parent() != null && elementOfInterest.nextElementSibling() == null )
+					while ( elementOfInterest.parent() != null )
 					{
-						elementOfInterest = elementOfInterest.parent();
-						elementLevel++;
-					};
-					// select next parent
-					if ( elementOfInterest.nextElementSibling() == null )
-						continue;
+						if ( elementLevel > 0 )
+						{
+							for ( Node child : elementOfInterest.childNodes() )
+								if ( child instanceof TextNode )
+									if ( ( (TextNode) child ).text().length() > 200 )
+									{
+										elementText = ( (TextNode) child ).text();
+//										break;
+									}
+						}
+//						if ( !elementText.equals( "" ) )
+//							break;
 
-					elementOfInterest = elementOfInterest.nextElementSibling();
+						if ( elementOfInterest.nextElementSibling() == null )
+						{
+							elementOfInterest = elementOfInterest.parent();
+							elementLevel++;
+						}
+						else
+						{
+							// select next parent
+							elementOfInterest = elementOfInterest.nextElementSibling();
+							break;
+						}
+					};
+
+					// check if there is large text on the node
+					// if ( elementOfInterest.nextElementSibling() == null )
+					// continue;
+
 					// level down until at the same level before level up
 					while ( elementOfInterest.childNodes() != null && elementLevel > 0 )
 					{
@@ -111,7 +147,8 @@ public class HtmlPublicationCollection
 				}
 
 				// get text
-				String elementText = elementOfInterest.text();
+				if ( elementText.equals( "" ) )
+					elementText = elementOfInterest.text();
 
 				// check for keyword
 				if ( elementOfInterestType.equals( "keyword" ) && !keywordFound )

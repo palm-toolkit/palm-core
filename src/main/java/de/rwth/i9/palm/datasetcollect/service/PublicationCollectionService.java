@@ -433,6 +433,10 @@ public class PublicationCollectionService
 					for ( int i = 0; i < authorsArray.length; i++ )
 					{
 						String authorString = authorsArray[i].toLowerCase().replace( ".", "" ).trim();
+
+						if ( authorString.equals( "" ) )
+							continue;
+
 						String[] splitName = authorString.split( " " );
 						String lastName = splitName[splitName.length - 1];
 						String firstName = authorString.substring( 0, authorString.length() - lastName.length() ).trim();

@@ -172,9 +172,9 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 	private static Map<String, String> getGoogleScholarCookie()
 	{
 		Map<String, String> cookies = new HashMap<String, String>();
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=869edad20cec41f9:TM=1440361812:C=c:IP=95.223.161.25-:S=APGng0tx0e4pphAgwPD7jnCi1AS-8CSV6A" );
-		cookies.put( "GSP", "LM=1440361821:S=-Lu7Y-KgZ6oZyasX" );
-		cookies.put( "NID", "70=HzzNP27QNx95-CuhZNL5J6WkCUMbW2k440VznNTLHrV74DtwQANPieG32AhE9TpNT27NjfGmrCJkG0GQ4SQaKGqEaaxzYJjP_DAZcaYDWHhoAftzoR2ELWB1cOYe5h8_" );
+		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=562f07f0083a8a18:TM=1440432080:C=c:IP=95.223.161.25-:S=APGng0tmemv2sWysioz9VSu-8qJszg6k8g" );
+		cookies.put( "GSP", "LM=1440432086:S=IoyU8QOMrSVJz6nv" );
+		//cookies.put( "NID", "70=HzzNP27QNx95-CuhZNL5J6WkCUMbW2k440VznNTLHrV74DtwQANPieG32AhE9TpNT27NjfGmrCJkG0GQ4SQaKGqEaaxzYJjP_DAZcaYDWHhoAftzoR2ELWB1cOYe5h8_" );
 		//cookies.put( "PREF", "ID=1111111111111111:FF=0:TM=1438520627:LM=1438520627:V=1:S=8w-e8EQt08Or09Lx" );
 		return cookies;
 	}

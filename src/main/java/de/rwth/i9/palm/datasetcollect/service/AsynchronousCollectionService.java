@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Stopwatch;
 
+import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.pdfextraction.service.ItextPdfExtraction;
 import de.rwth.i9.palm.pdfextraction.service.TextSection;
@@ -320,7 +321,7 @@ public class AsynchronousCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<PublicationSource> getPublicationInfromationFromHtml( PublicationSource publicationSource ) throws IOException
+	public Future<PublicationSource> getPublicationInfromationFromHtml( PublicationSource publicationSource, PublicationFile publicationFile ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "start : get publication information from Htmlpage " + publicationSource.getSourceUrl() + " starting" );
@@ -336,6 +337,8 @@ public class AsynchronousCollectionService
 				publicationSource.setAbstractText( publicationInformationMap.get( "abstract" ) );
 			if ( publicationInformationMap.get( "keyword" ) != null )
 				publicationSource.setKeyword( publicationInformationMap.get( "keyword" ) );
+
+			publicationFile.setReadable( true );
 		}
 
 		return new AsyncResult<PublicationSource>( publicationSource );
@@ -349,7 +352,7 @@ public class AsynchronousCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<PublicationSource> getPublicationInformationFromPdf( PublicationSource publicationSource ) throws IOException
+	public Future<PublicationSource> getPublicationInformationFromPdf( PublicationSource publicationSource, PublicationFile publicationFile ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "start : get publication information from Pdf " + publicationSource.getSourceUrl() + " starting" );
@@ -435,6 +438,8 @@ public class AsynchronousCollectionService
 				publicationSource.setAbstractText( publicationInformationMap.get( "abstract" ) );
 			if ( publicationInformationMap.get( "keyword" ) != null )
 				publicationSource.setKeyword( publicationInformationMap.get( "keyword" ) );
+
+			publicationFile.setReadable( true );
 		}
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );

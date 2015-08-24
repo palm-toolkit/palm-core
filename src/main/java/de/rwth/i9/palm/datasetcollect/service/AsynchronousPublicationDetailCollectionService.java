@@ -115,8 +115,11 @@ public class AsynchronousPublicationDetailCollectionService
 						publicationSource.setSourceUrl( publicationFile.getUrl() );
 						publicationSource.setSourceMethod( SourceMethod.EXTRACTPAGE );
 						publicationSource.setSourceType( SourceType.PDF );
+						publicationSource.setPublicationType( publication.getPublicationType().toString() );
 
-						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromPdf( publicationSource ) );
+						publicationFile.setChecked( true );
+
+						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromPdf( publicationSource, publicationFile ) );
 					}
 
 					if ( publicationFile.getFileType().equals( FileType.HTML ) )
@@ -125,8 +128,11 @@ public class AsynchronousPublicationDetailCollectionService
 						publicationSource.setSourceUrl( publicationFile.getUrl() );
 						publicationSource.setSourceMethod( SourceMethod.EXTRACTPAGE );
 						publicationSource.setSourceType( SourceType.HTML );
+						publicationSource.setPublicationType( publication.getPublicationType().toString() );
 
-						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInfromationFromHtml( publicationSource ) );
+						publicationFile.setChecked( true );
+
+						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInfromationFromHtml( publicationSource, publicationFile ) );
 					}
 				}
 			}
