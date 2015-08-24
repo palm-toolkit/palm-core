@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -150,7 +151,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 	}
 
 	@Override
-	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String force ) throws IOException, InterruptedException, ExecutionException, ParseException
+	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String force ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();

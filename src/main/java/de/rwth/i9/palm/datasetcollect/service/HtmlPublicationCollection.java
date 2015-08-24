@@ -91,6 +91,9 @@ public class HtmlPublicationCollection
 						elementLevel++;
 					};
 					// select next parent
+					if ( elementOfInterest.nextElementSibling() == null )
+						continue;
+
 					elementOfInterest = elementOfInterest.nextElementSibling();
 					// level down until at the same level before level up
 					while ( elementOfInterest.childNodes() != null && elementLevel > 0 )

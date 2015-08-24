@@ -234,7 +234,7 @@ public class ResearcherCollectionService
 					if ( !sources[i].equals( "" ) )
 					{
 						AuthorSource as = new AuthorSource();
-						as.setName( sources[i] );
+						as.setName( name );
 						as.setSourceUrl( sourceUrls[i] );
 						as.setSourceType( SourceType.valueOf( sources[i].toUpperCase() ) );
 						as.setAuthor( author );

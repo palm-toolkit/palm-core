@@ -158,4 +158,20 @@ public class PublicationCollectionServiceTest
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 		log.info( "time it took to perform work " + stopwatch );
 	}
+
+//	@Test
+//	public void getPublicationInformationFromPdf() throws IOException, InterruptedException, ExecutionException
+//	{
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//
+//		Future<Map<String, String>> authorGoogleScholar = asynchronousCollectionService.getPublicationInformationFromPdf( "http://dspace.learningnetworks.org/bitstream/1820/3180/1/Chatti_ETS.pdf" );
+//
+//		if ( authorGoogleScholar.isDone() )
+//			for ( Entry<String, String> pubDetail : authorGoogleScholar.get().entrySet() )
+//				System.out.println( pubDetail.getKey() + " : " + pubDetail.getValue() );
+//			System.out.println();
+//
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "time it took to perform work " + stopwatch );
+//	}
 }

@@ -3,10 +3,13 @@ package de.rwth.i9.palm.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -19,8 +22,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -44,6 +50,9 @@ public class ResearcherController
 	@Autowired
 	private ResearcherFeature researcherFeature;
 	
+	@Autowired
+	private PublicationCollectionService publicationCollectionService;
+
 	/**
 	 * Landing page of researcher page
 	 * 
@@ -108,6 +117,7 @@ public class ResearcherController
 	 * @throws IOException
 	 * @throws ExecutionException
 	 * @throws ParseException
+	 * @throws TimeoutException 
 	 */
 	@RequestMapping( value = "/fetch", method = RequestMethod.GET )
 	@Transactional
@@ -117,7 +127,7 @@ public class ResearcherController
 			@RequestParam( value = "uri", required = false ) final String uri,
 			@RequestParam( value = "affiliation", required = false ) final String affiliation,
 			@RequestParam( value = "force", required = false ) final String force,
-			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, ParseException
+			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, ParseException, TimeoutException
 	{
 		return researcherFeature.getResearcherSearch().fetchResearcherData( id, name, uri, affiliation, force );
 	}
@@ -148,12 +158,23 @@ public class ResearcherController
 			@RequestParam( value = "endDate", required = false ) final String endDate,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
-		if( name != null )
-			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
-		else
-			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
+//		if( name != null )
+//			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
+//		else
+//			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
+		return Collections.emptyMap();
 	}
 	
+	@RequestMapping( value = "/enrich", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherEnrich( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException, TimeoutException
+	{
+		// id=90522536-4717-4fa3-ac43-b3f6300ad6c4
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+		publicationCollectionService.enrichPublicationByExtractOriginalSources( new ArrayList<Publication>( author.getPublications() ), author, true );
+		return Collections.emptyMap();
+	}
+
 	@RequestMapping( value = "/interestEvolution", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterestEvolution( 

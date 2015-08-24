@@ -468,12 +468,13 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 									//currentHeader = this.textSections.get( this.textSections.size() - 2 ).getContent();
 								}
 								// detect another reading phase
-								if ( this.textSection.getFontHeight() > this.contentFontHeight )
+								if ( this.textSection.getFontHeight() >= this.contentFontHeight )
 								{
 									this.textSection.setName( "keyword-header" );
 									this.contentHeaderFontHeight = this.textSection.getFontHeight();
 									this.readingPhaseIndex = 3;// set to keyword phase
-								} else
+								}
+								else
 									this.readingPhaseIndex = 1;// set to author phase
 							}
 						}

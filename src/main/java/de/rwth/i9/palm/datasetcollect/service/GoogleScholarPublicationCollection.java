@@ -134,15 +134,22 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 		publicationDetailMaps.put( "title", publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_TITLE ).text() );
 
-		String docName = publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PDF ).text();
-		if ( docName != null )
-			publicationDetailMaps.put( "doc", publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PDF ).text() );
+
 
 		try
 		{
 			Elements publicationPdfUrl = publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PDF );
 			if ( publicationPdfUrl != null )
+			{
 				publicationDetailMaps.put( "doc_url", publicationPdfUrl.select( "a" ).first().absUrl( "href" ) );
+
+				String docName = publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PDF ).text();
+				if ( docName != null )
+					publicationDetailMaps.put( "doc", docName );
+				else
+					publicationDetailMaps.put( "doc", "null" );
+			}
+
 		}
 		catch ( Exception e )
 		{
@@ -165,10 +172,10 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 	private static Map<String, String> getGoogleScholarCookie()
 	{
 		Map<String, String> cookies = new HashMap<String, String>();
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=7a6e80aa6b8f4b72:TM=1439671671:C=c:IP=95.223.161.25-:S=APGng0uT2VzxBOTxNpa0aheJnga798uHbw" );
-		cookies.put( "GSP", "LM=1439671692:S=vaddmF-x4K9EWhEj" );
-		cookies.put( "NID", "70=hcw9rL3hPrp4dWMkd4C4DeF_Q8BO7BpB-bo9z0Ix_WPeM7IwAmbYCR2jolHcJQW_Oy7cJQuEWuRg_CKaPku4MPHyu2ReS86KcCExepqy3GRJJPhVuYg42Z1ZrCbE26AC" );
-		cookies.put( "PREF", "ID=1111111111111111:FF=0:TM=1438520627:LM=1438520627:V=1:S=8w-e8EQt08Or09Lx" );
+		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=869edad20cec41f9:TM=1440361812:C=c:IP=95.223.161.25-:S=APGng0tx0e4pphAgwPD7jnCi1AS-8CSV6A" );
+		cookies.put( "GSP", "LM=1440361821:S=-Lu7Y-KgZ6oZyasX" );
+		cookies.put( "NID", "70=HzzNP27QNx95-CuhZNL5J6WkCUMbW2k440VznNTLHrV74DtwQANPieG32AhE9TpNT27NjfGmrCJkG0GQ4SQaKGqEaaxzYJjP_DAZcaYDWHhoAftzoR2ELWB1cOYe5h8_" );
+		//cookies.put( "PREF", "ID=1111111111111111:FF=0:TM=1438520627:LM=1438520627:V=1:S=8w-e8EQt08Or09Lx" );
 		return cookies;
 	}
 }

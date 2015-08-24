@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.datasetcollect.service;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.model.PublicationSource;
+import de.rwth.i9.palm.pdfextraction.service.ItextPdfExtraction;
+import de.rwth.i9.palm.pdfextraction.service.TextSection;
 import de.rwth.i9.palm.utils.TextUtils;
 
 /**
@@ -178,28 +181,6 @@ public class AsynchronousCollectionService
 	}
 
 	/**
-	 * Asynchronously gather publication information (keywords and abstract)
-	 * from HtmlPage
-	 * 
-	 * @param url
-	 * @return
-	 * @throws IOException
-	 */
-	@Async
-	public Future<Map<String, String>> getPublicationInfromationFromWebPage( String url ) throws IOException
-	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication list from Htmlpage " + url + " starting" );
-
-		Map<String, String> publicationInformationMap = HtmlPublicationCollection.getPublicationInformationFromHtmlPage( url );
-
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "get publication list from Htmlpagel " + url + " complete in " + stopwatch );
-
-		return new AsyncResult<Map<String, String>>( publicationInformationMap );
-	}
-
-	/**
 	 * Asynchronously gather publication detail from google scholar
 	 * 
 	 * @param publicationSource
@@ -207,7 +188,7 @@ public class AsynchronousCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<PublicationSource> getListOfPublicationsDetailGoogleScholar( PublicationSource publicationSource ) throws IOException
+	public Future<PublicationSource> getPublicationInformationFromGoogleScholar( PublicationSource publicationSource ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get publication detail from google scholar with url " + publicationSource.getSourceUrl() + " starting" );
@@ -288,10 +269,10 @@ public class AsynchronousCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<PublicationSource> getListOfPublicationDetailCiteseerX( PublicationSource publicationSource ) throws IOException
+	public Future<PublicationSource> getPublicationInformationFromCiteseerX( PublicationSource publicationSource ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication detail from citeseerX with query " + publicationSource.getSourceUrl() + " starting" );
+		log.info( "get publication detail from citeseerX with url " + publicationSource.getSourceUrl() + " starting" );
 
 		// scrap the webpage
 		Map<String, String> publicationDetailMap = CiteseerXPublicationCollection.getPublicationDetailByPublicationUrl( publicationSource.getSourceUrl() );
@@ -331,23 +312,134 @@ public class AsynchronousCollectionService
 	}
 
 	/**
-	 * Asynchronously gather publication detail from Dblp
+	 * Asynchronously gather publication information (keywords and abstract)
+	 * from HtmlPage
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<PublicationSource> getPublicationInfromationFromHtml( PublicationSource publicationSource ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "start : get publication information from Htmlpage " + publicationSource.getSourceUrl() + " starting" );
+
+		Map<String, String> publicationInformationMap = HtmlPublicationCollection.getPublicationInformationFromHtmlPage( publicationSource.getSourceUrl() );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "done :get publication information from Htmlpagel " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
+
+		if ( publicationInformationMap != null && !publicationInformationMap.isEmpty() )
+		{
+			if ( publicationInformationMap.get( "abstract" ) != null )
+				publicationSource.setAbstractText( publicationInformationMap.get( "abstract" ) );
+			if ( publicationInformationMap.get( "keyword" ) != null )
+				publicationSource.setKeyword( publicationInformationMap.get( "keyword" ) );
+		}
+
+		return new AsyncResult<PublicationSource>( publicationSource );
+	}
+
+	/**
+	 * Asynchronously gather publication detail from citeseerx
 	 * 
 	 * @param publicationSource
 	 * @return
 	 * @throws IOException
 	 */
 	@Async
-	public Future<PublicationSource> getListOfPublicationDetailDblp( PublicationSource publicationSource ) throws IOException
+	public Future<PublicationSource> getPublicationInformationFromPdf( PublicationSource publicationSource ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication detail from Dblp with title " + publicationSource.getTitle() + " starting" );
+		log.info( "start : get publication information from Pdf " + publicationSource.getSourceUrl() + " starting" );
 
+		List<TextSection> textSections = null;
+		
+		if ( publicationSource.getSourceUrl().contains( "ieeexplore.ieee.org" ) )
+			publicationSource.setSourceUrl( HtmlPublicationCollection.getIeeePdfUrl( publicationSource.getSourceUrl() ) );
+
+		try
+		{
+			// extract pdf until second page
+			textSections = ItextPdfExtraction.extractPdf( publicationSource.getSourceUrl(), 2 );
+		}
+		catch ( Exception e )
+		{
+			log.info( "error e " + e.getMessage() );
+		}
+		
+		Map<String, String> publicationInformationMap = new LinkedHashMap<String, String>();
+
+		// only take information until abstract and keyword
+		if ( textSections != null && !textSections.isEmpty() )
+		{
+			for ( TextSection textSection : textSections )
+			{
+				if ( textSection.getContent() == null || textSection.getName() == null )
+					continue;
+
+				if ( publicationInformationMap.get( textSection.getName() ) != null )
+				{
+					String concatenationSign = " ";
+					if ( textSection.getName().equals( "author" ) )
+						concatenationSign = "_#_";
+					if ( textSection.getName().equals( "keyword" ) )
+						concatenationSign = ", ";
+					publicationInformationMap.put( textSection.getName(), publicationInformationMap.get( textSection.getName() ) + concatenationSign + textSection.getContent() );
+				}
+				else
+				{
+					if ( textSection.getName().equals( "title" ) )
+					{
+						publicationInformationMap.put( "title", textSection.getContent() );
+					}
+					else if ( textSection.getName().equals( "author" ) )
+					{
+						publicationInformationMap.put( "author", textSection.getContent() );
+					}
+					else if ( textSection.getName().equals( "abstract-header" ) )
+					{
+						if ( textSection.getContent().replaceAll( "[^a-zA-Z]", "" ).length() > 20 )
+							publicationInformationMap.put( "abstract", textSection.getContent() );
+					}
+					else if ( textSection.getName().equals( "abstract" ) )
+					{
+						publicationInformationMap.put( "abstract", textSection.getContent() );
+					}
+					else if ( textSection.getName().equals( "keyword-header" ) )
+					{
+						if ( textSection.getContent().replaceAll( "[^a-zA-Z]", "" ).length() > 20 )
+							publicationInformationMap.put( "keyword", textSection.getContent() );
+					}
+					else if ( textSection.getName().equals( "keyword" ) )
+					{
+						if ( textSection.getContent().replaceAll( "[^a-zA-Z]", "" ).length() > 20 )
+							publicationInformationMap.put( "keyword", textSection.getContent() );
+					}
+					else if ( textSection.getName().equals( "content-header" ) || textSection.getName().equals( "content" ) )
+					{
+						break;
+					}
+				}
+			}
+		}
+
+		if ( publicationInformationMap != null && !publicationInformationMap.isEmpty() )
+		{
+			if ( publicationInformationMap.get( "title" ) != null )
+				publicationSource.setTitle( publicationInformationMap.get( "title" ) );
+			if ( publicationInformationMap.get( "author" ) != null )
+				publicationSource.setCoAuthors( publicationInformationMap.get( "author" ) );
+			if ( publicationInformationMap.get( "abstract" ) != null )
+				publicationSource.setAbstractText( publicationInformationMap.get( "abstract" ) );
+			if ( publicationInformationMap.get( "keyword" ) != null )
+				publicationSource.setKeyword( publicationInformationMap.get( "keyword" ) );
+		}
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "get publication detail from DBLP with title " + publicationSource.getTitle() + " complete in " + stopwatch );
+		log.info( "done : get publication information from pdf " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
 
 		return new AsyncResult<PublicationSource>( publicationSource );
 	}
-
 }

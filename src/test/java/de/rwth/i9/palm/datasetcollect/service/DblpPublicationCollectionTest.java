@@ -33,7 +33,7 @@ public class DblpPublicationCollectionTest
 	@Test
 	public void getListOfPublicationTest() throws IOException
 	{
-		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/c/Chatti:Mohamed_Amine" );
+		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/db/conf/csedu/csedu2009-1.html" );
 
 		for ( Map<String, String> eachPublicationMap : publicationMapLists )
 		{
