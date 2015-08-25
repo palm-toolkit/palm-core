@@ -5,9 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.pdfextraction.service.PdfExtractionService;
