@@ -18,9 +18,23 @@ public class Oauth2ClientTest
 		String TOKEN_URL = "https://api-oauth2.mendeley.com/oauth/token";
 		String TRUSTED_CLIENT_ID = "392";
 		String TRUSTED_SECRET = "VWheQe6qKEGeUXQcLj1NDTCqxkP29PyJ";
-		String CATALOG_URL = "https://api.mendeley.com:443/search/catalog?author=mohamed%20amine%20chatti&limit=100";
+		String CATALOG_URL = "https://api.mendeley.com:443/search/catalog?author=mohamed%20amine%20chatti&limit=2";
 
-		JsonNode jSOnNode = Oauth2Client.Oauth2CLientRequestCatalog( TOKEN_URL, TRUSTED_CLIENT_ID, TRUSTED_SECRET, CATALOG_URL );
+		JsonNode jsonNode = Oauth2Client.Oauth2ClientRequestCatalog( TOKEN_URL, TRUSTED_CLIENT_ID, TRUSTED_SECRET, CATALOG_URL );
+
+		System.out.println( jsonNode.toString() );
+
+		// mendeley print
+		if ( jsonNode.isArray() )
+		{
+			for ( JsonNode j : jsonNode )
+			{
+				JsonNode titleNode = j.path( "title" );
+				if ( !titleNode.isMissingNode() )
+					System.out.println( "title : " + titleNode.toString() );
+			}
+		}
+
 	}
 
 }
