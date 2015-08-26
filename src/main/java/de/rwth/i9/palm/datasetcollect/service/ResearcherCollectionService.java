@@ -25,7 +25,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 public class ResearcherCollectionService
 {
 	@Autowired
-	private AsynchronousCollectionService asynchronousCollectionService;
+	private AsynchronousAuthorCollectionService asynchronousAuthorCollectionService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -49,11 +49,13 @@ public class ResearcherCollectionService
 		for ( Map.Entry<SourceType, Boolean> sourceEntry : activeSourceMap.entrySet() )
 		{
 			if ( sourceEntry.getKey().equals( SourceType.GOOGLESCHOLAR ) && sourceEntry.getValue() )
-				authorFutureLists.add( asynchronousCollectionService.getListOfAuthorsGoogleScholar( query ) );
+				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsGoogleScholar( query ) );
 			else if ( sourceEntry.getKey().equals( SourceType.CITESEERX ) && sourceEntry.getValue() )
-				authorFutureLists.add( asynchronousCollectionService.getListOfAuthorsCiteseerX( query ) );
+				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsCiteseerX( query ) );
 			else if ( sourceEntry.getKey().equals( SourceType.DBLP ) && sourceEntry.getValue() )
-				authorFutureLists.add( asynchronousCollectionService.getListOfAuthorsDblp( query ) );
+				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsDblp( query ) );
+//			else if ( sourceEntry.getKey().equals( SourceType.MENDELEY ) && sourceEntry.getValue() )
+//				author
 		}
 
 		// Wait until they are all done

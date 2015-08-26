@@ -65,6 +65,8 @@ public class ResearcherController
 	@Transactional
 	public ModelAndView mainPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "name", required = false ) final String name,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// get current session object

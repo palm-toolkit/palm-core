@@ -1,0 +1,90 @@
+package de.rwth.i9.palm.datasetcollect.service;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
+import org.springframework.stereotype.Service;
+
+import com.google.common.base.Stopwatch;
+
+/**
+ * 
+ * @author sigit
+ *
+ */
+@Service
+public class AsynchronousAuthorCollectionService
+{
+	private final static Logger log = LoggerFactory.getLogger( AsynchronousAuthorCollectionService.class );
+
+	/**
+	 * Asynchronously gather author list from google scholar
+	 * 
+	 * @param authorName
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<List<Map<String, String>>> getListOfAuthorsGoogleScholar( String authorName ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "get author from google scholar with query " + authorName + " starting" );
+
+		List<Map<String, String>> authorMap = GoogleScholarPublicationCollection.getListOfAuthors( authorName );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "get author from google scholar with query " + authorName + " complete in " + stopwatch );
+
+		return new AsyncResult<List<Map<String, String>>>( authorMap );
+	}
+
+	/**
+	 * Asynchronously gather author list from citeseerx
+	 * 
+	 * @param authorName
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<List<Map<String, String>>> getListOfAuthorsCiteseerX( String authorName ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "get author from citeseerX with query " + authorName + " starting" );
+
+		List<Map<String, String>> authorMap = CiteseerXPublicationCollection.getListOfAuthors( authorName );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "get author from citeSeerX with query " + authorName + " complete in " + stopwatch );
+
+		return new AsyncResult<List<Map<String, String>>>( authorMap );
+	}
+
+	/**
+	 * Asynchronously gather author list from citeseerx
+	 * 
+	 * @param authorName
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<List<Map<String, String>>> getListOfAuthorsDblp( String authorName ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "get author from DBLP with query " + authorName + " starting" );
+
+		List<Map<String, String>> authorMap = DblpPublicationCollection.getListOfAuthors( authorName );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "get author from DBLP with query " + authorName + " complete in " + stopwatch );
+
+		return new AsyncResult<List<Map<String, String>>>( authorMap );
+	}
+
+}
