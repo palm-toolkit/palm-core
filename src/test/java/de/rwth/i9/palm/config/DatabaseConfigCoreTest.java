@@ -42,6 +42,7 @@ import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.model.Reference;
 import de.rwth.i9.palm.model.Role;
 import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceProperty;
 import de.rwth.i9.palm.model.Subject;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserRequest;
@@ -153,6 +154,7 @@ public class DatabaseConfigCoreTest
 						Reference.class,
 						Role.class,
 		 				Source.class,
+		 				SourceProperty.class,
 		 				Subject.class,
 						User.class,
 						UserRequest.class,

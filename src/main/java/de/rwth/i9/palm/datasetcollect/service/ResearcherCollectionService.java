@@ -54,26 +54,11 @@ public class ResearcherCollectionService
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsCiteseerX( query ) );
 			else if ( sourceEntry.getKey().equals( SourceType.DBLP ) && sourceEntry.getValue() )
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsDblp( query ) );
-//			else if ( sourceEntry.getKey().equals( SourceType.MENDELEY ) && sourceEntry.getValue() )
-//				author
-		}
-
-		// Wait until they are all done
-		boolean processIsDone = true;
-		do
-		{
-			processIsDone = true;
-			for ( Future<List<Map<String, String>>> futureList : authorFutureLists )
-			{
-				if ( !futureList.isDone() )
-				{
-					processIsDone = false;
-					break;
-				}
+			else if ( sourceEntry.getKey().equals( SourceType.MENDELEY ) && sourceEntry.getValue() ){
+				// get mendeley token by get new one if not exist, check the expiration if exist (1 hour expiration)
 			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !processIsDone );
+				
+		}
 
 		// merge the result
 		this.mergeAuthorInformation( authorFutureLists );
@@ -95,34 +80,31 @@ public class ResearcherCollectionService
 			Map<String, Integer> indexHelper = new HashMap<String, Integer>();
 			for ( Future<List<Map<String, String>>> authorFutureList : authorFutureLists )
 			{
-				if ( authorFutureList.isDone() )
+				List<Map<String, String>> authorListMap = authorFutureList.get();
+				for ( Map<String, String> authorMap : authorListMap )
 				{
-					List<Map<String, String>> authorListMap = authorFutureList.get();
-					for ( Map<String, String> authorMap : authorListMap )
+					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim();
+					// check if author already on array list
+					Integer authorIndex = indexHelper.get( authorName );
+					if ( authorIndex == null )
 					{
-						String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim();
-						// check if author already on array list
-						Integer authorIndex = indexHelper.get( authorName );
-						if ( authorIndex == null )
-						{
-							// if not exist on map
-							mergedAuthorList.add( authorMap );
-							indexHelper.put( authorName, mergedAuthorList.size() - 1 );
-						}
-						else
-						{
-							Map<String, String> mapFromMergerList = mergedAuthorList.get( authorIndex );
-							for ( Map.Entry<String, String> entry : authorMap.entrySet() )
-							{// merge everything else
-								if ( mapFromMergerList.get( entry.getKey() ) == null )
-								{
-									mapFromMergerList.put( entry.getKey(), entry.getValue() );
-								}
-								else
-								{
-									if ( entry.getKey().equals( "source" ) || entry.getKey().equals( "url" ) )
-										mapFromMergerList.put( entry.getKey(), mapFromMergerList.get( entry.getKey() ) + " " + entry.getValue() );
-								}
+						// if not exist on map
+						mergedAuthorList.add( authorMap );
+						indexHelper.put( authorName, mergedAuthorList.size() - 1 );
+					}
+					else
+					{
+						Map<String, String> mapFromMergerList = mergedAuthorList.get( authorIndex );
+						for ( Map.Entry<String, String> entry : authorMap.entrySet() )
+						{// merge everything else
+							if ( mapFromMergerList.get( entry.getKey() ) == null )
+							{
+								mapFromMergerList.put( entry.getKey(), entry.getValue() );
+							}
+							else
+							{
+								if ( entry.getKey().equals( "source" ) || entry.getKey().equals( "url" ) )
+									mapFromMergerList.put( entry.getKey(), mapFromMergerList.get( entry.getKey() ) + " " + entry.getValue() );
 							}
 						}
 					}

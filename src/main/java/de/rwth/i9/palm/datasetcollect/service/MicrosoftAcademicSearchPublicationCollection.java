@@ -2,6 +2,7 @@ package de.rwth.i9.palm.datasetcollect.service;
 
 public class MicrosoftAcademicSearchPublicationCollection extends PublicationCollection
 {
+
 	/**
 	 * Old API url
 	 * http://academic.research.microsoft.com/json.svc/search?AppId=e028e2a5-

@@ -67,7 +67,7 @@ public class AsynchronousAuthorCollectionService
 	}
 
 	/**
-	 * Asynchronously gather author list from citeseerx
+	 * Asynchronously gather author list from dblp
 	 * 
 	 * @param authorName
 	 * @return
@@ -83,6 +83,27 @@ public class AsynchronousAuthorCollectionService
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 		log.info( "get author from DBLP with query " + authorName + " complete in " + stopwatch );
+
+		return new AsyncResult<List<Map<String, String>>>( authorMap );
+	}
+
+	/**
+	 * Asynchronously gather author list from Mendeley
+	 * 
+	 * @param authorName
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<List<Map<String, String>>> getListOfAuthorsMendeley( String authorName, String token ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "get author from Mendeley with query " + authorName + " starting" );
+
+		List<Map<String, String>> authorMap = MendeleyPublicationCollection.getListOfAuthors( authorName, token );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "get author from Mendeley with query " + authorName + " complete in " + stopwatch );
 
 		return new AsyncResult<List<Map<String, String>>>( authorMap );
 	}

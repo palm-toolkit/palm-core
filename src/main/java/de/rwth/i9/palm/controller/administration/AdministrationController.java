@@ -34,7 +34,7 @@ public class AdministrationController
 		if ( sessionId != null && sessionId.equals( "0" ) )
 			response.setHeader( "SESSION_INVALID", "yes" );
 
-		model.addObject( "activeMenu", "widget-add" );
+		model.addObject( "activeMenu", "source" );
 
 		return model;
 	}
