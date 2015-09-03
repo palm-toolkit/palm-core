@@ -404,6 +404,13 @@
         <version>1.20.0</version>
     </dependency>
 	
+	<!-- Cache -->
+	<dependency>
+		<groupId>net.sf.ehcache</groupId>
+		<artifactId>ehcache</artifactId>
+		<version>2.10.0</version>
+	</dependency>
+	
 	
 	<!--
 	<dependency>
