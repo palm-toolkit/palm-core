@@ -21,23 +21,23 @@ import de.rwth.i9.palm.oauth2.Oauth2Client;
 @ContextConfiguration( loader = AnnotationConfigContextLoader.class )
 public class MendeleyPublicationCollectionTest
 {
-	@Test
-	public void getListOfAuthorsTest() throws IOException, ParseException, OAuthSystemException, OAuthProblemException
-	{
-		String tokenUrl = "https://api-oauth2.mendeley.com/oauth/token";
-		String clientId = "392";
-		String clientSecret = "VWheQe6qKEGeUXQcLj1NDTCqxkP29PyJ";
-
-		String token = Oauth2Client.Oauth2ClientRequestToken( tokenUrl, clientId, clientSecret );
-		List<Map<String, String>> authorList = MendeleyPublicationCollection.getListOfAuthors( "chatti", token );
-
-		for ( Map<String, String> eachAuthor : authorList )
-		{
-			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
-				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
-			System.out.println();
-		}
-	}
+//	@Test
+//	public void getListOfAuthorsTest() throws IOException, ParseException, OAuthSystemException, OAuthProblemException
+//	{
+//		String tokenUrl = "https://api-oauth2.mendeley.com/oauth/token";
+//		String clientId = "392";
+//		String clientSecret = "VWheQe6qKEGeUXQcLj1NDTCqxkP29PyJ";
+//
+//		String token = Oauth2Client.Oauth2ClientRequestToken( tokenUrl, clientId, clientSecret );
+//		List<Map<String, String>> authorList = MendeleyPublicationCollection.getListOfAuthors( "chatti", token );
+//
+//		for ( Map<String, String> eachAuthor : authorList )
+//		{
+//			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
+//				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
+//			System.out.println();
+//		}
+//	}
 
 	@Test
 	@Ignore

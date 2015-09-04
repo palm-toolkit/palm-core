@@ -31,32 +31,32 @@ public class PublicationCollectionServiceTest
 	@Autowired
 	private AsynchronousAuthorCollectionService asynchronousCollectionService;
 
-	@Test
-	@Ignore
-	public void test2() throws IOException, InterruptedException, ExecutionException
-	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-
-		Future<List<Map<String, String>>> authorGoogleScholar = asynchronousCollectionService.getListOfAuthorsGoogleScholar( "chatti" );
-		Future<List<Map<String, String>>> authorCiteseerX = asynchronousCollectionService.getListOfAuthorsCiteseerX( "chatti" );
-
-		for ( Map<String, String> eachAuthor : authorGoogleScholar.get() )
-		{
-			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
-				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
-			System.out.println();
-		}
-
-		for ( Map<String, String> eachAuthor : authorCiteseerX.get() )
-		{
-			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
-				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
-			System.out.println();
-		}
-
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "time it took to perform work " + stopwatch );
-	}
+//	@Test
+//	@Ignore
+//	public void test2() throws IOException, InterruptedException, ExecutionException
+//	{
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//
+//		Future<List<Map<String, String>>> authorGoogleScholar = asynchronousCollectionService.getListOfAuthorsGoogleScholar( "chatti" );
+//		Future<List<Map<String, String>>> authorCiteseerX = asynchronousCollectionService.getListOfAuthorsCiteseerX( "chatti" );
+//
+//		for ( Map<String, String> eachAuthor : authorGoogleScholar.get() )
+//		{
+//			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
+//				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
+//			System.out.println();
+//		}
+//
+//		for ( Map<String, String> eachAuthor : authorCiteseerX.get() )
+//		{
+//			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
+//				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
+//			System.out.println();
+//		}
+//
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "time it took to perform work " + stopwatch );
+//	}
 
 //	@Test
 //	public void getPublicationInformationFromPdf() throws IOException, InterruptedException, ExecutionException
