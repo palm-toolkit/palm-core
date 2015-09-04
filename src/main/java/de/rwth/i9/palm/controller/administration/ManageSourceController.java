@@ -63,7 +63,7 @@ public class ManageSourceController
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.ADMINISTRATION, "source" );
 
 		// get list of sources and sort
-		List<Source> sources = persistenceStrategy.getSourceDAO().getAll();
+		List<Source> sources = persistenceStrategy.getSourceDAO().getAllSource();
 		Collections.sort( sources, new SourceByNaturalOrderComparator() );
 		
 		// put it into wrapper class
