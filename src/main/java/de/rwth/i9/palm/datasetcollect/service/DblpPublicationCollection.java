@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.rwth.i9.palm.model.PublicationType;
+import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceProperty;
 import de.rwth.i9.palm.model.SourceType;
 
 public class DblpPublicationCollection extends PublicationCollection
@@ -33,16 +35,17 @@ public class DblpPublicationCollection extends PublicationCollection
 	 * Get possible author
 	 * 
 	 * @param authorName
+	 * @param source
 	 * @return
 	 * @throws IOException
 	 */
-	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
+	public static List<Map<String, String>> getListOfAuthors( String authorName, Source source ) throws IOException
 	{
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "http://dblp.uni-trier.de/search/author?q=" + authorName.replace( " ", "+" );
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie( source ) );
 
 		if ( document == null )
 			return Collections.emptyList();
@@ -411,6 +414,23 @@ public class DblpPublicationCollection extends PublicationCollection
 		Map<String, String> cookies = new HashMap<String, String>();
 		cookies.put( "dblp-search-mode", "c" );
 		cookies.put( "dblp-view", "t" );
+		return cookies;
+	}
+
+	/**
+	 * DBLP cache, important for select correct DBLP page before crawling
+	 * 
+	 * @return
+	 */
+	private static Map<String, String> getDblpCookie( Source source )
+	{
+		Map<String, String> cookies = new HashMap<String, String>();
+
+		for ( SourceProperty sourceProperty : source.getSourceProperties() )
+		{
+			if ( sourceProperty.getMainIdentifier().equals( "cookie" ) && sourceProperty.isValid() )
+				cookies.put( sourceProperty.getSecondaryIdentifier(), sourceProperty.getValue() );
+		}
 		return cookies;
 	}
 

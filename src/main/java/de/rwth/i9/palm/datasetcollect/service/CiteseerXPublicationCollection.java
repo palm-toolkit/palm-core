@@ -13,6 +13,7 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceType;
 
 public class CiteseerXPublicationCollection extends PublicationCollection
@@ -25,7 +26,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		super();
 	}
 
-	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
+	public static List<Map<String, String>> getListOfAuthors( String authorName, Source source ) throws IOException
 	{
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 

@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Stopwatch;
 
+import de.rwth.i9.palm.model.Source;
+
 /**
  * 
  * @author sigit
@@ -32,12 +34,12 @@ public class AsynchronousAuthorCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<List<Map<String, String>>> getListOfAuthorsGoogleScholar( String authorName ) throws IOException
+	public Future<List<Map<String, String>>> getListOfAuthorsGoogleScholar( String authorName, Source source ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get author from google scholar with query " + authorName + " starting" );
 
-		List<Map<String, String>> authorMap = GoogleScholarPublicationCollection.getListOfAuthors( authorName );
+		List<Map<String, String>> authorMap = GoogleScholarPublicationCollection.getListOfAuthors( authorName, source );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 		log.info( "get author from google scholar with query " + authorName + " complete in " + stopwatch );
@@ -53,12 +55,12 @@ public class AsynchronousAuthorCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<List<Map<String, String>>> getListOfAuthorsCiteseerX( String authorName ) throws IOException
+	public Future<List<Map<String, String>>> getListOfAuthorsCiteseerX( String authorName, Source source ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get author from citeseerX with query " + authorName + " starting" );
 
-		List<Map<String, String>> authorMap = CiteseerXPublicationCollection.getListOfAuthors( authorName );
+		List<Map<String, String>> authorMap = CiteseerXPublicationCollection.getListOfAuthors( authorName, source );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 		log.info( "get author from citeSeerX with query " + authorName + " complete in " + stopwatch );
@@ -74,12 +76,12 @@ public class AsynchronousAuthorCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<List<Map<String, String>>> getListOfAuthorsDblp( String authorName ) throws IOException
+	public Future<List<Map<String, String>>> getListOfAuthorsDblp( String authorName, Source source ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get author from DBLP with query " + authorName + " starting" );
 
-		List<Map<String, String>> authorMap = DblpPublicationCollection.getListOfAuthors( authorName );
+		List<Map<String, String>> authorMap = DblpPublicationCollection.getListOfAuthors( authorName, source );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 		log.info( "get author from DBLP with query " + authorName + " complete in " + stopwatch );
@@ -95,12 +97,14 @@ public class AsynchronousAuthorCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<List<Map<String, String>>> getListOfAuthorsMendeley( String authorName, String token ) throws IOException
+	public Future<List<Map<String, String>>> getListOfAuthorsMendeley( String authorName, Source source ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get author from Mendeley with query " + authorName + " starting" );
 
-		List<Map<String, String>> authorMap = MendeleyPublicationCollection.getListOfAuthors( authorName, token );
+		// check or update token here
+
+		List<Map<String, String>> authorMap = MendeleyPublicationCollection.getListOfAuthors( authorName, source );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 		log.info( "get author from Mendeley with query " + authorName + " complete in " + stopwatch );

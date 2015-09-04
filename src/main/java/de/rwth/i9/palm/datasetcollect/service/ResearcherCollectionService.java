@@ -18,8 +18,10 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Institution;
+import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.ApplicationService;
 
 @Service
 public class ResearcherCollectionService
@@ -29,6 +31,9 @@ public class ResearcherCollectionService
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private ApplicationService applicationService;
 
 	/**
 	 * Gather researcher from academic networks
@@ -43,20 +48,21 @@ public class ResearcherCollectionService
 		// container
 		List<Future<List<Map<String, String>>>> authorFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
 
-		// get sources and their flag "active/inactive" as Map
-		Map<SourceType, Boolean> activeSourceMap = persistenceStrategy.getSourceDAO().getActiveSourceMap();
+		// getSourceMap
+		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
+
 		// loop through all source which is active
-		for ( Map.Entry<SourceType, Boolean> sourceEntry : activeSourceMap.entrySet() )
+		for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
 		{
-			if ( sourceEntry.getKey().equals( SourceType.GOOGLESCHOLAR ) && sourceEntry.getValue() )
-				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsGoogleScholar( query ) );
-			else if ( sourceEntry.getKey().equals( SourceType.CITESEERX ) && sourceEntry.getValue() )
-				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsCiteseerX( query ) );
-			else if ( sourceEntry.getKey().equals( SourceType.DBLP ) && sourceEntry.getValue() )
-				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsDblp( query ) );
-			else if ( sourceEntry.getKey().equals( SourceType.MENDELEY ) && sourceEntry.getValue() ){
-				// get mendeley token by get new one if not exist, check the expiration if exist (1 hour expiration)
-			}
+			Source source = sourceEntry.getValue();
+			if ( source.getSourceType().equals( SourceType.GOOGLESCHOLAR ) && source.isActive() )
+				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsGoogleScholar( query, source ) );
+			else if ( source.getSourceType().equals( SourceType.CITESEERX ) && source.isActive() )
+				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsCiteseerX( query, source ) );
+			else if ( source.getSourceType().equals( SourceType.DBLP ) && source.isActive() )
+				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsDblp( query, source ) );
+			else if ( source.getSourceType().equals( SourceType.MENDELEY ) && source.isActive() )
+				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsMendeley( query, source ) );
 				
 		}
 

@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.http.apache.ApacheHttpTransport;
 
+import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceType;
 
 public class MendeleyPublicationCollection extends PublicationCollection
@@ -36,14 +37,14 @@ public class MendeleyPublicationCollection extends PublicationCollection
 	 * @return
 	 * @throws IOException
 	 */
-	public static List<Map<String, String>> getListOfAuthors( String authorName, String token ) throws IOException
+	public static List<Map<String, String>> getListOfAuthors( String authorName, Source source ) throws IOException
 	{
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String authorCatalog = "https://api.mendeley.com:443/search/profiles?query=" + URLEncoder.encode( authorName, "UTF-8" ).replace( "+", "%20" );
 		// get the resources ( authors or publications )
 		HttpGet httpGet = new HttpGet( authorCatalog );
-		httpGet.setHeader( "Authorization", "Bearer " + token );
+		httpGet.setHeader( "Authorization", "Bearer " + source );
 	    DefaultHttpClient apacheHttpClient = ApacheHttpTransport.newDefaultHttpClient();
 	    HttpResponse httpResponse = apacheHttpClient.execute(httpGet);
 

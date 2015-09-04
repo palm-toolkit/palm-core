@@ -14,6 +14,8 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceProperty;
 import de.rwth.i9.palm.model.SourceType;
 
 public class GoogleScholarPublicationCollection extends PublicationCollection
@@ -25,14 +27,14 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		super();
 	}
 
-	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
+	public static List<Map<String, String>> getListOfAuthors( String authorName, Source source ) throws IOException
 	{
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "https://scholar.google.com/citations?view_op=search_authors&mauthors=" + authorName.replace( " ", "-" );
 
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie( source ) );
 
 		if ( document == null )
 			return Collections.emptyList();
@@ -176,6 +178,23 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		cookies.put( "GSP", "LM=1440432086:S=IoyU8QOMrSVJz6nv" );
 		//cookies.put( "NID", "70=HzzNP27QNx95-CuhZNL5J6WkCUMbW2k440VznNTLHrV74DtwQANPieG32AhE9TpNT27NjfGmrCJkG0GQ4SQaKGqEaaxzYJjP_DAZcaYDWHhoAftzoR2ELWB1cOYe5h8_" );
 		//cookies.put( "PREF", "ID=1111111111111111:FF=0:TM=1438520627:LM=1438520627:V=1:S=8w-e8EQt08Or09Lx" );
+		return cookies;
+	}
+
+	/**
+	 * Google Scholar cache, update in case IP being blocked by google
+	 * 
+	 * @return
+	 */
+	private static Map<String, String> getGoogleScholarCookie( Source source )
+	{
+		Map<String, String> cookies = new HashMap<String, String>();
+
+		for ( SourceProperty sourceProperty : source.getSourceProperties() )
+		{
+			if ( sourceProperty.getMainIdentifier().equals( "cookie" ) && sourceProperty.isValid() )
+				cookies.put( sourceProperty.getSecondaryIdentifier(), sourceProperty.getValue() );
+		}
 		return cookies;
 	}
 }
