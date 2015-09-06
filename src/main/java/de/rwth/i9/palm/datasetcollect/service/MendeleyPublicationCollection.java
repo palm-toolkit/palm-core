@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.http.apache.ApacheHttpTransport;
 
 import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceProperty;
 import de.rwth.i9.palm.model.SourceType;
 
 public class MendeleyPublicationCollection extends PublicationCollection
@@ -40,13 +41,19 @@ public class MendeleyPublicationCollection extends PublicationCollection
 	public static List<Map<String, String>> getListOfAuthors( String authorName, Source source ) throws IOException
 	{
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
+		// for search profile properties
+		SourceProperty searchProfileProperty = source.getSourcePropertyByIdentifiers( "catalog", "SEARCH_PROFILE" );
+		// for token properties
+		SourceProperty tokenProperty = source.getSourcePropertyByIdentifiers( "oauth2", "TOKEN" );
 
-		String authorCatalog = "https://api.mendeley.com:443/search/profiles?query=" + URLEncoder.encode( authorName, "UTF-8" ).replace( "+", "%20" );
+		String authorCatalog = searchProfileProperty.getValue() + "?query=" + URLEncoder.encode( authorName, "UTF-8" ).replace( "+", "%20" );
 		// get the resources ( authors or publications )
 		HttpGet httpGet = new HttpGet( authorCatalog );
-		httpGet.setHeader( "Authorization", "Bearer " + source );
+		httpGet.setHeader( "Authorization", "Bearer " + tokenProperty.getValue() );
 	    DefaultHttpClient apacheHttpClient = ApacheHttpTransport.newDefaultHttpClient();
 	    HttpResponse httpResponse = apacheHttpClient.execute(httpGet);
+
+		// TODO: check for invalid token
 
 		// map the results into jsonMap
 		ObjectMapper mapper = new ObjectMapper();
@@ -119,6 +126,7 @@ public class MendeleyPublicationCollection extends PublicationCollection
 		}
 
 		authorDetailMap.put( "source", SourceType.MENDELEY.toString() );
+		authorDetailMap.put( "url", "MENDELEY" );
 
 		return authorDetailMap;
 	}

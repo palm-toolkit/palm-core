@@ -3,6 +3,7 @@ package de.rwth.i9.palm.datasetcollect.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,11 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.apache.http.ParseException;
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +32,8 @@ import de.rwth.i9.palm.service.ApplicationService;
 @Service
 public class ResearcherCollectionService
 {
+	private final static Logger log = LoggerFactory.getLogger( ResearcherCollectionService.class );
+
 	@Autowired
 	private AsynchronousAuthorCollectionService asynchronousAuthorCollectionService;
 
@@ -35,6 +43,9 @@ public class ResearcherCollectionService
 	@Autowired
 	private ApplicationService applicationService;
 
+	@Autowired
+	private MendeleyOauth2Helper mendeleyOauth2Helper;
+
 	/**
 	 * Gather researcher from academic networks
 	 * 
@@ -42,8 +53,12 @@ public class ResearcherCollectionService
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
+	 * @throws OAuthProblemException
+	 * @throws OAuthSystemException
+	 * @throws ParseException
 	 */
-	public void collectAuthorInformationFromNetwork( String query ) throws IOException, InterruptedException, ExecutionException
+	@Transactional
+	public void collectAuthorInformationFromNetwork( String query ) throws IOException, InterruptedException, ExecutionException, ParseException, OAuthSystemException, OAuthProblemException
 	{
 		// container
 		List<Future<List<Map<String, String>>>> authorFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
@@ -62,8 +77,11 @@ public class ResearcherCollectionService
 			else if ( source.getSourceType().equals( SourceType.DBLP ) && source.isActive() )
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsDblp( query, source ) );
 			else if ( source.getSourceType().equals( SourceType.MENDELEY ) && source.isActive() )
+			{
+				// check for token validity
+				mendeleyOauth2Helper.checkAndUpdateMendeleyToken( source );
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsMendeley( query, source ) );
-				
+			}
 		}
 
 		// merge the result
@@ -90,6 +108,10 @@ public class ResearcherCollectionService
 				for ( Map<String, String> authorMap : authorListMap )
 				{
 					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim();
+
+					if ( authorName == null )
+						continue;
+
 					// check if author already on array list
 					Integer authorIndex = indexHelper.get( authorName );
 					if ( authorIndex == null )
@@ -117,15 +139,17 @@ public class ResearcherCollectionService
 				}
 			}
 
-			// test print
-			// for ( Map<String, String> mergedAuthor : mergedAuthorList )
-			// {
-			// for ( Map.Entry<String, String> entry : mergedAuthor.entrySet() )
-			// {
-			// System.out.println( entry.getKey() + " -> " + entry.getValue() );
-			// }
-			// System.out.println();
-			// }
+			// remove author if its only from mendeley
+			// since mendeley also put non researcher on its api result
+			// the source ulr of mendeley will be "MENDELEY"
+			// which are less then 10 character in length
+			for ( Iterator<Map<String, String>> iteratorAuthor = mergedAuthorList.iterator(); iteratorAuthor.hasNext(); )
+			{
+				Map<String, String> authorMap = iteratorAuthor.next();
+
+				if ( authorMap.get( "source" ).length() < 10 )
+					iteratorAuthor.remove();
+			}
 
 			// update database
 			for ( Map<String, String> mergedAuthor : mergedAuthorList )
@@ -215,21 +239,28 @@ public class ResearcherCollectionService
 				if ( mergedAuthor.get( "citedby" ) != null )
 					author.setCitedBy( Integer.parseInt( mergedAuthor.get( "citedby" ) ) );
 
+				// TODO, specific to mendeley add adacemic_status and
+				// discipline/field
+
 				// insert source
 				Set<AuthorSource> authorSources = new LinkedHashSet<AuthorSource>();
-				String[] sources = mergedAuthor.get( "source" ).split( " " );
-				String[] sourceUrls = mergedAuthor.get( "url" ).split( " " );
-				for ( int i = 0; i < sources.length; i++ )
-				{
-					if ( !sources[i].equals( "" ) )
-					{
-						AuthorSource as = new AuthorSource();
-						as.setName( name );
-						as.setSourceUrl( sourceUrls[i] );
-						as.setSourceType( SourceType.valueOf( sources[i].toUpperCase() ) );
-						as.setAuthor( author );
 
-						authorSources.add( as );
+				if ( mergedAuthor.get( "source" ) != null && mergedAuthor.get( "url" ) != null )
+				{
+					String[] sources = mergedAuthor.get( "source" ).split( " " );
+					String[] sourceUrls = mergedAuthor.get( "url" ).split( " " );
+					for ( int i = 0; i < sources.length; i++ )
+					{
+						if ( !sources[i].equals( "" ) )
+						{
+							AuthorSource as = new AuthorSource();
+							as.setName( name );
+							as.setSourceUrl( sourceUrls[i] );
+							as.setSourceType( SourceType.valueOf( sources[i].toUpperCase() ) );
+							as.setAuthor( author );
+
+							authorSources.add( as );
+						}
 					}
 				}
 				author.setAuthorSources( authorSources );
@@ -240,4 +271,5 @@ public class ResearcherCollectionService
 		}
 
 	}
+
 }

@@ -13,6 +13,8 @@ import java.util.concurrent.TimeoutException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,6 +94,9 @@ public class ResearcherController
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
+	 * @throws OAuthProblemException 
+	 * @throws OAuthSystemException 
+	 * @throws org.apache.http.ParseException 
 	 */
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
@@ -99,7 +104,7 @@ public class ResearcherController
 			@RequestParam( value = "query", required = false ) String query, 
 			@RequestParam( value = "page", required = false ) Integer page, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
-			final HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException
+			final HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		return researcherFeature.getResearcherSearch().getResearcherListByQuery( query, page, maxresult );
 	}
@@ -120,6 +125,9 @@ public class ResearcherController
 	 * @throws ExecutionException
 	 * @throws ParseException
 	 * @throws TimeoutException 
+	 * @throws org.apache.http.ParseException 
+	 * @throws OAuthProblemException 
+	 * @throws OAuthSystemException 
 	 */
 	@RequestMapping( value = "/fetch", method = RequestMethod.GET )
 	@Transactional
@@ -129,7 +137,7 @@ public class ResearcherController
 			@RequestParam( value = "uri", required = false ) final String uri,
 			@RequestParam( value = "affiliation", required = false ) final String affiliation,
 			@RequestParam( value = "force", required = false ) final String force,
-			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, ParseException, TimeoutException
+			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		return researcherFeature.getResearcherSearch().fetchResearcherData( id, name, uri, affiliation, force );
 	}

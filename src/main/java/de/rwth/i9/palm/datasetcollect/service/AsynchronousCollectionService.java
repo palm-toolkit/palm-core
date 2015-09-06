@@ -17,6 +17,7 @@ import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
+import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.pdfextraction.service.ItextPdfExtraction;
 import de.rwth.i9.palm.pdfextraction.service.TextSection;
 import de.rwth.i9.palm.utils.TextUtils;
@@ -35,11 +36,12 @@ public class AsynchronousCollectionService
 	 * Asynchronously gather publication list from google scholar
 	 * 
 	 * @param url
+	 * @param source
 	 * @return
 	 * @throws IOException
 	 */
 	@Async
-	public Future<List<Map<String, String>>> getListOfPublicationsGoogleScholar( String url ) throws IOException
+	public Future<List<Map<String, String>>> getListOfPublicationsGoogleScholar( String url, Source source ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get publication list from google scholar with url " + url + " starting" );
@@ -56,11 +58,12 @@ public class AsynchronousCollectionService
 	 * Asynchronously gather publication list from citeseerx
 	 * 
 	 * @param url
+	 * @param source
 	 * @return
 	 * @throws IOException
 	 */
 	@Async
-	public Future<List<Map<String, String>>> getListOfPublicationCiteseerX( String url ) throws IOException
+	public Future<List<Map<String, String>>> getListOfPublicationCiteseerX( String url, Source source ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get publication list from citeseerX with query " + url + " starting" );
@@ -77,11 +80,12 @@ public class AsynchronousCollectionService
 	 * Asynchronously gather publication list from DBLP
 	 * 
 	 * @param url
+	 * @param source
 	 * @return
 	 * @throws IOException
 	 */
 	@Async
-	public Future<List<Map<String, String>>> getListOfPublicationDBLP( String url ) throws IOException
+	public Future<List<Map<String, String>>> getListOfPublicationDBLP( String url, Source source ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get publication list from DBLP with query " + url + " starting" );

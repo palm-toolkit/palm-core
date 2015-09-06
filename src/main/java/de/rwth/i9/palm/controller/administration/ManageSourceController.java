@@ -28,6 +28,7 @@ import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.service.ApplicationService;
 import de.rwth.i9.palm.wrapper.SourceListWrapper;
 
 @Controller
@@ -42,6 +43,9 @@ public class ManageSourceController
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private ApplicationService applicationService;
 
 	/**
 	 * Load the source detail form
@@ -122,6 +126,10 @@ public class ManageSourceController
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		responseMap.put( "status", "ok" );
 		responseMap.put( "format", "json" );
+
+		// update application service source cache
+		applicationService.updateAcademicNetworkSourcesCache();
+
 		return responseMap;
 	}
 

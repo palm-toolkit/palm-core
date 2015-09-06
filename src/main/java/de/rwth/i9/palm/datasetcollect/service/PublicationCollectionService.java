@@ -16,6 +16,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +34,11 @@ import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.PublicationType;
+import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceMethod;
 import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.ApplicationService;
 
 @Service
 public class PublicationCollectionService
@@ -53,6 +57,12 @@ public class PublicationCollectionService
 	@Autowired
 	private PalmAnalytics palmAnalitics;
 
+	@Autowired
+	private ApplicationService applicationService;
+
+	@Autowired
+	private MendeleyOauth2Helper mendeleyOauth2Helper;
+
 	/**
 	 * Fetch author' publication list from academic networks
 	 * 
@@ -63,8 +73,11 @@ public class PublicationCollectionService
 	 * @throws ExecutionException
 	 * @throws ParseException
 	 * @throws TimeoutException
+	 * @throws org.apache.http.ParseException
+	 * @throws OAuthProblemException
+	 * @throws OAuthSystemException
 	 */
-	public void collectPublicationListFromNetwork( Map<String, Object> responseMap, Author author ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException
+	public void collectPublicationListFromNetwork( Map<String, Object> responseMap, Author author ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		// get author sources
 		Set<AuthorSource> authorSources = author.getAuthorSources();
@@ -75,40 +88,47 @@ public class PublicationCollectionService
 			responseMap.put( "reason", "no author sources found" );
 		}
 
-		// get source and its flag "active/inactive" as Map
-		Map<SourceType, Boolean> activeSourceMap = persistenceStrategy.getSourceDAO().getActiveSourceMap();
+		// getSourceMap
+		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
 
 		// future list for publication list
 		// extract dataset from academic network concurrently
 		// Stopwatch stopwatch = Stopwatch.createStarted();
 
 		List<Future<List<Map<String, String>>>> publicationFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
+
 		for ( AuthorSource authorSource : authorSources )
 		{
-			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR && activeSourceMap.get( SourceType.GOOGLESCHOLAR ) )
-				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationsGoogleScholar( authorSource.getSourceUrl() ) );
-			else if ( authorSource.getSourceType() == SourceType.CITESEERX && activeSourceMap.get( SourceType.CITESEERX ) )
-				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl() ) );
-			else if ( authorSource.getSourceType() == SourceType.DBLP && activeSourceMap.get( SourceType.DBLP ) )
-				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDBLP( authorSource.getSourceUrl() ) );
+			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR && sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ).isActive() )
+				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationsGoogleScholar( authorSource.getSourceUrl(), sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ) ) );
+			else if ( authorSource.getSourceType() == SourceType.CITESEERX && sourceMap.get( SourceType.CITESEERX.toString() ).isActive() )
+				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl(), sourceMap.get( SourceType.CITESEERX.toString() ) ) );
+			else if ( authorSource.getSourceType() == SourceType.DBLP && sourceMap.get( SourceType.DBLP.toString() ).isActive() )
+				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDBLP( authorSource.getSourceUrl(), sourceMap.get( SourceType.DBLP.toString() ) ) );
+			else if ( authorSource.getSourceType() == SourceType.DBLP && sourceMap.get( SourceType.MENDELEY.toString() ).isActive() )
+			{
+				// check for token validity
+				mendeleyOauth2Helper.checkAndUpdateMendeleyToken( sourceMap.get( SourceType.MENDELEY.toString() ) );
+
+			}
 		}
 
 		// Wait until they are all done
-		boolean processIsDone = true;
-		do
-		{
-			processIsDone = true;
-			for ( Future<List<Map<String, String>>> futureList : publicationFutureLists )
-			{
-				if ( !futureList.isDone() )
-				{
-					processIsDone = false;
-					break;
-				}
-			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !processIsDone );
+//		boolean processIsDone = true;
+//		do
+//		{
+//			processIsDone = true;
+//			for ( Future<List<Map<String, String>>> futureList : publicationFutureLists )
+//			{
+//				if ( !futureList.isDone() )
+//				{
+//					processIsDone = false;
+//					break;
+//				}
+//			}
+//			// 10-millisecond pause between each check
+//			Thread.sleep( 10 );
+//		} while ( !processIsDone );
 
 		// merge the result
 		this.mergePublicationInformation( publicationFutureLists, author );
@@ -168,6 +188,8 @@ public class PublicationCollectionService
 		{
 			if ( publicationFutureList.isDone() )
 			{
+				// here, if process has not been completed yet. It will wait,
+				// until process complete
 				List<Map<String, String>> publicationMapLists = publicationFutureList.get();
 				for ( Map<String, String> publicationMap : publicationMapLists )
 				{

@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.ParseException;
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -95,15 +98,16 @@ public class AsynchronousAuthorCollectionService
 	 * @param authorName
 	 * @return
 	 * @throws IOException
+	 * @throws OAuthProblemException 
+	 * @throws OAuthSystemException 
+	 * @throws ParseException 
 	 */
 	@Async
-	public Future<List<Map<String, String>>> getListOfAuthorsMendeley( String authorName, Source source ) throws IOException
+	public Future<List<Map<String, String>>> getListOfAuthorsMendeley( String authorName, Source source ) throws IOException, ParseException, OAuthSystemException, OAuthProblemException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get author from Mendeley with query " + authorName + " starting" );
-
-		// check or update token here
-
+			
 		List<Map<String, String>> authorMap = MendeleyPublicationCollection.getListOfAuthors( authorName, source );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );

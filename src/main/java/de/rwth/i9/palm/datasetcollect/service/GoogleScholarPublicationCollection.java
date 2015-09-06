@@ -80,7 +80,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url + "&cstart=0&pagesize=1000", 5000, getGoogleScholarCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url + "&view_op=list_works&cstart=0&pagesize=100", 5000, getGoogleScholarCookie() );
 
 		if ( document == null )
 			return Collections.emptyList();

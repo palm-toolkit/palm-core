@@ -27,14 +27,20 @@ public class AdministrationController
 	private PersistenceStrategy persistenceStrategy;
 
 	@RequestMapping( method = RequestMethod.GET )
-	public ModelAndView landing( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response ) throws InterruptedException
+	public ModelAndView landing( 
+			@RequestParam( value = "sessionid", required = false ) final String sessionId,
+			@RequestParam( value = "page", required = false ) final String page,
+			final HttpServletResponse response ) throws InterruptedException
 	{
 		ModelAndView model = TemplateHelper.createViewWithLink( "administration", LINK_NAME );
 
 		if ( sessionId != null && sessionId.equals( "0" ) )
 			response.setHeader( "SESSION_INVALID", "yes" );
 
-		model.addObject( "activeMenu", "source" );
+		if( page != null)
+			model.addObject( "activeMenu", page );
+		else
+			model.addObject( "activeMenu", "source" );
 
 		return model;
 	}

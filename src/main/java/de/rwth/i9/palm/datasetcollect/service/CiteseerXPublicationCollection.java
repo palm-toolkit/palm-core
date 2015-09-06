@@ -26,11 +26,18 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		super();
 	}
 
+	
 	public static List<Map<String, String>> getListOfAuthors( String authorName, Source source ) throws IOException
 	{
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "http://citeseerx.ist.psu.edu/search?q=" + authorName.replace( " ", "+" ) + "&submit=Search&uauth=1&sort=ndocs&t=auth";
+		
+		/*
+		 * Alternative URL using lucene query
+		 * http://citeseerx.ist.psu.edu/search?q=author%3A(\%22mohamed%20amine%20chatti\%22)&sort=cite&t=doc&sort=cite&start=0
+		 */
+		
 		// Using jsoup java html parser library
 		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000 );
 
