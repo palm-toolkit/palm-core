@@ -168,11 +168,11 @@ public class ResearcherController
 			@RequestParam( value = "endDate", required = false ) final String endDate,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
-//		if( name != null )
-//			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
-//		else
-//			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
-		return Collections.emptyMap();
+		if ( name != null )
+			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
+		else
+			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
+		// return Collections.emptyMap();
 	}
 	
 	@RequestMapping( value = "/enrich", method = RequestMethod.GET )

@@ -56,8 +56,9 @@ public class InterestMiningService
 			}
 		}
 	
-		if( author.getAuthorInterestProfiles() == null){
-			logger.info( "Something went wrong, author interest is empty" );
+		if ( author.getAuthorInterestProfiles() == null || authorInterestProfiles.isEmpty() )
+		{
+			logger.info( "Something went wrong, author interest profile is empty" );
 			return Collections.emptyMap();
 		}
 		// get the author interest on json format (Map)
@@ -230,7 +231,7 @@ public class InterestMiningService
 	}
 
 	/**
-	 * Count the occurrenceof unique
+	 * Count the occurrence of unique terms/topic in corpus
 	 * 
 	 * @param languageYearInterestMap
 	 * @param languageYearCorpusMap
@@ -458,13 +459,19 @@ public class InterestMiningService
 	 */
 	private String getPublicationText( Publication publication )
 	{
-		String text = publication.getTitle() + " ";
+		String text = "";
+		// title most significant, multiply 3 times
+		for ( int i = 0; i < 2; i++ )
+			text +=	publication.getTitle() + ". ";
+		// title most quite significant, multiply 2 times
+		for ( int i = 0; i < 2; i++ )
+			if ( publication.getKeywords() != null )
+				text += publication.getKeywords() + ". ";
 		if ( publication.getAbstractText() != null )
 			text += publication.getAbstractText() + " ";
-		if ( publication.getKeywords() != null )
-			text += publication.getKeywords() + " ";
-		if ( publication.getContentText() != null )
-			text += publication.getContentText() + " ";
+		
+//		if ( publication.getContentText() != null )
+//			text += publication.getContentText() + " ";
 		return text;
 	}
 

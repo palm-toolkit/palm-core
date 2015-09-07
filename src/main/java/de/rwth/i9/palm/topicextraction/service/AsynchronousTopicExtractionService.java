@@ -214,11 +214,11 @@ public class AsynchronousTopicExtractionService
 	{
 		String text = publication.getTitle();
 		if ( publication.getAbstractText() != null )
-			text += " " + publication.getAbstractText();
+			text += ". " + publication.getAbstractText();
 		if ( publication.getKeywords() != null )
-			text += " " + publication.getKeywords();
-		if ( publication.getContentText() != null )
-			text += " " + publication.getContentText();
+			text += ". " + publication.getKeywords();
+//		if ( publication.getContentText() != null )
+//			text += " " + publication.getContentText();
 		return text;
 	}
 }

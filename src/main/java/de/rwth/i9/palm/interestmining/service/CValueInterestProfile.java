@@ -52,7 +52,7 @@ public class CValueInterestProfile
 		// check whether similar profile has already saved in the database
 		// if already exist do update
 		Set<AuthorInterestProfile> authorInterestProfiles = author.getAuthorInterestProfiles();
-		if ( authorInterestProfiles != null || !authorInterestProfiles.isEmpty() )
+		if ( authorInterestProfiles != null && !authorInterestProfiles.isEmpty() )
 		{
 			for ( AuthorInterestProfile eachAuthorInterestProfile : authorInterestProfiles )
 				if ( eachAuthorInterestProfile.getName().equals( authorInteresProfileName ) )
@@ -167,7 +167,7 @@ public class CValueInterestProfile
 
 			InterestAuthor interestAuthor = null;
 
-			if ( interestAuthors != null || !interestAuthors.isEmpty() )
+			if ( interestAuthors != null && !interestAuthors.isEmpty() )
 			{
 				for ( InterestAuthor eachInterestAuthor : interestAuthors )
 				{
