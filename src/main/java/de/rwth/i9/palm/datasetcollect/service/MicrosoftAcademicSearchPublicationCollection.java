@@ -107,8 +107,11 @@ public class MicrosoftAcademicSearchPublicationCollection extends PublicationCol
 			publicationDetailMap.put( "type", "CONFERENCE" );
 
 		if ( !publicationNode.path( "Year" ).isMissingNode() )
-			publicationDetailMap.put( "year", Integer.toString( publicationNode.path( "Year" ).intValue() ) );
-
+		{
+			int year = publicationNode.path( "Year" ).intValue();
+			if ( year > 1800 )
+				publicationDetailMap.put( "year", Integer.toString( year ) );
+		}
 		if ( !publicationNode.path( "Abstract" ).isMissingNode() )
 		{
 			String abstractText = publicationNode.path( "Abstract" ).textValue();
