@@ -27,6 +27,7 @@ import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorSource;
+import de.rwth.i9.palm.model.CompletionStatus;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.FileType;
@@ -105,33 +106,25 @@ public class PublicationCollectionService
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl(), sourceMap.get( SourceType.CITESEERX.toString() ) ) );
 			else if ( authorSource.getSourceType() == SourceType.DBLP && sourceMap.get( SourceType.DBLP.toString() ).isActive() )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDBLP( authorSource.getSourceUrl(), sourceMap.get( SourceType.DBLP.toString() ) ) );
-			else if ( authorSource.getSourceType() == SourceType.DBLP && sourceMap.get( SourceType.MENDELEY.toString() ).isActive() )
-			{
-				// check for token validity
-				mendeleyOauth2Helper.checkAndUpdateMendeleyToken( sourceMap.get( SourceType.MENDELEY.toString() ) );
+		}
+		if ( sourceMap.get( SourceType.MENDELEY.toString() ).isActive() )
+		{
+			// check for token validity
+			mendeleyOauth2Helper.checkAndUpdateMendeleyToken( sourceMap.get( SourceType.MENDELEY.toString() ) );
+			publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDetailMendeley( author, sourceMap.get( SourceType.MENDELEY.toString() ) ) );
+		}
+		// for MAS since not included on author search
+		if ( sourceMap.get( SourceType.MAS.toString() ).isActive() )
+			publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDetailMicrosoftAcademicSearch( author, sourceMap.get( SourceType.MAS.toString() ) ) );
 
-			}
+		// wait till everything complete
+		for ( Future<List<Map<String, String>>> publicationFuture : publicationFutureLists )
+		{
+			publicationFuture.get();
 		}
 
-		// Wait until they are all done
-//		boolean processIsDone = true;
-//		do
-//		{
-//			processIsDone = true;
-//			for ( Future<List<Map<String, String>>> futureList : publicationFutureLists )
-//			{
-//				if ( !futureList.isDone() )
-//				{
-//					processIsDone = false;
-//					break;
-//				}
-//			}
-//			// 10-millisecond pause between each check
-//			Thread.sleep( 10 );
-//		} while ( !processIsDone );
-
 		// merge the result
-		this.mergePublicationInformation( publicationFutureLists, author );
+		this.mergePublicationInformation( publicationFutureLists, author, sourceMap );
 	}
 	
 	/**
@@ -139,13 +132,14 @@ public class PublicationCollectionService
 	 * 
 	 * @param publicationFutureLists
 	 * @param author
+	 * @param sourceMap
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 * @throws IOException
 	 * @throws ParseException
-	 * @throws TimeoutException 
+	 * @throws TimeoutException
 	 */
-	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists, Author author ) throws InterruptedException, ExecutionException, IOException, ParseException, TimeoutException
+	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists, Author author, Map<String, Source> sourceMap ) throws InterruptedException, ExecutionException, IOException, ParseException, TimeoutException
 	{
 		if ( publicationFutureLists.size() > 0 )
 		{
@@ -157,7 +151,7 @@ public class PublicationCollectionService
 			this.constructPublicationWithSources( selectedPublications, publicationFutureLists , author );
 			
 			// extract and combine information from multiple sources
-			this.getPublicationInformationFromSources( selectedPublications, author );
+			this.getPublicationInformationFromSources( selectedPublications, author, sourceMap );
 
 			// enrich the publication information by extract information
 			// from html or pdf source
@@ -253,6 +247,8 @@ public class PublicationCollectionService
 					if( publication == null ){
 						publication = new Publication();
 						publication.setTitle( publicationTitle );
+						publication.setAbstractStatus( CompletionStatus.NOT_COMPLETE );
+						publication.setKeywordStatus( CompletionStatus.NOT_COMPLETE );
 						selectedPublications.add( publication );
 					}
 					// add coauthor
@@ -262,8 +258,17 @@ public class PublicationCollectionService
 					PublicationSource publicationSource = new PublicationSource();
 					publicationSource.setTitle( publicationTitle );
 					publicationSource.setSourceUrl( publicationMap.get( "url" ) );
-					publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
+					
 					publicationSource.setSourceType( SourceType.valueOf(publicationMap.get( "source" ).toUpperCase() ) );
+					
+					if( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) ||  
+							publicationSource.getSourceType().equals( SourceType.CITESEERX ) ||
+							publicationSource.getSourceType().equals( SourceType.DBLP ))
+						publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
+					else if ( publicationSource.getSourceType().equals( SourceType.MENDELEY ) ||  
+							publicationSource.getSourceType().equals( SourceType.MAS ))
+						publicationSource.setSourceMethod( SourceMethod.API );
+					
 					publicationSource.setPublication( publication );
 
 					if ( publicationMap.get( "nocitation" ) != null )
@@ -286,10 +291,18 @@ public class PublicationCollectionService
 
 					if ( publicationMap.get( "type" ) != null )
 						publicationSource.setPublicationType( publicationMap.get( "type" ) );
+					
+					if ( publicationMap.get( "abstract" ) != null )
+						publicationSource.setAbstractText( publicationMap.get( "abstract" ) );
+
+					if ( publicationMap.get( "keyword" ) != null )
+						publicationSource.setKeyword( publicationMap.get( "keyword" ) );
+
+					if ( publicationMap.get( "citedby" ) != null )
+						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "citedby" ) ) );
 
 					publication.addPublicationSource( publicationSource );
 								
-					// combine information from multiple sources;
 					
 					// check  print 
 //					for ( Entry<String, String> eachPublicationDetail : publicationMap.entrySet() )
@@ -304,48 +317,26 @@ public class PublicationCollectionService
 	 * combine publication information from multiple publication sources
 	 * 
 	 * @param selectedPublications
+	 * @param sourceMap
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 * @throws ParseException
 	 */
-	public void getPublicationInformationFromSources( List<Publication> selectedPublications, Author pivotAuthor ) throws IOException, InterruptedException, ExecutionException, ParseException
+	public void getPublicationInformationFromSources( List<Publication> selectedPublications, Author pivotAuthor, Map<String, Source> sourceMap ) throws IOException, InterruptedException, ExecutionException, ParseException
 	{
 		//multi thread future publication detail
 		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
 		for( Publication publication : selectedPublications){
-			selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncWalkOverSelectedPublication( publication ) );
+			selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncWalkOverSelectedPublication( publication, sourceMap ) );
 		}
 		
-		// Wait until they are all done
-		// Thread.sleep( 1000 );
-		boolean walkingPublicationIsDone = true;
-		// list coauthor of pivotauthor
-		/*List<Author> coAuthors = new ArrayList<Author>();*/
-		do
+		for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
 		{
-			walkingPublicationIsDone = true;
-			for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
-			{
-				if ( !selectedPublicationFuture.isDone() )
-					walkingPublicationIsDone = false;
-				else
-				{
-					// combine from sources to publication
-					Publication publication = mergingPublicationInformation( selectedPublicationFuture.get(), pivotAuthor/* , coAuthors */ );
-//
-//					// set is updated true
-//					publication.setContentUpdated( true );
-//
-//					// persist
-//					persistenceStrategy.getPublicationDAO().persist( publication );
-				}
-
-			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !walkingPublicationIsDone );
-		
+			// combine from sources to publication
+			this.mergingPublicationInformation( selectedPublicationFuture.get(),
+					pivotAuthor/* , coAuthors */ );
+		}
 	}
 
 	/**
@@ -367,7 +358,9 @@ public class PublicationCollectionService
 
 		for ( Publication publication : selectedPublications )
 		{
-			selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication ) );
+			// only proceed for publication with not complete abstract
+			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
+				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication ) );
 		}
 
 		// check process completion
@@ -389,7 +382,7 @@ public class PublicationCollectionService
 	 * @param selectedPublications
 	 * @throws ParseException
 	 */
-	public Publication mergingPublicationInformation( Publication publication,
+	public void mergingPublicationInformation( Publication publication,
 			Author pivotAuthor/* , List<Author> coAuthors */ ) throws ParseException
 	{
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/d", Locale.ENGLISH );
@@ -439,6 +432,27 @@ public class PublicationCollectionService
 			else if ( pubSource.getSourceType() == SourceType.CITESEERX )
 			{
 				// nothing to do
+			}
+			else if ( pubSource.getSourceType() == SourceType.MENDELEY )
+			{
+				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null )
+				{
+					publication.setAbstractText( pubSource.getAbstractText() );
+					publication.setAbstractStatus( CompletionStatus.COMPLETE );
+				}
+			}
+			else if ( pubSource.getSourceType() == SourceType.MAS )
+			{
+				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null )
+				{
+					publication.setAbstractText( pubSource.getAbstractText() );
+					publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
+				}
+				if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
+				{
+					publication.setKeywordText( pubSource.getKeyword() );
+					publication.setKeywordStatus( CompletionStatus.COMPLETE );
+				}
 			}
 			// for general information
 			// author
@@ -556,9 +570,23 @@ public class PublicationCollectionService
 			}
 
 			// abstract ( searching the longest)
-			if ( pubSource.getAbstractText() != null )
+			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null )
 				if ( publication.getAbstractText() == null || publication.getAbstractText().length() < pubSource.getAbstractText().length() )
+				{
 					publication.setAbstractText( pubSource.getAbstractText() );
+					publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
+				}
+
+			// keyword (MAS is the most valid) others source currently by the
+			// fastest
+			if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
+			{
+				if ( publication.getKeywordText() == null )
+				{
+					publication.setKeywordText( pubSource.getKeyword() );
+					publication.setKeywordStatus( CompletionStatus.PARTIALLY_COMPLETE );
+				}
+			}
 
 			if ( publication.getPublicationDate() == null && publicationDate == null && pubSource.getDate() != null )
 			{
@@ -655,7 +683,6 @@ public class PublicationCollectionService
 
 		}
 
-		return publication;
 	}
 
 }

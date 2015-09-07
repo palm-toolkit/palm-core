@@ -24,6 +24,7 @@ public class MendeleyOauth2Helper
 {
 	private final static Logger log = LoggerFactory.getLogger( MendeleyOauth2Helper.class );
 
+	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
 	@Autowired
@@ -56,7 +57,7 @@ public class MendeleyOauth2Helper
 			newSourceProperty.setValue( token );
 			newSourceProperty.setValid( true );
 			newSourceProperty.setLastModified( currentTimestamp );
-			newSourceProperty.setExpiredEvery( "1 HOUR" );
+			newSourceProperty.setExpiredEvery( "10 MINUTE" );
 			newSourceProperty.setSource( source );
 			persistenceStrategy.getSourcePropertyDAO().persist( newSourceProperty );
 
@@ -69,13 +70,13 @@ public class MendeleyOauth2Helper
 		}
 		else
 		{
-			// check if token has already expired > (1 hour)
-			if ( mendeleyTokenProperty.getExpiredEvery().equals( "1 HOUR" ) )
+			// check if token has already expired > (10 MINUTE)
+			//if ( mendeleyTokenProperty.getExpiredEvery().equals( "10 MINUTE" ) )
 			{
 				// get current timestamp
 				Timestamp currentTimestamp = new Timestamp( date.getTime() );
 
-				if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, mendeleyTokenProperty.getLastModified() ) > 1 )
+				if ( DateTimeHelper.substractTimeStampToMinutes( currentTimestamp, mendeleyTokenProperty.getLastModified() ) > 10 )
 				{
 					// update token
 					log.info( "updating token" );

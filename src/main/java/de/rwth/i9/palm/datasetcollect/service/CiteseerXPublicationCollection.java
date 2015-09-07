@@ -74,7 +74,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		return authorList;
 	}
 
-	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException
+	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url, Source source ) throws IOException
 	{
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
@@ -131,7 +131,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		return publicationMapLists;
 	}
 
-	public static Map<String, String> getPublicationDetailByPublicationUrl( String url ) throws IOException
+	public static Map<String, String> getPublicationDetailByPublicationUrl( String url, Source source ) throws IOException
 	{
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
 

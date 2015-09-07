@@ -115,10 +115,11 @@ public class DblpPublicationCollection extends PublicationCollection
 	 * get author page and publication list
 	 * 
 	 * @param url
+	 * @param source
 	 * @return
 	 * @throws IOException
 	 */
-	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException
+	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url, Source source ) throws IOException
 	{
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 

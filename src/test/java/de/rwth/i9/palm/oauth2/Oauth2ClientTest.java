@@ -18,8 +18,8 @@ public class Oauth2ClientTest
 		String TOKEN_URL = "https://api-oauth2.mendeley.com/oauth/token";
 		String TRUSTED_CLIENT_ID = "392";
 		String TRUSTED_SECRET = "VWheQe6qKEGeUXQcLj1NDTCqxkP29PyJ";
-		String CATALOG_URL = "https://api.mendeley.com:443/search/catalog?author=mohamed%20amine%20chatti&limit=50";
-		CATALOG_URL = "https://api.mendeley.com:443/search/profiles?query=mohamed%20amine%20chatti";
+		String CATALOG_URL = "https://api.mendeley.com:443/search/catalog?author=mohamed%20amine%20chatti&limit=5";
+		//CATALOG_URL = "https://api.mendeley.com:443/search/profiles?query=mohamed%20amine%20chatti";
 		//CATALOG_URL = "https://api.mendeley.com:443/documents?profile_id=1ffa2c9e-d32b-32ea-82e2-23b25c3af724";
 		//
 		// institution

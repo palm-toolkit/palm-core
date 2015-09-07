@@ -1,7 +1,32 @@
 package de.rwth.i9.palm.datasetcollect.service;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.http.apache.ApacheHttpTransport;
+
+import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceProperty;
+import de.rwth.i9.palm.model.SourceType;
+
 public class MicrosoftAcademicSearchPublicationCollection extends PublicationCollection
 {
+
+	private final static Logger log = LoggerFactory.getLogger( MicrosoftAcademicSearchPublicationCollection.class );
 
 	/**
 	 * Old API url
@@ -18,4 +43,103 @@ public class MicrosoftAcademicSearchPublicationCollection extends PublicationCol
 	 * publication detail
 	 * 
 	 */
+	
+	public static List<Map<String, String>> getPublicationDetailList( Author author, Source source ) throws IOException
+	{
+		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
+		
+		// for search profile properties
+		SourceProperty endPointProperty = source.getSourcePropertyByIdentifiers( "OLD_API", "END_POINT" );
+		SourceProperty appIdProperty = source.getSourcePropertyByIdentifiers( "OLD_API", "APP_ID" );
+		
+		String publicationCatalog = endPointProperty.getValue() + 
+				"?AppId=" + appIdProperty.getValue() + "&AuthorQuery=" + URLEncoder.encode( author.getName(), "UTF-8" ).replace( "+", "%20" ) 
+				+ "&ResultObjects=Publication&PublicationContent=AllInfo&StartIdx=0&EndIdx=99";
+		// get the resources ( authors or publications )
+		HttpGet httpGet = new HttpGet( publicationCatalog );
+		DefaultHttpClient apacheHttpClient = ApacheHttpTransport.newDefaultHttpClient();
+		HttpResponse httpResponse = apacheHttpClient.execute( httpGet );
+
+		// map the results into jsonMap
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode resultsNode = mapper.readTree( httpResponse.getEntity().getContent() );
+		
+		JsonNode publicationResultNode = null;
+
+		try
+		{
+			publicationResultNode = resultsNode.path( "d" ).path( "Publication" ).path( "Result" );
+		}
+		catch ( Exception e )
+		{
+			// TODO: handle exception
+			log.error( "Publication result node not found" );
+		}
+
+		if ( publicationResultNode == null )
+			return Collections.emptyList();
+
+		if ( publicationResultNode.isArray() )
+			for ( JsonNode publicationNode : publicationResultNode )
+					publicationMapLists.add( extractPublicationDetail( publicationNode ) );
+		else
+			publicationMapLists.add( extractPublicationDetail( publicationResultNode ) );
+
+		return publicationMapLists;
+	}
+	
+	/**
+	 * Parse publication detail into java map
+	 * 
+	 * @param publicationNode
+	 * @return
+	 */
+	private static Map<String, String> extractPublicationDetail( JsonNode publicationNode )
+	{
+		Map<String, String> publicationDetailMap = new LinkedHashMap<String, String>();
+		
+		if ( !publicationNode.path( "Title" ).isMissingNode() )
+			publicationDetailMap.put( "title", publicationNode.path( "Title" ).textValue() );
+
+		if ( !publicationNode.path( "Journal" ).isMissingNode() )
+			publicationDetailMap.put( "type", "JOURNAL" );
+		if ( !publicationNode.path( "Conference" ).isMissingNode() )
+			publicationDetailMap.put( "type", "CONFERENCE" );
+
+		if ( !publicationNode.path( "Year" ).isMissingNode() )
+			publicationDetailMap.put( "year", Integer.toString( publicationNode.path( "Year" ).intValue() ) );
+
+		if ( !publicationNode.path( "Abstract" ).isMissingNode() )
+		{
+			String abstractText = publicationNode.path( "Abstract" ).textValue();
+			if ( !abstractText.equals( "" ) )
+				publicationDetailMap.put( "abstract", abstractText );
+		}
+
+		if ( !publicationNode.path( "CitationCount" ).isMissingNode() )
+			publicationDetailMap.put( "citedby", Integer.toString( ( publicationNode.path( "CitationCount" ).intValue() ) ) );
+
+		if ( !publicationNode.path( "Keyword" ).isMissingNode() )
+		{
+			String keyword = "";
+			if ( publicationNode.path( "Keyword" ).isArray() )
+			{
+				for ( JsonNode keywordNode : publicationNode.path( "Keyword" ) )
+				{
+					if ( !keyword.equals( "" ) )
+						keyword += ",";
+					keyword += keywordNode.path( "Name" ).textValue();
+				}
+			}
+
+			if ( !keyword.equals( "" ) )
+				publicationDetailMap.put( "keyword", keyword );
+		}
+
+		// add other attributes here
+
+		publicationDetailMap.put( "source", SourceType.MAS.toString() );
+		
+		return publicationDetailMap;
+	}
 }

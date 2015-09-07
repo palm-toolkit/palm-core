@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Stopwatch;
 
+import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.Source;
@@ -46,7 +47,7 @@ public class AsynchronousCollectionService
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get publication list from google scholar with url " + url + " starting" );
 
-		List<Map<String, String>> publicationMapList = GoogleScholarPublicationCollection.getPublicationListByAuthorUrl( url );
+		List<Map<String, String>> publicationMapList = GoogleScholarPublicationCollection.getPublicationListByAuthorUrl( url, source );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 		log.info( "get publication list from google scholar with url " + url + " complete in " + stopwatch );
@@ -68,7 +69,7 @@ public class AsynchronousCollectionService
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get publication list from citeseerX with query " + url + " starting" );
 
-		List<Map<String, String>> publicationMapList = CiteseerXPublicationCollection.getPublicationListByAuthorUrl( url );
+		List<Map<String, String>> publicationMapList = CiteseerXPublicationCollection.getPublicationListByAuthorUrl( url, source );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 		log.info( "get publication list from citeSeerX with url " + url + " complete in " + stopwatch );
@@ -90,7 +91,7 @@ public class AsynchronousCollectionService
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get publication list from DBLP with query " + url + " starting" );
 
-		List<Map<String, String>> publicationMapList = DblpPublicationCollection.getPublicationListByAuthorUrl( url );
+		List<Map<String, String>> publicationMapList = DblpPublicationCollection.getPublicationListByAuthorUrl( url, source );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 		log.info( "get publication list from DBLP with url " + url + " complete in " + stopwatch );
@@ -99,20 +100,66 @@ public class AsynchronousCollectionService
 	}
 
 	/**
-	 * Asynchronously gather publication detail from google scholar
+	 * Asynchronously gather publication detail from Microsoft Academic Search
+	 * Old API
 	 * 
-	 * @param publicationSource
+	 * @param url
+	 * @param source
 	 * @return
 	 * @throws IOException
 	 */
 	@Async
-	public Future<PublicationSource> getPublicationInformationFromGoogleScholar( PublicationSource publicationSource ) throws IOException
+	public Future<List<Map<String, String>>> getListOfPublicationDetailMicrosoftAcademicSearch( Author author, Source source ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "get publication detail list from Microsoft Academic Search with author " + author.getName() + " starting" );
+
+		List<Map<String, String>> publicationMapList = MicrosoftAcademicSearchPublicationCollection.getPublicationDetailList( author, source );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "get publication detail list from Microsoft Academic Search with author " + author.getName() + " complete in " + stopwatch );
+
+		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
+	}
+
+	/**
+	 * Asynchronously gather publication detail from Mendeley API
+	 * 
+	 * @param url
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<List<Map<String, String>>> getListOfPublicationDetailMendeley( Author author, Source source ) throws IOException
+	{
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "get publication detail list from Mendeley with author " + author.getName() + " starting" );
+
+		List<Map<String, String>> publicationMapList = MendeleyPublicationCollection.getPublicationDetailList( author, source );
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+		log.info( "get publication detail list from Mendeley with author " + author.getName() + " complete in " + stopwatch );
+
+		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
+	}
+
+	/**
+	 * Asynchronously gather publication detail from google scholar
+	 * 
+	 * @param publicationSource
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 */
+	@Async
+	public Future<PublicationSource> getPublicationInformationFromGoogleScholar( PublicationSource publicationSource, Source source ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get publication detail from google scholar with url " + publicationSource.getSourceUrl() + " starting" );
 
 		// scrap the webpage
-		Map<String, String> publicationDetailMap = GoogleScholarPublicationCollection.getPublicationDetailByPublicationUrl( publicationSource.getSourceUrl() );
+		Map<String, String> publicationDetailMap = GoogleScholarPublicationCollection.getPublicationDetailByPublicationUrl( publicationSource.getSourceUrl(), source );
 
 		// assign the information gathered into publicationSource object
 		// this.assignInformationFromGoogleScholar( publicationSource,
@@ -183,17 +230,18 @@ public class AsynchronousCollectionService
 	 * Asynchronously gather publication detail from citeseerx
 	 * 
 	 * @param publicationSource
+	 * @param source
 	 * @return
 	 * @throws IOException
 	 */
 	@Async
-	public Future<PublicationSource> getPublicationInformationFromCiteseerX( PublicationSource publicationSource ) throws IOException
+	public Future<PublicationSource> getPublicationInformationFromCiteseerX( PublicationSource publicationSource, Source source ) throws IOException
 	{
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info( "get publication detail from citeseerX with url " + publicationSource.getSourceUrl() + " starting" );
 
 		// scrap the webpage
-		Map<String, String> publicationDetailMap = CiteseerXPublicationCollection.getPublicationDetailByPublicationUrl( publicationSource.getSourceUrl() );
+		Map<String, String> publicationDetailMap = CiteseerXPublicationCollection.getPublicationDetailByPublicationUrl( publicationSource.getSourceUrl(), source );
 
 		// assign the information gathered into publicationSource object
 		// this.assignInformationFromCiteseerx( publicationSource,

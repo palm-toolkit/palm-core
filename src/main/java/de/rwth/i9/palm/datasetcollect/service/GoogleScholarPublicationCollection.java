@@ -75,12 +75,12 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		return authorList;
 	}
 
-	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException
+	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url, Source source ) throws IOException
 	{
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url + "&view_op=list_works&cstart=0&pagesize=100", 5000, getGoogleScholarCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url + "&view_op=list_works&cstart=0&pagesize=100", 5000, getGoogleScholarCookie( source ) );
 
 		if ( document == null )
 			return Collections.emptyList();
@@ -117,11 +117,11 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		return publicationMapLists;
 	}
 
-	public static Map<String, String> getPublicationDetailByPublicationUrl( String url ) throws IOException
+	public static Map<String, String> getPublicationDetailByPublicationUrl( String url, Source source ) throws IOException
 	{
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie( source ) );
 
 		if ( document == null )
 			return Collections.emptyMap();
@@ -164,21 +164,6 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			publicationDetailMaps.put( publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_LABEL ).text(), publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_VALUE ).text() );
 
 		return publicationDetailMaps;
-	}
-	
-	/**
-	 * Google Scholar cache, update in case IP being blocked by google
-	 * 
-	 * @return
-	 */
-	private static Map<String, String> getGoogleScholarCookie()
-	{
-		Map<String, String> cookies = new HashMap<String, String>();
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=562f07f0083a8a18:TM=1440432080:C=c:IP=95.223.161.25-:S=APGng0tmemv2sWysioz9VSu-8qJszg6k8g" );
-		cookies.put( "GSP", "LM=1440432086:S=IoyU8QOMrSVJz6nv" );
-		//cookies.put( "NID", "70=HzzNP27QNx95-CuhZNL5J6WkCUMbW2k440VznNTLHrV74DtwQANPieG32AhE9TpNT27NjfGmrCJkG0GQ4SQaKGqEaaxzYJjP_DAZcaYDWHhoAftzoR2ELWB1cOYe5h8_" );
-		//cookies.put( "PREF", "ID=1111111111111111:FF=0:TM=1438520627:LM=1438520627:V=1:S=8w-e8EQt08Or09Lx" );
-		return cookies;
 	}
 
 	/**

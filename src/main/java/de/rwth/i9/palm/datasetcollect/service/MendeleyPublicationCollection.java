@@ -17,6 +17,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.http.apache.ApacheHttpTransport;
 
+import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.PublicationType;
 import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceProperty;
 import de.rwth.i9.palm.model.SourceType;
@@ -59,14 +61,20 @@ public class MendeleyPublicationCollection extends PublicationCollection
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode resultsNode = mapper.readTree( httpResponse.getEntity().getContent() );
 		if ( resultsNode.isArray() )
-			for ( JsonNode authorNode : resultsNode )
-				authorList.add( extractAuthorDetail( authorNode ) );
+			for ( JsonNode publicationNode : resultsNode )
+				authorList.add( extractAuthorDetail( publicationNode ) );
 		else
 			authorList.add( extractAuthorDetail( resultsNode ) );
 
 		return authorList;
 	}
 
+	/**
+	 * Parse Authors JSON into Java Map
+	 * 
+	 * @param authorNode
+	 * @return
+	 */
 	private static Map<String, String> extractAuthorDetail( JsonNode authorNode )
 	{
 		Map<String, String> authorDetailMap = new LinkedHashMap<String, String>();
@@ -130,6 +138,156 @@ public class MendeleyPublicationCollection extends PublicationCollection
 
 		return authorDetailMap;
 	}
+
+	/**
+	 * Get List of Publication Detail from Mendeley in Java Map
+	 * 
+	 * @param author
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 */
+	public static List<Map<String, String>> getPublicationDetailList( Author author, Source source ) throws IOException
+	{
+		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
+
+		// for search catalog properties
+		SourceProperty searchCatalogProperty = source.getSourcePropertyByIdentifiers( "catalog", "SEARCH_CATALOG" );
+		// for token properties
+		SourceProperty tokenProperty = source.getSourcePropertyByIdentifiers( "oauth2", "TOKEN" );
+
+		String publicationCatalog = searchCatalogProperty.getValue() + "?author=" + URLEncoder.encode( author.getName(), "UTF-8" ).replace( "+", "%20" ) + "&limit=100";
+		// get the resources ( authors or publications )
+		HttpGet httpGet = new HttpGet( publicationCatalog );
+		httpGet.setHeader( "Authorization", "Bearer " + tokenProperty.getValue() );
+		DefaultHttpClient apacheHttpClient = ApacheHttpTransport.newDefaultHttpClient();
+		HttpResponse httpResponse = apacheHttpClient.execute( httpGet );
+
+		// TODO: check for invalid token
+
+		// map the results into jsonMap
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode resultsNode = mapper.readTree( httpResponse.getEntity().getContent() );
+		if ( resultsNode.isArray() )
+			for ( JsonNode publicationNode : resultsNode )
+			{
+				if ( isPublicationAuthorCorrect( author, publicationNode ) )
+					publicationMapLists.add( extractPublicationDetail( publicationNode ) );
+			}
+		else
+		{
+			if ( isPublicationAuthorCorrect( author, resultsNode ) )
+				publicationMapLists.add( extractPublicationDetail( resultsNode ) );
+		}
+
+		return publicationMapLists;
+	}
+
+	/*
+	 * check if author on publication match with target author
+	 */
+	public static boolean isPublicationAuthorCorrect( Author author, JsonNode publicationNode )
+	{
+		if ( !publicationNode.path( "authors" ).isMissingNode() )
+		{
+			if ( publicationNode.path( "authors" ).isArray() )
+			{
+				for ( JsonNode authorNode : publicationNode.path( "authors" ) )
+				{
+					String authorName = "";
+					if ( !authorNode.path( "first_name" ).isMissingNode() )
+						authorName += authorNode.path( "first_name" ).textValue().toLowerCase() + " ";
+					if ( !authorNode.path( "last_name" ).isMissingNode() )
+						authorName += authorNode.path( "last_name" ).textValue().toLowerCase();
+
+					if ( !authorName.equals( "" ) && authorName.equals( author.getName() ) )
+						return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Parse publication detail into java map
+	 * 
+	 * @param publicationNode
+	 * @return
+	 */
+	private static Map<String, String> extractPublicationDetail( JsonNode publicationNode )
+	{
+		Map<String, String> publicationDetailMap = new LinkedHashMap<String, String>();
+
+		if ( !publicationNode.path( "title" ).isMissingNode() )
+			publicationDetailMap.put( "title", publicationNode.path( "title" ).textValue() );
+		if ( !publicationNode.path( "type" ).isMissingNode() )
+		{
+			String pubType = publicationNode.path( "type" ).textValue().toUpperCase();
+			if ( isPublicationTypeContains( pubType ) )
+				publicationDetailMap.put( "type", pubType );
+		}
+		if ( !publicationNode.path( "year" ).isMissingNode() )
+			publicationDetailMap.put( "year", publicationNode.path( "year" ).textValue() );
+		if ( !publicationNode.path( "abstract" ).isMissingNode() )
+			publicationDetailMap.put( "abstract", publicationNode.path( "abstract" ).textValue() );
+		if ( !publicationNode.path( "keywords" ).isMissingNode() )
+		{
+			String keyword = "";
+			if ( publicationNode.path( "keywords" ).isArray() )
+			{
+				for ( JsonNode keywordNode : publicationNode.path( "keywords" ) )
+				{
+					if ( !keyword.equals( "" ) )
+						keyword += ",";
+					keyword += keywordNode.textValue();
+				}
+			}
+			if ( !keyword.equals( "" ) )
+				publicationDetailMap.put( "keyword", keyword );
+		}
+		// add other attributes here
+
+		publicationDetailMap.put( "source", SourceType.MENDELEY.toString() );
+
+		return publicationDetailMap;
+	}
+
+	/**
+	 * Check accepted publication type
+	 * 
+	 * @param pubType
+	 * @return
+	 */
+	public static boolean isPublicationTypeContains( String pubType )
+	{
+
+		for ( PublicationType pt : PublicationType.values() )
+		{
+			if ( pt.name().equals( pubType ) )
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+	/*
+	 * 
+	 * [ { "title":
+	 * "PLEF: A Conceptual Framework for Mashup Personal Learning Environments",
+	 * "type":"journal", "authors":[ { "first_name":"Mohamed Amine",
+	 * "last_name":"Chatti" } ], "year":2009, "source":
+	 * "Learning Technology Newsletter", "identifiers":{
+	 * "scopus":"2-s2.0-78650291287" },
+	 * "id":"ed205f4d-f930-3c76-b25a-35836fef4337", "link":
+	 * "http://www.mendeley.com/research/plef-conceptual-framework-mashup-personal-learning-environments",
+	 * "abstract":
+	 * "This master thesis proposes to develop Personal Learning Environment Framework (PLEF), a framework that enable the creation of PLEs. This master thesis will also provide supporting components of the framework and a front end interface of the system. The whole result of the master thesis will prove that the framework is usable and useful."
+	 * }
+	 */
+
+	// public
 	/**
 	 * Logged in as sigit nugraha Display name sigit nugraha Id
 	 * cbebc27d-600d-35db-9e57-1ecbc24229de
