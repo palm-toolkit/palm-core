@@ -37,7 +37,7 @@ public class CorePhraseInterestProfile
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public void doCValueCalculation( Map<String, Map<Integer, Map<Interest, Integer>>> languageYearInterestOccurrenceMap, Author author ) throws ParseException
+	public void doCorePhraseCalculation( Map<String, Map<Integer, Map<Interest, Integer>>> languageYearInterestOccurrenceMap, Author author ) throws ParseException
 	{
 		// prepare the variables to saving the result
 		Calendar calendar = Calendar.getInstance();

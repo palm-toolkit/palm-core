@@ -48,6 +48,7 @@ public class InterestMiningService
 		// get all active authorinterestprofiles
 		List<AuthorInterestProfile> authorInterestProfiles = persistenceStrategy.getAuthorInterestProfileDAO().getDefaultAuthorInterestProfile();
 		
+		// interest profile is needed before interests are calculated
 		if( !authorInterestProfiles.isEmpty() ){
 			if ( (author.getAuthorInterestProfiles() == null && author.getAuthorInterestProfiles().isEmpty())  ||
 				 author.getAuthorInterestProfiles().size() != authorInterestProfiles.size() || updateAuthorInterest)
@@ -55,8 +56,7 @@ public class InterestMiningService
 				calculateAuthorInterestBasedOnActiveInterestProfile( author, authorInterestProfiles);
 			}
 		}
-	
-		if ( author.getAuthorInterestProfiles() == null || authorInterestProfiles.isEmpty() )
+		else
 		{
 			logger.info( "Something went wrong, author interest profile is empty" );
 			return Collections.emptyMap();
