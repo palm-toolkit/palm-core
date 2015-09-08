@@ -196,6 +196,7 @@ public class InterestMiningService
 	private void calculateAuthorInterestBasedOnActiveInterestProfile( Author author, List<AuthorInterestProfile> authorInterestProfiles ) throws ParseException
 	{
 		// calculate the author interest
+		// first create clusters of publication based on year
 
 		// Map of the entire corpus ( publication information )
 		// based on language and year
