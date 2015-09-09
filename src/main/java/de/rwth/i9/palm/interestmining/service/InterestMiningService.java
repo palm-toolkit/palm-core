@@ -271,7 +271,7 @@ public class InterestMiningService
 																// word
 						term = " " + term + " "; // give white spaces
 
-					// count frequencies unique term in a year occured
+					// count frequencies unique term in a year occurred
 					interestOccurrenceOnCorpusMap.put( interest, StringUtils.countMatches( corpus, term ) );
 				}
 			}
