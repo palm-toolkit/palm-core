@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,11 +20,14 @@ import org.springframework.stereotype.Service;
 import org.tartarus.snowball.ext.PorterStemmer;
 
 import de.rwth.i9.palm.helper.comparator.AuthorInterestByDateComparator;
+import de.rwth.i9.palm.interestmining.service.PublicationClusterHelper.TermDetail;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.ExtractionServiceType;
 import de.rwth.i9.palm.model.Interest;
+import de.rwth.i9.palm.model.InterestProfile;
+import de.rwth.i9.palm.model.InterestProfileType;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -41,6 +45,146 @@ public class InterestMiningService
 	@Autowired
 	private CValueInterestProfile cValueInterestProfile;
 
+	/**
+	 * Get author interest from active author profiles
+	 * 
+	 * @param responseMap
+	 * @param author
+	 * @param updateAuthorInterest
+	 * @return
+	 * @throws ParseException
+	 */
+	public Map<String, Object> getInterestFromAuthor( Map<String, Object> responseMap, Author author, boolean updateAuthorInterest ) throws ParseException
+	{
+		logger.info( "start mining interest " );
+		// get default interest profile
+		List<InterestProfile> interestProfilesDefault = persistenceStrategy.getInterestProfileDAO().getAllValidInterestProfile( InterestProfileType.DEFAULT );
+
+		// get default interest profile
+		List<InterestProfile> interestProfilesDerived = persistenceStrategy.getInterestProfileDAO().getAllValidInterestProfile( InterestProfileType.DERIVED );
+
+		if ( interestProfilesDefault.isEmpty() && interestProfilesDerived.isEmpty() )
+		{
+			logger.warn( "No active interest profile found" );
+			return responseMap;
+		}
+
+		if ( author.getPublications() == null || author.getPublications().isEmpty() )
+		{
+			logger.warn( "No publication found" );
+			return responseMap;
+		}
+
+		// update for all author interest profile
+		if ( !updateAuthorInterest )
+		{
+			// get interest profile from author
+			Set<AuthorInterestProfile> authorInterestProfiles = author.getAuthorInterestProfiles();
+			if ( authorInterestProfiles != null || !authorInterestProfiles.isEmpty() )
+			{
+				// check for missing default interest profile in author
+				// only calculate missing one
+				for ( Iterator<InterestProfile> interestProfileIterator = interestProfilesDefault.iterator(); interestProfileIterator.hasNext(); )
+				{
+					InterestProfile interestProfileDefault = interestProfileIterator.next();
+					for ( AuthorInterestProfile authorInterestProfile : authorInterestProfiles )
+					{
+						if ( authorInterestProfile.getInterestProfile().equals( interestProfileDefault ) )
+						{
+							interestProfileIterator.remove();
+							break;
+						}
+					}
+				}
+
+				// check for missing derivative interest profile
+				for ( Iterator<InterestProfile> interestProfileIterator = interestProfilesDerived.iterator(); interestProfileIterator.hasNext(); )
+				{
+					InterestProfile interestProfileDerived = interestProfileIterator.next();
+					for ( AuthorInterestProfile authorInterestProfile : authorInterestProfiles )
+					{
+						if ( authorInterestProfile.getInterestProfile().equals( interestProfileDerived ) )
+						{
+							interestProfileIterator.remove();
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		// if defaultInterestProfile not null,
+		// means interest calculation from beginning is needed
+		if ( !interestProfilesDefault.isEmpty() )
+		{
+			// first create publication cluster
+			// prepare the cluster container
+			List<PublicationClusterHelper> publicationClusters = new ArrayList<PublicationClusterHelper>();
+			Map<String, PublicationClusterHelper> publicationClustersMap = new HashMap<String, PublicationClusterHelper>();
+			// construct the cluster
+			constructPublicationCLusterByLanguageAndYear( author, publicationClustersMap );
+
+			// cluster is ready
+			if ( !publicationClustersMap.isEmpty() )
+			{
+				for ( Map.Entry<String, PublicationClusterHelper> publicationClusterEntry : publicationClustersMap.entrySet() )
+				{
+					PublicationClusterHelper publicationCluster = publicationClusterEntry.getValue();
+					// calculate frequencies on cluster
+					Map<String, TermDetail> termMap = publicationCluster.calculateTermProperties();
+				}
+			}
+			// sort
+		}
+
+		// get and put author interest profile into map or list
+
+		return responseMap;
+	}
+
+	public void constructPublicationCLusterByLanguageAndYear( Author author, Map<String, PublicationClusterHelper> publicationClustersMap )
+	{
+		// fill publication clusters
+		// prepare calendar for publication year
+		Calendar calendar = Calendar.getInstance();
+		// get all publications from specific author and put it into cluster
+		for ( Publication publication : author.getPublications() )
+		{
+			// only proceed publication that have date, language and abstract
+			if ( publication.getAbstractText() == null || publication.getAbstractText().equals( "" ) )
+				continue;
+			if ( publication.getPublicationDate() == null )
+				continue;
+			if ( publication.getLanguage() == null )
+				continue;
+
+			// get publication year
+			calendar.setTime( publication.getPublicationDate() );
+
+			// construct clusterMap key
+			String clusterMapKey = publication.getLanguage() + calendar.get( Calendar.YEAR );
+
+			// construct publication map
+			if ( publicationClustersMap.get( clusterMapKey ) == null )
+			{
+				// not exist create new cluster
+				PublicationClusterHelper publicationCluster = new PublicationClusterHelper();
+				publicationCluster.setLangauge( publication.getLanguage() );
+				publicationCluster.setYear( calendar.get( Calendar.YEAR ) );
+				publicationCluster.addPublicationAndUpdate( publication );
+
+			}
+			else
+			{
+				// exist on map, get the cluster
+				PublicationClusterHelper publicationCluster = publicationClustersMap.get( clusterMapKey );
+				publicationCluster.addPublicationAndUpdate( publication );
+			}
+
+		}
+	}
+
+	/* OLD IMPLEMENTATION */
 	public Map<String, Object> getInterestFromAuthor( Author author, boolean updateAuthorInterest, Map<String, Object> responseMap ) throws ParseException
 	{
 
