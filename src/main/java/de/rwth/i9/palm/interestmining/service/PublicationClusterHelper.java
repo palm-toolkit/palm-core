@@ -24,13 +24,13 @@ public class PublicationClusterHelper
 	List<Publication> publications;
 
 	int numberOfWordsOnTitle;
-	String concatenatedTitle;
+	String concatenatedTitle = "";
 
 	int numberOfWordsOnKeyword;
-	String concatenatedKeyword;
+	String concatenatedKeyword = "";
 
 	int numberOfWordsOnAbstract;
-	String concatenatedAbstract;
+	String concatenatedAbstract = "";
 
 	Map<String, TermDetail> termMap;
 
@@ -207,7 +207,7 @@ public class PublicationClusterHelper
 	 */
 	public Map<String, TermDetail> calculateTermProperties()
 	{
-		if ( this.publications != null )
+		if ( this.publications == null )
 			return Collections.emptyMap();
 
 		// init termMap
@@ -232,12 +232,13 @@ public class PublicationClusterHelper
 							
 					for ( Map.Entry<String, Double> termValuesEntry : termValues.entrySet() )
 					{
+						String term = normalizeText( termValuesEntry.getKey() );
 						// check if termMap has already contain term
 						// if term already exist "more than one term extractor
 						// services, produced same terms"
-						if ( termMap.get( termValuesEntry.getKey() ) != null )
+						if ( termMap.get( term ) != null )
 						{
-							termDetail = termMap.get( termValuesEntry.getKey() );
+							termDetail = termMap.get( term );
 							// update extraction service list
 							termDetail.addExtractionServiceType( extractionServiceType );
 						}
@@ -246,20 +247,19 @@ public class PublicationClusterHelper
 						{
 							// create new termDetail object
 							termDetail = new TermDetail();
-							String termLabel = termValuesEntry.getKey();
 
 							// add extraction service
 							termDetail.addExtractionServiceType( extractionServiceType );
-							termDetail.setTermLabel( termLabel );
-							termDetail.setTermLength( this.countWords( termLabel ) );
+							termDetail.setTermLabel( term );
+							termDetail.setTermLength( this.countWords( term ) );
 
 							// calculate frequencies
-							termDetail.setFrequencyOnTitle( StringUtils.countMatches( this.getConcatenatedTitle(), termLabel ) );
-							termDetail.setFrequencyOnAbstract( StringUtils.countMatches( this.getConcatenatedAbstract(), termLabel ) );
-							termDetail.setFrequencyOnKeyword( StringUtils.countMatches( this.getConcatenatedKeyword(), termLabel ) );
+							termDetail.setFrequencyOnTitle( StringUtils.countMatches( this.getConcatenatedTitle(), term ) );
+							termDetail.setFrequencyOnAbstract( StringUtils.countMatches( this.getConcatenatedAbstract(), term ) );
+							termDetail.setFrequencyOnKeyword( StringUtils.countMatches( this.getConcatenatedKeyword(), term ) );
 
 							// put into map
-							termMap.put( termLabel, termDetail );
+							termMap.put( term, termDetail );
 						}
 					}
 
@@ -267,6 +267,11 @@ public class PublicationClusterHelper
 			}
 		}
 
+		return termMap;
+	}
+
+	public Map<String, TermDetail> getTermMap()
+	{
 		return termMap;
 	}
 

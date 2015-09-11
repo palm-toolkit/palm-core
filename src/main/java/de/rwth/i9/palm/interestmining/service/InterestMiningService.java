@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.tartarus.snowball.ext.PorterStemmer;
 
 import de.rwth.i9.palm.helper.comparator.AuthorInterestByDateComparator;
-import de.rwth.i9.palm.interestmining.service.PublicationClusterHelper.TermDetail;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
@@ -41,6 +40,9 @@ public class InterestMiningService
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private CValueInterestProfileOld cValueInterestProfileOld;
 
 	@Autowired
 	private CValueInterestProfile cValueInterestProfile;
@@ -80,7 +82,7 @@ public class InterestMiningService
 		{
 			// get interest profile from author
 			Set<AuthorInterestProfile> authorInterestProfiles = author.getAuthorInterestProfiles();
-			if ( authorInterestProfiles != null || !authorInterestProfiles.isEmpty() )
+			if ( authorInterestProfiles != null && !authorInterestProfiles.isEmpty() )
 			{
 				// check for missing default interest profile in author
 				// only calculate missing one
@@ -89,7 +91,7 @@ public class InterestMiningService
 					InterestProfile interestProfileDefault = interestProfileIterator.next();
 					for ( AuthorInterestProfile authorInterestProfile : authorInterestProfiles )
 					{
-						if ( authorInterestProfile.getInterestProfile().equals( interestProfileDefault ) )
+						if ( authorInterestProfile.getInterestProfile() != null && authorInterestProfile.getInterestProfile().equals( interestProfileDefault ) )
 						{
 							interestProfileIterator.remove();
 							break;
@@ -119,30 +121,85 @@ public class InterestMiningService
 		{
 			// first create publication cluster
 			// prepare the cluster container
-			List<PublicationClusterHelper> publicationClusters = new ArrayList<PublicationClusterHelper>();
 			Map<String, PublicationClusterHelper> publicationClustersMap = new HashMap<String, PublicationClusterHelper>();
 			// construct the cluster
-			constructPublicationCLusterByLanguageAndYear( author, publicationClustersMap );
+			logger.info( "Construct publication cluster " );
+			constructPublicationClusterByLanguageAndYear( author, publicationClustersMap );
 
 			// cluster is ready
 			if ( !publicationClustersMap.isEmpty() )
 			{
-				for ( Map.Entry<String, PublicationClusterHelper> publicationClusterEntry : publicationClustersMap.entrySet() )
-				{
-					PublicationClusterHelper publicationCluster = publicationClusterEntry.getValue();
-					// calculate frequencies on cluster
-					Map<String, TermDetail> termMap = publicationCluster.calculateTermProperties();
-				}
+				// calculate default interest profile
+				calculateInterestProfilesDefault( author, publicationClustersMap, interestProfilesDefault );
 			}
-			// sort
 		}
 
 		// get and put author interest profile into map or list
+		getInterestFromDatabase( author, responseMap );
 
 		return responseMap;
 	}
 
-	public void constructPublicationCLusterByLanguageAndYear( Author author, Map<String, PublicationClusterHelper> publicationClustersMap )
+	public void calculateInterestProfilesDefault( Author author, Map<String, PublicationClusterHelper> publicationClustersMap, List<InterestProfile> interestProfilesDefault )
+	{
+		// calculate frequencies of term in cluster
+		for ( Map.Entry<String, PublicationClusterHelper> publicationClusterEntry : publicationClustersMap.entrySet() )
+			publicationClusterEntry.getValue().calculateTermProperties();
+
+		// loop through all interest profiles default
+		for ( InterestProfile interestProfileDefault : interestProfilesDefault )
+			calculateEachInterestProfileDefault( author, interestProfileDefault, publicationClustersMap );
+	}
+
+	public void calculateEachInterestProfileDefault( Author author, InterestProfile interestProfileDefault, Map<String, PublicationClusterHelper> publicationClustersMap )
+	{
+		// get author interest profile
+		Calendar calendar = Calendar.getInstance();
+		// default profile name [USERID]+[DEFAULT_PROFILENAME]
+		String authorInterestProfileName = author.getId() + "+" + interestProfileDefault.getName();
+
+		// create new author interest profile for c-value
+		AuthorInterestProfile authorInterestProfile = new AuthorInterestProfile();
+		authorInterestProfile.setCreated( calendar.getTime() );
+		authorInterestProfile.setDescription( "Interest mining using " + interestProfileDefault.getName() + " algorithm" );
+		authorInterestProfile.setName( authorInterestProfileName );
+
+		for ( Map.Entry<String, PublicationClusterHelper> publicationClusterEntry : publicationClustersMap.entrySet() )
+		{
+			PublicationClusterHelper publicationCluster = publicationClusterEntry.getValue();
+
+			if ( publicationCluster.getTermMap() == null || publicationCluster.getTermMap().isEmpty() )
+				continue;
+
+			// prepare variables
+			AuthorInterest authorInterest = new AuthorInterest();
+
+			if ( interestProfileDefault.getName().toLowerCase().equals( "cvalue" ) )
+			{
+				// assign author interest here
+				cValueInterestProfile.doCValueCalculation( authorInterest, publicationCluster );
+			}
+			// TODO other interest profiles
+
+			// check author interest calculation result
+			if ( authorInterest.getTermWeights() != null && !authorInterest.getTermWeights().isEmpty() )
+			{
+				authorInterest.setAuthorInterestProfile( authorInterestProfile );
+				authorInterestProfile.addAuthorInterest( authorInterest );
+				authorInterestProfile.setInterestProfile( interestProfileDefault );
+			}
+		}
+
+		// at the end persist
+		if ( authorInterestProfile.getAuthorInterests() != null || !authorInterestProfile.getAuthorInterests().isEmpty() )
+		{
+			authorInterestProfile.setAuthor( author );
+			author.addAuthorInterestProfiles( authorInterestProfile );
+			persistenceStrategy.getAuthorDAO().persist( author );
+		}
+	}
+
+	public void constructPublicationClusterByLanguageAndYear( Author author, Map<String, PublicationClusterHelper> publicationClustersMap )
 	{
 		// fill publication clusters
 		// prepare calendar for publication year
@@ -173,6 +230,9 @@ public class InterestMiningService
 				publicationCluster.setYear( calendar.get( Calendar.YEAR ) );
 				publicationCluster.addPublicationAndUpdate( publication );
 
+				// add into map
+				publicationClustersMap.put( clusterMapKey, publicationCluster );
+
 			}
 			else
 			{
@@ -183,6 +243,7 @@ public class InterestMiningService
 
 		}
 	}
+
 
 	/* OLD IMPLEMENTATION */
 	public Map<String, Object> getInterestFromAuthor( Author author, boolean updateAuthorInterest, Map<String, Object> responseMap ) throws ParseException
@@ -363,7 +424,7 @@ public class InterestMiningService
 				if( authorInterestProfile.getName().equals( "cvalue" )){
 					// since persistenceStrategy is a singleton object,
 					// and hibernate still tracking the
-					cValueInterestProfile.doCValueCalculation( languageYearInterestOccurrenceMap, author );
+					cValueInterestProfileOld.doCValueCalculation( languageYearInterestOccurrenceMap, author );
 				} else if( authorInterestProfile.getName().equals( "corephrase" )){
 					
 				} else if( authorInterestProfile.getName().equals( "wordfreq" )){
