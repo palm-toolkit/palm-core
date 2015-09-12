@@ -606,7 +606,7 @@ public class InterestMiningService
 			{
 				// only alchemyAPI that capable to extract
 				// topic correctly on other languages
-				if ( publicationTopic.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
+				if ( publicationTopic.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) )
 				{
 					for ( Map.Entry<String, Double> entry : termValues.entrySet() )
 					{
