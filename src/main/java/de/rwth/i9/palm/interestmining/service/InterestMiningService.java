@@ -60,10 +60,10 @@ public class InterestMiningService
 	{
 		logger.info( "start mining interest " );
 		// get default interest profile
-		List<InterestProfile> interestProfilesDefault = persistenceStrategy.getInterestProfileDAO().getAllValidInterestProfile( InterestProfileType.DEFAULT );
+		List<InterestProfile> interestProfilesDefault = persistenceStrategy.getInterestProfileDAO().getAllActiveInterestProfile( InterestProfileType.DEFAULT );
 
 		// get default interest profile
-		List<InterestProfile> interestProfilesDerived = persistenceStrategy.getInterestProfileDAO().getAllValidInterestProfile( InterestProfileType.DERIVED );
+		List<InterestProfile> interestProfilesDerived = persistenceStrategy.getInterestProfileDAO().getAllActiveInterestProfile( InterestProfileType.DERIVED );
 
 		if ( interestProfilesDefault.isEmpty() && interestProfilesDerived.isEmpty() )
 		{
