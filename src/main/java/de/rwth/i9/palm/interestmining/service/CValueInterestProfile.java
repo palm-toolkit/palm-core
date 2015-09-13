@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -61,7 +62,7 @@ public class CValueInterestProfile
 			TermDetail termDetail = termDetailEntryMap.getValue();
 			
 			//only proceed for term that intersect with other topic extractor
-			if ( termDetail.getExtractionServiceTypes().size() >= 2 )
+			if ( ( termDetail.getExtractionServiceTypes().size() >= numberOfExtractionService - 1 ) || numberOfExtractionService == 1 )
 			{
 			
 				for ( int i = 0; i < termDetail.getFrequencyOnTitle(); i++ )
@@ -90,21 +91,39 @@ public class CValueInterestProfile
 		
 		List<TermCandidate> termCandidates = cValue.getTermCandidates();
 		
+		// ordered map as helper
+		Map<String, Double> termWeightHelperMap = new HashMap<String, Double>();
+		double maxWeightValue = 0.0;
+
 		// put calculated term value to container
 		for ( TermCandidate termCandidate : termCandidates )
 		{
-			if ( termCandidate.getCValue() >= ( numberOfExtractionService - 1 ) )
+			if ( termCandidate.getCValue() >= 2 )
 			{
-				Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( termCandidate.getCandidateTerm() );
+				double cValueWeight = termCandidate.getCValue();
+				termWeightHelperMap.put( termCandidate.getCandidateTerm(), cValueWeight );
 
-				if ( interest == null )
-				{
-					interest = new Interest();
-					interest.setTerm( termCandidate.getCandidateTerm() );
-					persistenceStrategy.getInterestDAO().persist( interest );
-				}
-				authorInterest.addTermWeight( interest, termCandidate.getCValue() );
+				if ( cValueWeight > maxWeightValue )
+					maxWeightValue = cValueWeight;
 			}
+		}
+
+		// normalize value between 0 - 1
+		for ( Map.Entry<String, Double> termWeightHelperEntry : termWeightHelperMap.entrySet() )
+		{
+			String term = termWeightHelperEntry.getKey();
+			double normalizedWeighting = termWeightHelperEntry.getValue() / maxWeightValue;
+
+			// proceed to interest object
+			Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( term );
+
+			if ( interest == null )
+			{
+				interest = new Interest();
+				interest.setTerm( term );
+				persistenceStrategy.getInterestDAO().persist( interest );
+			}
+			authorInterest.addTermWeight( interest, normalizedWeighting );
 		}
 		
 	}

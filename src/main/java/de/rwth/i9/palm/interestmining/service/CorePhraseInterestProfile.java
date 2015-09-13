@@ -3,6 +3,7 @@ package de.rwth.i9.palm.interestmining.service;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -42,6 +43,10 @@ public class CorePhraseInterestProfile
 		
 		Map<String, TermDetail> termDetailsMap = publicationCluster.getTermMap();
 		
+		// ordered map as helper
+		Map<String, Double> termWeightHelperMap = new HashMap<String, Double>();
+		double maxWeightValue = 0.0;
+
 		for ( Map.Entry<String, TermDetail> termDetailEntryMap : termDetailsMap.entrySet() )
 		{
 			String term = termDetailEntryMap.getKey();
@@ -68,17 +73,29 @@ public class CorePhraseInterestProfile
 			if ( intersectionFactor <= 1.0 )
 				continue;
 			
+			termWeightHelperMap.put( term, intersectionFactor );
+
+			if ( intersectionFactor > maxWeightValue )
+				maxWeightValue = intersectionFactor;
+
+		}
+
+		// normalize value between 0 - 1
+		for ( Map.Entry<String, Double> termWeightHelperEntry : termWeightHelperMap.entrySet() )
+		{
+			String term = termWeightHelperEntry.getKey();
+			double normalizedWeighting = termWeightHelperEntry.getValue() / maxWeightValue;
+
+			// proceed to interest object
 			Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( term );
 
 			if ( interest == null )
 			{
 				interest = new Interest();
 				interest.setTerm( term );
-
 				persistenceStrategy.getInterestDAO().persist( interest );
 			}
-			authorInterest.addTermWeight( interest, intersectionFactor );
-
+			authorInterest.addTermWeight( interest, normalizedWeighting );
 		}
 		
 	}

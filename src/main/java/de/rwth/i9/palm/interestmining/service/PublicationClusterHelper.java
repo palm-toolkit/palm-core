@@ -24,6 +24,7 @@ public class PublicationClusterHelper
 	int numberOfWordsOnTitle;
 	String concatenatedTitle = "";
 
+	int numberOfPublicationWithKeyword;
 	int numberOfWordsOnKeyword;
 	String concatenatedKeyword = "";
 
@@ -54,7 +55,11 @@ public class PublicationClusterHelper
 		// update other properties
 		this.updateConcatenatedTitle( publication.getTitle() );
 		if ( publication.getKeywordText() != null )
+		{
 			this.updateConcatenatedKeyword( publication.getKeywordText() );
+			// increment number of publications contain keywords
+			incrementNumberOfPublicationWithKeyword();
+		}
 		if ( publication.getAbstractText() != null )
 			this.updateConcatenatedAbstract( publication.getAbstractText() );
 
@@ -109,6 +114,16 @@ public class PublicationClusterHelper
 		updateNumberOfWordsOnTitle( titleText );
 
 		return this.concatenatedTitle;
+	}
+
+	public int getNumberOfPublicationWithKeyword()
+	{
+		return numberOfPublicationWithKeyword;
+	}
+
+	private void incrementNumberOfPublicationWithKeyword()
+	{
+		this.numberOfPublicationWithKeyword++;
 	}
 
 	public int getNumberOfWordsOnKeyword()
@@ -271,6 +286,43 @@ public class PublicationClusterHelper
 	public Map<String, TermDetail> getTermMap()
 	{
 		return termMap;
+	}
+
+	/**
+	 * Get TermMap as ArrayList, sorted based on term length
+	 * 
+	 * @return
+	 */
+	public List<TermDetail> getTermMapAsList()
+	{
+		if ( this.termMap == null )
+			return Collections.emptyList();
+
+		List<TermDetail> termDetails = new ArrayList<TermDetail>();
+
+		// put list member on specific index ( sorting )
+		for ( Map.Entry<String, TermDetail> termDetailEntryMap : this.termMap.entrySet() )
+		{
+			TermDetail termDetail = termDetailEntryMap.getValue();
+			if ( termDetails.isEmpty() )
+				termDetails.add( termDetail );
+			else
+			{
+				// searching index position based on term length
+				int indexPosition = 0;
+				int termlength = termDetail.getTermLength();
+				for ( int i = 0; i < termDetails.size(); i++ )
+				{
+					indexPosition = i;
+					if ( termlength >= termDetails.get( i ).getTermLength() )
+						break;
+				}
+				// add termmap on specific position
+				termDetails.add( indexPosition, termDetail );
+			}
+		}
+
+		return termDetails;
 	}
 
 	/**

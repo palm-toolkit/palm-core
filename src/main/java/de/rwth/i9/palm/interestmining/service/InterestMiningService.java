@@ -207,13 +207,20 @@ public class InterestMiningService
 			if ( interestProfileDefault.getName().toLowerCase().equals( "cvalue" ) )
 			{
 				cValueInterestProfile.doCValueCalculation( authorInterest, publicationCluster, numberOfExtractionService );
-			} else if ( interestProfileDefault.getName().toLowerCase().equals( "corephrase" ) )
+			}
+			else if ( interestProfileDefault.getName().toLowerCase().equals( "corephrase" ) )
 			{
 				Double yearFactor = yearFactorMap.get( publicationCluster.getLanguage() + publicationCluster.getYear() );
 				Double totalYearFactor = totalYearsFactorMap.get( publicationCluster.getLanguage() );
 				corePhraseInterestProfile.doCorePhraseCalculation( authorInterest, publicationCluster, yearFactor, totalYearFactor, numberOfExtractionService );
 			}
-			// TODO other default interest profiles
+			else if ( interestProfileDefault.getName().toLowerCase().equals( "wordfreq" ) )
+			{
+				Double yearFactor = yearFactorMap.get( publicationCluster.getLanguage() + publicationCluster.getYear() );
+				Double totalYearFactor = totalYearsFactorMap.get( publicationCluster.getLanguage() );
+				wordFreqInterestProfile.doWordFreqCalculation( authorInterest, publicationCluster, yearFactor, totalYearFactor, numberOfExtractionService );
+			}
+			// Put other default interest profiles
 
 			// check author interest calculation result
 			if ( authorInterest.getTermWeights() != null && !authorInterest.getTermWeights().isEmpty() )
@@ -327,7 +334,7 @@ public class InterestMiningService
 			Map<String, Object> authorInterestResultProfilesMap = new HashMap<String, Object>();
 
 			// get interest profile name and description
-			String interestProfileName = authorInterestProfile.getName().substring( author.getId().length() );
+			String interestProfileName = authorInterestProfile.getName().substring( author.getId().length() + 1 );
 			String interestProfileDescription = authorInterestProfile.getName().substring( author.getId().length() );
 
 			// get authorInterest set on profile
