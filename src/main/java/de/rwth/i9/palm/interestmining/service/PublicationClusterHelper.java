@@ -3,10 +3,8 @@ package de.rwth.i9.palm.interestmining.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -286,7 +284,7 @@ public class PublicationClusterHelper
 
 		private String termLabel;
 		private int termLength;
-		private Set<ExtractionServiceType> extractionServiceTypes;
+		private List<ExtractionServiceType> extractionServiceTypes;
 		private int frequencyOnTitle;
 		private int frequencyOnKeyword;
 		private int frequencyOnAbstract;
@@ -311,7 +309,7 @@ public class PublicationClusterHelper
 			this.termLength = termLength;
 		}
 
-		public Set<ExtractionServiceType> getExtractionServiceTypes()
+		public List<ExtractionServiceType> getExtractionServiceTypes()
 		{
 			return extractionServiceTypes;
 		}
@@ -319,14 +317,15 @@ public class PublicationClusterHelper
 		public TermDetail addExtractionServiceType( ExtractionServiceType extractionServiceType )
 		{
 			if ( this.extractionServiceTypes == null )
-				this.extractionServiceTypes = new HashSet<ExtractionServiceType>();
+				this.extractionServiceTypes = new ArrayList<ExtractionServiceType>();
 
-			this.extractionServiceTypes.add( extractionServiceType );
+			if ( !this.extractionServiceTypes.contains( extractionServiceType ) )
+				this.extractionServiceTypes.add( extractionServiceType );
 
 			return this;
 		}
 
-		public void setExtractionServiceTypes( Set<ExtractionServiceType> extractionServiceTypes )
+		public void setExtractionServiceTypes( List<ExtractionServiceType> extractionServiceTypes )
 		{
 			this.extractionServiceTypes = extractionServiceTypes;
 		}

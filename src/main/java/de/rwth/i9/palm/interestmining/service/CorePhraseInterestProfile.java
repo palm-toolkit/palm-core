@@ -3,30 +3,20 @@ package de.rwth.i9.palm.interestmining.service;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import de.rwth.i9.palm.analytics.algorithm.cvalue.CValue;
-import de.rwth.i9.palm.analytics.algorithm.cvalue.TermCandidate;
-import de.rwth.i9.palm.analytics.api.PalmAnalytics;
-import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.interestmining.service.PublicationClusterHelper.TermDetail;
 import de.rwth.i9.palm.model.AuthorInterest;
-import de.rwth.i9.palm.model.AuthorInterestProfile;
+import de.rwth.i9.palm.model.ExtractionServiceType;
 import de.rwth.i9.palm.model.Interest;
-import de.rwth.i9.palm.model.InterestAuthor;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
+@Service
 public class CorePhraseInterestProfile
 {
 	final Logger logger = Logger.getLogger( CorePhraseInterestProfile.class );
@@ -34,164 +24,63 @@ public class CorePhraseInterestProfile
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	@Autowired
-	private PalmAnalytics palmAnalytics;
-
-	public void doCorePhraseCalculation( Map<String, Map<Integer, Map<Interest, Integer>>> languageYearInterestOccurrenceMap, Author author ) throws ParseException
+	public void doCorePhraseCalculation( AuthorInterest authorInterest, PublicationClusterHelper publicationCluster, Double yearFactor, Double totalYearFactor, int numberOfExtractionService )
 	{
-		// prepare the variables to saving the result
-		Calendar calendar = Calendar.getInstance();
-		AuthorInterestProfile authorInterestProfile = null;
-
-		// default profile name [USERID][PROFILENAME]
-		String authorInteresProfileName = author.getId() + "corephrase";
-
-		// check whether similar profile has already saved in the database
-		// if already exist do update
-		Set<AuthorInterestProfile> authorInterestProfiles = author.getAuthorInterestProfiles();
-		if ( authorInterestProfiles != null && !authorInterestProfiles.isEmpty() )
-		{
-			for ( AuthorInterestProfile eachAuthorInterestProfile : authorInterestProfiles )
-				if ( eachAuthorInterestProfile.getName().equals( authorInteresProfileName ) )
-					authorInterestProfile = eachAuthorInterestProfile;
-		}
-
-		// prepare list of authorInterest
-		Set<AuthorInterest> authorInterests = new HashSet<>();
-
-		// if there is still no profile, create new one
-		if ( authorInterestProfile == null )
-		{
-			authorInterestProfile = new AuthorInterestProfile();
-			authorInterestProfile.setAuthor( author );
-			authorInterestProfile.setCreated( calendar.getTime() );
-			authorInterestProfile.setDescription( "Interest mining with CorePhrase algorithm" );
-			authorInterestProfile.setName( authorInteresProfileName );
-			authorInterestProfile.setAuthorInterests( authorInterests );
-
-			// persistenceStrategy.getAuthorInterestProfileDAO().persist(
-			// authorInterestProfile );
-
-			// added interest profile to author
-			author.addAuthorInterestProfiles( authorInterestProfile );
-			// persistenceStrategy.getAuthorDAO().persist( author );
-		}
-		else
-		{
-			authorInterestProfile.setCreated( calendar.getTime() );
-			// replacing authorInterest
-			authorInterestProfile.setAuthorInterests( authorInterests );
-
-			// persistenceStrategy.getAuthorInterestProfileDAO().persist(
-			// authorInterestProfile );
-		}
+		// assign authorInterest properties
+		authorInterest.setLanguage( publicationCluster.getLanguage() );
 
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
-
-		// store interest and weighting of author lifelong
-		Map<Interest, Double> interestWeightLifelongMap = new HashMap<Interest, Double>();
-
-		for ( Entry<String, Map<Integer, Map<Interest, Integer>>> languageYearInterestOccurrenceEntry : languageYearInterestOccurrenceMap.entrySet() )
+		try
 		{
-			String language = languageYearInterestOccurrenceEntry.getKey();
-
-			for ( Entry<Integer, Map<Interest, Integer>> yearInterestOccurrenceEntry : languageYearInterestOccurrenceEntry.getValue().entrySet() )
-			{
-				// create author interest
-				AuthorInterest authorInterest = new AuthorInterest();
-				authorInterest.setLanguage( language );
-				authorInterest.setYear( dateFormat.parse( Integer.toString( yearInterestOccurrenceEntry.getKey() ) ) );
-				authorInterest.setAuthorInterestProfile( authorInterestProfile );
-
-				authorInterestProfile.addAuthorInterest( authorInterest );
-
-				// store interest and weighting based on year
-				Map<Interest, Double> interestWeightMap = new LinkedHashMap<Interest, Double>();
-
-				Map<Interest, Integer> interestOccurrenceMap = yearInterestOccurrenceEntry.getValue();
-
-				// helper for author interest map, term as the key
-				Map<String, Interest> interestHelperMap = new HashMap<String, Interest>();
-
-				List<String> terms = new ArrayList<>();
-				for ( Entry<Interest, Integer> interestOccurrenceEntry : interestOccurrenceMap.entrySet() )
-				{
-					int occurrence = interestOccurrenceEntry.getValue();
-					String term = interestOccurrenceEntry.getKey().getTerm();
-
-					interestHelperMap.put( term, interestOccurrenceEntry.getKey() );
-
-					if ( occurrence > 0 )
-					{
-						for ( int i = 0; i < occurrence; i++ )
-						{
-							terms.add( term );
-						}
-					}
-				}
-
-				// calculate c-value
-				CValue cValue = palmAnalytics.getCValueAlgorithm();
-				cValue.setTerms( terms );
-				cValue.calculateCValue();
-
-				List<TermCandidate> termCandidates = cValue.getTermCandidates();
-
-				// put calculated term value to container
-				for ( TermCandidate termCandidate : termCandidates )
-				{
-					if ( termCandidate.getCValue() >= 2 )
-					{
-						interestWeightMap.put( interestHelperMap.get( termCandidate.getCandidateTerm() ), termCandidate.getCValue() );
-						// calculate lifelong maps
-						if ( interestWeightLifelongMap.get( interestHelperMap.get( termCandidate.getCandidateTerm() ) ) != null )
-							interestWeightLifelongMap.put( interestHelperMap.get( termCandidate.getCandidateTerm() ), interestWeightLifelongMap.get( interestHelperMap.get( termCandidate.getCandidateTerm() ) ) + termCandidate.getCValue() );
-						else
-							interestWeightLifelongMap.put( interestHelperMap.get( termCandidate.getCandidateTerm() ), termCandidate.getCValue() );
-					}
-				}
-
-				if ( !interestWeightMap.isEmpty() )
-					authorInterest.setTermWeights( interestWeightMap );
-
-			}
+			authorInterest.setYear( dateFormat.parse( Integer.toString( publicationCluster.getYear() ) ) );
+		}
+		catch ( ParseException e )
+		{
+			e.printStackTrace();
 		}
 
-		Set<InterestAuthor> interestAuthors = author.getInterestAuthors();
-
-		// store the lifelong learning interest
-		for ( Entry<Interest, Double> interestWeightLifelongMapEntry : interestWeightLifelongMap.entrySet() )
+		
+		Map<String, TermDetail> termDetailsMap = publicationCluster.getTermMap();
+		
+		for ( Map.Entry<String, TermDetail> termDetailEntryMap : termDetailsMap.entrySet() )
 		{
-			Interest interest = interestWeightLifelongMapEntry.getKey();
+			String term = termDetailEntryMap.getKey();
 
-			InterestAuthor interestAuthor = null;
+			// just skip term which are too long
+			if ( term.length() > 50 )
+				continue;
 
-			if ( interestAuthors != null && !interestAuthors.isEmpty() )
+			TermDetail termDetail = termDetailEntryMap.getValue();
+			Double intersectionFactor = 0.0;
+
+			// calculate intersection factor
+			intersectionFactor = (double) termDetail.getExtractionServiceTypes().size();
+
+			// Extraction from yahoo content analysis have higher precision
+			if ( termDetail.getExtractionServiceTypes().contains( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
+				intersectionFactor += 0.5;
+			
+			// then multiple by year factor
+			intersectionFactor = intersectionFactor * yearFactor;
+			
+			// Finally, put calculation into authorInterest object
+			// only if intersectionFactor > 1.0
+			if ( intersectionFactor <= 1.0 )
+				continue;
+			
+			Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( term );
+
+			if ( interest == null )
 			{
-				for ( InterestAuthor eachInterestAuthor : interestAuthors )
-				{
-					if ( eachInterestAuthor.getInterest().equals( interest ) )
-					{
-						interestAuthor = eachInterestAuthor;
-						break;
-					}
-				}
-			}
+				interest = new Interest();
+				interest.setTerm( term );
 
-			if ( interestAuthor == null )
-			{
-				interestAuthor = new InterestAuthor();
-				interestAuthor.setAuthor( author );
-				interestAuthor.setInterest( interest );
+				persistenceStrategy.getInterestDAO().persist( interest );
 			}
-			interestAuthor.setValue( interestWeightLifelongMapEntry.getValue() );
+			authorInterest.addTermWeight( interest, intersectionFactor );
 
-			author.addInterestAuthor( interestAuthor );
-			interest.addInterestAuthor( interestAuthor );
 		}
-
-		// at the end persist
-		persistenceStrategy.getAuthorDAO().persist( author );
-		persistenceStrategy.getAuthorInterestProfileDAO().persist( authorInterestProfile );
+		
 	}
+
 }

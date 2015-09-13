@@ -30,6 +30,7 @@ import de.rwth.i9.palm.model.InterestProfileType;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.ApplicationService;
 import de.rwth.i9.palm.utils.Inflector;
 
 @Service
@@ -42,10 +43,19 @@ public class InterestMiningService
 	private PersistenceStrategy persistenceStrategy;
 
 	@Autowired
+	private ApplicationService applicationService;
+
+	@Autowired
 	private CValueInterestProfileOld cValueInterestProfileOld;
 
 	@Autowired
 	private CValueInterestProfile cValueInterestProfile;
+
+	@Autowired
+	private CorePhraseInterestProfile corePhraseInterestProfile;
+
+	@Autowired
+	private WordFreqInterestProfile wordFreqInterestProfile;
 
 	/**
 	 * Get author interest from active author profiles
@@ -163,7 +173,26 @@ public class InterestMiningService
 		authorInterestProfile.setCreated( calendar.getTime() );
 		authorInterestProfile.setDescription( "Interest mining using " + interestProfileDefault.getName() + " algorithm" );
 		authorInterestProfile.setName( authorInterestProfileName );
+		
+		// CorePhrase and WordFreq specific, according to Svetoslav Evtimov thesis
+		// yearFactor Map format Map< Language-Year , value >
+		// totalYearsFactor Map< Language, value >
+		
+		Map<String, Double> yearFactorMap = new HashMap<String, Double>();
+		Map<String, Double> totalYearsFactorMap = new HashMap<String, Double>();
+		
+		// calculate some weighting factors
+		if ( interestProfileDefault.getName().toLowerCase().equals( "corephrase" ) ||
+				interestProfileDefault.getName().toLowerCase().equals( "wordfreq" )	)
+		{
+			yearFactorMap = CorePhraseAndWordFreqHelper.calculateYearFactor( publicationClustersMap, 0.25 );
+			totalYearsFactorMap = CorePhraseAndWordFreqHelper.calculateTotalYearsFactor( publicationClustersMap );
+		}
 
+		// get the number of active extraction services
+		int numberOfExtractionService = applicationService.getExtractionServices().size();
+
+		// loop to each cluster and calculate default profiles
 		for ( Map.Entry<String, PublicationClusterHelper> publicationClusterEntry : publicationClustersMap.entrySet() )
 		{
 			PublicationClusterHelper publicationCluster = publicationClusterEntry.getValue();
@@ -174,12 +203,17 @@ public class InterestMiningService
 			// prepare variables
 			AuthorInterest authorInterest = new AuthorInterest();
 
+			// assign author interest method
 			if ( interestProfileDefault.getName().toLowerCase().equals( "cvalue" ) )
 			{
-				// assign author interest here
-				cValueInterestProfile.doCValueCalculation( authorInterest, publicationCluster );
+				cValueInterestProfile.doCValueCalculation( authorInterest, publicationCluster, numberOfExtractionService );
+			} else if ( interestProfileDefault.getName().toLowerCase().equals( "corephrase" ) )
+			{
+				Double yearFactor = yearFactorMap.get( publicationCluster.getLanguage() + publicationCluster.getYear() );
+				Double totalYearFactor = totalYearsFactorMap.get( publicationCluster.getLanguage() );
+				corePhraseInterestProfile.doCorePhraseCalculation( authorInterest, publicationCluster, yearFactor, totalYearFactor, numberOfExtractionService );
 			}
-			// TODO other interest profiles
+			// TODO other default interest profiles
 
 			// check author interest calculation result
 			if ( authorInterest.getTermWeights() != null && !authorInterest.getTermWeights().isEmpty() )
@@ -243,6 +277,7 @@ public class InterestMiningService
 
 		}
 	}
+
 
 
 	/* OLD IMPLEMENTATION */

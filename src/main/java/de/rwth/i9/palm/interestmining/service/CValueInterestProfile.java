@@ -31,7 +31,7 @@ public class CValueInterestProfile
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public void doCValueCalculation( AuthorInterest authorInterest, PublicationClusterHelper publicationCluster )
+	public void doCValueCalculation( AuthorInterest authorInterest, PublicationClusterHelper publicationCluster, int numberOfExtractionService )
 	{
 		// assign authorInterest properties
 		authorInterest.setLanguage( publicationCluster.getLanguage() );
@@ -53,23 +53,33 @@ public class CValueInterestProfile
 		for ( Map.Entry<String, TermDetail> termDetailEntryMap : termDetailsMap.entrySet() )
 		{
 			String term = termDetailEntryMap.getKey();
+
+			// just skip term which are too long
+			if ( term.length() > 50 )
+				continue;
+
 			TermDetail termDetail = termDetailEntryMap.getValue();
 			
 			//only proceed for term that intersect with other topic extractor
 			if ( termDetail.getExtractionServiceTypes().size() >= 2 )
+			{
 			
-			for( int i=0; i < termDetail.getFrequencyOnTitle() ; i++){
-				// if there is weighting add here
-				terms.add( term );
-			}
-			
-			for( int i=0; i < termDetail.getFrequencyOnKeyword() ; i++){
-				// if there is weighting add here
-				terms.add( term );
-			}
-			
-			for( int i=0; i < termDetail.getFrequencyOnAbstract() ; i++){
-				terms.add( term );
+				for ( int i = 0; i < termDetail.getFrequencyOnTitle(); i++ )
+				{
+					// if there is weighting add here
+					terms.add( term );
+				}
+
+				for ( int i = 0; i < termDetail.getFrequencyOnKeyword(); i++ )
+				{
+					// if there is weighting add here
+					terms.add( term );
+				}
+
+				for ( int i = 0; i < termDetail.getFrequencyOnAbstract(); i++ )
+				{
+					terms.add( term );
+				}
 			}
 		}
 		
@@ -83,7 +93,7 @@ public class CValueInterestProfile
 		// put calculated term value to container
 		for ( TermCandidate termCandidate : termCandidates )
 		{
-			if ( termCandidate.getCValue() >= 2 )
+			if ( termCandidate.getCValue() >= ( numberOfExtractionService - 1 ) )
 			{
 				Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( termCandidate.getCandidateTerm() );
 
@@ -93,7 +103,7 @@ public class CValueInterestProfile
 					interest.setTerm( termCandidate.getCandidateTerm() );
 					persistenceStrategy.getInterestDAO().persist( interest );
 				}
-				authorInterest.addTerm( interest, termCandidate.getCValue() );
+				authorInterest.addTermWeight( interest, termCandidate.getCValue() );
 			}
 		}
 		

@@ -8,9 +8,9 @@ import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Service
-public class WordFreqProfile
+public class WordFreqInterestProfile
 {
-	final Logger logger = Logger.getLogger( WordFreqProfile.class );
+	final Logger logger = Logger.getLogger( WordFreqInterestProfile.class );
 	// final private String PROFILENAME = "cvalue";
 
 	@Autowired
