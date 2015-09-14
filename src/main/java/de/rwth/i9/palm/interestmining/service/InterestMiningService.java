@@ -280,7 +280,7 @@ public class InterestMiningService
 
 
 	/**
-	 * COllect the author interest result as JSON object
+	 * Collect the author interest result as JSON object
 	 * 
 	 * @param author
 	 * @param responseMap

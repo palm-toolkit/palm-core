@@ -44,6 +44,7 @@ public class CorePhraseInterestProfile
 		Map<String, TermDetail> termDetailsMap = publicationCluster.getTermMap();
 		
 		// ordered map as helper
+		Map<String, Integer> wordOccurrenceMap = new HashMap<String, Integer>();
 		Map<String, Double> termWeightHelperMap = new HashMap<String, Double>();
 		double maxWeightValue = 0.0;
 
@@ -51,12 +52,39 @@ public class CorePhraseInterestProfile
 		{
 			String term = termDetailEntryMap.getKey();
 
-			// just skip term which are too long
+			// just skip terms which are too long
 			if ( term.length() > 50 )
 				continue;
 
+			// terms which are too short is not good either
+			if ( term.length() < 4 )
+				continue;
+
 			TermDetail termDetail = termDetailEntryMap.getValue();
+			int totalOccurrenceOnEachTerm = 0;
 			Double intersectionFactor = 0.0;
+
+			// only proceed for term that intersect with other topic extractor
+			if ( ( termDetail.getExtractionServiceTypes().size() >= numberOfExtractionService - 1 ) || numberOfExtractionService == 1 )
+				// calculate the weight based on frequency and factor on each
+				// cluster
+				totalOccurrenceOnEachTerm = termDetail.getFrequencyOnTitle() + termDetail.getFrequencyOnKeyword() + termDetail.getFrequencyOnAbstract();
+			else
+				continue;
+
+			// calculate occurrence on each term words
+			if ( termDetail.getTermLength() > 1 )
+			{
+				String[] termWords = termDetail.getTermLabel().split( "\\s+" );
+				for ( int i = 0; i < termWords.length; i++ )
+				{
+					assignWordOccurrenceMap( termWords[i], totalOccurrenceOnEachTerm, wordOccurrenceMap );
+				}
+			}
+			else
+			{
+				assignWordOccurrenceMap( termDetail.getTermLabel(), totalOccurrenceOnEachTerm, wordOccurrenceMap );
+			}
 
 			// calculate intersection factor
 			intersectionFactor = (double) termDetail.getExtractionServiceTypes().size();
@@ -74,10 +102,24 @@ public class CorePhraseInterestProfile
 				continue;
 			
 			termWeightHelperMap.put( term, intersectionFactor );
+		}
 
-			if ( intersectionFactor > maxWeightValue )
-				maxWeightValue = intersectionFactor;
+		// calculate score
+		for ( Map.Entry<String, Double> termWeightHelperEntry : termWeightHelperMap.entrySet() )
+		{
+			String term = termWeightHelperEntry.getKey();
+			int score = getTermScore( term, wordOccurrenceMap );
 
+			if ( score == 0 )
+				continue;
+
+			double newWeight = score * termWeightHelperEntry.getValue();
+			// update value
+			termWeightHelperEntry.setValue( newWeight );
+
+			// update max value for normalization
+			if ( newWeight > maxWeightValue )
+				maxWeightValue = newWeight;
 		}
 
 		// normalize value between 0 - 1
@@ -98,6 +140,30 @@ public class CorePhraseInterestProfile
 			authorInterest.addTermWeight( interest, normalizedWeighting );
 		}
 		
+	}
+
+	private void assignWordOccurrenceMap( String word, int value, Map<String, Integer> wordOccurrenceMap )
+	{
+		if ( wordOccurrenceMap.get( word ) == null )
+		{
+			wordOccurrenceMap.put( word, value );
+		}
+		else
+		{
+			wordOccurrenceMap.put( word, wordOccurrenceMap.get( word ) + value );
+		}
+	}
+
+	private int getTermScore( String term, Map<String, Integer> wordOccurrenceMap )
+	{
+		int score = 0;
+		String[] termWords = term.split( "\\s+" );
+		for ( int i = 0; i < termWords.length; i++ )
+		{
+			if ( wordOccurrenceMap.get( termWords[i] ) != null )
+				score += wordOccurrenceMap.get( termWords[i] );
+		}
+		return score;
 	}
 
 }

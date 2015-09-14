@@ -73,6 +73,10 @@ public class WordFreqInterestProfile
 			if ( term.length() > 50 )
 				continue;
 
+			// terms which are too short is not good either
+			if ( term.length() < 4 )
+				continue;
+
 			Double termWeight = 0.0;
 
 			// only proceed for term that intersect with other topic extractor
@@ -81,7 +85,8 @@ public class WordFreqInterestProfile
 				termWeight = ( termDetail.getFrequencyOnTitle() * titleWordFactor ) + 
 						( termDetail.getFrequencyOnKeyword() * abstractWordFactor ) + 
 						( termDetail.getFrequencyOnAbstract() * keywordWordFactor );
-
+			else
+				continue;
 
 			// check for nested terms on multi-words term
 			if ( termDetail.getTermLength() > 1 )
