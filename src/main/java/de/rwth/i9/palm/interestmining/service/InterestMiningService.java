@@ -39,9 +39,6 @@ public class InterestMiningService
 	private ApplicationService applicationService;
 
 	@Autowired
-	private CValueInterestProfileOld cValueInterestProfileOld;
-
-	@Autowired
 	private CValueInterestProfile cValueInterestProfile;
 
 	@Autowired
@@ -108,7 +105,7 @@ public class InterestMiningService
 					InterestProfile interestProfileDerived = interestProfileIterator.next();
 					for ( AuthorInterestProfile authorInterestProfile : authorInterestProfiles )
 					{
-						if ( authorInterestProfile.getInterestProfile().equals( interestProfileDerived ) )
+						if ( authorInterestProfile.getInterestProfile() != null && authorInterestProfile.getInterestProfile().equals( interestProfileDerived ) )
 						{
 							interestProfileIterator.remove();
 							break;
@@ -137,10 +134,176 @@ public class InterestMiningService
 			}
 		}
 
+		// check for derived interest profile
+		if ( !interestProfilesDerived.isEmpty() )
+		{
+			// calculate derived interest profile
+			calculateInterestProfilesDerived( author, interestProfilesDerived );
+		}
+
 		// get and put author interest profile into map or list
 		getInterestFromDatabase( author, responseMap );
 
 		return responseMap;
+	}
+
+	private void calculateInterestProfilesDerived( Author author, List<InterestProfile> interestProfilesDerived )
+	{
+		// get authorInterest set on profile
+		for ( InterestProfile interestProfileDerived : interestProfilesDerived )
+		{
+
+			String[] derivedInterestProfileName = interestProfileDerived.getName().split( "\\s+" );
+
+			// at list profile name has three segment
+			if ( derivedInterestProfileName.length < 3 )
+				continue;
+
+			// prepare variables
+			AuthorInterestProfile authorInterestProfile1 = null;
+			AuthorInterestProfile authorInterestProfile2 = null;
+			AuthorInterestProfile authorInterestProfileResult = null;
+			String operationType = null;
+
+			for ( String partOfProfileName : derivedInterestProfileName )
+			{
+				if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "∪" ) )
+				{
+					if ( authorInterestProfileResult != null )
+					{
+						authorInterestProfile1 = authorInterestProfileResult;
+						authorInterestProfileResult = null;
+					}
+					if ( partOfProfileName.equals( "∩" ) )
+						operationType = "INTERSECTION";
+					else
+						operationType = "UNION";
+				}
+				else
+				{
+					if ( authorInterestProfile1 == null )
+					{
+						authorInterestProfile1 = author.getSpecifitAuthorInterestProfile( partOfProfileName );
+
+						if ( authorInterestProfile1 == null )
+						{
+							logger.error( "AuthorInterestProfile " + partOfProfileName + " not found" );
+							// continue to next derived author profile, if exist
+							break;
+						}
+					}
+					else
+					{
+						authorInterestProfile2 = author.getSpecifitAuthorInterestProfile( partOfProfileName );
+
+						if ( authorInterestProfile2 == null )
+						{
+							logger.error( "AuthorInterestProfile " + partOfProfileName + " not found" );
+							// continue to next derived author profile, if exist
+							break;
+						}
+					}
+
+					// calculate and persist
+					if ( authorInterestProfile1 != null && authorInterestProfile2 != null && operationType != null )
+					{
+						if ( operationType.equals( "INTERSECTION" ) )
+							authorInterestProfileResult = calculateIntersectionOfAuthorInterestProfiles( authorInterestProfile1, authorInterestProfile2, interestProfileDerived );
+						else
+							authorInterestProfileResult = calculateUnionOfAuthorInterestProfiles( authorInterestProfile1, authorInterestProfile2, interestProfileDerived );
+					}
+				}
+			}
+			// persist result
+			if ( authorInterestProfileResult != null && ( authorInterestProfileResult.getAuthorInterests() != null && !authorInterestProfileResult.getAuthorInterests().isEmpty() ) )
+			{
+				authorInterestProfileResult.setAuthor( author );
+				author.addAuthorInterestProfiles( authorInterestProfileResult );
+				persistenceStrategy.getAuthorDAO().persist( author );
+
+				persistenceStrategy.getAuthorInterestProfileDAO().persist( authorInterestProfileResult );
+			}
+
+		}
+
+	}
+
+	private AuthorInterestProfile calculateUnionOfAuthorInterestProfiles( AuthorInterestProfile authorInterestProfile1, AuthorInterestProfile authorInterestProfile2, InterestProfile interestProfileDerived )
+	{
+		Calendar calendar = Calendar.getInstance();
+		AuthorInterestProfile authorInterestProfileResult = new AuthorInterestProfile();
+		// default profile name [DEFAULT_PROFILENAME]
+		String authorInterestProfileName = authorInterestProfile1.getName() + " ∪ " + authorInterestProfile2.getName();
+
+		authorInterestProfileResult.setCreated( calendar.getTime() );
+		authorInterestProfileResult.setName( authorInterestProfileName );
+		authorInterestProfileResult.setDescription( "Interest mining using " + authorInterestProfileName + " algorithm" );
+
+		Set<AuthorInterest> authorInterests1 = authorInterestProfile1.getAuthorInterests();
+		Set<AuthorInterest> authorInterests2 = authorInterestProfile2.getAuthorInterests();
+
+		return null;
+	}
+
+	private AuthorInterestProfile calculateIntersectionOfAuthorInterestProfiles( AuthorInterestProfile authorInterestProfile1, AuthorInterestProfile authorInterestProfile2, InterestProfile interestProfileDerived )
+	{
+		Calendar calendar = Calendar.getInstance();
+		AuthorInterestProfile authorInterestProfileResult = new AuthorInterestProfile();
+		// default profile name [DEFAULT_PROFILENAME]
+		String authorInterestProfileName = authorInterestProfile1.getName() + " ∩ " + authorInterestProfile2.getName();
+
+		authorInterestProfileResult.setCreated( calendar.getTime() );
+		authorInterestProfileResult.setName( authorInterestProfileName );
+		authorInterestProfileResult.setDescription( "Interest mining using " + authorInterestProfileName + " algorithm" );
+
+		Set<AuthorInterest> authorInterests1 = authorInterestProfile1.getAuthorInterests();
+		Set<AuthorInterest> authorInterests2 = authorInterestProfile2.getAuthorInterests();
+
+		for ( AuthorInterest eachAuthorInterest1 : authorInterests1 )
+		{
+			AuthorInterest authorInterestResult = null;
+			for ( AuthorInterest eachAuthorInterest2 : authorInterests2 )
+			{
+				if ( eachAuthorInterest1.getLanguage().equals( eachAuthorInterest2.getLanguage() ) && eachAuthorInterest1.getYear().equals( eachAuthorInterest2.getYear() ) )
+				{
+					authorInterestResult = calculateIntersectionOfAuthorInterest( eachAuthorInterest1, eachAuthorInterest2 );
+				}
+			}
+
+			if ( authorInterestResult != null && authorInterestResult.getTermWeights() != null && !authorInterestResult.getTermWeights().isEmpty() )
+			{
+				authorInterestResult.setAuthorInterestProfile( authorInterestProfileResult );
+				authorInterestProfileResult.addAuthorInterest( authorInterestResult );
+				authorInterestProfileResult.setInterestProfile( interestProfileDerived );
+			}
+		}
+
+		return authorInterestProfileResult;
+	}
+
+	private AuthorInterest calculateIntersectionOfAuthorInterest( AuthorInterest eachAuthorInterest1, AuthorInterest eachAuthorInterest2 )
+	{
+		AuthorInterest authorInterestResult = new AuthorInterest();
+		authorInterestResult.setLanguage( eachAuthorInterest1.getLanguage() );
+		authorInterestResult.setYear( eachAuthorInterest1.getYear() );
+
+		Map<Interest, Double> termsWeight1 = eachAuthorInterest1.getTermWeights();
+		Map<Interest, Double> termsWeight2 = eachAuthorInterest2.getTermWeights();
+		Map<Interest, Double> termsWeightResult = new HashMap<Interest, Double>();
+
+		for ( Map.Entry<Interest, Double> eachTermWeight1 : termsWeight1.entrySet() )
+		{
+			Interest interstKey = eachTermWeight1.getKey();
+			if ( termsWeight2.get( interstKey ) != null )
+			{
+				termsWeightResult.put( interstKey, ( eachTermWeight1.getValue() + termsWeight2.get( interstKey ) ) / 2 );
+			}
+		}
+
+		if ( !termsWeightResult.isEmpty() )
+			authorInterestResult.setTermWeights( termsWeightResult );
+
+		return authorInterestResult;
 	}
 
 	public void calculateInterestProfilesDefault( Author author, Map<String, PublicationClusterHelper> publicationClustersMap, List<InterestProfile> interestProfilesDefault )
@@ -158,8 +321,8 @@ public class InterestMiningService
 	{
 		// get author interest profile
 		Calendar calendar = Calendar.getInstance();
-		// default profile name [USERID]+[DEFAULT_PROFILENAME]
-		String authorInterestProfileName = author.getId() + "+" + interestProfileDefault.getName();
+		// default profile name [DEFAULT_PROFILENAME]
+		String authorInterestProfileName = interestProfileDefault.getName();
 
 		// create new author interest profile for c-value
 		AuthorInterestProfile authorInterestProfile = new AuthorInterestProfile();
@@ -299,8 +462,8 @@ public class InterestMiningService
 			Map<String, Object> authorInterestResultProfilesMap = new HashMap<String, Object>();
 
 			// get interest profile name and description
-			String interestProfileName = authorInterestProfile.getName().substring( author.getId().length() + 1 );
-			String interestProfileDescription = authorInterestProfile.getName().substring( author.getId().length() );
+			String interestProfileName = authorInterestProfile.getName();
+			String interestProfileDescription = authorInterestProfile.getDescription();
 
 			// get authorInterest set on profile
 			Set<AuthorInterest> authorInterests = authorInterestProfile.getAuthorInterests();
