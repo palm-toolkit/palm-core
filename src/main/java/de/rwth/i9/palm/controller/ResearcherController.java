@@ -216,5 +216,11 @@ public class ResearcherController
 		return researcherFeature.getResearcherApi().getAuthorAutoComplete( name );
 	}
 	
+	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationList( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response)
+	{
+		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId );
+	}
 
 }
