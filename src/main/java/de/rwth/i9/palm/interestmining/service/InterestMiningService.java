@@ -48,7 +48,7 @@ public class InterestMiningService
 	private WordFreqInterestProfile wordFreqInterestProfile;
 
 	/**
-	 * Get author interest from active author profiles
+	 * Get author interests from active author profiles
 	 * 
 	 * @param responseMap
 	 * @param author
@@ -147,6 +147,13 @@ public class InterestMiningService
 		return responseMap;
 	}
 
+	/**
+	 * Calculated derived interest profile (Intersection and/or Union between
+	 * interest profile) in an author
+	 * 
+	 * @param author
+	 * @param interestProfilesDerived
+	 */
 	private void calculateInterestProfilesDerived( Author author, List<InterestProfile> interestProfilesDerived )
 	{
 		// get authorInterest set on profile
@@ -228,6 +235,14 @@ public class InterestMiningService
 
 	}
 
+	/**
+	 * Calculate Union interest between 2 Author interest profiles
+	 * 
+	 * @param authorInterestProfile1
+	 * @param authorInterestProfile2
+	 * @param interestProfileDerived
+	 * @return
+	 */
 	private AuthorInterestProfile calculateUnionOfAuthorInterestProfiles( AuthorInterestProfile authorInterestProfile1, AuthorInterestProfile authorInterestProfile2, InterestProfile interestProfileDerived )
 	{
 		Calendar calendar = Calendar.getInstance();
@@ -245,6 +260,14 @@ public class InterestMiningService
 		return null;
 	}
 
+	/**
+	 * Calculate Intersection interest between 2 Author interest profiles
+	 * 
+	 * @param authorInterestProfile1
+	 * @param authorInterestProfile2
+	 * @param interestProfileDerived
+	 * @return
+	 */
 	private AuthorInterestProfile calculateIntersectionOfAuthorInterestProfiles( AuthorInterestProfile authorInterestProfile1, AuthorInterestProfile authorInterestProfile2, InterestProfile interestProfileDerived )
 	{
 		Calendar calendar = Calendar.getInstance();
@@ -281,6 +304,13 @@ public class InterestMiningService
 		return authorInterestProfileResult;
 	}
 
+	/**
+	 * Calculate Intersection interest between 2 AuthorInterest
+	 * 
+	 * @param eachAuthorInterest1
+	 * @param eachAuthorInterest2
+	 * @return
+	 */
 	private AuthorInterest calculateIntersectionOfAuthorInterest( AuthorInterest eachAuthorInterest1, AuthorInterest eachAuthorInterest2 )
 	{
 		AuthorInterest authorInterestResult = new AuthorInterest();
@@ -306,6 +336,14 @@ public class InterestMiningService
 		return authorInterestResult;
 	}
 
+	/**
+	 * Main method to calculate default InterestProfile such as : C-Value,
+	 * Corephrase and WordFreq profile
+	 * 
+	 * @param author
+	 * @param publicationClustersMap
+	 * @param interestProfilesDefault
+	 */
 	public void calculateInterestProfilesDefault( Author author, Map<String, PublicationClusterHelper> publicationClustersMap, List<InterestProfile> interestProfilesDefault )
 	{
 		// calculate frequencies of term in cluster
@@ -317,6 +355,13 @@ public class InterestMiningService
 			calculateEachInterestProfileDefault( author, interestProfileDefault, publicationClustersMap );
 	}
 
+	/**
+	 * Calculate each default InterestProfile
+	 * 
+	 * @param author
+	 * @param interestProfileDefault
+	 * @param publicationClustersMap
+	 */
 	public void calculateEachInterestProfileDefault( Author author, InterestProfile interestProfileDefault, Map<String, PublicationClusterHelper> publicationClustersMap )
 	{
 		// get author interest profile
@@ -396,6 +441,12 @@ public class InterestMiningService
 		}
 	}
 
+	/**
+	 * Create a cluster for publications, based on language and year
+	 * 
+	 * @param author
+	 * @param publicationClustersMap
+	 */
 	public void constructPublicationClusterByLanguageAndYear( Author author, Map<String, PublicationClusterHelper> publicationClustersMap )
 	{
 		// fill publication clusters
