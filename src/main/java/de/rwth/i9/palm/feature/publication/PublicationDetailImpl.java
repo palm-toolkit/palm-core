@@ -9,7 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
+import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -48,8 +51,14 @@ public class PublicationDetailImpl implements PublicationDetail
 			Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 			authorMap.put( "id", author.getId() );
 			authorMap.put( "name", author.getName() );
-			if ( author.getInstitution() != null )
-				authorMap.put( "aff", author.getInstitution().getName() );
+			if ( author.getInstitutions() != null )
+				for ( Institution institution : author.getInstitutions() )
+				{
+					if ( authorMap.get( "aff" ) != null )
+						authorMap.put( "aff", authorMap.get( "aff" ) + ", " + institution.getName() );
+					else
+						authorMap.put( "aff", institution.getName() );
+				}
 			if ( author.getPhotoUrl() != null )
 				authorMap.put( "photo", author.getPhotoUrl() );
 
@@ -58,12 +67,36 @@ public class PublicationDetailImpl implements PublicationDetail
 		publicationMap.put( "coauthor", coathorList );
 		if ( publication.getContentText() != null )
 			publicationMap.put( "content", publication.getContentText() );
-		if( publication.getPdfSource() != null )
-			publicationMap.put( "pdf", publication.getPdfSource() );
-		if( publication.getPdfSourceUrl() != null ){
-			publicationMap.put( "pdfurl", publication.getPdfSourceUrl() );
+
+		PublicationFile publicationFile = null;
+
+		if ( publication.getPublicationFiles() != null )
+		{
+			for ( PublicationFile pubFile : publication.getPublicationFiles() )
+			{
+				if ( publicationFile == null )
+					publicationFile = pubFile;
+				else
+				{
+					if ( pubFile.getSourceType().equals( SourceType.DBLP ) )
+						publicationFile = pubFile;
+				}
+
+				if ( pubFile.isCorrectlyExtracted() )
+				{
+					publicationFile = pubFile;
+					break;
+				}
+			}
+		}
+
+		if ( publicationFile != null )
+		{
+			publicationMap.put( "pdf", publicationFile.getUrl() );
+			publicationMap.put( "pdfurl", publicationFile.getSource() );
 			publicationMap.put( "pdfextract", publication.isPdfExtracted() );
 		}
+
 		if ( publication.getKeywordText() != null )
 			publicationMap.put( "keyword", publication.getKeywordText() );
 		if ( publication.getReferenceText() != null )

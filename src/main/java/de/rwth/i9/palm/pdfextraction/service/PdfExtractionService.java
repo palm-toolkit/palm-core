@@ -48,7 +48,7 @@ public class PdfExtractionService
 		List<Publication> publications = new ArrayList<Publication>();
 		for ( Publication publication : author.getPublications() )
 		{
-			if ( publication.getPdfSourceUrl() != null )
+			if ( publication.getPublicationFiles() != null )
 				publications.add( publication );
 		}
 

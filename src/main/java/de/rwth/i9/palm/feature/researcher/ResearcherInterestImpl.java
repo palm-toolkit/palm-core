@@ -48,7 +48,7 @@ public class ResearcherInterestImpl extends AcademicFeatureImpl implements Resea
 		
 		
 		// mining the author interest
-		interestMiningService.getInterestFromAuthor( author, false, responseMap );
+		interestMiningService.getInterestFromAuthor( responseMap, author, false );
 
 //		// put the publication into arrayLiat
 //		List<Publication> publications = new ArrayList<Publication>();

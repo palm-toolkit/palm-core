@@ -14,13 +14,22 @@ public class PublicationByDateComparator implements Comparator<Publication>
 			return 0;
 
 		if ( publication1 == null )
-			return -1;
-
-		if ( publication2 == null )
 			return 1;
 
-		if ( publication1.getPublicationDate().before( publication2.getPublicationDate() ) )
+		if ( publication2 == null )
 			return -1;
+
+		if ( publication1.getPublicationDate() == null && publication2.getPublicationDate() == null )
+			return 0;
+
+		if ( publication1.getPublicationDate() == null )
+			return 1;
+
+		if ( publication2.getPublicationDate() == null )
+			return -1;
+
+		if ( publication1.getPublicationDate().before( publication2.getPublicationDate() ) )
+			return 1;
 		else if ( publication1.getPublicationDate().after( publication2.getPublicationDate() ) )
 			return -1;
 		else

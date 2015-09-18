@@ -13,7 +13,7 @@ public class HtmlSelectorConstant
 	public static final String GS_PUBLICATION_ROW_LIST = "tr.gsc_a_tr";
 	public static final String GS_PUBLICATION_COAUTHOR_AND_VENUE = ".gs_gray";
 	public static final String GS_PUBLICATION_NOCITATION = ".gsc_a_c";
-	public static final String GS_PUBLICATION_YEAR = ".gsc_a_y";
+	public static final String GS_PUBLICATION_DATE = ".gsc_a_y";
 
 	// third phase get the publication details
 	public static final String GS_PUBLICATION_DETAIL_CONTAINER = "#gs_ccl";

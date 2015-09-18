@@ -26,10 +26,13 @@ public class PalmPdfExtractionTest
 		src = "C:\\Users\\nifry\\Google Drive\\Thesis\\Papers\\01 Fostering Analytics on Learning Analytics Research - the LAK Dataset - 2014.pdf";
 		src = "http://ifets.info/journals/15_3/ets_15_3_contents.pdf";
 		src = "http://dspace.learningnetworks.org/bitstream/1820/3180/1/Chatti_ETS.pdf";
-		src = "http://www.irrodl.org/index.php/irrodl/article/download/2032/3322";
-		src = "http://honne.learning-context.de/upload/files/publications/DeLFI14_HT.pdf";
-		src = "http://orbi.ulg.ac.be/bitstream/2268/151963/1/Verpoorten%20LICE%20orbi.pdf";
-		src = "http://ieeexplore.ieee.org/ielx5/4620076/6213193/06095503.pdf?tp=&amp;arnumber=6095503&amp;isnumber=6213193";
+//		src = "http://www.irrodl.org/index.php/irrodl/article/download/2032/3322";
+//		src = "http://honne.learning-context.de/upload/files/publications/DeLFI14_HT.pdf";
+//		src = "http://orbi.ulg.ac.be/bitstream/2268/151963/1/Verpoorten%20LICE%20orbi.pdf";
+//		src = "http://ieeexplore.ieee.org/ielx5/4620076/6213193/06095503.pdf?tp=&amp;arnumber=6095503&amp;isnumber=6213193";
+		//src = "http://www-i5.informatik.rwth-aachen.de/lehrstuhl/staff/chatti/download/ChJF07_IJKL.pdf";
+		//src = "file:///C:/Users/nifry/Downloads/apel_143_148.pdf";
+		src = "http://educationaldatamining.org/EDM2011/wp-content/uploads/proc/edm2011_poster19_Dyckhoff.pdf";
 
 		PdfReader reader = new PdfReader( src );
 
@@ -50,6 +53,8 @@ public class PalmPdfExtractionTest
 			// update the current page size
 			palmPdfExtractionStrategy.setPageNumber( i );
 			PdfTextExtractor.getTextFromPage( reader, i, palmPdfExtractionStrategy );
+			if ( i >= 2 )
+				break;
 		}
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );

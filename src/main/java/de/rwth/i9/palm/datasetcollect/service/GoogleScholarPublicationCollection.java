@@ -14,6 +14,10 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceProperty;
+import de.rwth.i9.palm.model.SourceType;
+
 public class GoogleScholarPublicationCollection extends PublicationCollection
 {
 	private final static Logger log = LoggerFactory.getLogger( GoogleScholarPublicationCollection.class );
@@ -23,14 +27,14 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		super();
 	}
 
-	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
+	public static List<Map<String, String>> getListOfAuthors( String authorName, Source source ) throws IOException
 	{
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "https://scholar.google.com/citations?view_op=search_authors&mauthors=" + authorName.replace( " ", "-" );
 
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie( source ) );
 
 		if ( document == null )
 			return Collections.emptyList();
@@ -51,7 +55,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			// get author name
 			eachAuthorMap.put( "name", name );
 			// set source
-			eachAuthorMap.put( "source", "googlescholar" );
+			eachAuthorMap.put( "source", SourceType.GOOGLESCHOLAR.toString() );
 			// get author url
 			eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
 			// get author photo
@@ -71,12 +75,12 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		return authorList;
 	}
 
-	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException
+	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url, Source source ) throws IOException
 	{
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url + "&cstart=0&pagesize=1000", 5000, getGoogleScholarCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url + "&view_op=list_works&cstart=0&pagesize=100", 5000, getGoogleScholarCookie( source ) );
 
 		if ( document == null )
 			return Collections.emptyList();
@@ -93,7 +97,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		{
 			Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
 			// set source
-			publicationDetails.put( "source", "googlescholar" );
+			publicationDetails.put( "source", SourceType.GOOGLESCHOLAR.toString() );
 			publicationDetails.put( "url", eachPublicationRow.select( "a" ).first().absUrl( "href" ) );
 			publicationDetails.put( "title", eachPublicationRow.select( "a" ).first().text() );
 			publicationDetails.put( "coauthor", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).first().text() );
@@ -103,9 +107,9 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			String noCitation = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_NOCITATION ).text().replaceAll( "[^\\d]", "" );
 			if( !noCitation.equals( "" ))
 				publicationDetails.put( "nocitation", noCitation );
-			String year = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_YEAR ).text().trim();
-			if( !year.equals( "" ))
-				publicationDetails.put( "year", year );
+			String date = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_DATE ).text().trim();
+			if ( !date.equals( "" ) )
+				publicationDetails.put( "date", date );
 
 			publicationMapLists.add( publicationDetails );
 		}
@@ -113,11 +117,11 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		return publicationMapLists;
 	}
 
-	public static Map<String, String> getPublicationDetailByPublicationUrl( String url ) throws IOException
+	public static Map<String, String> getPublicationDetailByPublicationUrl( String url, Source source ) throws IOException
 	{
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getGoogleScholarCookie( source ) );
 
 		if ( document == null )
 			return Collections.emptyMap();
@@ -132,15 +136,22 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 		publicationDetailMaps.put( "title", publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_TITLE ).text() );
 
-		String docName = publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PDF ).text();
-		if ( docName != null )
-			publicationDetailMaps.put( "doc", publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PDF ).text() );
+
 
 		try
 		{
 			Elements publicationPdfUrl = publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PDF );
 			if ( publicationPdfUrl != null )
+			{
 				publicationDetailMaps.put( "doc_url", publicationPdfUrl.select( "a" ).first().absUrl( "href" ) );
+
+				String docName = publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PDF ).text();
+				if ( docName != null )
+					publicationDetailMaps.put( "doc", docName );
+				else
+					publicationDetailMaps.put( "doc", "null" );
+			}
+
 		}
 		catch ( Exception e )
 		{
@@ -154,14 +165,21 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 		return publicationDetailMaps;
 	}
-	
-	private static Map<String, String> getGoogleScholarCookie()
+
+	/**
+	 * Google Scholar cache, update in case IP being blocked by google
+	 * 
+	 * @return
+	 */
+	private static Map<String, String> getGoogleScholarCookie( Source source )
 	{
 		Map<String, String> cookies = new HashMap<String, String>();
-		cookies.put( "GOOGLE_ABUSE_EXEMPTION", "ID=df93c59979ded4c7:TM=1438589257:C=c:IP=95.223.161.25-:S=APGng0uX_nGeZZbVdG0c4vxsxbRwXg08fA" );
-		cookies.put( "GSP", "LM=1438509418:S=OsqfoXZicqz09iBT" );
-		cookies.put( "NID", "70=hcw9rL3hPrp4dWMkd4C4DeF_Q8BO7BpB-bo9z0Ix_WPeM7IwAmbYCR2jolHcJQW_Oy7cJQuEWuRg_CKaPku4MPHyu2ReS86KcCExepqy3GRJJPhVuYg42Z1ZrCbE26AC" );
-		cookies.put( "PREF", "ID=1111111111111111:FF=0:TM=1438520627:LM=1438520627:V=1:S=8w-e8EQt08Or09Lx" );
+
+		for ( SourceProperty sourceProperty : source.getSourceProperties() )
+		{
+			if ( sourceProperty.getMainIdentifier().equals( "cookie" ) && sourceProperty.isValid() )
+				cookies.put( sourceProperty.getSecondaryIdentifier(), sourceProperty.getValue() );
+		}
 		return cookies;
 	}
 }

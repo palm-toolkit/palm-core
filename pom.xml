@@ -328,19 +328,13 @@
 	<!--  Library for json -->
 	
 	<dependency>
-		<groupId>org.codehaus.jackson</groupId>
-		<artifactId>jackson-mapper-asl</artifactId>
-		<version>${org.codehaus.jackson.version}</version>
+		<groupId>com.fasterxml.jackson.core</groupId>
+		<artifactId>jackson-databind</artifactId>
+		<version>${com.fasterxml.jackson.core.version}</version>
 	</dependency>
-	
-    <dependency>
-		<groupId>org.codehaus.jackson</groupId>
-		<artifactId>jackson-core-asl</artifactId>
-		<version>${org.codehaus.jackson.version}</version>
-	</dependency>
+
 	
 	<!--  File IO and File upload -->
-	
 	<dependency>
 		<groupId>commons-fileupload</groupId>
 		<artifactId>commons-fileupload</artifactId>
@@ -396,6 +390,27 @@
 		<artifactId>commons-lang3</artifactId>
 		<version>3.4</version>
 	</dependency>
+	
+	<!-- OAuth2 for Mendeley -->
+	<dependency>
+		<groupId>org.apache.oltu.oauth2</groupId>
+		<artifactId>org.apache.oltu.oauth2.client</artifactId>
+		<version>1.0.0</version>
+	</dependency>
+	
+	<dependency>
+        <groupId>com.google.api-client</groupId>
+        <artifactId>google-api-client</artifactId>
+        <version>1.20.0</version>
+    </dependency>
+	
+	<!-- Cache -->
+	<dependency>
+		<groupId>net.sf.ehcache</groupId>
+		<artifactId>ehcache</artifactId>
+		<version>2.10.0</version>
+	</dependency>
+	
 	
 	<!--
 	<dependency>

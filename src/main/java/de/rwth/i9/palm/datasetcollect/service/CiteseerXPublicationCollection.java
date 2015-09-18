@@ -13,6 +13,9 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceType;
+
 public class CiteseerXPublicationCollection extends PublicationCollection
 {
 
@@ -23,11 +26,18 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		super();
 	}
 
-	public static List<Map<String, String>> getListOfAuthors( String authorName ) throws IOException
+	
+	public static List<Map<String, String>> getListOfAuthors( String authorName, Source source ) throws IOException
 	{
 		List<Map<String, String>> authorList = new ArrayList<Map<String, String>>();
 
 		String url = "http://citeseerx.ist.psu.edu/search?q=" + authorName.replace( " ", "+" ) + "&submit=Search&uauth=1&sort=ndocs&t=auth";
+		
+		/*
+		 * Alternative URL using lucene query
+		 * http://citeseerx.ist.psu.edu/search?q=author%3A(\%22mohamed%20amine%20chatti\%22)&sort=cite&t=doc&sort=cite&start=0
+		 */
+		
 		// Using jsoup java html parser library
 		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000 );
 
@@ -50,7 +60,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 			// get author name
 			eachAuthorMap.put( "name", name );
 			// set source
-			eachAuthorMap.put( "source", "citeseerx" );
+			eachAuthorMap.put( "source", SourceType.CITESEERX.toString() );
 			// get author url
 			eachAuthorMap.put( "url", authorListNode.select( "a" ).first().absUrl( "href" ) );
 			// get author photo
@@ -64,7 +74,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		return authorList;
 	}
 
-	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url ) throws IOException
+	public static List<Map<String, String>> getPublicationListByAuthorUrl( String url, Source source ) throws IOException
 	{
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
@@ -93,7 +103,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 					publicationDetails.put( "nocitation", noCitation );
 
 				// set source
-				publicationDetails.put( "source", "citeseerx" );
+				publicationDetails.put( "source", SourceType.CITESEERX.toString() );
 				
 				publicationDetails.put( "url", eachPublicationRow.select( "a" ).first().absUrl( "href" ) );
 				
@@ -105,7 +115,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 				{
 					if ( venueAndYear.substring( venueAndYear.length() - 4 ).matches( "^\\d{4}" ) )
 					{
-						publicationDetails.put( "year", venueAndYear.substring( venueAndYear.length() - 4 ) );
+						publicationDetails.put( "date", venueAndYear.substring( venueAndYear.length() - 4 ) );
 						if ( venueAndYear.length() > 10 )
 							publicationDetails.put( "venue", venueAndYear.substring( 0, venueAndYear.length() - 4 ).replace( "-", "" ).trim() );
 					}
@@ -121,7 +131,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		return publicationMapLists;
 	}
 
-	public static Map<String, String> getPublicationDetailByPublicationUrl( String url ) throws IOException
+	public static Map<String, String> getPublicationDetailByPublicationUrl( String url, Source source ) throws IOException
 	{
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
 

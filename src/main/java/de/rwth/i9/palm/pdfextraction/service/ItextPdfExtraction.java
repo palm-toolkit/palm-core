@@ -12,6 +12,20 @@ public class ItextPdfExtraction
 {
 	public static List<TextSection> extractPdf( String pdfPath ) throws IOException
 	{
+		return extractPdf( pdfPath, 0 );
+	}
+
+	/**
+	 * Extract pdf with specific PALM extraction strategy
+	 * 
+	 * @param pdfPath
+	 * @param untilPage
+	 *            = 0 means extract all pages
+	 * @return
+	 * @throws IOException
+	 */
+	public static List<TextSection> extractPdf( String pdfPath, int untilPage ) throws IOException
+	{
 		PdfReader reader = null;
 		try
 		{
@@ -35,8 +49,12 @@ public class ItextPdfExtraction
 			palmPdfExtractionStrategy.setPageNumber( i );
 			// read perpage
 			PdfTextExtractor.getTextFromPage( reader, i, palmPdfExtractionStrategy );
+			// break when untilPage are specified
+			if ( untilPage != 0 && i >= untilPage )
+				break;
 		}
 
 		return palmPdfExtractionStrategy.getTextSections();
 	}
+
 }

@@ -5,8 +5,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
@@ -96,7 +94,7 @@ public class TopicExtractionService
 
 					publication.addPublicationTopic( publicationTopic );
 
-					if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
+					if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) )
 						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
 					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
 						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
@@ -126,7 +124,7 @@ public class TopicExtractionService
 					}
 					if ( publicationTopic.getTermValues() == null || publicationTopic.getTermValues().isEmpty() )
 					{
-						if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMYAPI ) )
+						if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) )
 							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
 						else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
 							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
