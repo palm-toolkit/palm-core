@@ -28,10 +28,13 @@ import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Dataset;
 //import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
 import de.rwth.i9.palm.model.ExtractionService;
+import de.rwth.i9.palm.model.ExtractionServiceProperty;
 import de.rwth.i9.palm.model.Function;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.InterestAuthor;
+import de.rwth.i9.palm.model.InterestProfile;
+import de.rwth.i9.palm.model.InterestProfileProperty;
 import de.rwth.i9.palm.model.Location;
 import de.rwth.i9.palm.model.PalmConfiguration;
 import de.rwth.i9.palm.model.Publication;
@@ -140,9 +143,12 @@ public class DatabaseConfigCoreTest
 						EventGroup.class,
 						Dataset.class,
 						ExtractionService.class,
+						ExtractionServiceProperty.class,
 						Function.class,
 						Interest.class,
 						InterestAuthor.class,
+						InterestProfile.class,
+						InterestProfileProperty.class,
 						Institution.class,
 						Location.class,
 						PalmConfiguration.class,

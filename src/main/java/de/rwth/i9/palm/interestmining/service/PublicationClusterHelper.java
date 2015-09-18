@@ -1,35 +1,74 @@
 package de.rwth.i9.palm.interestmining.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+
+import de.rwth.i9.palm.model.ExtractionServiceType;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationTopic;
+import de.rwth.i9.palm.utils.Inflector;
 
 public class PublicationClusterHelper
 {
+	// cluster identifier
+	String language;
 	int year;
 
-	Set<Publication> publications;
-
-	int numberOfPublication;
-	int numberOfPublicationWithKeyword;
+	List<Publication> publications;
 
 	int numberOfWordsOnTitle;
-	String concatenatedTitle;
+	String concatenatedTitle = "";
 
+	int numberOfPublicationWithKeyword;
 	int numberOfWordsOnKeyword;
-	String concatenatedKeyword;
+	String concatenatedKeyword = "";
 
 	int numberOfWordsOnAbstract;
-	String concatenatedAbstract;
+	String concatenatedAbstract = "";
 
-	Map<String, Integer> termTitleFreqMap;
-	Map<String, Integer> termKeywordFreqMap;
-	Map<String, Integer> termAbstractFreqMap;
+	Map<String, TermDetail> termMap;
+
+	public List<Publication> getPublications()
+	{
+		return publications;
+	}
+
+	public void setPublications( List<Publication> publications )
+	{
+		for ( Publication publication : publications )
+		{
+			this.addPublicationAndUpdate( publication );
+		}
+	}
+
+	public PublicationClusterHelper addPublicationAndUpdate( Publication publication )
+	{
+		if ( this.publications == null )
+			this.publications = new ArrayList<Publication>();
+		this.publications.add( publication );
+
+		// update other properties
+		this.updateConcatenatedTitle( publication.getTitle() );
+		if ( publication.getKeywordText() != null )
+		{
+			this.updateConcatenatedKeyword( publication.getKeywordText() );
+			// increment number of publications contain keywords
+			incrementNumberOfPublicationWithKeyword();
+		}
+		if ( publication.getAbstractText() != null )
+			this.updateConcatenatedAbstract( publication.getAbstractText() );
+
+		return this;
+	}
 
 	public int getYear()
 	{
-		return year;
+		return this.year;
 	}
 
 	public void setYear( int year )
@@ -37,34 +76,14 @@ public class PublicationClusterHelper
 		this.year = year;
 	}
 
-	public Set<Publication> getPublications()
+	public String getLanguage()
 	{
-		return publications;
+		return this.language;
 	}
 
-	public void setPublications( Set<Publication> publications )
+	public void setLangauge( String language )
 	{
-		this.publications = publications;
-	}
-
-	public int getNumberOfPublication()
-	{
-		return numberOfPublication;
-	}
-
-	public void setNumberOfPublication( int numberOfPublication )
-	{
-		this.numberOfPublication = numberOfPublication;
-	}
-
-	public int getNumberOfPublicationWithKeyword()
-	{
-		return numberOfPublicationWithKeyword;
-	}
-
-	public void setNumberOfPublicationWithKeyword( int numberOfPublicationWithKeyword )
-	{
-		this.numberOfPublicationWithKeyword = numberOfPublicationWithKeyword;
+		this.language = language;
 	}
 
 	public int getNumberOfWordsOnTitle()
@@ -72,9 +91,10 @@ public class PublicationClusterHelper
 		return numberOfWordsOnTitle;
 	}
 
-	public void setNumberOfWordsOnTitle( int numberOfWordsOnTitle )
+	private int updateNumberOfWordsOnTitle( String titleText )
 	{
-		this.numberOfWordsOnTitle = numberOfWordsOnTitle;
+		this.numberOfWordsOnTitle += countWords( titleText );
+		return this.numberOfWordsOnTitle;
 	}
 
 	public String getConcatenatedTitle()
@@ -82,9 +102,28 @@ public class PublicationClusterHelper
 		return concatenatedTitle;
 	}
 
-	public void setConcatenatedTitle( String concatenatedTitle )
+	private String updateConcatenatedTitle( String titleText )
 	{
-		this.concatenatedTitle = concatenatedTitle;
+		// filter and normalize text
+		titleText = normalizeText( titleText );
+
+		// concatenated
+		this.concatenatedTitle += titleText + " ";
+
+		// update word count
+		updateNumberOfWordsOnTitle( titleText );
+
+		return this.concatenatedTitle;
+	}
+
+	public int getNumberOfPublicationWithKeyword()
+	{
+		return numberOfPublicationWithKeyword;
+	}
+
+	private void incrementNumberOfPublicationWithKeyword()
+	{
+		this.numberOfPublicationWithKeyword++;
 	}
 
 	public int getNumberOfWordsOnKeyword()
@@ -92,9 +131,10 @@ public class PublicationClusterHelper
 		return numberOfWordsOnKeyword;
 	}
 
-	public void setNumberOfWordsOnKeyword( int numberOfWordsOnKeyword )
+	private int updateNumberOfWordsOnKeyword( String keywordText )
 	{
-		this.numberOfWordsOnKeyword = numberOfWordsOnKeyword;
+		this.numberOfWordsOnKeyword += countWords( keywordText );
+		return this.numberOfWordsOnKeyword;
 	}
 
 	public String getConcatenatedKeyword()
@@ -102,9 +142,18 @@ public class PublicationClusterHelper
 		return concatenatedKeyword;
 	}
 
-	public void setConcatenatedKeyword( String concatenatedKeyword )
+	private String updateConcatenatedKeyword( String keywordText )
 	{
-		this.concatenatedKeyword = concatenatedKeyword;
+		// filter and normalize text
+		keywordText = normalizeText( keywordText );
+
+		// concatenated
+		this.concatenatedKeyword += keywordText;
+
+		// update word count
+		updateNumberOfWordsOnKeyword( keywordText );
+
+		return this.concatenatedKeyword;
 	}
 
 	public int getNumberOfWordsOnAbstract()
@@ -112,9 +161,10 @@ public class PublicationClusterHelper
 		return numberOfWordsOnAbstract;
 	}
 
-	public void setNumberOfWordsOnAbstract( int numberOfWordsOnAbstract )
+	private int updateNumberOfWordsOnAbstract( String abstractText )
 	{
-		this.numberOfWordsOnAbstract = numberOfWordsOnAbstract;
+		this.numberOfWordsOnAbstract += countWords( abstractText );
+		return this.numberOfWordsOnAbstract;
 	}
 
 	public String getConcatenatedAbstract()
@@ -122,41 +172,246 @@ public class PublicationClusterHelper
 		return concatenatedAbstract;
 	}
 
-	public void setConcatenatedAbstract( String concatenatedAbstract )
+	private String updateConcatenatedAbstract( String abstractText )
 	{
-		this.concatenatedAbstract = concatenatedAbstract;
+		// filter and normalize text
+		abstractText = normalizeText( abstractText );
+
+		// concatenated
+		this.concatenatedAbstract += abstractText;
+
+		// update word count
+		updateNumberOfWordsOnAbstract( abstractText );
+
+		return this.concatenatedAbstract;
 	}
 
-	public Map<String, Integer> getTermTitleFreqMap()
+	// utility methods
+
+	// counting the number of words on text
+	private int countWords( String text )
 	{
-		return termTitleFreqMap;
+		return text.split( "\\s+" ).length;
 	}
 
-	public void setTermTitleFreqMap( Map<String, Integer> termTitleFreqMap )
+	// do normalization and filtering on text
+	// changed plural form into singular form
+	private String normalizeText( String text )
 	{
-		this.termTitleFreqMap = termTitleFreqMap;
+		// to lower case
+		// remove all number
+		// remove -_()
+		// remove s on word end
+		text = text.toLowerCase().replaceAll( "\\d", "" ).replaceAll( "[_\\-()]", " " );
+		if ( this.getLanguage().equals( "english" ) )
+			text = singularizeString( text );
+		return text;
 	}
 
-	public Map<String, Integer> getTermKeywordFreqMap()
+	private String singularizeString( String text )
 	{
-		return termKeywordFreqMap;
+		Inflector inflector = new Inflector();
+		return inflector.singularize( text );
 	}
 
-	public void setTermKeywordFreqMap( Map<String, Integer> termKeywordFreqMap )
+	/**
+	 * Only run this method after all publication has clustered This method,
+	 * calculate frequencies occurred
+	 */
+	public Map<String, TermDetail> calculateTermProperties()
 	{
-		this.termKeywordFreqMap = termKeywordFreqMap;
+		if ( this.publications == null )
+			return Collections.emptyMap();
+
+		// init termMap
+		termMap = new HashMap<String, TermDetail>();
+
+		for ( Publication publication : this.publications )
+		{
+			if ( publication.getPublicationTopics() != null )
+			{
+				for ( PublicationTopic publicationTopic : publication.getPublicationTopics() )
+				{
+
+					if ( publicationTopic.getTermValues() == null || publicationTopic.getTermValues().isEmpty() )
+						continue;
+
+					// get properties needed
+					ExtractionServiceType extractionServiceType = publicationTopic.getExtractionServiceType();
+					Map<String, Double> termValues = publicationTopic.getTermValues();
+					
+					// prepare termDetail
+					TermDetail termDetail = null;
+							
+					for ( Map.Entry<String, Double> termValuesEntry : termValues.entrySet() )
+					{
+						String term = normalizeText( termValuesEntry.getKey() );
+						// check if termMap has already contain term
+						// if term already exist "more than one term extractor
+						// services, produced same terms"
+						if ( termMap.get( term ) != null )
+						{
+							termDetail = termMap.get( term );
+							// update extraction service list
+							termDetail.addExtractionServiceType( extractionServiceType );
+						}
+						// term not exist on map
+						else
+						{
+							// create new termDetail object
+							termDetail = new TermDetail();
+
+							// add extraction service
+							termDetail.addExtractionServiceType( extractionServiceType );
+							termDetail.setTermLabel( term );
+							termDetail.setTermLength( this.countWords( term ) );
+
+							// calculate frequencies
+							termDetail.setFrequencyOnTitle( StringUtils.countMatches( this.getConcatenatedTitle(), term ) );
+							termDetail.setFrequencyOnAbstract( StringUtils.countMatches( this.getConcatenatedAbstract(), term ) );
+							termDetail.setFrequencyOnKeyword( StringUtils.countMatches( this.getConcatenatedKeyword(), term ) );
+
+							// put into map
+							termMap.put( term, termDetail );
+						}
+					}
+
+				}
+			}
+		}
+
+		return termMap;
 	}
 
-	public Map<String, Integer> getTermAbstractFreqMap()
+	public Map<String, TermDetail> getTermMap()
 	{
-		return termAbstractFreqMap;
+		return termMap;
 	}
 
-	public void setTermAbstractFreqMap( Map<String, Integer> termAbstractFreqMap )
+	/**
+	 * Get TermMap as ArrayList, sorted based on term length
+	 * 
+	 * @return
+	 */
+	public List<TermDetail> getTermMapAsList()
 	{
-		this.termAbstractFreqMap = termAbstractFreqMap;
+		if ( this.termMap == null )
+			return Collections.emptyList();
+
+		List<TermDetail> termDetails = new ArrayList<TermDetail>();
+
+		// put list member on specific index ( sorting )
+		for ( Map.Entry<String, TermDetail> termDetailEntryMap : this.termMap.entrySet() )
+		{
+			TermDetail termDetail = termDetailEntryMap.getValue();
+			if ( termDetails.isEmpty() )
+				termDetails.add( termDetail );
+			else
+			{
+				// searching index position based on term length
+				int indexPosition = 0;
+				int termlength = termDetail.getTermLength();
+				for ( int i = 0; i < termDetails.size(); i++ )
+				{
+					indexPosition = i;
+					if ( termlength >= termDetails.get( i ).getTermLength() )
+						break;
+				}
+				// add termmap on specific position
+				termDetails.add( indexPosition, termDetail );
+			}
+		}
+
+		return termDetails;
 	}
 
-	// getter and setter
+	/**
+	 * Class contains term properties
+	 * 
+	 * @author Sigit
+	 *
+	 */
+	class TermDetail
+	{
+
+		private String termLabel;
+		private int termLength;
+		private List<ExtractionServiceType> extractionServiceTypes;
+		private int frequencyOnTitle;
+		private int frequencyOnKeyword;
+		private int frequencyOnAbstract;
+
+		public String getTermLabel()
+		{
+			return termLabel;
+		}
+
+		public void setTermLabel( String termLabel )
+		{
+			this.termLabel = termLabel;
+		}
+
+		public int getTermLength()
+		{
+			return termLength;
+		}
+
+		public void setTermLength( int termLength )
+		{
+			this.termLength = termLength;
+		}
+
+		public List<ExtractionServiceType> getExtractionServiceTypes()
+		{
+			return extractionServiceTypes;
+		}
+
+		public TermDetail addExtractionServiceType( ExtractionServiceType extractionServiceType )
+		{
+			if ( this.extractionServiceTypes == null )
+				this.extractionServiceTypes = new ArrayList<ExtractionServiceType>();
+
+			if ( !this.extractionServiceTypes.contains( extractionServiceType ) )
+				this.extractionServiceTypes.add( extractionServiceType );
+
+			return this;
+		}
+
+		public void setExtractionServiceTypes( List<ExtractionServiceType> extractionServiceTypes )
+		{
+			this.extractionServiceTypes = extractionServiceTypes;
+		}
+
+		public int getFrequencyOnTitle()
+		{
+			return frequencyOnTitle;
+		}
+
+		public void setFrequencyOnTitle( int frequencyOnTitle )
+		{
+			this.frequencyOnTitle = frequencyOnTitle;
+		}
+
+		public int getFrequencyOnKeyword()
+		{
+			return frequencyOnKeyword;
+		}
+
+		public void setFrequencyOnKeyword( int frequencyOnKeyword )
+		{
+			this.frequencyOnKeyword = frequencyOnKeyword;
+		}
+
+		public int getFrequencyOnAbstract()
+		{
+			return frequencyOnAbstract;
+		}
+
+		public void setFrequencyOnAbstract( int frequencyOnAbstract )
+		{
+			this.frequencyOnAbstract = frequencyOnAbstract;
+		}
+
+	}
 
 }

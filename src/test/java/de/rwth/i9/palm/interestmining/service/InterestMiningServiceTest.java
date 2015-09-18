@@ -2,7 +2,6 @@ package de.rwth.i9.palm.interestmining.service;
 
 import java.text.ParseException;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.junit.Ignore;
@@ -49,7 +48,6 @@ public class InterestMiningServiceTest extends AbstractTransactionalJUnit4Spring
 		if ( authors != null )
 		{
 			Author author = authors.get( 0 );
-			Map<String, Object> result = interestMiningService.getInterestFromAuthor( author, true, null );
 		}
 	}
 }

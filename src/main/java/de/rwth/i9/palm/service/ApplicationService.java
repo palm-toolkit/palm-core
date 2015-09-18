@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
+import de.rwth.i9.palm.model.ExtractionService;
+import de.rwth.i9.palm.model.InterestProfile;
 import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -28,6 +30,12 @@ public class ApplicationService
 	// caching the sources
 	private Map<String, Source> academicNetworkSourcesCache;
 
+	// caching extraction services
+	private Map<String, ExtractionService> extractionServiceCache;
+
+	// caching interest profiles
+	private Map<String, InterestProfile> interestProfileCache;
+
 	@PostConstruct
 	public void init()
 	{
@@ -41,6 +49,7 @@ public class ApplicationService
 		}
 	}
 
+	/* Source cache */
 	@Transactional
 	public Map<String, Source> getAcademicNetworkSources()
 	{
@@ -53,6 +62,36 @@ public class ApplicationService
 	public void updateAcademicNetworkSourcesCache()
 	{
 		academicNetworkSourcesCache = persistenceStrategy.getSourceDAO().getSourceMap();
+	}
+
+	/* extraction services cache */
+	@Transactional
+	public Map<String, ExtractionService> getExtractionServices()
+	{
+		if ( extractionServiceCache == null || extractionServiceCache.isEmpty() )
+			updateExtractionServicesCache();
+		return extractionServiceCache;
+	}
+
+	@Transactional
+	public void updateExtractionServicesCache()
+	{
+		extractionServiceCache = persistenceStrategy.getExtractionServiceDAO().getExtractionServiceMap();
+	}
+
+	/* interest profile cache */
+	@Transactional
+	public Map<String, InterestProfile> getInterestProfiles()
+	{
+		if ( interestProfileCache == null || interestProfileCache.isEmpty() )
+			updateInterestProfilesCache();
+		return interestProfileCache;
+	}
+
+	@Transactional
+	public void updateInterestProfilesCache()
+	{
+		interestProfileCache = persistenceStrategy.getInterestProfileDAO().getInterestProfileMap();
 	}
 
 }

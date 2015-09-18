@@ -107,10 +107,10 @@ public class ResearcherCollectionService
 				List<Map<String, String>> authorListMap = authorFutureList.get();
 				for ( Map<String, String> authorMap : authorListMap )
 				{
-					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim();
-
-					if ( authorName == null )
+					if ( authorMap.get( "name" ) == null )
 						continue;
+
+					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim();
 
 					// check if author already on array list
 					Integer authorIndex = indexHelper.get( authorName );
