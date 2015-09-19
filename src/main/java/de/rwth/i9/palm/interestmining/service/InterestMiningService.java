@@ -48,7 +48,7 @@ public class InterestMiningService
 	private WordFreqInterestProfile wordFreqInterestProfile;
 
 	/**
-	 * Get author interest from active author profiles
+	 * Get author interests from active author profiles
 	 * 
 	 * @param responseMap
 	 * @param author
@@ -147,6 +147,13 @@ public class InterestMiningService
 		return responseMap;
 	}
 
+	/**
+	 * Calculated derived interest profile (Intersection and/or Union between
+	 * interest profile) in an author
+	 * 
+	 * @param author
+	 * @param interestProfilesDerived
+	 */
 	private void calculateInterestProfilesDerived( Author author, List<InterestProfile> interestProfilesDerived )
 	{
 		// get authorInterest set on profile
@@ -228,11 +235,19 @@ public class InterestMiningService
 
 	}
 
+	/**
+	 * Calculate Union interest between 2 Author interest profiles
+	 * 
+	 * @param authorInterestProfile1
+	 * @param authorInterestProfile2
+	 * @param interestProfileDerived
+	 * @return
+	 */
 	private AuthorInterestProfile calculateUnionOfAuthorInterestProfiles( AuthorInterestProfile authorInterestProfile1, AuthorInterestProfile authorInterestProfile2, InterestProfile interestProfileDerived )
 	{
 		Calendar calendar = Calendar.getInstance();
 		AuthorInterestProfile authorInterestProfileResult = new AuthorInterestProfile();
-		// default profile name [DEFAULT_PROFILENAME]
+		// set derived profile name
 		String authorInterestProfileName = authorInterestProfile1.getName() + " ∪ " + authorInterestProfile2.getName();
 
 		authorInterestProfileResult.setCreated( calendar.getTime() );
@@ -242,14 +257,82 @@ public class InterestMiningService
 		Set<AuthorInterest> authorInterests1 = authorInterestProfile1.getAuthorInterests();
 		Set<AuthorInterest> authorInterests2 = authorInterestProfile2.getAuthorInterests();
 
-		return null;
+		for ( AuthorInterest eachAuthorInterest1 : authorInterests1 )
+		{
+			AuthorInterest authorInterestResult = null;
+			for ( AuthorInterest eachAuthorInterest2 : authorInterests2 )
+			{
+				if ( eachAuthorInterest1.getLanguage().equals( eachAuthorInterest2.getLanguage() ) && eachAuthorInterest1.getYear().equals( eachAuthorInterest2.getYear() ) )
+				{
+					authorInterestResult = calculateUnionOfAuthorInterest( eachAuthorInterest1, eachAuthorInterest2 );
+				}
+			}
+
+			if ( authorInterestResult != null && authorInterestResult.getTermWeights() != null && !authorInterestResult.getTermWeights().isEmpty() )
+			{
+				authorInterestResult.setAuthorInterestProfile( authorInterestProfileResult );
+				authorInterestProfileResult.addAuthorInterest( authorInterestResult );
+				authorInterestProfileResult.setInterestProfile( interestProfileDerived );
+			}
+		}
+
+		return authorInterestProfileResult;
 	}
 
+	/**
+	 * Calculate Union interest between 2 AuthorInterest
+	 * 
+	 * @param eachAuthorInterest1
+	 * @param eachAuthorInterest2
+	 * @return
+	 */
+	private AuthorInterest calculateUnionOfAuthorInterest( AuthorInterest eachAuthorInterest1, AuthorInterest eachAuthorInterest2 )
+	{
+		AuthorInterest authorInterestResult = new AuthorInterest();
+		authorInterestResult.setLanguage( eachAuthorInterest1.getLanguage() );
+		authorInterestResult.setYear( eachAuthorInterest1.getYear() );
+
+		Map<Interest, Double> termsWeight1 = eachAuthorInterest1.getTermWeights();
+		Map<Interest, Double> termsWeight2 = eachAuthorInterest2.getTermWeights();
+
+		Map<Interest, Double> mergedTermWeight = new HashMap<Interest, Double>();
+		mergedTermWeight.putAll( termsWeight1 );
+		mergedTermWeight.putAll( termsWeight2 );
+
+		Map<Interest, Double> termsWeightResult = new HashMap<Interest, Double>();
+
+		for ( Map.Entry<Interest, Double> eachMergedTermWeight : mergedTermWeight.entrySet() )
+		{
+			Interest interstKey = eachMergedTermWeight.getKey();
+			if ( termsWeight1.get( interstKey ) != null )
+			{
+				termsWeightResult.put( interstKey, ( eachMergedTermWeight.getValue() + termsWeight1.get( interstKey ) ) / 2 );
+			}
+			else
+			{
+				termsWeightResult.put( interstKey, eachMergedTermWeight.getValue() );
+			}
+		}
+
+		if ( !termsWeightResult.isEmpty() )
+			authorInterestResult.setTermWeights( termsWeightResult );
+
+		return authorInterestResult;
+	}
+
+	/**
+	 * Calculate Intersection interest between 2 Author interest profiles
+	 * 
+	 * @param authorInterestProfile1
+	 * @param authorInterestProfile2
+	 * @param interestProfileDerived
+	 * @return
+	 */
 	private AuthorInterestProfile calculateIntersectionOfAuthorInterestProfiles( AuthorInterestProfile authorInterestProfile1, AuthorInterestProfile authorInterestProfile2, InterestProfile interestProfileDerived )
 	{
 		Calendar calendar = Calendar.getInstance();
 		AuthorInterestProfile authorInterestProfileResult = new AuthorInterestProfile();
-		// default profile name [DEFAULT_PROFILENAME]
+		// set derived profile name
 		String authorInterestProfileName = authorInterestProfile1.getName() + " ∩ " + authorInterestProfile2.getName();
 
 		authorInterestProfileResult.setCreated( calendar.getTime() );
@@ -281,6 +364,13 @@ public class InterestMiningService
 		return authorInterestProfileResult;
 	}
 
+	/**
+	 * Calculate Intersection interest between 2 AuthorInterest
+	 * 
+	 * @param eachAuthorInterest1
+	 * @param eachAuthorInterest2
+	 * @return
+	 */
 	private AuthorInterest calculateIntersectionOfAuthorInterest( AuthorInterest eachAuthorInterest1, AuthorInterest eachAuthorInterest2 )
 	{
 		AuthorInterest authorInterestResult = new AuthorInterest();
@@ -306,6 +396,14 @@ public class InterestMiningService
 		return authorInterestResult;
 	}
 
+	/**
+	 * Main method to calculate default InterestProfile such as : C-Value,
+	 * Corephrase and WordFreq profile
+	 * 
+	 * @param author
+	 * @param publicationClustersMap
+	 * @param interestProfilesDefault
+	 */
 	public void calculateInterestProfilesDefault( Author author, Map<String, PublicationClusterHelper> publicationClustersMap, List<InterestProfile> interestProfilesDefault )
 	{
 		// calculate frequencies of term in cluster
@@ -317,6 +415,13 @@ public class InterestMiningService
 			calculateEachInterestProfileDefault( author, interestProfileDefault, publicationClustersMap );
 	}
 
+	/**
+	 * Calculate each default InterestProfile
+	 * 
+	 * @param author
+	 * @param interestProfileDefault
+	 * @param publicationClustersMap
+	 */
 	public void calculateEachInterestProfileDefault( Author author, InterestProfile interestProfileDefault, Map<String, PublicationClusterHelper> publicationClustersMap )
 	{
 		// get author interest profile
@@ -388,7 +493,7 @@ public class InterestMiningService
 		}
 
 		// at the end persist
-		if ( authorInterestProfile.getAuthorInterests() != null || !authorInterestProfile.getAuthorInterests().isEmpty() )
+		if ( authorInterestProfile.getAuthorInterests() != null && !authorInterestProfile.getAuthorInterests().isEmpty() )
 		{
 			authorInterestProfile.setAuthor( author );
 			author.addAuthorInterestProfiles( authorInterestProfile );
@@ -396,6 +501,12 @@ public class InterestMiningService
 		}
 	}
 
+	/**
+	 * Create a cluster for publications, based on language and year
+	 * 
+	 * @param author
+	 * @param publicationClustersMap
+	 */
 	public void constructPublicationClusterByLanguageAndYear( Author author, Map<String, PublicationClusterHelper> publicationClustersMap )
 	{
 		// fill publication clusters
