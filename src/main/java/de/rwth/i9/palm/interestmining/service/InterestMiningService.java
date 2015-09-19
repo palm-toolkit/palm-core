@@ -433,7 +433,7 @@ public class InterestMiningService
 		}
 
 		// at the end persist
-		if ( authorInterestProfile.getAuthorInterests() != null || !authorInterestProfile.getAuthorInterests().isEmpty() )
+		if ( authorInterestProfile.getAuthorInterests() != null && !authorInterestProfile.getAuthorInterests().isEmpty() )
 		{
 			authorInterestProfile.setAuthor( author );
 			author.addAuthorInterestProfiles( authorInterestProfile );
