@@ -247,7 +247,7 @@ public class InterestMiningService
 	{
 		Calendar calendar = Calendar.getInstance();
 		AuthorInterestProfile authorInterestProfileResult = new AuthorInterestProfile();
-		// default profile name [DEFAULT_PROFILENAME]
+		// set derived profile name
 		String authorInterestProfileName = authorInterestProfile1.getName() + " ∪ " + authorInterestProfile2.getName();
 
 		authorInterestProfileResult.setCreated( calendar.getTime() );
@@ -257,7 +257,67 @@ public class InterestMiningService
 		Set<AuthorInterest> authorInterests1 = authorInterestProfile1.getAuthorInterests();
 		Set<AuthorInterest> authorInterests2 = authorInterestProfile2.getAuthorInterests();
 
-		return null;
+		for ( AuthorInterest eachAuthorInterest1 : authorInterests1 )
+		{
+			AuthorInterest authorInterestResult = null;
+			for ( AuthorInterest eachAuthorInterest2 : authorInterests2 )
+			{
+				if ( eachAuthorInterest1.getLanguage().equals( eachAuthorInterest2.getLanguage() ) && eachAuthorInterest1.getYear().equals( eachAuthorInterest2.getYear() ) )
+				{
+					authorInterestResult = calculateUnionOfAuthorInterest( eachAuthorInterest1, eachAuthorInterest2 );
+				}
+			}
+
+			if ( authorInterestResult != null && authorInterestResult.getTermWeights() != null && !authorInterestResult.getTermWeights().isEmpty() )
+			{
+				authorInterestResult.setAuthorInterestProfile( authorInterestProfileResult );
+				authorInterestProfileResult.addAuthorInterest( authorInterestResult );
+				authorInterestProfileResult.setInterestProfile( interestProfileDerived );
+			}
+		}
+
+		return authorInterestProfileResult;
+	}
+
+	/**
+	 * Calculate Union interest between 2 AuthorInterest
+	 * 
+	 * @param eachAuthorInterest1
+	 * @param eachAuthorInterest2
+	 * @return
+	 */
+	private AuthorInterest calculateUnionOfAuthorInterest( AuthorInterest eachAuthorInterest1, AuthorInterest eachAuthorInterest2 )
+	{
+		AuthorInterest authorInterestResult = new AuthorInterest();
+		authorInterestResult.setLanguage( eachAuthorInterest1.getLanguage() );
+		authorInterestResult.setYear( eachAuthorInterest1.getYear() );
+
+		Map<Interest, Double> termsWeight1 = eachAuthorInterest1.getTermWeights();
+		Map<Interest, Double> termsWeight2 = eachAuthorInterest2.getTermWeights();
+
+		Map<Interest, Double> mergedTermWeight = new HashMap<Interest, Double>();
+		mergedTermWeight.putAll( termsWeight1 );
+		mergedTermWeight.putAll( termsWeight2 );
+
+		Map<Interest, Double> termsWeightResult = new HashMap<Interest, Double>();
+
+		for ( Map.Entry<Interest, Double> eachMergedTermWeight : mergedTermWeight.entrySet() )
+		{
+			Interest interstKey = eachMergedTermWeight.getKey();
+			if ( termsWeight1.get( interstKey ) != null )
+			{
+				termsWeightResult.put( interstKey, ( eachMergedTermWeight.getValue() + termsWeight1.get( interstKey ) ) / 2 );
+			}
+			else
+			{
+				termsWeightResult.put( interstKey, eachMergedTermWeight.getValue() );
+			}
+		}
+
+		if ( !termsWeightResult.isEmpty() )
+			authorInterestResult.setTermWeights( termsWeightResult );
+
+		return authorInterestResult;
 	}
 
 	/**
@@ -272,7 +332,7 @@ public class InterestMiningService
 	{
 		Calendar calendar = Calendar.getInstance();
 		AuthorInterestProfile authorInterestProfileResult = new AuthorInterestProfile();
-		// default profile name [DEFAULT_PROFILENAME]
+		// set derived profile name
 		String authorInterestProfileName = authorInterestProfile1.getName() + " ∩ " + authorInterestProfile2.getName();
 
 		authorInterestProfileResult.setCreated( calendar.getTime() );
