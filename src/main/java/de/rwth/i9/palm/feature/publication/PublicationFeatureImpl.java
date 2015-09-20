@@ -12,10 +12,13 @@ public class PublicationFeatureImpl implements PublicationFeature
 	private PublicationDetail publicationDetail;
 
 	@Autowired( required = false )
-	private PublicationSearch publicationSearch;
+	private PublicationManage publicationManage;
 
 	@Autowired( required = false )
-	private PublicationManage publicationManage;
+	private PublicationMining publicationMining;
+
+	@Autowired( required = false )
+	private PublicationSearch publicationSearch;
 
 	@Override
 	public PublicationBasicStatistic getPublicationBasicStatistic()
@@ -36,21 +39,30 @@ public class PublicationFeatureImpl implements PublicationFeature
 	}
 
 	@Override
-	public PublicationSearch getPublicationSearch()
-	{
-		if ( this.publicationSearch == null )
-			this.publicationSearch = new PublicationSearchImpl();
-
-		return this.publicationSearch;
-	}
-
-	@Override
 	public PublicationManage getPublicationManage()
 	{
 		if ( this.publicationManage == null )
 			this.publicationManage = new PublicationManageImpl();
 
 		return this.publicationManage;
+	}
+
+	@Override
+	public PublicationMining getPublicationMining()
+	{
+		if ( this.publicationMining == null )
+			this.publicationMining = new PublicationMiningImpl();
+
+		return this.publicationMining;
+	}
+
+	@Override
+	public PublicationSearch getPublicationSearch()
+	{
+		if ( this.publicationSearch == null )
+			this.publicationSearch = new PublicationSearchImpl();
+
+		return this.publicationSearch;
 	}
 
 }
