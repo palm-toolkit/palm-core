@@ -156,4 +156,20 @@ public class PublicationController
 	{
 		return publicationFeature.getPublicationManage().extractPublicationFromPdf( id );
 	}
+	
+	/**
+	 * Get list of PuiblicationTopic
+	 * 
+	 * @param id
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topic", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopic( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			final HttpServletResponse response)
+	{
+		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id );
+	}
 }
