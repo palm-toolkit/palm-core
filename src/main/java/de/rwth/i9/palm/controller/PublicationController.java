@@ -168,8 +168,9 @@ public class PublicationController
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationTopic( 
 			@RequestParam( value = "id", required = false ) final String id, 
+ @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, 
 			final HttpServletResponse response)
 	{
-		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id );
+		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, maxRetrieve );
 	}
 }
