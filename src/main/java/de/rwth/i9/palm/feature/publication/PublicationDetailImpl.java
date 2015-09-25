@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.feature.publication;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,10 +9,12 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.helper.comparator.PublicationSourceBySourceTypeComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationFile;
+import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -36,7 +39,7 @@ public class PublicationDetailImpl implements PublicationDetail
 			return responseMap;
 		}
 
-		responseMap.put( "status", "OK" );
+		responseMap.put( "status", "ok" );
 
 		// put publication detail
 		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
@@ -44,6 +47,8 @@ public class PublicationDetailImpl implements PublicationDetail
 		publicationMap.put( "title", publication.getTitle() );
 		if ( publication.getAbstractText() != null )
 			publicationMap.put( "abstract", publication.getAbstractText() );
+		if ( publication.getKeywordText() != null )
+			publicationMap.put( "keyword", publication.getKeywordText() );
 		// coauthor
 		List<Map<String, Object>> coathorList = new ArrayList<Map<String, Object>>();
 		for ( Author author : publication.getCoAuthors() )
@@ -67,6 +72,34 @@ public class PublicationDetailImpl implements PublicationDetail
 		publicationMap.put( "coauthor", coathorList );
 		if ( publication.getContentText() != null )
 			publicationMap.put( "content", publication.getContentText() );
+
+		List<Object> publicationSourceList = new ArrayList<Object>();
+
+		List<PublicationSource> publicationSources = new ArrayList<PublicationSource>( publication.getPublicationSources() );
+		// sort publicationSource asc
+		Collections.sort( publicationSources, new PublicationSourceBySourceTypeComparator() );
+		// put publicationSource to Map and add into list
+		for ( PublicationSource publicationSource : publicationSources )
+		{
+			Map<String, Object> publicationSourceMap = new LinkedHashMap<String, Object>();
+
+			String sourceType = publicationSource.getSourceType().toString().toLowerCase();
+			publicationSourceMap.put( "source", sourceType );
+
+			if ( publicationSource.getTitle() != null )
+				publicationSourceMap.put( "title", publicationSource.getTitle() );
+
+			if ( publicationSource.getAbstractText() != null )
+				publicationSourceMap.put( "abstract", publicationSource.getAbstractText() );
+
+			if ( publicationSource.getKeyword() != null )
+				publicationSourceMap.put( "keyword", publicationSource.getKeyword() );
+
+			// add into list
+			publicationSourceList.add( publicationSourceMap );
+		}
+		// put publicationSource into JSON
+		publicationMap.put( "sources", publicationSourceList );
 
 		PublicationFile publicationFile = null;
 
@@ -96,11 +129,6 @@ public class PublicationDetailImpl implements PublicationDetail
 			publicationMap.put( "pdfurl", publicationFile.getSource() );
 			publicationMap.put( "pdfextract", publication.isPdfExtracted() );
 		}
-
-		if ( publication.getKeywordText() != null )
-			publicationMap.put( "keyword", publication.getKeywordText() );
-		if ( publication.getReferenceText() != null )
-			publicationMap.put( "reference", publication.getReferenceText() );
 
 		responseMap.put( "publication", publicationMap );
 
