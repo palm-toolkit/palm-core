@@ -3,7 +3,6 @@ package de.rwth.i9.palm.datasetcollect.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -23,7 +22,6 @@ import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.PublicationType;
-import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceMethod;
 import de.rwth.i9.palm.model.SourceType;
 
@@ -43,53 +41,6 @@ public class AsynchronousPublicationDetailCollectionService
 	@Autowired
 	private PalmAnalytics palmAnalitics;
 
-	/**
-	 * Collect publication detail from a publication from multiple source
-	 * 
-	 * @param publication
-	 * @param sourceMap
-	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	@Async
-	public Future<Publication> asyncWalkOverSelectedPublication( Publication publication, Map<String, Source> sourceMap ) throws IOException, InterruptedException
-	{
-		// multithread publication source
-		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();
-
-		for ( PublicationSource publicationSource : publication.getPublicationSources() )
-		{
-			// handling publication source ( Only for google Scholar and
-			// CiteseerX)
-			if ( publicationSource.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
-			{
-				if ( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) )
-					publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromGoogleScholar( publicationSource, sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ) ) );
-				else if ( publicationSource.getSourceType().equals( SourceType.CITESEERX ) )
-					publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromCiteseerX( publicationSource, sourceMap.get( SourceType.CITESEERX.toString() ) ) );
-			}
-		}
-
-		boolean walkingProcessIsDone = true;
-		do
-		{
-			walkingProcessIsDone = true;
-			for ( Future<PublicationSource> publicationSourceFuture : publicationSourceFutureList )
-			{
-				if ( publicationSourceFuture.isDone() )
-				{
-					walkingProcessIsDone = false;
-					break;
-				}
-			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !walkingProcessIsDone );
-
-		return new AsyncResult<Publication>( publication );
-	}
-	
 	/**
 	 * Collect publication detail from a publication from multiple source
 	 * 

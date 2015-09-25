@@ -325,56 +325,34 @@ public class PublicationCollectionService
 	 */
 	public void getPublicationInformationFromSources( List<Publication> selectedPublications, Author pivotAuthor, Map<String, Source> sourceMap ) throws IOException, InterruptedException, ExecutionException, ParseException
 	{
-		//multi thread future publication detail
-		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
+		// multithread publication source
+		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();
 		for( Publication publication : selectedPublications){
-			selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncWalkOverSelectedPublication( publication, sourceMap ) );
-		}
-		
-		for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
-		{
-			// combine from sources to publication
-			this.mergingPublicationInformation( selectedPublicationFuture.get(),
-					pivotAuthor/* , coAuthors */ );
-		}
-	}
-
-	/**
-	 * Extract publication information from original source either as html or
-	 * pdf with asynchronous multi threads
-	 * 
-	 * @param publication
-	 * @param pivotAuthor
-	 * @param persistResult
-	 * @throws InterruptedException
-	 * @throws IOException
-	 * @throws ExecutionException
-	 * @throws TimeoutException
-	 */
-	public void enrichPublicationByExtractOriginalSources( List<Publication> selectedPublications, Author pivotAuthor, boolean persistResult ) throws IOException, InterruptedException, ExecutionException, TimeoutException
-	{
-		log.info( "Start publications enrichment for Auhtor " + pivotAuthor.getName() );
-		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
-
-		for ( Publication publication : selectedPublications )
-		{
-			// only proceed for publication with not complete abstract
-			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
-				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication ) );
-		}
-
-		// check process completion
-		for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
-		{
-			Publication publication = selectedPublicationFuture.get();
-
-			if ( persistResult )
+			for ( PublicationSource publicationSource : publication.getPublicationSources() )
 			{
-				publication.setContentUpdated( true );
-				persistenceStrategy.getPublicationDAO().persist( publication );
+				// handling publication source ( Only for google Scholar and
+				// CiteseerX)
+				if ( publicationSource.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+				{
+					if ( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) )
+						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromGoogleScholar( publicationSource, sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ) ) );
+					else if ( publicationSource.getSourceType().equals( SourceType.CITESEERX ) )
+						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromCiteseerX( publicationSource, sourceMap.get( SourceType.CITESEERX.toString() ) ) );
+				}
 			}
 		}
-		log.info( "Done publications enrichment for Auhtor " + pivotAuthor.getName() );
+
+		// make sure everything is done
+		for ( Future<PublicationSource> publicationSourceFuture : publicationSourceFutureList )
+		{
+			publicationSourceFuture.get();
+		}
+
+		for ( Publication selectedPublication : selectedPublications )
+		{
+			// combine from sources to publication
+			this.mergingPublicationInformation( selectedPublication, pivotAuthor/* , coAuthors */ );
+		}
 	}
 
 	/**
@@ -571,11 +549,13 @@ public class PublicationCollectionService
 
 			// abstract ( searching the longest)
 			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null )
+			{
 				if ( publication.getAbstractText() == null || publication.getAbstractText().length() < pubSource.getAbstractText().length() )
 				{
 					publication.setAbstractText( pubSource.getAbstractText() );
 					publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
 				}
+			}
 
 			// keyword (MAS is the most valid) others source currently by the
 			// fastest
@@ -683,6 +663,44 @@ public class PublicationCollectionService
 
 		}
 
+	}
+
+	/**
+	 * Extract publication information from original source either as html or
+	 * pdf with asynchronous multi threads
+	 * 
+	 * @param publication
+	 * @param pivotAuthor
+	 * @param persistResult
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws TimeoutException
+	 */
+	public void enrichPublicationByExtractOriginalSources( List<Publication> selectedPublications, Author pivotAuthor, boolean persistResult ) throws IOException, InterruptedException, ExecutionException, TimeoutException
+	{
+		log.info( "Start publications enrichment for Auhtor " + pivotAuthor.getName() );
+		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
+
+		for ( Publication publication : selectedPublications )
+		{
+			// only proceed for publication with not complete abstract
+			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
+				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication ) );
+		}
+
+		// check process completion
+		for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
+		{
+			Publication publication = selectedPublicationFuture.get();
+
+			if ( persistResult )
+			{
+				publication.setContentUpdated( true );
+				persistenceStrategy.getPublicationDAO().persist( publication );
+			}
+		}
+		log.info( "Done publications enrichment for Auhtor " + pivotAuthor.getName() );
 	}
 
 }
