@@ -39,7 +39,7 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 		if ( publication.getPublicationDate() != null )
 		{
 			SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd" );
-			publicationMap.put( "date", sdf.format( publication.getPublicationDate() ) );
+			publicationMap.put( "publication date", sdf.format( publication.getPublicationDate() ) );
 		}
 
 		if ( publication.getLanguage() != null )
@@ -51,7 +51,7 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 		if ( publication.getPublicationType() != null )
 		{
 			String publicationType = publication.getPublicationType().toString();
-			publicationType = publicationType.substring( 0, 1 ).toUpperCase() + publicationType.substring( 1 );
+			publicationType = publicationType.substring( 0, 1 ).toUpperCase() + publicationType.toLowerCase().substring( 1 );
 			publicationMap.put( "type", publicationType );
 		}
 
