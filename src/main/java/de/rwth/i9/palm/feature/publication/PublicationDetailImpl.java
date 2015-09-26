@@ -89,12 +89,35 @@ public class PublicationDetailImpl implements PublicationDetail
 			if ( publicationSource.getTitle() != null )
 				publicationSourceMap.put( "title", publicationSource.getTitle() );
 
+			if ( publicationSource.getCoAuthors() != null )
+				publicationSourceMap.put( "authors", publicationSource.getCoAuthors() );
+
 			if ( publicationSource.getAbstractText() != null )
 				publicationSourceMap.put( "abstract", publicationSource.getAbstractText() );
 
 			if ( publicationSource.getKeyword() != null )
 				publicationSourceMap.put( "keyword", publicationSource.getKeyword() );
 
+			if ( publicationSource.getDate() != null )
+				publicationSourceMap.put( "date", publicationSource.getDate() );
+
+			if ( publicationSource.getCitedBy() > 0 )
+				publicationSourceMap.put( "cited by", publicationSource.getCitedBy() );
+
+			if ( publicationSource.getVenue() != null )
+				publicationSourceMap.put( "venue", publicationSource.getVenue() );
+
+			if ( publicationSource.getPublisher() != null )
+				publicationSourceMap.put( "publisher", publicationSource.getPublisher() );
+
+			if ( publicationSource.getIssue() != null )
+				publicationSourceMap.put( "issue", publicationSource.getIssue() );
+
+			if ( publicationSource.getVolume() != null )
+				publicationSourceMap.put( "volume", publicationSource.getVolume() );
+
+			if ( publicationSource.getPages() != null )
+				publicationSourceMap.put( "page", publicationSource.getPages() );
 			// add into list
 			publicationSourceList.add( publicationSourceMap );
 		}
