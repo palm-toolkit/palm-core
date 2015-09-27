@@ -186,15 +186,15 @@ public class PublicationCollectionService
 			Publication publication = iteratorPublication.next();
 
 			// The pattern of incorrect publication
-			// For google scholar :
-			// 1. the publications don't have publication date.
-			// 2. No other publications cited the incorrect publications for
-			// years (more then 3 years)
-			// 3. The title of publication contains "special issue article"
 			if ( publication.getPublicationSources().size() == 1 )
 			{
 				List<PublicationSource> publicationSource = new ArrayList<>( publication.getPublicationSources() );
 
+				// For google scholar :
+				// 1. the publications don't have publication date.
+				// 2. No other publications cited the incorrect publications for
+				// years (more then 3 years)
+				// 3. The title of publication contains "special issue article"
 				if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.GOOGLESCHOLAR ) )
 				{
 					// removing condition
@@ -210,6 +210,16 @@ public class PublicationCollectionService
 							iteratorPublication.remove();
 							continue;
 						}
+					}
+				}
+				// The pattern of incorrect publication
+				// For MAS no author name
+				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.MAS ) )
+				{
+					if ( publicationSource.get( 0 ).getCoAuthors() == null || publicationSource.get( 0 ).getCoAuthors().equals( "" ) )
+					{
+						iteratorPublication.remove();
+						continue;
 					}
 				}
 			}
@@ -239,6 +249,7 @@ public class PublicationCollectionService
 					continue;
 				}
 			}
+
 		}
 	}
 
