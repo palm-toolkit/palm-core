@@ -227,10 +227,10 @@ public class PublicationCollectionService
 				}
 
 				// The pattern of incorrect publication
-				// For Mendeley no author name
+				// For Mendeley is master thesis also recorded
 				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.MENDELEY ) )
 				{
-					if ( publicationSource.get( 0 ).getCoAuthors() == null || publicationSource.get( 0 ).getCoAuthors().equals( "" ) )
+					if ( publicationSource.get( 0 ).getAbstractText().contains( "master thesis" ) )
 					{
 						iteratorPublication.remove();
 						continue;
