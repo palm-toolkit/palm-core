@@ -98,7 +98,7 @@ public class AsynchronousPublicationDetailCollectionService
 			{
 				try
 				{
-					PublicationSource publicationSource = publicationSourceFuture.get( 15, TimeUnit.SECONDS );
+					PublicationSource publicationSource = publicationSourceFuture.get( 35, TimeUnit.SECONDS );
 
 					if ( publicationSource.getAbstractText() != null )
 					{
