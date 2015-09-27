@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,14 +49,15 @@ public class PublicationDetailImpl implements PublicationDetail
 		if ( publication.getAbstractText() != null )
 			publicationMap.put( "abstract", publication.getAbstractText() );
 		if ( publication.getKeywordText() != null )
-			publicationMap.put( "keyword", publication.getKeywordText() );
+			publicationMap.put( "keyword", publication.getKeywordText().replace( ",", ", " ) );
 		// coauthor
 		List<Map<String, Object>> coathorList = new ArrayList<Map<String, Object>>();
+		
 		for ( Author author : publication.getCoAuthors() )
 		{
 			Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 			authorMap.put( "id", author.getId() );
-			authorMap.put( "name", author.getName() );
+			authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
 			if ( author.getInstitutions() != null )
 				for ( Institution institution : author.getInstitutions() )
 				{
@@ -90,13 +92,13 @@ public class PublicationDetailImpl implements PublicationDetail
 				publicationSourceMap.put( "title", publicationSource.getTitle() );
 
 			if ( publicationSource.getCoAuthors() != null )
-				publicationSourceMap.put( "authors", publicationSource.getCoAuthors() );
+				publicationSourceMap.put( "authors", publicationSource.getCoAuthors().replace( ",", ", " ) );
 
 			if ( publicationSource.getAbstractText() != null )
 				publicationSourceMap.put( "abstract", publicationSource.getAbstractText() );
 
 			if ( publicationSource.getKeyword() != null )
-				publicationSourceMap.put( "keyword", publicationSource.getKeyword() );
+				publicationSourceMap.put( "keyword", publicationSource.getKeyword().replace( ",", ", " ) );
 
 			if ( publicationSource.getDate() != null )
 				publicationSourceMap.put( "date", publicationSource.getDate() );
