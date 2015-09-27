@@ -418,7 +418,7 @@ public class PublicationCollectionService
 					if ( publicationMap.get( "type" ) != null )
 						publicationSource.setPublicationType( publicationMap.get( "type" ) );
 					
-					if ( publicationMap.get( "abstract" ) != null && publicationMap.get( "abstract" ).length() > 350 )
+					if ( publicationMap.get( "abstract" ) != null && publicationMap.get( "abstract" ).length() > 250 )
 						publicationSource.setAbstractText( publicationMap.get( "abstract" ) );
 
 					if ( publicationMap.get( "keyword" ) != null )
@@ -536,7 +536,7 @@ public class PublicationCollectionService
 			}
 			else if ( pubSource.getSourceType() == SourceType.MENDELEY )
 			{
-				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 350 )
+				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
 				{
 					publication.setAbstractText( pubSource.getAbstractText() );
 					publication.setAbstractStatus( CompletionStatus.COMPLETE );
@@ -550,7 +550,7 @@ public class PublicationCollectionService
 			}
 			else if ( pubSource.getSourceType() == SourceType.MAS )
 			{
-				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 350 )
+				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
 				{
 					publication.setAbstractText( pubSource.getAbstractText() );
 					publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
@@ -668,7 +668,7 @@ public class PublicationCollectionService
 			}
 
 			// abstract ( searching the longest)
-			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 350 )
+			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
 			{
 				if ( publication.getAbstractText() == null || publication.getAbstractText().length() < pubSource.getAbstractText().length() )
 				{
