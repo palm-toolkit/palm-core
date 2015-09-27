@@ -157,6 +157,9 @@ public class PublicationCollectionService
 			// third, extract and combine information from multiple sources
 			this.extractPublicationInformationDetailFromSources( selectedPublications, author, sourceMap );
 
+			// fourth, second checking, after the information has been merged
+			this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
+
 			// enrich the publication information by extract information
 			// from html or pdf source
 			this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
@@ -172,7 +175,7 @@ public class PublicationCollectionService
 	}
 	
 	/**
-	 * Remove all publication that considered incorrect and duplicated.
+	 * Remove all publication that considered incorrect.
 	 * 
 	 * @param selectedPublications
 	 */
@@ -222,6 +225,17 @@ public class PublicationCollectionService
 						continue;
 					}
 				}
+
+				// The pattern of incorrect publication
+				// For Mendeley no author name
+				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.MENDELEY ) )
+				{
+					if ( publicationSource.get( 0 ).getCoAuthors() == null || publicationSource.get( 0 ).getCoAuthors().equals( "" ) )
+					{
+						iteratorPublication.remove();
+						continue;
+					}
+				}
 			}
 
 			// The pattern of incorrect publication
@@ -232,6 +246,20 @@ public class PublicationCollectionService
 				iteratorPublication.remove();
 				continue;
 			}
+
+		}
+	}
+
+	/**
+	 * Remove duplicated publication (have partial title)
+	 * 
+	 * @param selectedPublications
+	 */
+	private void removeIncorrectPublicationPhase2FromPublicationList( List<Publication> selectedPublications )
+	{
+		for ( Iterator<Publication> iteratorPublication = selectedPublications.iterator(); iteratorPublication.hasNext(); )
+		{
+			Publication publication = iteratorPublication.next();
 
 			// The pattern of incorrect publication
 			// For google scholar :
@@ -562,9 +590,12 @@ public class PublicationCollectionService
 			else if ( pubSource.getSourceType() == SourceType.MAS )
 			{
 				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
-				{
-					publication.setAbstractText( pubSource.getAbstractText() );
-					publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
+				{ // sometimes MAS abstract is also incorrect
+					if ( publication.getAbstractText().length() < pubSource.getAbstractText().length() )
+					{
+						publication.setAbstractText( pubSource.getAbstractText() );
+						publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
+					}
 				}
 				if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
 				{
