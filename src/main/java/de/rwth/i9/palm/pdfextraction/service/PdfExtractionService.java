@@ -62,22 +62,26 @@ public class PdfExtractionService
 		// check whether thread worker is done
 		// Wait until they are all done
 		// give 100-millisecond pause ( for downloading the pdf)
-		Thread.sleep( 100 );
-		boolean processIsDone = true;
-		do
-		{
-			processIsDone = true;
-			for ( Entry<Publication, Future<List<TextSection>>> futureMap : extractedPfdFutureMap.entrySet() )
-			{
-				if ( !futureMap.getValue().isDone() )
-				{
-					processIsDone = false;
-					break;
-				}
-			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !processIsDone );
+//		Thread.sleep( 100 );
+//		boolean processIsDone = true;
+//		do
+//		{
+//			processIsDone = true;
+//			for ( Entry<Publication, Future<List<TextSection>>> futureMap : extractedPfdFutureMap.entrySet() )
+//			{
+//				if ( !futureMap.getValue().isDone() )
+//				{
+//					processIsDone = false;
+//					break;
+//				}
+//			}
+//			// 10-millisecond pause between each check
+//			Thread.sleep( 10 );
+//		} while ( !processIsDone );
+		
+		// wait until everything complete
+		for ( Entry<Publication, Future<List<TextSection>>> futureMap : extractedPfdFutureMap.entrySet() )
+			futureMap.getValue().get();
 
 		// process the extracted text sections further
 		this.processExtractedPublication( extractedPfdFutureMap, null );
@@ -92,22 +96,26 @@ public class PdfExtractionService
 		// check whether thread worker is done
 		// Wait until they are all done
 		// give 100-millisecond pause ( for downloading the pdf)
-		Thread.sleep( 100 );
-		boolean processIsDone = true;
-		do
-		{
-			processIsDone = true;
-			for ( Entry<Publication, Future<List<TextSection>>> futureMap : extractedPfdFutureMap.entrySet() )
-			{
-				if ( !futureMap.getValue().isDone() )
-				{
-					processIsDone = false;
-					break;
-				}
-			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !processIsDone );
+//		Thread.sleep( 100 );
+//		boolean processIsDone = true;
+//		do
+//		{
+//			processIsDone = true;
+//			for ( Entry<Publication, Future<List<TextSection>>> futureMap : extractedPfdFutureMap.entrySet() )
+//			{
+//				if ( !futureMap.getValue().isDone() )
+//				{
+//					processIsDone = false;
+//					break;
+//				}
+//			}
+//			// 10-millisecond pause between each check
+//			Thread.sleep( 10 );
+//		} while ( !processIsDone );
+		
+		// wait till complete
+		for ( Entry<Publication, Future<List<TextSection>>> futureMap : extractedPfdFutureMap.entrySet() )
+			futureMap.getValue().get();
 
 		// process the extracted text sections further
 		this.processExtractedPublication( extractedPfdFutureMap, responseMap );
