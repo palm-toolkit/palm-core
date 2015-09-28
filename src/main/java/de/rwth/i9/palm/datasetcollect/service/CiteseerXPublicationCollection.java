@@ -100,7 +100,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 
 				String noCitation = eachPublicationRow.select( "td" ).first().text();
 				if ( !noCitation.equals( "" ) )
-					publicationDetails.put( "nocitation", noCitation );
+					publicationDetails.put( "citedby", noCitation );
 
 				// set source
 				publicationDetails.put( "source", SourceType.CITESEERX.toString() );

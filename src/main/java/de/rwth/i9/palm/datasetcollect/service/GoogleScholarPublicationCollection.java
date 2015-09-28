@@ -106,10 +106,13 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 				publicationDetails.put( "venue", venue );
 			String noCitation = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_NOCITATION ).text().replaceAll( "[^\\d]", "" );
 			if( !noCitation.equals( "" ))
-				publicationDetails.put( "nocitation", noCitation );
+				publicationDetails.put( "citedby", noCitation );
 			String date = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_DATE ).text().trim();
-			if ( !date.equals( "" ) )
-				publicationDetails.put( "date", date );
+			if ( date.equals( "" ) )
+				continue;
+
+			// only pick publication with date
+			publicationDetails.put( "year", date );
 
 			publicationMapLists.add( publicationDetails );
 		}

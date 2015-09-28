@@ -17,6 +17,7 @@ public class HtmlPublicationCollectionTest
 {
 
 	@Test
+	@Ignore
 	public void getPublicationDetailByPublicationUrlTest() throws IOException
 	{
 		String input = "http://www.scitepress.org/DigitalLibrary/Link.aspx?doi=10.5220/0004791400090020";

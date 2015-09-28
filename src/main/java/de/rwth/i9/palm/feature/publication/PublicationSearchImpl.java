@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -60,6 +61,14 @@ public class PublicationSearchImpl implements PublicationSearch
 			{
 				Map<String, Object> pub = new LinkedHashMap<String, Object>();
 				pub.put( "id", publication.getId() );
+
+				if ( publication.getPublicationType() != null )
+				{
+					String publicationType = publication.getPublicationType().toString();
+					publicationType = publicationType.substring( 0, 1 ).toUpperCase() + publicationType.toLowerCase().substring( 1 );
+					pub.put( "type", publicationType );
+				}
+
 				pub.put( "title", publication.getTitle() );
 				if ( publication.getCitedBy() > 0 )
 					pub.put( "cited", Integer.toString( publication.getCitedBy() ) );
@@ -73,7 +82,7 @@ public class PublicationSearchImpl implements PublicationSearch
 				{
 					Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 					authorMap.put( "id", author.getId() );
-					authorMap.put( "name", author.getName() );
+					authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
 					if ( author.getInstitutions() != null )
 						for ( Institution institution : author.getInstitutions() )
 						{
@@ -87,7 +96,7 @@ public class PublicationSearchImpl implements PublicationSearch
 
 					authorObject.add( authorMap );
 				}
-				pub.put( "author", authorObject );
+				pub.put( "authors", authorObject );
 
 				publicationList.add( pub );
 			}

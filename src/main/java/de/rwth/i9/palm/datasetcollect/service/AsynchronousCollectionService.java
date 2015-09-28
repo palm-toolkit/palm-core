@@ -294,7 +294,7 @@ public class AsynchronousCollectionService
 		Map<String, String> publicationInformationMap = HtmlPublicationCollection.getPublicationInformationFromHtmlPage( publicationSource.getSourceUrl() );
 
 		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "done :get publication information from Htmlpagel " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
+		log.info( "done :get publication information from Htmlpage " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
 
 		if ( publicationInformationMap != null && !publicationInformationMap.isEmpty() )
 		{

@@ -1,12 +1,7 @@
 package de.rwth.i9.palm.datasetcollect.service;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -17,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
-
-import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.config.WebAppConfigTest;
 
@@ -31,10 +24,10 @@ public class PublicationCollectionServiceTest
 	@Autowired
 	private AsynchronousAuthorCollectionService asynchronousCollectionService;
 
-//	@Test
-//	@Ignore
-//	public void test2() throws IOException, InterruptedException, ExecutionException
-//	{
+	@Test
+	@Ignore
+	public void test2() throws IOException, InterruptedException, ExecutionException
+	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 //
 //		Future<List<Map<String, String>>> authorGoogleScholar = asynchronousCollectionService.getListOfAuthorsGoogleScholar( "chatti" );
@@ -56,11 +49,12 @@ public class PublicationCollectionServiceTest
 //
 //		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 //		log.info( "time it took to perform work " + stopwatch );
-//	}
+	}
 
-//	@Test
-//	public void getPublicationInformationFromPdf() throws IOException, InterruptedException, ExecutionException
-//	{
+	@Test
+	@Ignore
+	public void getPublicationInformationFromPdf() throws IOException, InterruptedException, ExecutionException
+	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 //
 //		Future<Map<String, String>> authorGoogleScholar = asynchronousCollectionService.getPublicationInformationFromPdf( "http://dspace.learningnetworks.org/bitstream/1820/3180/1/Chatti_ETS.pdf" );
@@ -72,5 +66,5 @@ public class PublicationCollectionServiceTest
 //
 //		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 //		log.info( "time it took to perform work " + stopwatch );
-//	}
+	}
 }

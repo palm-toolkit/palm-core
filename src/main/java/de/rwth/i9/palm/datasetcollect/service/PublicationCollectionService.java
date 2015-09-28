@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -25,13 +26,13 @@ import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.CompletionStatus;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.FileType;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationAuthor;
 import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.PublicationType;
@@ -146,12 +147,18 @@ public class PublicationCollectionService
 			// list/set of selected publication, either from database or completely new 
 			List<Publication> selectedPublications = new ArrayList<Publication>();
 			
-			// first construct the publication
+			// first, construct the publication
 			// get it from database or create new if still doesn't exist
 			this.constructPublicationWithSources( selectedPublications, publicationFutureLists , author );
 			
-			// extract and combine information from multiple sources
-			this.getPublicationInformationFromSources( selectedPublications, author, sourceMap );
+			// second, remove incorrect publication based on investigation
+			this.removeIncorrectPublicationFromPublicationList( selectedPublications );
+
+			// third, extract and combine information from multiple sources
+			this.extractPublicationInformationDetailFromSources( selectedPublications, author, sourceMap );
+
+			// fourth, second checking, after the information has been merged
+			this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
 
 			// enrich the publication information by extract information
 			// from html or pdf source
@@ -167,6 +174,151 @@ public class PublicationCollectionService
 		
 	}
 	
+	/**
+	 * Remove all publication that considered incorrect.
+	 * 
+	 * @param selectedPublications
+	 */
+	private void removeIncorrectPublicationFromPublicationList( List<Publication> selectedPublications )
+	{
+		// get current year
+		int currentYear = Calendar.getInstance().get( Calendar.YEAR );
+
+		for ( Iterator<Publication> iteratorPublication = selectedPublications.iterator(); iteratorPublication.hasNext(); )
+		{
+			Publication publication = iteratorPublication.next();
+
+			// The pattern of incorrect publication
+			if ( publication.getPublicationSources().size() == 1 )
+			{
+				List<PublicationSource> publicationSource = new ArrayList<>( publication.getPublicationSources() );
+
+				// For google scholar :
+				// 1. the publications don't have publication date.
+				// 2. No other publications cited the incorrect publications for
+				// years (more then 3 years)
+				// 3. The title of publication contains "special issue article"
+				if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.GOOGLESCHOLAR ) )
+				{
+					// removing condition
+					if ( publicationSource.get( 0 ).getDate() == null )
+					{
+						iteratorPublication.remove();
+						continue;
+					}
+					else
+					{
+						if ( publicationSource.get( 0 ).getCitedBy() == 0 && currentYear - Integer.parseInt( publicationSource.get( 0 ).getDate() ) > 2 )
+						{
+							iteratorPublication.remove();
+							continue;
+						}
+					}
+				}
+				// The pattern of incorrect publication
+				// For MAS no author name
+				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.MAS ) )
+				{
+					if ( publicationSource.get( 0 ).getCoAuthors() == null || publicationSource.get( 0 ).getCoAuthors().equals( "" ) )
+					{
+						iteratorPublication.remove();
+						continue;
+					}
+				}
+
+				// The pattern of incorrect publication
+				// For Mendeley is master thesis also recorded
+				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.MENDELEY ) )
+				{
+					if ( publicationSource.get( 0 ).getAbstractText().contains( "master thesis" ) )
+					{
+						iteratorPublication.remove();
+						continue;
+					}
+				}
+			}
+
+			// The pattern of incorrect publication
+			// For google scholar :
+			// 3. The title of publication contains "special issue article"
+			if ( publication.getTitle().toLowerCase().contains( "special issue article" ) )
+			{
+				iteratorPublication.remove();
+				continue;
+			}
+
+		}
+	}
+
+	/**
+	 * Remove duplicated publication (have partial title)
+	 * 
+	 * @param selectedPublications
+	 */
+	private void removeIncorrectPublicationPhase2FromPublicationList( List<Publication> selectedPublications )
+	{
+		for ( Iterator<Publication> iteratorPublication = selectedPublications.iterator(); iteratorPublication.hasNext(); )
+		{
+			Publication publication = iteratorPublication.next();
+
+			// The pattern of incorrect publication
+			// For google scholar :
+			// 4. sometimes the publication is duplicated,
+			// the title of duplicated one is substring the correct one
+			// e.g. "Teaching Collaborative Software Development"
+			// actual title "Teaching collaborative software development: A case
+			// study."
+			// only check for title that shorter than 80 characters
+			if ( publication.getTitle().length() < 80 )
+			{
+				if ( isPublicationDuplicated( publication, selectedPublications ) )
+				{
+					iteratorPublication.remove();
+					continue;
+				}
+			}
+
+		}
+	}
+
+	/**
+	 * Check duplicated publication, compare publication to each other
+	 * 
+	 * @param publication
+	 * @param selectedPublications
+	 * @param maxLenghtToCompare
+	 * @return
+	 */
+	private boolean isPublicationDuplicated( Publication publication, List<Publication> selectedPublications )
+	{
+		int lengthOfComparedTitleText = 40; 
+		int lengthOfComparedTitleAbstract = 40; 
+		for ( Publication eachPublication : selectedPublications )
+		{
+			if ( eachPublication.getTitle().length() > publication.getTitle().length() )
+			{
+				// check title
+				if( publication.getTitle().length() < lengthOfComparedTitleText )
+					lengthOfComparedTitleText = publication.getTitle().length();
+				String compareTitle1 = publication.getTitle().substring( 0, lengthOfComparedTitleText );
+				String compareTitle2 = eachPublication.getTitle().substring( 0, lengthOfComparedTitleText );
+				if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( compareTitle1.toLowerCase(), compareTitle2.toLowerCase() ) > .9f ){
+					// check abstract
+					if( publication.getAbstractText() == null || publication.getAbstractText().length() < 100 )
+						// just delete publication without abstract or short abstract
+						return true;
+					else{
+						String compareAbstract1 = publication.getAbstractText().substring( 0, lengthOfComparedTitleAbstract );
+						String compareAbstract2 = eachPublication.getAbstractText().substring( 0, lengthOfComparedTitleAbstract);
+						if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( compareAbstract1.toLowerCase(), compareAbstract2.toLowerCase() ) > .9f )
+							return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Construct the publication and publicationSources, with the data gathered
 	 * from academic networks
@@ -250,10 +402,23 @@ public class PublicationCollectionService
 						publication.setAbstractStatus( CompletionStatus.NOT_COMPLETE );
 						publication.setKeywordStatus( CompletionStatus.NOT_COMPLETE );
 						selectedPublications.add( publication );
+
+						// persistenceStrategy.getPublicationDAO().persist(
+						// publication );
 					}
-					// add coauthor
-					publication.addCoAuthor( author );
+//					// add coauthor
+////					publication.addCoAuthor( author );
+//					PublicationAuthor publicationAuthor = new PublicationAuthor();
+//					publicationAuthor.setPublication( publication );
+//					publicationAuthor.setAuthor( author );
+//
+//					// author.addPublicationAuthor( publicationAuthor );
+//
+//					publication.addPublicationAuthor( publicationAuthor );
 					
+
+					// persistenceStrategy.getAuthorDAO().persist( author );
+
 					// create publication sources and assign it to publication
 					PublicationSource publicationSource = new PublicationSource();
 					publicationSource.setTitle( publicationTitle );
@@ -271,8 +436,8 @@ public class PublicationCollectionService
 					
 					publicationSource.setPublication( publication );
 
-					if ( publicationMap.get( "nocitation" ) != null )
-						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "nocitation" ) ) );
+					if ( publicationMap.get( "citedby" ) != null )
+						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "citedby" ) ) );
 
 					if ( publicationMap.get( "coauthor" ) != null )
 						publicationSource.setCoAuthors( publicationMap.get( "coauthor" ) );
@@ -292,14 +457,11 @@ public class PublicationCollectionService
 					if ( publicationMap.get( "type" ) != null )
 						publicationSource.setPublicationType( publicationMap.get( "type" ) );
 					
-					if ( publicationMap.get( "abstract" ) != null )
+					if ( publicationMap.get( "abstract" ) != null && publicationMap.get( "abstract" ).length() > 250 )
 						publicationSource.setAbstractText( publicationMap.get( "abstract" ) );
 
 					if ( publicationMap.get( "keyword" ) != null )
 						publicationSource.setKeyword( publicationMap.get( "keyword" ) );
-
-					if ( publicationMap.get( "citedby" ) != null )
-						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "citedby" ) ) );
 
 					publication.addPublicationSource( publicationSource );
 								
@@ -323,58 +485,36 @@ public class PublicationCollectionService
 	 * @throws ExecutionException
 	 * @throws ParseException
 	 */
-	public void getPublicationInformationFromSources( List<Publication> selectedPublications, Author pivotAuthor, Map<String, Source> sourceMap ) throws IOException, InterruptedException, ExecutionException, ParseException
+	public void extractPublicationInformationDetailFromSources( List<Publication> selectedPublications, Author pivotAuthor, Map<String, Source> sourceMap ) throws IOException, InterruptedException, ExecutionException, ParseException
 	{
-		//multi thread future publication detail
-		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
+		// multithread publication source
+		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();
 		for( Publication publication : selectedPublications){
-			selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncWalkOverSelectedPublication( publication, sourceMap ) );
-		}
-		
-		for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
-		{
-			// combine from sources to publication
-			this.mergingPublicationInformation( selectedPublicationFuture.get(),
-					pivotAuthor/* , coAuthors */ );
-		}
-	}
-
-	/**
-	 * Extract publication information from original source either as html or
-	 * pdf with asynchronous multi threads
-	 * 
-	 * @param publication
-	 * @param pivotAuthor
-	 * @param persistResult
-	 * @throws InterruptedException
-	 * @throws IOException
-	 * @throws ExecutionException
-	 * @throws TimeoutException
-	 */
-	public void enrichPublicationByExtractOriginalSources( List<Publication> selectedPublications, Author pivotAuthor, boolean persistResult ) throws IOException, InterruptedException, ExecutionException, TimeoutException
-	{
-		log.info( "Start publications enrichment for Auhtor " + pivotAuthor.getName() );
-		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
-
-		for ( Publication publication : selectedPublications )
-		{
-			// only proceed for publication with not complete abstract
-			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
-				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication ) );
-		}
-
-		// check process completion
-		for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
-		{
-			Publication publication = selectedPublicationFuture.get();
-
-			if ( persistResult )
+			for ( PublicationSource publicationSource : publication.getPublicationSources() )
 			{
-				publication.setContentUpdated( true );
-				persistenceStrategy.getPublicationDAO().persist( publication );
+				// handling publication source ( Only for google Scholar and
+				// CiteseerX)
+				if ( publicationSource.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+				{
+					if ( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) )
+						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromGoogleScholar( publicationSource, sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ) ) );
+					else if ( publicationSource.getSourceType().equals( SourceType.CITESEERX ) )
+						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromCiteseerX( publicationSource, sourceMap.get( SourceType.CITESEERX.toString() ) ) );
+				}
 			}
 		}
-		log.info( "Done publications enrichment for Auhtor " + pivotAuthor.getName() );
+
+		// make sure everything is done
+		for ( Future<PublicationSource> publicationSourceFuture : publicationSourceFutureList )
+		{
+			publicationSourceFuture.get();
+		}
+
+		for ( Publication selectedPublication : selectedPublications )
+		{
+			// combine from sources to publication
+			this.mergingPublicationInformation( selectedPublication, pivotAuthor/* , coAuthors */ );
+		}
 	}
 
 	/**
@@ -435,23 +575,32 @@ public class PublicationCollectionService
 			}
 			else if ( pubSource.getSourceType() == SourceType.MENDELEY )
 			{
-				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null )
+				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
 				{
 					publication.setAbstractText( pubSource.getAbstractText() );
 					publication.setAbstractStatus( CompletionStatus.COMPLETE );
-				}
-			}
-			else if ( pubSource.getSourceType() == SourceType.MAS )
-			{
-				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null )
-				{
-					publication.setAbstractText( pubSource.getAbstractText() );
-					publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
 				}
 				if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
 				{
 					publication.setKeywordText( pubSource.getKeyword() );
 					publication.setKeywordStatus( CompletionStatus.COMPLETE );
+				}
+
+			}
+			else if ( pubSource.getSourceType() == SourceType.MAS )
+			{
+				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
+				{ // sometimes MAS abstract is also incorrect
+					if ( publication.getAbstractText().length() < pubSource.getAbstractText().length() )
+					{
+						publication.setAbstractText( pubSource.getAbstractText() );
+						publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
+					}
+				}
+				if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
+				{
+					publication.setKeywordText( pubSource.getKeyword() );
+					publication.setKeywordStatus( CompletionStatus.PARTIALLY_COMPLETE );
 				}
 			}
 			// for general information
@@ -479,7 +628,17 @@ public class PublicationCollectionService
 						
 						Author author = null;
 						if ( pivotAuthor.getName().toLowerCase().equals( authorString.toLowerCase() ) )
+						{
 							author = pivotAuthor;
+
+							// create the relation with publication
+							PublicationAuthor publicationAuthor = new PublicationAuthor();
+							publicationAuthor.setPublication( publication );
+							publicationAuthor.setAuthor( author );
+							publicationAuthor.setPosition( i + 1 );
+
+							publication.addPublicationAuthor( publicationAuthor );
+						}
 						else
 						{
 							// first check from database by full name
@@ -498,34 +657,13 @@ public class PublicationCollectionService
 							if( author == null ){
 								coAuthorsDb = persistenceStrategy.getAuthorDAO().getByLastName( lastName );
 								if( !coAuthorsDb.isEmpty() ){
-									String[] firstNameSplit = firstName.split( " " );
 									for ( Author coAuthorDb : coAuthorsDb )
 									{
-										if ( coAuthorDb.isAliasNameFromFirstName( firstNameSplit ) )
+										if ( coAuthorDb.isAliasNameFromFirstName( firstName ) )
 										{
-											// select longest name as the
-											// fullname
-											if ( coAuthorDb.getFirstName().length() > firstName.length() )
-											{
-												AuthorAlias authorAlias = new AuthorAlias();
-												authorAlias.setCompleteName( authorString );
-												authorAlias.setAuthor( coAuthorDb );
-												coAuthorDb.addAlias( authorAlias );
-												persistenceStrategy.getAuthorDAO().persist( coAuthorDb );
-											}
-											else
-											{
-												// change name with longer name
-												String tempName = coAuthorDb.getName();
-												coAuthorDb.setName( authorString );
-												coAuthorDb.setFirstName( firstName );
-
-												AuthorAlias authorAlias = new AuthorAlias();
-												authorAlias.setCompleteName( tempName );
-												authorAlias.setAuthor( coAuthorDb );
-												coAuthorDb.addAlias( authorAlias );
-												persistenceStrategy.getAuthorDAO().persist( coAuthorDb );
-											}
+											// TODO: check with institution for
+											// higher acuracy
+											persistenceStrategy.getAuthorDAO().persist( coAuthorDb );
 
 											author = coAuthorDb;
 											break;
@@ -534,9 +672,7 @@ public class PublicationCollectionService
 								}
 							}
 
-							// TODO : this probably not correct, since author
-							// name are ambigous, the best way is to check their
-							// relation and their affiliation
+							// if author null, create new one
 							if( author == null ){
 								// create new author
 								author = new Author();
@@ -545,11 +681,15 @@ public class PublicationCollectionService
 	
 								// save new author
 								persistenceStrategy.getAuthorDAO().persist( author );
-
-								author.addPublication( publication );
-								publication.addCoAuthor( author );
-
 							}
+
+							// make a relation between author and publication
+							PublicationAuthor publicationAuthor = new PublicationAuthor();
+							publicationAuthor.setPublication( publication );
+							publicationAuthor.setAuthor( author );
+							publicationAuthor.setPosition( i + 1 );
+
+							publication.addPublicationAuthor( publicationAuthor );
 
 							// assign with authorSource, if exist
 							if ( authorsUrlArray != null && !author.equals( pivotAuthor ) )
@@ -570,15 +710,16 @@ public class PublicationCollectionService
 			}
 
 			// abstract ( searching the longest)
-			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null )
+			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
+			{
 				if ( publication.getAbstractText() == null || publication.getAbstractText().length() < pubSource.getAbstractText().length() )
 				{
 					publication.setAbstractText( pubSource.getAbstractText() );
 					publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
 				}
+			}
 
-			// keyword (MAS is the most valid) others source currently by the
-			// fastest
+			// keyword
 			if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
 			{
 				if ( publication.getKeywordText() == null )
@@ -683,6 +824,44 @@ public class PublicationCollectionService
 
 		}
 
+	}
+
+	/**
+	 * Extract publication information from original source either as html or
+	 * pdf with asynchronous multi threads
+	 * 
+	 * @param publication
+	 * @param pivotAuthor
+	 * @param persistResult
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws TimeoutException
+	 */
+	public void enrichPublicationByExtractOriginalSources( List<Publication> selectedPublications, Author pivotAuthor, boolean persistResult ) throws IOException, InterruptedException, ExecutionException, TimeoutException
+	{
+		log.info( "Start publications enrichment for Auhtor " + pivotAuthor.getName() );
+		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
+
+		for ( Publication publication : selectedPublications )
+		{
+			// only proceed for publication with not complete abstract
+			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
+				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication ) );
+		}
+
+		// check process completion
+		for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
+		{
+			Publication publication = selectedPublicationFuture.get();
+
+			if ( persistResult )
+			{
+				publication.setContentUpdated( true );
+				persistenceStrategy.getPublicationDAO().persist( publication );
+			}
+		}
+		log.info( "Done publications enrichment for Auhtor " + pivotAuthor.getName() );
 	}
 
 }

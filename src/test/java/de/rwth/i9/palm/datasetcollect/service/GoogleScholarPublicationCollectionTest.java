@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -16,6 +17,7 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 public class GoogleScholarPublicationCollectionTest
 {
 	@Test
+	@Ignore
 	public void getListOfAuthorsTest() throws IOException
 	{
 		List<Map<String, String>> authorList = GoogleScholarPublicationCollection.getListOfAuthors( "chatti" );
@@ -29,6 +31,7 @@ public class GoogleScholarPublicationCollectionTest
 	}
 
 	@Test
+	@Ignore
 	public void getListOfPublicationTest() throws IOException
 	{
 		List<Map<String, String>> publicationMapLists = GoogleScholarPublicationCollection.getPublicationListByAuthorUrl( "https://scholar.google.com/citations?user=gyLI8FYAAAAJ&hl=en" );
@@ -42,6 +45,7 @@ public class GoogleScholarPublicationCollectionTest
 	}
 
 	@Test
+	@Ignore
 	public void getPublicationDetailByPublicationUrlTest() throws IOException
 	{
 		Map<String, String> publicationDetailMaps = GoogleScholarPublicationCollection.getPublicationDetailByPublicationUrl( "https://scholar.google.com/citations?view_op=view_citation&hl=en&user=gyLI8FYAAAAJ&citation_for_view=gyLI8FYAAAAJ:u5HHmVD_uO8C" );

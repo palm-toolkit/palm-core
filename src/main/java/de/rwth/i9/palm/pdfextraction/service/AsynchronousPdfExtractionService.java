@@ -51,4 +51,29 @@ public class AsynchronousPdfExtractionService
 
 		return new AsyncResult<List<TextSection>>( textSections );
 	}
+
+	@Async
+	public Future<List<TextSection>> extractPublicationPdfIntoTextSections( String url ) throws IOException
+	{
+
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info( "Download and Extract pdf " + url + " starting" );
+
+		List<TextSection> textSections = null;
+
+		try
+		{
+			textSections = ItextPdfExtraction.extractPdf( url );
+		}
+		catch ( Exception e )
+		{
+			// TODO: handle exception
+		}
+
+		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		log.info( "Download and Extract pdf " + url + " complete in " + stopwatch );
+
+		return new AsyncResult<List<TextSection>>( textSections );
+	}
 }

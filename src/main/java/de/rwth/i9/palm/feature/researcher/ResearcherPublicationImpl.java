@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -71,7 +72,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			{
 				Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 				authorMap.put( "id", author.getId() );
-				authorMap.put( "name", author.getName() );
+				authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
 				if ( author.getInstitutions() != null )
 					for ( Institution institution : author.getInstitutions() )
 					{

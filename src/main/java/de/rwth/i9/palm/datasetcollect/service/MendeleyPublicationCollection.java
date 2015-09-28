@@ -219,6 +219,26 @@ public class MendeleyPublicationCollection extends PublicationCollection
 	{
 		Map<String, String> publicationDetailMap = new LinkedHashMap<String, String>();
 
+		if ( publicationNode.path( "authors" ).isArray() )
+		{
+			String coauthor = "";
+			int index = 0;
+			for ( JsonNode authorNode : publicationNode.path( "authors" ) )
+			{
+				if ( index > 0 )
+					coauthor += ",";
+				String authorName = "";
+				if ( !authorNode.path( "first_name" ).isMissingNode() )
+					authorName += authorNode.path( "first_name" ).textValue().toLowerCase() + " ";
+				if ( !authorNode.path( "last_name" ).isMissingNode() )
+					authorName += authorNode.path( "last_name" ).textValue().toLowerCase();
+
+				coauthor += authorName;
+				index++;
+			}
+			publicationDetailMap.put( "coauthor", coauthor );
+		}
+
 		if ( !publicationNode.path( "title" ).isMissingNode() )
 			publicationDetailMap.put( "title", publicationNode.path( "title" ).textValue() );
 		if ( !publicationNode.path( "type" ).isMissingNode() )
@@ -230,7 +250,7 @@ public class MendeleyPublicationCollection extends PublicationCollection
 		if ( !publicationNode.path( "year" ).isMissingNode() )
 			publicationDetailMap.put( "year", publicationNode.path( "year" ).textValue() );
 		if ( !publicationNode.path( "abstract" ).isMissingNode() )
-			publicationDetailMap.put( "abstract", publicationNode.path( "abstract" ).textValue() );
+			publicationDetailMap.put( "abstract", publicationNode.path( "abstract" ).textValue().replaceAll( "\\\\n", " " ) );
 		if ( !publicationNode.path( "keywords" ).isMissingNode() )
 		{
 			String keyword = "";

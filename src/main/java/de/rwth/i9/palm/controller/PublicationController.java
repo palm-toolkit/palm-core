@@ -156,4 +156,35 @@ public class PublicationController
 	{
 		return publicationFeature.getPublicationManage().extractPublicationFromPdf( id );
 	}
+	
+	@RequestMapping( value = "/pdfExtractTest", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> doPdfExtractionTest( @RequestParam( value = "url", required = false ) final String url, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return publicationFeature.getPublicationApi().extractPfdFile( url );
+	}
+
+	@RequestMapping( value = "/htmlExtractTest", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, String> doHtmlExtractionTest( @RequestParam( value = "url", required = false ) final String url, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return publicationFeature.getPublicationApi().extractHtmlFile( url );
+	}
+
+	/**
+	 * Get list of PuiblicationTopic
+	 * 
+	 * @param id
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topic", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopic( 
+			@RequestParam( value = "id", required = false ) final String id, 
+ @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, 
+			final HttpServletResponse response)
+	{
+		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, maxRetrieve );
+	}
 }

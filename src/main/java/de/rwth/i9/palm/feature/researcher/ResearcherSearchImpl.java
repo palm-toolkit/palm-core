@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,7 +118,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 			{
 				Map<String, String> pub = new LinkedHashMap<String, String>();
 				pub.put( "id", researcher.getId() );
-				pub.put( "name", researcher.getName() );
+				pub.put( "name", WordUtils.capitalize( researcher.getName() ) );
 				if ( researcher.getPhotoUrl() != null )
 					pub.put( "photo", researcher.getPhotoUrl() );
 
