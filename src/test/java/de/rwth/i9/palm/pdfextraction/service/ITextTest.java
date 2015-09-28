@@ -55,6 +55,7 @@ public class ITextTest
 	}
 
 	@Test
+	@Ignore
 	public void test1pdfExtract() throws IOException
 	{
 		String src = "http://dspace.learningnetworks.org/bitstream/1820/3180/1/Chatti_ETS.pdf";

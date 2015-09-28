@@ -31,6 +31,7 @@ public class DblpPublicationCollectionTest
 	}
 
 	@Test
+	@Ignore
 	public void getListOfPublicationTest() throws IOException
 	{
 		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/db/conf/csedu/csedu2009-1.html" );
