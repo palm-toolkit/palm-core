@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class PublicationFeatureImpl implements PublicationFeature
 {
+	@Autowired( required = false )
+	private PublicationApi publicationApi;
 
 	@Autowired( required = false )
 	private PublicationBasicStatistic publicationBasicStatistic;
@@ -19,6 +21,15 @@ public class PublicationFeatureImpl implements PublicationFeature
 
 	@Autowired( required = false )
 	private PublicationSearch publicationSearch;
+
+	@Override
+	public PublicationApi getPublicationApi()
+	{
+		if ( this.publicationApi == null )
+			this.publicationApi = new PublicationApiImpl();
+
+		return this.publicationApi;
+	}
 
 	@Override
 	public PublicationBasicStatistic getPublicationBasicStatistic()

@@ -122,8 +122,22 @@ public class PdfExtractionService
 
 	}
 
+	@SuppressWarnings( "unchecked" )
+	public Map<String, Object> extractPdfFromSpecificUrl( String url ) throws IOException, InterruptedException, ExecutionException
+	{
+		List<Future<List<TextSection>>> extractedPfdFutureList = new ArrayList<Future<List<TextSection>>>();
+		extractedPfdFutureList.add( this.asynchronousPdfExtractionService.extractPublicationPdfIntoTextSections( url ) );
+
+		// wait till complete
+		for ( Future<List<TextSection>> futureMap : extractedPfdFutureList )
+			futureMap.get();
+
+		return (Map<String, Object>) this.processExtractedPdf( extractedPfdFutureList ).get( 0 );
+	}
+
 	/**
-	 * Here the extracted text section will be 
+	 * Here the extracted text section will be merged into publication
+	 * 
 	 * @param extractedPfdFutureMap
 	 * @throws InterruptedException
 	 * @throws ExecutionException
@@ -211,6 +225,98 @@ public class PdfExtractionService
 				publication.setKeywordText( publicationKeyword.toString() );
 
 		}
+	}
+
+	/**
+	 * Here the extracted text section will be merged into publication
+	 * 
+	 * @param extractedPfdFutureMap
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	public List<Object> processExtractedPdf( List<Future<List<TextSection>>> extractedPfdFutureList ) throws InterruptedException, ExecutionException
+	{
+		List<Object> extractedPdfList = new ArrayList<Object>();
+		for ( Future<List<TextSection>> extractedPfdFuture : extractedPfdFutureList )
+		{
+			Map<String, Object> extractedPdfMap = new LinkedHashMap<String, Object>();
+
+			List<TextSection> textSections = extractedPfdFuture.get();
+			StringBuilder publicationTitle = new StringBuilder();
+			StringBuilder publicationAuthor = new StringBuilder();
+			StringBuilder publicationAbstract = new StringBuilder();
+			StringBuilder publicationContent = new StringBuilder();
+			StringBuilder publicationKeyword = new StringBuilder();
+			StringBuilder contentSection = new StringBuilder();
+			StringBuilder contentSectionWithName = new StringBuilder();
+
+			for ( TextSection textSection : textSections )
+			{
+				if ( textSection.getName() != null )
+				{
+					if ( textSection.getName().equals( "content" ) )
+					{
+						publicationContent.append( textSection.getContent() + "\n" );
+						contentSectionWithName.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "content-header" ) )
+					{
+						publicationContent.append( "\t\n" + textSection.getContent() + "\n\t" );
+						contentSection.setLength( 0 );
+						contentSectionWithName.setLength( 0 );
+						contentSectionWithName.append( "\t\n" + textSection.getContent() + "\n\t" );
+					}
+					else if ( textSection.getName().equals( "content-cont" ) )
+					{
+						publicationContent.setLength( publicationContent.length() - 1 );
+
+						if ( publicationContent.toString().endsWith( "-" ) )
+							publicationContent.setLength( publicationContent.length() - 1 );
+
+						publicationContent.append( textSection.getContent() + "\n" );
+						contentSectionWithName.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "keyword" ) )
+					{
+						publicationKeyword.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "abstract" ) )
+					{
+						publicationAbstract.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "abstract-header" ) )
+					{
+						if ( textSection.getContent().length() > 100 )
+							publicationAbstract.append( textSection.getContent() + "\n" );
+					}
+					else if ( textSection.getName().equals( "author" ) )
+					{
+						publicationAuthor.append( textSection.getContent() );
+					}
+					else if ( textSection.getName().equals( "title" ) )
+					{
+						publicationTitle.append( textSection.getContent() );
+					}
+				}
+				else
+				{
+					if ( textSection.getContent().length() > 5 )
+						contentSection.append( textSection.getContent() );
+				}
+			}
+			publicationContent.setLength( publicationContent.length() - contentSectionWithName.length() );
+
+			extractedPdfMap.put( "title", publicationTitle.toString() );
+			extractedPdfMap.put( "author", Jsoup.parse( publicationAuthor.toString() ).text() );
+			extractedPdfMap.put( "abstract", Jsoup.parse( publicationAbstract.toString() ).text() );
+			if ( publicationKeyword.length() > 0 )
+				extractedPdfMap.put( "keyword", publicationKeyword.toString() );
+			extractedPdfMap.put( "content", Jsoup.parse( publicationContent.toString() ).text() );
+			extractedPdfMap.put( "reference", Jsoup.parse( contentSection.toString() ).text() );
+
+			extractedPdfList.add( extractedPdfMap );
+		}
+		return extractedPdfList;
 	}
 
 	public void processExtractedPublicationAuthor( Publication publication, List<TextSection> textAuthorSections )

@@ -7,6 +7,8 @@ package de.rwth.i9.palm.feature.publication;
  */
 public interface PublicationFeature
 {
+	public PublicationApi getPublicationApi();
+
 	public PublicationBasicStatistic getPublicationBasicStatistic();
 
 	public PublicationDetail getPublicationDetail();
