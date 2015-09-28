@@ -16,7 +16,6 @@ import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
-import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -126,34 +125,21 @@ public class PublicationDetailImpl implements PublicationDetail
 		// put publicationSource into JSON
 		publicationMap.put( "sources", publicationSourceList );
 
-		PublicationFile publicationFile = null;
-
+		// publication files
+		List<Object> publicationFileList = new ArrayList<Object>();
 		if ( publication.getPublicationFiles() != null )
 		{
 			for ( PublicationFile pubFile : publication.getPublicationFiles() )
 			{
-				if ( publicationFile == null )
-					publicationFile = pubFile;
-				else
-				{
-					if ( pubFile.getSourceType().equals( SourceType.DBLP ) )
-						publicationFile = pubFile;
-				}
-
-				if ( pubFile.isCorrectlyExtracted() )
-				{
-					publicationFile = pubFile;
-					break;
-				}
+				Map<String, Object> publicationFileMap = new LinkedHashMap<String, Object>();
+				publicationFileMap.put( "type", pubFile.getFileType().toString() );
+				publicationFileMap.put( "source", pubFile.getSourceType().toString().toLowerCase() );
+				publicationFileMap.put( "label", pubFile.getSource() );
+				publicationFileMap.put( "url", pubFile.getUrl() );
+				publicationFileList.add( publicationFileMap );
 			}
 		}
-
-		if ( publicationFile != null )
-		{
-			publicationMap.put( "pdf", publicationFile.getUrl() );
-			publicationMap.put( "pdfurl", publicationFile.getSource() );
-			publicationMap.put( "pdfextract", publication.isPdfExtracted() );
-		}
+		publicationMap.put( "files", publicationFileList );
 
 		responseMap.put( "publication", publicationMap );
 
