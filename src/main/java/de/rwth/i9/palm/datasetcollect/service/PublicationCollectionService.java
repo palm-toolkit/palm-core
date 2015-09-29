@@ -70,6 +70,7 @@ public class PublicationCollectionService
 	 * 
 	 * @param responseMap
 	 * @param author
+	 * @param pid
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
@@ -79,8 +80,11 @@ public class PublicationCollectionService
 	 * @throws OAuthProblemException
 	 * @throws OAuthSystemException
 	 */
-	public void collectPublicationListFromNetwork( Map<String, Object> responseMap, Author author ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public void collectPublicationListFromNetwork( Map<String, Object> responseMap, Author author, String pid ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
+		// process log
+		applicationService.putProcessLog( pid, "start publication <br>", "replace" );
+
 		// get author sources
 		Set<AuthorSource> authorSources = author.getAuthorSources();
 		if ( authorSources == null )
@@ -124,8 +128,11 @@ public class PublicationCollectionService
 			publicationFuture.get();
 		}
 
+		// process log
+		applicationService.putProcessLog( pid, "merging  publication <br>", "append" );
+
 		// merge the result
-		this.mergePublicationInformation( publicationFutureLists, author, sourceMap );
+		this.mergePublicationInformation( publicationFutureLists, author, sourceMap, pid );
 	}
 	
 	/**
@@ -134,19 +141,23 @@ public class PublicationCollectionService
 	 * @param publicationFutureLists
 	 * @param author
 	 * @param sourceMap
+	 * @param pid
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 * @throws IOException
 	 * @throws ParseException
 	 * @throws TimeoutException
 	 */
-	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists, Author author, Map<String, Source> sourceMap ) throws InterruptedException, ExecutionException, IOException, ParseException, TimeoutException
+	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists, Author author, Map<String, Source> sourceMap, String pid ) throws InterruptedException, ExecutionException, IOException, ParseException, TimeoutException
 	{
 		if ( publicationFutureLists.size() > 0 )
 		{
 			// list/set of selected publication, either from database or completely new 
 			List<Publication> selectedPublications = new ArrayList<Publication>();
 			
+			// process log
+			applicationService.putProcessLog( pid, "construct  publication <br>", "append" );
+
 			// first, construct the publication
 			// get it from database or create new if still doesn't exist
 			this.constructPublicationWithSources( selectedPublications, publicationFutureLists , author );
@@ -160,9 +171,15 @@ public class PublicationCollectionService
 			// fourth, second checking, after the information has been merged
 			this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
 
+			// process log
+			applicationService.putProcessLog( pid, "enrich  publication <br>", "append" );
+
 			// enrich the publication information by extract information
 			// from html or pdf source
 			this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
+
+			// process log
+			applicationService.putProcessLog( pid, "enrich  publication done! <br>", "append" );
 
 			// at the end save everything
 			for ( Publication publication : selectedPublications )
@@ -591,7 +608,7 @@ public class PublicationCollectionService
 			{
 				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
 				{ // sometimes MAS abstract is also incorrect
-					if ( publication.getAbstractText().length() < pubSource.getAbstractText().length() )
+					if ( publication.getAbstractText() != null && publication.getAbstractText().length() < pubSource.getAbstractText().length() )
 					{
 						publication.setAbstractText( pubSource.getAbstractText() );
 						publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
@@ -692,18 +709,18 @@ public class PublicationCollectionService
 							publication.addPublicationAuthor( publicationAuthor );
 
 							// assign with authorSource, if exist
-							if ( authorsUrlArray != null && !author.equals( pivotAuthor ) )
-							{
-								AuthorSource authorSource = new AuthorSource();
-								authorSource.setName( author.getName() );
-								authorSource.setSourceUrl( authorsUrlArray[i] );
-								authorSource.setSourceType( pubSource.getSourceType() );
-								authorSource.setAuthor( author );
-
-								author.addAuthorSource( authorSource );
-								// persist new source
-								persistenceStrategy.getAuthorDAO().persist( author );
-							}
+//							if ( authorsUrlArray != null && !author.equals( pivotAuthor ) )
+//							{
+//								AuthorSource authorSource = new AuthorSource();
+//								authorSource.setName( author.getName() );
+//								authorSource.setSourceUrl( authorsUrlArray[i] );
+//								authorSource.setSourceType( pubSource.getSourceType() );
+//								authorSource.setAuthor( author );
+//
+//								author.addAuthorSource( authorSource );
+//								// persist new source
+//								persistenceStrategy.getAuthorDAO().persist( author );
+//							}
 						}
 					}
 				}

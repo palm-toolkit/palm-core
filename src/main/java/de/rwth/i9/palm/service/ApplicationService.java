@@ -1,6 +1,9 @@
 package de.rwth.i9.palm.service;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
@@ -35,6 +38,12 @@ public class ApplicationService
 
 	// caching interest profiles
 	private Map<String, InterestProfile> interestProfileCache;
+
+	// user process log
+	private Map<String, Map<String, String>> userProcessLogMap;
+
+	// process log with random key
+	private Map<String, String> processLogMap;
 
 	@PostConstruct
 	public void init()
@@ -94,4 +103,131 @@ public class ApplicationService
 		interestProfileCache = persistenceStrategy.getInterestProfileDAO().getInterestProfileMap();
 	}
 
+	/* user log map */
+	public void putUserProcessLog( String sessionId, String processName, String logMessage )
+	{
+		if ( this.userProcessLogMap == null )
+		{
+			this.userProcessLogMap = new HashMap<String, Map<String, String>>();
+
+			// create inner map and put into outer map
+			Map<String, String> processLogMap = new HashMap<String, String>();
+			processLogMap.put( processName, logMessage );
+
+			this.userProcessLogMap.put( sessionId, processLogMap );
+
+		}
+		else
+		{
+			// check if outer map exist
+			if ( this.userProcessLogMap.get( sessionId ) == null )
+			{
+				// user not exist
+				// create inner map and put into outer map
+				Map<String, String> processLogMap = new HashMap<String, String>();
+				processLogMap.put( processName, logMessage );
+
+				this.userProcessLogMap.put( sessionId, processLogMap );
+			}
+			else
+			{
+				// user exist, check for innerMap
+				Map<String, String> processLogMap = this.userProcessLogMap.get( sessionId );
+				if ( processLogMap.get( processName ) == null )
+				{
+					// inner map not exist, put new one
+					processLogMap.put( processName, logMessage );
+				}
+				else
+				{
+					// inner map exist, then update
+					processLogMap.put( processName, logMessage );
+				}
+			}
+		}
+	}
+
+	/* get user log */
+	public String getUserProcessLog( String sessionId, String processName )
+	{
+		if ( this.userProcessLogMap == null )
+		{
+			return null;
+		}
+		else
+		{
+		if ( this.userProcessLogMap.get( sessionId ) == null )
+			return null;
+		else
+		{
+			Map<String, String> processLogMap = this.userProcessLogMap.get( sessionId );
+			if ( processLogMap.get( processName ) == null )
+			{
+				return null;
+			}
+			else
+				return processLogMap.get( processName );
+		}
+		}
+	}
+
+	/* delete user log */
+	public void deleteUserProcessLog( String sessionId )
+	{
+		for ( Iterator<Entry<String, Map<String, String>>> it = this.userProcessLogMap.entrySet().iterator(); it.hasNext(); )
+		{
+			Entry<String, Map<String, String>> entry = it.next();
+			if ( entry.getKey().equals( sessionId ) )
+			{
+				it.remove();
+			}
+		}
+	}
+
+	/* user log map */
+	public void putProcessLog( String processKey, String logMessage, String mode )
+	{
+		if ( this.processLogMap == null )
+		{
+			this.processLogMap = new HashMap<String, String>();
+			this.processLogMap.put( processKey, logMessage );
+		}
+		else
+		{
+			if ( this.processLogMap.get( processKey ) == null )
+				processLogMap.put( processKey, logMessage );
+			else
+			{
+				if ( mode.equals( "replace" ) )
+					processLogMap.put( processKey, logMessage );
+				else
+					processLogMap.put( processKey, processLogMap.get( processKey ) + logMessage );
+			}
+		}
+	}
+
+	/* get user log */
+	public String getProcessLog( String processKey )
+	{
+		if ( this.processLogMap == null )
+			return "process not found";
+
+		if ( this.processLogMap.get( processKey ) == null )
+			return "process not found";
+		else
+			return processLogMap.get( processKey );
+	}
+
+	/* delete user log */
+	public void deleteProcessLog( String processKey )
+	{
+		for ( Iterator<Entry<String, String>> it = this.processLogMap.entrySet().iterator(); it.hasNext(); )
+		{
+			Entry<String, String> entry = it.next();
+			if ( entry.getKey().equals( processKey ) )
+			{
+				it.remove();
+			}
+		}
+	}
 }

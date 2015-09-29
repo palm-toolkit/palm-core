@@ -136,10 +136,11 @@ public class ResearcherController
 			@RequestParam( value = "name", required = false ) final String name, 
 			@RequestParam( value = "uri", required = false ) final String uri,
 			@RequestParam( value = "affiliation", required = false ) final String affiliation,
+			@RequestParam( value = "pid", required = false ) final String pid, 
 			@RequestParam( value = "force", required = false ) final String force,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-		return researcherFeature.getResearcherSearch().fetchResearcherData( id, name, uri, affiliation, force );
+		return researcherFeature.getResearcherSearch().fetchResearcherData( id, name, uri, affiliation, pid, force );
 	}
 	
 	/**
