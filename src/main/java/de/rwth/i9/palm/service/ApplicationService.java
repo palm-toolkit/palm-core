@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
+import de.rwth.i9.palm.helper.ProcessLogHelper;
 import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.InterestProfile;
 import de.rwth.i9.palm.model.Source;
@@ -43,7 +44,7 @@ public class ApplicationService
 	private Map<String, Map<String, String>> userProcessLogMap;
 
 	// process log with random key
-	private Map<String, String> processLogMap;
+	private Map<String, ProcessLogHelper> processLogMap;
 
 	@PostConstruct
 	public void init()
@@ -189,19 +190,28 @@ public class ApplicationService
 	{
 		if ( this.processLogMap == null )
 		{
-			this.processLogMap = new HashMap<String, String>();
-			this.processLogMap.put( processKey, logMessage );
+			ProcessLogHelper processLogHelper = new ProcessLogHelper();
+			processLogHelper.setLogMessge( logMessage );
+
+			this.processLogMap = new HashMap<String, ProcessLogHelper>();
+			this.processLogMap.put( processKey, processLogHelper );
 		}
 		else
 		{
 			if ( this.processLogMap.get( processKey ) == null )
-				processLogMap.put( processKey, logMessage );
+			{
+				ProcessLogHelper processLogHelper = new ProcessLogHelper();
+				processLogHelper.setLogMessge( logMessage );
+
+				processLogMap.put( processKey, processLogHelper );
+			}
 			else
 			{
+				ProcessLogHelper processLogHelper = this.processLogMap.get( processKey );
 				if ( mode.equals( "replace" ) )
-					processLogMap.put( processKey, logMessage );
+					processLogHelper.setLogMessge( logMessage );
 				else
-					processLogMap.put( processKey, processLogMap.get( processKey ) + logMessage );
+					processLogHelper.appendLogMessage( logMessage );
 			}
 		}
 	}
@@ -215,15 +225,18 @@ public class ApplicationService
 		if ( this.processLogMap.get( processKey ) == null )
 			return "process not found";
 		else
-			return processLogMap.get( processKey );
+		{
+			ProcessLogHelper processLogHelper = this.processLogMap.get( processKey );
+			return processLogHelper.getLogMessage();
+		}
 	}
 
-	/* delete user log */
+	/* delete process log */
 	public void deleteProcessLog( String processKey )
 	{
-		for ( Iterator<Entry<String, String>> it = this.processLogMap.entrySet().iterator(); it.hasNext(); )
+		for ( Iterator<Entry<String, ProcessLogHelper>> it = this.processLogMap.entrySet().iterator(); it.hasNext(); )
 		{
-			Entry<String, String> entry = it.next();
+			Entry<String, ProcessLogHelper> entry = it.next();
 			if ( entry.getKey().equals( processKey ) )
 			{
 				it.remove();
