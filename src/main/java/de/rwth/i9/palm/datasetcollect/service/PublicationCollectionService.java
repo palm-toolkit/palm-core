@@ -83,7 +83,7 @@ public class PublicationCollectionService
 	public void collectPublicationListFromNetwork( Map<String, Object> responseMap, Author author, String pid ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		// process log
-		applicationService.putProcessLog( pid, "Collecting publications list from Academic Networks<br>", "replace" );
+		applicationService.putProcessLog( pid, "Collecting publications list from Academic Networks...<br>", "replace" );
 
 		// get author sources
 		Set<AuthorSource> authorSources = author.getAuthorSources();
@@ -132,7 +132,7 @@ public class PublicationCollectionService
 		applicationService.putProcessLog( pid, "Done collecting publications list from Academic Networks<br><br>", "append" );
 
 		// process log
-		applicationService.putProcessLog( pid, "Merging publication list<br>", "append" );
+		applicationService.putProcessLog( pid, "Merging publication list...<br>", "append" );
 
 		// merge the result
 		this.mergePublicationInformation( publicationFutureLists, author, sourceMap, pid );
@@ -166,7 +166,7 @@ public class PublicationCollectionService
 			applicationService.putProcessLog( pid, "Done in merging publication list<br><br>", "append" );
 
 			// process log
-			applicationService.putProcessLog( pid, "Removing incorrect publications<br>", "append" );
+			applicationService.putProcessLog( pid, "Removing incorrect publications...<br>", "append" );
 
 			// second, remove incorrect publication based on investigation
 			this.removeIncorrectPublicationFromPublicationList( selectedPublications );
@@ -175,7 +175,7 @@ public class PublicationCollectionService
 			applicationService.putProcessLog( pid, "Done removing incorrect publications<br><br>", "append" );
 
 			// process log
-			applicationService.putProcessLog( pid, "Extracting publications details<br>", "append" );
+			applicationService.putProcessLog( pid, "Extracting publications details...<br>", "append" );
 
 			// third, extract and combine information from multiple sources
 			this.extractPublicationInformationDetailFromSources( selectedPublications, author, sourceMap );
@@ -187,14 +187,14 @@ public class PublicationCollectionService
 			this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
 
 			// process log
-			applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html <br>", "append" );
+			applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html...<br>", "append" );
 
 			// enrich the publication information by extract information
 			// from html or pdf source
 			this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
 
 			// process log
-			applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html <br><br>", "append" );
+			applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
 
 			// at the end save everything
 			for ( Publication publication : selectedPublications )
