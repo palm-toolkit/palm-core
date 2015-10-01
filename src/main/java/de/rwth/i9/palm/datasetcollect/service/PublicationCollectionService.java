@@ -262,7 +262,7 @@ public class PublicationCollectionService
 				// For Mendeley is master thesis also recorded
 				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.MENDELEY ) )
 				{
-					if ( publicationSource.get( 0 ).getAbstractText().contains( "master thesis" ) )
+					if ( publicationSource.get( 0 ).getAbstractText() != null && publicationSource.get( 0 ).getAbstractText().contains( "master thesis" ) )
 					{
 						iteratorPublication.remove();
 						continue;
@@ -324,7 +324,7 @@ public class PublicationCollectionService
 	private boolean isPublicationDuplicated( Publication publication, List<Publication> selectedPublications )
 	{
 		int lengthOfComparedTitleText = 40; 
-		int lengthOfComparedTitleAbstract = 40; 
+		int lengthOfComparedAbstractText = 40;
 		for ( Publication eachPublication : selectedPublications )
 		{
 			if ( eachPublication.getTitle().length() > publication.getTitle().length() )
@@ -336,12 +336,15 @@ public class PublicationCollectionService
 				String compareTitle2 = eachPublication.getTitle().substring( 0, lengthOfComparedTitleText );
 				if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( compareTitle1.toLowerCase(), compareTitle2.toLowerCase() ) > .9f ){
 					// check abstract
+					if ( eachPublication.getAbstractText() == null || eachPublication.getAbstractText().length() < lengthOfComparedAbstractText )
+						continue;
+
 					if( publication.getAbstractText() == null || publication.getAbstractText().length() < 100 )
 						// just delete publication without abstract or short abstract
 						return true;
 					else{
-						String compareAbstract1 = publication.getAbstractText().substring( 0, lengthOfComparedTitleAbstract );
-						String compareAbstract2 = eachPublication.getAbstractText().substring( 0, lengthOfComparedTitleAbstract);
+						String compareAbstract1 = publication.getAbstractText().substring( 0, lengthOfComparedAbstractText );
+						String compareAbstract2 = eachPublication.getAbstractText().substring( 0, lengthOfComparedAbstractText );
 						if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( compareAbstract1.toLowerCase(), compareAbstract2.toLowerCase() ) > .9f )
 							return true;
 					}
