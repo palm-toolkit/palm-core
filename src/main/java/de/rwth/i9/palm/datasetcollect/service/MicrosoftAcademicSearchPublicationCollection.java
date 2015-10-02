@@ -112,6 +112,37 @@ public class MicrosoftAcademicSearchPublicationCollection extends PublicationCol
 			if ( year > 1800 )
 				publicationDetailMap.put( "year", Integer.toString( year ) );
 		}
+		if ( !publicationNode.path( "Author" ).isMissingNode() )
+		{
+			String coauthor = "";
+			String msAuthorId = "";
+			if ( publicationNode.path( "Author" ).isArray() )
+			{
+				for ( JsonNode coauthorNode : publicationNode.path( "Author" ) )
+				{
+					if ( !coauthor.equals( "" ) )
+					{
+						coauthor += ",";
+						msAuthorId += ",";
+					}
+					if ( !coauthorNode.path( "FirstName" ).textValue().equals( "" ) )
+						coauthor += coauthorNode.path( "FirstName" ).textValue() + " ";
+					if ( !coauthorNode.path( "MiddleName" ).textValue().equals( "" ) )
+						coauthor += coauthorNode.path( "MiddleName" ).textValue() + " ";
+					if ( !coauthorNode.path( "LastName" ).textValue().equals( "" ) )
+						coauthor += coauthorNode.path( "LastName" ).textValue();
+
+					msAuthorId += coauthorNode.path( "ID" ).intValue();
+				}
+			}
+
+			if ( !coauthor.equals( "" ) )
+			{
+				publicationDetailMap.put( "coauthor", coauthor );
+				publicationDetailMap.put( "coauthorId", msAuthorId );
+			}
+		}
+
 		if ( !publicationNode.path( "Abstract" ).isMissingNode() )
 		{
 			String abstractText = publicationNode.path( "Abstract" ).textValue();

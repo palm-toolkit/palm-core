@@ -13,5 +13,5 @@ public interface ResearcherSearch
 {
 	public Map<String, Object> getResearcherListByQuery( String query, Integer page, Integer maxresult ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
 
-	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String force ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
+	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
 }

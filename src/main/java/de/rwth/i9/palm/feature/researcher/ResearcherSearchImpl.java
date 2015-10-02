@@ -24,6 +24,7 @@ import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.RequestType;
 import de.rwth.i9.palm.model.UserRequest;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.util.IdentifierFactory;
 
 @Component
 public class ResearcherSearchImpl implements ResearcherSearch
@@ -154,7 +155,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 	}
 
 	@Override
-	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String force ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -164,9 +165,13 @@ public class ResearcherSearchImpl implements ResearcherSearch
 		if ( author == null )
 			return responseMap;
 
+		// pid must exist
+		if ( pid == null )
+			pid = IdentifierFactory.getNextDefaultIdentifier();
+
 		// check whether it is necessary to collect information from network
 		if ( this.isFetchDatasetFromNetwork( author ) || force.equals( "true" ) )
-			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author );
+			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author, pid );
 
 		return responseMap;
 	}
