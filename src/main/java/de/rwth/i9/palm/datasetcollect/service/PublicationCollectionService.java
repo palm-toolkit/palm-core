@@ -437,22 +437,7 @@ public class PublicationCollectionService
 						publication.setAbstractStatus( CompletionStatus.NOT_COMPLETE );
 						publication.setKeywordStatus( CompletionStatus.NOT_COMPLETE );
 						selectedPublications.add( publication );
-
-						// persistenceStrategy.getPublicationDAO().persist(
-						// publication );
 					}
-//					// add coauthor
-////					publication.addCoAuthor( author );
-//					PublicationAuthor publicationAuthor = new PublicationAuthor();
-//					publicationAuthor.setPublication( publication );
-//					publicationAuthor.setAuthor( author );
-//
-//					// author.addPublicationAuthor( publicationAuthor );
-//
-//					publication.addPublicationAuthor( publicationAuthor );
-					
-
-					// persistenceStrategy.getAuthorDAO().persist( author );
 
 					// create publication sources and assign it to publication
 					PublicationSource publicationSource = new PublicationSource();
@@ -497,6 +482,14 @@ public class PublicationCollectionService
 
 					if ( publicationMap.get( "keyword" ) != null )
 						publicationSource.setKeyword( publicationMap.get( "keyword" ) );
+
+					// add venue detail for DBLP
+					if ( publicationSource.getSourceType().equals( SourceType.DBLP ) )
+					{
+						// venue url
+						if ( publicationMap.get( "event_url" ) != null )
+							publicationSource.setVenueUrl( publicationMap.get( "event_url" ) );
+					}
 
 					publication.addPublicationSource( publicationSource );
 								
@@ -592,7 +585,20 @@ public class PublicationCollectionService
 				}
 
 				if ( pubSource.getPages() != null )
-					publication.setPages( pubSource.getPages() );
+				{
+					String[] pageSplit = pubSource.getPages().split( "-" );
+					if ( pageSplit.length == 2 )
+					{
+						try
+						{
+							publication.setStartPage( Integer.parseInt( pageSplit[0] ) );
+							publication.setEndPage( Integer.parseInt( pageSplit[1] ) );
+						}
+						catch ( Exception e )
+						{
+						}
+					}
+				}
 
 				if ( pubSource.getPublisher() != null )
 					publication.setPublisher( pubSource.getPublisher() );

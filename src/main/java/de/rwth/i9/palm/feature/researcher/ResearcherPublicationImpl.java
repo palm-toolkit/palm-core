@@ -124,8 +124,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			if ( publication.getIssue() != null )
 				publicationMap.put( "issue", publication.getIssue() );
 
-			if ( publication.getPages() != null )
-				publicationMap.put( "pages", publication.getPages() );
+			if ( publication.getStartPage() > 0 )
+				publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
 
 			if ( publication.getPublisher() != null )
 				publicationMap.put( "publisher", publication.getPublisher() );
