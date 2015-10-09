@@ -43,7 +43,6 @@ import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationHistory;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.PublicationTopic;
-import de.rwth.i9.palm.model.Reference;
 import de.rwth.i9.palm.model.Role;
 import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceProperty;
@@ -159,7 +158,6 @@ public class DatabaseConfigCoreTest
 						PublicationHistory.class,
 						PublicationSource.class,
 						PublicationTopic.class,
-						Reference.class,
 						Role.class,
 		 				Source.class,
 		 				SourceProperty.class,
