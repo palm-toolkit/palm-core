@@ -108,14 +108,8 @@ public class PublicationDetailImpl implements PublicationDetail
 			if ( publicationSource.getVenue() != null )
 				publicationSourceMap.put( "venue", publicationSource.getVenue() );
 
-			if ( publicationSource.getPublisher() != null )
-				publicationSourceMap.put( "publisher", publicationSource.getPublisher() );
-
-			if ( publicationSource.getIssue() != null )
-				publicationSourceMap.put( "issue", publicationSource.getIssue() );
-
-			if ( publicationSource.getVolume() != null )
-				publicationSourceMap.put( "volume", publicationSource.getVolume() );
+			if ( publicationSource.getAdditionalInformation() != null )
+				publicationSourceMap.putAll( publicationSource.getAdditionalInformationAsMap() );
 
 			if ( publicationSource.getPages() != null )
 				publicationSourceMap.put( "page", publicationSource.getPages() );

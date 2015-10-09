@@ -198,14 +198,14 @@ public class AsynchronousCollectionService
 		if ( publicationDetailMap.get( "Pages" ) != null )
 			publicationSource.setPages( publicationDetailMap.get( "Pages" ) );
 
-		if ( publicationDetailMap.get( "Publisher " ) != null )
-			publicationSource.setPublisher( publicationDetailMap.get( "Publisher " ) );
+		if ( publicationDetailMap.get( "Publisher" ) != null )
+			publicationSource.addOrUpdateAdditionalInformation( "publisher", publicationDetailMap.get( "Publisher" ) );
 
 		if ( publicationDetailMap.get( "Volume" ) != null )
-			publicationSource.setVolume( publicationDetailMap.get( "Volume" ) );
+			publicationSource.addOrUpdateAdditionalInformation( "volume", publicationDetailMap.get( "Volume" ) );
 
 		if ( publicationDetailMap.get( "Issue" ) != null )
-			publicationSource.setIssue( publicationDetailMap.get( "Issue" ) );
+			publicationSource.addOrUpdateAdditionalInformation( "issue", publicationDetailMap.get( "Issue" ) );
 
 		if ( publicationDetailMap.get( "Description" ) != null )
 		{

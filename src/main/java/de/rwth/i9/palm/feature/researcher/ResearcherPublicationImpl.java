@@ -118,17 +118,11 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				publicationMap.put( "event", eventMap );
 			}
 
-			if ( publication.getVolume() != null )
-				publicationMap.put( "volume", publication.getVolume() );
-
-			if ( publication.getIssue() != null )
-				publicationMap.put( "issue", publication.getIssue() );
+			if ( publication.getAdditionalInformation() != null )
+				publicationMap.putAll( publication.getAdditionalInformationAsMap() );
 
 			if ( publication.getStartPage() > 0 )
 				publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
-
-			if ( publication.getPublisher() != null )
-				publicationMap.put( "publisher", publication.getPublisher() );
 
 			publicationList.add( publicationMap );
 		}

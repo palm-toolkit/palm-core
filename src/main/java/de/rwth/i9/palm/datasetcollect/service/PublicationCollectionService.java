@@ -600,14 +600,8 @@ public class PublicationCollectionService
 					}
 				}
 
-				if ( pubSource.getPublisher() != null )
-					publication.setPublisher( pubSource.getPublisher() );
-
-				if ( pubSource.getIssue() != null )
-					publication.setIssue( pubSource.getIssue() );
-
-				if ( pubSource.getVolume() != null )
-					publication.setVolume( pubSource.getVolume() );
+				if ( pubSource.getAdditionalInformation() != null )
+					publication.setAdditionalInformation( pubSource.getAdditionalInformation() );
 
 			}
 			else if ( pubSource.getSourceType() == SourceType.CITESEERX )
