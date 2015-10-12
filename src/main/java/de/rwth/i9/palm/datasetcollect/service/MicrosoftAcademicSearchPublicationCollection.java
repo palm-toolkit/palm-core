@@ -110,7 +110,7 @@ public class MicrosoftAcademicSearchPublicationCollection extends PublicationCol
 		{
 			int year = publicationNode.path( "Year" ).intValue();
 			if ( year > 1800 )
-				publicationDetailMap.put( "year", Integer.toString( year ) );
+				publicationDetailMap.put( "datePublished", Integer.toString( year ) );
 		}
 		if ( !publicationNode.path( "Author" ).isMissingNode() )
 		{

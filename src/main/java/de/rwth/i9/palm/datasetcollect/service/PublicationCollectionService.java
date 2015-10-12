@@ -409,7 +409,7 @@ public class PublicationCollectionService
 
 									Calendar cal = Calendar.getInstance();
 									cal.setTime( pub.getPublicationDate() );
-									if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "year" ) ) )
+									if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "datePublished" ) ) )
 									{
 										publication = pub;
 										break;
@@ -465,8 +465,8 @@ public class PublicationCollectionService
 					if ( publicationMap.get( "coauthorUrl" ) != null )
 						publicationSource.setCoAuthorsUrl( publicationMap.get( "coauthorUrl" ) );
 
-					if ( publicationMap.get( "year" ) != null )
-						publicationSource.setDate( publicationMap.get( "year" ) );
+					if ( publicationMap.get( "datePublished" ) != null )
+						publicationSource.setDate( publicationMap.get( "datePublished" ) );
 
 					if ( publicationMap.get( "doc" ) != null )
 						publicationSource.setMainSource( publicationMap.get( "doc" ) );
@@ -487,8 +487,14 @@ public class PublicationCollectionService
 					if ( publicationSource.getSourceType().equals( SourceType.DBLP ) )
 					{
 						// venue url
-						if ( publicationMap.get( "event_url" ) != null )
-							publicationSource.setVenueUrl( publicationMap.get( "event_url" ) );
+						if ( publicationMap.get( "eventUrl" ) != null )
+							publicationSource.setVenueUrl( publicationMap.get( "eventUrl" ) );
+						if ( publicationMap.get( "eventName" ) != null )
+							publicationSource.setVenue( publicationMap.get( "eventName" ) );
+						if ( publicationMap.get( "eventVolume" ) != null )
+							publicationSource.addOrUpdateAdditionalInformation( "volume", publicationMap.get( "eventVolume" ) );
+						if ( publicationMap.get( "eventNumber" ) != null )
+							publicationSource.addOrUpdateAdditionalInformation( "number", publicationMap.get( "eventNumber" ) );
 					}
 
 					publication.addPublicationSource( publicationSource );
@@ -764,6 +770,7 @@ public class PublicationCollectionService
 				}
 			}
 
+			// set publication date
 			if ( publication.getPublicationDate() == null && publicationDate == null && pubSource.getDate() != null )
 			{
 				publicationDate = dateFormat.parse( pubSource.getDate() + "/1/1" );
@@ -774,52 +781,79 @@ public class PublicationCollectionService
 			if ( pubSource.getCitedBy() > 0 && pubSource.getCitedBy() > publication.getCitedBy() )
 				publication.setCitedBy( pubSource.getCitedBy() );
 
-			// venuetype
+			// set event for conference and journal
 			if ( pubSource.getPublicationType() != null )
 			{
 				publicationType = PublicationType.valueOf( pubSource.getPublicationType() );
 				publication.setPublicationType( publicationType );
 
 
-				if ( ( publicationType.equals( "CONFERENCE" ) || publicationType.equals( "JOURNAL" ) ) && pubSource.getVenue() != null && publication.getEvent() == null )
+				if ( publicationType.equals( PublicationType.CONFERENCE ) || publicationType.equals( PublicationType.JOURNAL ) )
 				{
-					String eventName = pubSource.getVenue();
-					EventGroup eventGroup = null;
-					Event event = null;
-					List<EventGroup> eventGroups = persistenceStrategy.getEventDAO().getEventViaFuzzyQuery( eventName, .8f, 1 );
-					if ( eventGroups.isEmpty() )
+					if ( pubSource.getSourceType().equals( SourceType.DBLP ) && pubSource.getVenue() != null && pubSource.getVenueUrl() != null )
 					{
-						if ( publicationType != null )
+						String eventName = pubSource.getVenue();
+						EventGroup eventGroup = persistenceStrategy.getEventDAO().getEventGroupByEventNameOrNotation( eventName );
+						if ( eventGroup == null )
 						{
 							// create event group
 							eventGroup = new EventGroup();
 							eventGroup.setName( eventName );
-							String notationName = null;
-							String[] eventNameSplit = eventName.split( " " );
-							for ( String eachEventName : eventNameSplit )
-								if ( !eachEventName.equals( "" ) && Character.isUpperCase( eachEventName.charAt( 0 ) ) )
-									notationName += eachEventName.substring( 0, 1 );
-							eventGroup.setNotation( notationName );
+							eventGroup.setNotation( eventName );
 							eventGroup.setPublicationType( publicationType );
 							// create event
-							if ( publicationDate != null )
-							{
-								// save event group
-								persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 
-								calendar.setTime( publicationDate );
+							// save event group
+							persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+
+							Event event = new Event();
+							// event.setDate( publicationDate );
+							event.setYear( pubSource.getDate() );
+							event.setDblpUrl( pubSource.getVenueUrl() );
+							event.setEventGroup( eventGroup );
+
+							eventGroup.addEvent( event );
+							publication.setEvent( event );
+						}
+						else
+						{
+							Event event = null;
+							List<Event> events = eventGroup.getEvents();
+							String eventYear = pubSource.getDate();
+							for ( Event eachEvent : events )
+							{
+								if ( eachEvent.getYear().equals( eventYear ) )
+								{
+									event = eachEvent;
+									break;
+								}
+							}
+
+							// check whether event already exist, if not create
+							// new one
+							if ( event == null )
+							{
 								event = new Event();
-								event.setDate( publicationDate );
-								event.setYear( Integer.toString( calendar.get( Calendar.YEAR ) ) );
+								// event.setDate( publicationDate );
+								event.setYear( pubSource.getDate() );
+								event.setDblpUrl( pubSource.getVenueUrl() );
 								event.setEventGroup( eventGroup );
+
+								eventGroup.addEvent( event );
 								publication.setEvent( event );
 							}
+
 						}
 					}
+					else if ( !pubSource.getSourceType().equals( SourceType.DBLP ) && pubSource.getVenue() != null && publication.getEvent() == null )
+					{
+						publication.addOrUpdateAdditionalInformation( "venue", pubSource.getVenue() );
+					}
 				}
+
 			}
 
-			// original source
+			// original sources (PDF and WebPage)
 			if ( pubSource.getMainSourceUrl() != null )
 			{
 

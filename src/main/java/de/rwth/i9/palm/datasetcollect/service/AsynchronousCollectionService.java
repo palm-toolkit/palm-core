@@ -256,8 +256,8 @@ public class AsynchronousCollectionService
 		if ( publicationDetailMap.get( "coauthor" ) != null )
 			publicationSource.setCoAuthors( publicationDetailMap.get( "coauthor" ) );
 
-		if ( publicationDetailMap.get( "venue" ) != null )
-			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "venue" ), 200 ) );
+		if ( publicationDetailMap.get( "eventName" ) != null )
+			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "eventName" ), 200 ) );
 
 		if ( publicationDetailMap.get( "abstract" ) != null )
 		{

@@ -186,7 +186,7 @@ public class DblpPublicationCollection extends PublicationCollection
 					publicationDetails.put( "coauthorUrl", authorUrl );
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
-					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+					publicationDetails.put( "datePublished", dataElement.select( "[itemprop=datePublished]" ).text() );
 					if ( dataElement.select( "[itemprop=pagination]" ) != null )
 						publicationDetails.put( "page", dataElement.select( "[itemprop=pagination]" ).text() );
 
@@ -252,16 +252,16 @@ public class DblpPublicationCollection extends PublicationCollection
 					publicationDetails.put( "coauthorUrl", authorUrl );
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
-					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+					publicationDetails.put( "datePublished", dataElement.select( "[itemprop=datePublished]" ).text() );
 					publicationDetails.put( "source", SourceType.DBLP.toString() );
 
 					Element eventElement = dataElement.select( "> a" ).first();
 					if ( eventElement != null )
 					{
-						publicationDetails.put( "event_url", eventElement.absUrl( "href" ) );
-						publicationDetails.put( "event_short", eventElement.select( "[itemprop=name]" ).text() );
-						publicationDetails.put( "event_volume", eventElement.select( "[itemprop=volumeNumber]" ).text() );
-						publicationDetails.put( "event_number", eventElement.select( "[itemprop=issueNumber]" ).text() );
+						publicationDetails.put( "eventUrl", eventElement.absUrl( "href" ) );
+						publicationDetails.put( "eventName", eventElement.select( "[itemprop=name]" ).text() );
+						publicationDetails.put( "eventVolume", eventElement.select( "[itemprop=volumeNumber]" ).text() );
+						publicationDetails.put( "eventNumber", eventElement.select( "[itemprop=issueNumber]" ).text() );
 					}
 
 					String page = dataElement.select( "[itemprop=pagination]" ).text();
@@ -315,20 +315,20 @@ public class DblpPublicationCollection extends PublicationCollection
 					publicationDetails.put( "coauthorUrl", authorUrl );
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
-					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+					publicationDetails.put( "datePublished", dataElement.select( "[itemprop=datePublished]" ).text() );
 					publicationDetails.put( "source", SourceType.DBLP.toString() );
 
 					Element eventElement = dataElement.select( "> a" ).first();
 					if ( eventElement != null )
 					{
-						publicationDetails.put( "event_url", eventElement.absUrl( "href" ) );
+						publicationDetails.put( "eventUrl", eventElement.absUrl( "href" ) );
 						String eventShort = eventElement.select( "[itemprop=name]" ).text();
 						if ( eventShort.contains( ")" ) )
 						{
 							eventShort = eventShort.replace( ")", "" );
 							String[] eventShortSplit = eventShort.split( "\\(" );
-							publicationDetails.put( "event_short", eventShortSplit[0].trim() );
-							publicationDetails.put( "event_volume", eventShortSplit[1].trim() );
+							publicationDetails.put( "eventName", eventShortSplit[0].trim() );
+							publicationDetails.put( "eventVolume", eventShortSplit[1].trim() );
 						}
 						else
 						{
