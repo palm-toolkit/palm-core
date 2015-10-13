@@ -22,7 +22,7 @@ public class DblpEventCollectionTest
 		String url = "http://dblp.uni-trier.de/db/journals/jkm/jkm16.html#Chatti12";
 		url = "http://dblp.uni-trier.de/db/journals/tlt/tlt5.html#ChattiSJ12";
 		url = "http://dblp.uni-trier.de/db/conf/mlearn/mlearn2014.html#GrevenCTS14";
-		Map<String, Object> venueDetailMap = DblpEventCollection.getPublicationListByVenueUrl( url, null );
+		Map<String, Object> venueDetailMap = DblpEventCollection.getEventDetailByVenueUrl( url, null );
 
 		// List<Map<String,String>> publicationMapList = (List<Map<String,
 		// String>>) venueDetail.get( "publications" );

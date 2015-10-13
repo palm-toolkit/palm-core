@@ -36,7 +36,7 @@ public class DblpEventCollection extends PublicationCollection
 	 * @return
 	 * @throws IOException
 	 */
-	public static Map<String, Object> getPublicationListByVenueUrl( String url, Source source ) throws IOException
+	public static Map<String, Object> getEventDetailByVenueUrl( String url, Source source ) throws IOException
 	{
 		Map<String, Object> venueInformationMap = new LinkedHashMap<String, Object>();
 
@@ -143,6 +143,10 @@ public class DblpEventCollection extends PublicationCollection
 						venueInformationMap.put( "type", PublicationType.JOURNAL );
 					else if ( breadCrumbsLabel.toLowerCase().contains( "conferences" ) )
 						venueInformationMap.put( "type", PublicationType.CONFERENCE );
+					
+					// extract conference/journal main url
+					String mainUrl = element.select( "li > span > span > a" ).first().absUrl( "href" );
+					venueInformationMap.put( "main-url", mainUrl );
 
 					// extract header information
 					venueInformationMap.putAll( getDblpMainHeaderInformation( mainHeaderText, (PublicationType) venueInformationMap.get( "type" ) ) );

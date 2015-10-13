@@ -367,144 +367,140 @@ public class PublicationCollectionService
 	public void constructPublicationWithSources( List<Publication> selectedPublications,  List<Future<List<Map<String, String>>>> publicationFutureLists , Author author ) throws InterruptedException, ExecutionException{
 		for ( Future<List<Map<String, String>>> publicationFutureList : publicationFutureLists )
 		{
-			if ( publicationFutureList.isDone() )
+			// here, if process has not been completed yet. It will wait,
+			// until process complete
+			List<Map<String, String>> publicationMapLists = publicationFutureList.get();
+			for ( Map<String, String> publicationMap : publicationMapLists )
 			{
-				// here, if process has not been completed yet. It will wait,
-				// until process complete
-				List<Map<String, String>> publicationMapLists = publicationFutureList.get();
-				for ( Map<String, String> publicationMap : publicationMapLists )
+				Publication publication = null;
+				String publicationTitle = publicationMap.get( "title" );
+
+				if ( publicationTitle == null )
+					continue;
+
+				// check publication with the current selected list.
+				if ( !selectedPublications.isEmpty() )
 				{
-					Publication publication = null;
-					String publicationTitle = publicationMap.get( "title" );
-					
-					if( publicationTitle == null )
-						continue;
-					
-					// check publication with the current selected list.
-					if( !selectedPublications.isEmpty()){
-						for( Publication pub : selectedPublications){
-							if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
-							{
-								publication = pub;
-								break;
-							}
-						}
-					}
-					
-					// check with publication from database
-					if ( publication == null )
+					for ( Publication pub : selectedPublications )
 					{
-						// get the publication object
-						List<Publication> fromDbPublications = persistenceStrategy.getPublicationDAO().getPublicationViaPhraseSlopQuery( publicationTitle.toLowerCase(), 2 );
-						// check publication from database
-						if ( !fromDbPublications.isEmpty() )
+						if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 						{
-							if ( fromDbPublications.size() > 1 )
-							{
-								// check with year
-								for ( Publication pub : fromDbPublications )
-								{
-									if ( pub.getPublicationDate() == null )
-										continue;
-
-									Calendar cal = Calendar.getInstance();
-									cal.setTime( pub.getPublicationDate() );
-									if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "datePublished" ) ) )
-									{
-										publication = pub;
-										break;
-									}
-								}
-								// if publication still null, due to publication
-								// date is null
-								if ( publication == null )
-									publication = fromDbPublications.get( 0 );
-							}
-							else
-								publication = fromDbPublications.get( 0 );
-							// added to selected list
-							selectedPublications.add( publication );
+							publication = pub;
+							break;
 						}
-						// remove old publicationSource
-						if ( publication != null )
-							publication.removeNonUserInputPublicationSource();
 					}
+				}
 
-					// if not exist any where create new publication
-					if( publication == null ){
-						publication = new Publication();
-						publication.setTitle( publicationTitle );
-						publication.setAbstractStatus( CompletionStatus.NOT_COMPLETE );
-						publication.setKeywordStatus( CompletionStatus.NOT_COMPLETE );
+				// check with publication from database
+				if ( publication == null )
+				{
+					// get the publication object
+					List<Publication> fromDbPublications = persistenceStrategy.getPublicationDAO().getPublicationViaPhraseSlopQuery( publicationTitle.toLowerCase(), 2 );
+					// check publication from database
+					if ( !fromDbPublications.isEmpty() )
+					{
+						if ( fromDbPublications.size() > 1 )
+						{
+							// check with year
+							for ( Publication pub : fromDbPublications )
+							{
+								if ( pub.getPublicationDate() == null )
+									continue;
+
+								Calendar cal = Calendar.getInstance();
+								cal.setTime( pub.getPublicationDate() );
+								if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "datePublished" ) ) )
+								{
+									publication = pub;
+									break;
+								}
+							}
+							// if publication still null, due to publication
+							// date is null
+							if ( publication == null )
+								publication = fromDbPublications.get( 0 );
+						}
+						else
+							publication = fromDbPublications.get( 0 );
+						// added to selected list
 						selectedPublications.add( publication );
 					}
+					// remove old publicationSource
+					if ( publication != null )
+						publication.removeNonUserInputPublicationSource();
+				}
 
-					// create publication sources and assign it to publication
-					PublicationSource publicationSource = new PublicationSource();
-					publicationSource.setTitle( publicationTitle );
-					publicationSource.setSourceUrl( publicationMap.get( "url" ) );
-					
-					publicationSource.setSourceType( SourceType.valueOf(publicationMap.get( "source" ).toUpperCase() ) );
-					
-					if( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) ||  
-							publicationSource.getSourceType().equals( SourceType.CITESEERX ) ||
-							publicationSource.getSourceType().equals( SourceType.DBLP ))
-						publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
-					else if ( publicationSource.getSourceType().equals( SourceType.MENDELEY ) ||  
-							publicationSource.getSourceType().equals( SourceType.MAS ))
-						publicationSource.setSourceMethod( SourceMethod.API );
-					
-					publicationSource.setPublication( publication );
+				// if not exist any where create new publication
+				if ( publication == null )
+				{
+					publication = new Publication();
+					publication.setTitle( publicationTitle );
+					publication.setAbstractStatus( CompletionStatus.NOT_COMPLETE );
+					publication.setKeywordStatus( CompletionStatus.NOT_COMPLETE );
+					selectedPublications.add( publication );
+				}
 
-					if ( publicationMap.get( "citedby" ) != null )
-						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "citedby" ) ) );
+				// create publication sources and assign it to publication
+				PublicationSource publicationSource = new PublicationSource();
+				publicationSource.setTitle( publicationTitle );
+				publicationSource.setSourceUrl( publicationMap.get( "url" ) );
 
-					if ( publicationMap.get( "coauthor" ) != null )
-						publicationSource.setCoAuthors( publicationMap.get( "coauthor" ) );
+				publicationSource.setSourceType( SourceType.valueOf( publicationMap.get( "source" ).toUpperCase() ) );
 
-					if ( publicationMap.get( "coauthorUrl" ) != null )
-						publicationSource.setCoAuthorsUrl( publicationMap.get( "coauthorUrl" ) );
+				if ( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) || publicationSource.getSourceType().equals( SourceType.CITESEERX ) || publicationSource.getSourceType().equals( SourceType.DBLP ) )
+					publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
+				else if ( publicationSource.getSourceType().equals( SourceType.MENDELEY ) || publicationSource.getSourceType().equals( SourceType.MAS ) )
+					publicationSource.setSourceMethod( SourceMethod.API );
 
-					if ( publicationMap.get( "datePublished" ) != null )
-						publicationSource.setDate( publicationMap.get( "datePublished" ) );
+				publicationSource.setPublication( publication );
 
-					if ( publicationMap.get( "doc" ) != null )
-						publicationSource.setMainSource( publicationMap.get( "doc" ) );
+				if ( publicationMap.get( "citedby" ) != null )
+					publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "citedby" ) ) );
 
-					if ( publicationMap.get( "doc_url" ) != null )
-						publicationSource.setMainSourceUrl( publicationMap.get( "doc_url" ) );
+				if ( publicationMap.get( "coauthor" ) != null )
+					publicationSource.setCoAuthors( publicationMap.get( "coauthor" ) );
 
-					if ( publicationMap.get( "type" ) != null )
-						publicationSource.setPublicationType( publicationMap.get( "type" ) );
-					
-					if ( publicationMap.get( "abstract" ) != null && publicationMap.get( "abstract" ).length() > 250 )
-						publicationSource.setAbstractText( publicationMap.get( "abstract" ) );
+				if ( publicationMap.get( "coauthorUrl" ) != null )
+					publicationSource.setCoAuthorsUrl( publicationMap.get( "coauthorUrl" ) );
 
-					if ( publicationMap.get( "keyword" ) != null )
-						publicationSource.setKeyword( publicationMap.get( "keyword" ) );
+				if ( publicationMap.get( "datePublished" ) != null )
+					publicationSource.setDate( publicationMap.get( "datePublished" ) );
 
-					// add venue detail for DBLP
-					if ( publicationSource.getSourceType().equals( SourceType.DBLP ) )
-					{
-						// venue url
-						if ( publicationMap.get( "eventUrl" ) != null )
-							publicationSource.setVenueUrl( publicationMap.get( "eventUrl" ) );
-						if ( publicationMap.get( "eventName" ) != null )
-							publicationSource.setVenue( publicationMap.get( "eventName" ) );
-						if ( publicationMap.get( "eventVolume" ) != null )
-							publicationSource.addOrUpdateAdditionalInformation( "volume", publicationMap.get( "eventVolume" ) );
-						if ( publicationMap.get( "eventNumber" ) != null )
-							publicationSource.addOrUpdateAdditionalInformation( "number", publicationMap.get( "eventNumber" ) );
-					}
+				if ( publicationMap.get( "doc" ) != null )
+					publicationSource.setMainSource( publicationMap.get( "doc" ) );
 
-					publication.addPublicationSource( publicationSource );
-								
-					
-					// check  print 
+				if ( publicationMap.get( "doc_url" ) != null )
+					publicationSource.setMainSourceUrl( publicationMap.get( "doc_url" ) );
+
+				if ( publicationMap.get( "type" ) != null )
+					publicationSource.setPublicationType( publicationMap.get( "type" ) );
+
+				if ( publicationMap.get( "abstract" ) != null && publicationMap.get( "abstract" ).length() > 250 )
+					publicationSource.setAbstractText( publicationMap.get( "abstract" ) );
+
+				if ( publicationMap.get( "keyword" ) != null )
+					publicationSource.setKeyword( publicationMap.get( "keyword" ) );
+
+				// add venue detail for DBLP
+				if ( publicationSource.getSourceType().equals( SourceType.DBLP ) )
+				{
+					// venue url
+					if ( publicationMap.get( "eventUrl" ) != null )
+						publicationSource.setVenueUrl( publicationMap.get( "eventUrl" ) );
+					if ( publicationMap.get( "eventName" ) != null )
+						publicationSource.setVenue( publicationMap.get( "eventName" ) );
+					if ( publicationMap.get( "eventVolume" ) != null )
+						publicationSource.addOrUpdateAdditionalInformation( "volume", publicationMap.get( "eventVolume" ) );
+					if ( publicationMap.get( "eventNumber" ) != null )
+						publicationSource.addOrUpdateAdditionalInformation( "number", publicationMap.get( "eventNumber" ) );
+				}
+
+				publication.addPublicationSource( publicationSource );
+
+				// check print
 //					for ( Entry<String, String> eachPublicationDetail : publicationMap.entrySet() )
 //						System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
 //					System.out.println();
-				}
 			}
 		}
 	}
