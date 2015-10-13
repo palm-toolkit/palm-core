@@ -63,11 +63,8 @@ public class EventPublicationCollectionService
 	@Autowired
 	private ApplicationService applicationService;
 
-	@Autowired
-	private MendeleyOauth2Helper mendeleyOauth2Helper;
-
 	/**
-	 * Fetch author' publication list from DBLP venue
+	 * Fetch publications list from DBLP venue
 	 * 
 	 * @param responseMap
 	 * @param venue
@@ -113,7 +110,7 @@ public class EventPublicationCollectionService
 	{
 		Map<String, Object> eventDetailMap = eventDetailMapFuture.get();
 		// set location for Conference
-		if ( eventDetailMap.get( "type" ).equals( "CONFERENCE" ) )
+		if ( eventDetailMap.get( "type" ).toString().equals( "CONFERENCE" ) )
 		{
 			if ( eventDetailMap.get( "country" ) != null && eventDetailMap.get( "city" ) != null )
 			{
@@ -133,9 +130,9 @@ public class EventPublicationCollectionService
 			}
 		}
 		// add main url into eventGroup
-		if ( eventDetailMap != null )
+		EventGroup eventGroup = event.getEventGroup();
+		if ( eventGroup.getDblpUrl() == null && eventDetailMap.get( "main-url" ) != null )
 		{
-			EventGroup eventGroup = event.getEventGroup();
 			eventGroup.setDblpUrl( (String) eventDetailMap.get( "main-url" ) );
 		}
 
@@ -181,6 +178,7 @@ public class EventPublicationCollectionService
 			publication.setContentUpdated( true );
 			persistenceStrategy.getPublicationDAO().persist( publication );
 		}
+		persistenceStrategy.getEventDAO().persist( event );
 	}
 
 	/**
@@ -259,6 +257,12 @@ public class EventPublicationCollectionService
 						publication = fromDbPublications.get( 0 );
 					// added to selected list
 					eventPublications.add( publication );
+					if ( publication.getEvent() == null )
+					{
+						// create publication and event relations
+						publication.setEvent( event );
+						event.addPublication( publication );
+					}
 				}
 				// remove old publicationSource
 				if ( publication != null )
@@ -273,6 +277,10 @@ public class EventPublicationCollectionService
 				publication.setAbstractStatus( CompletionStatus.NOT_COMPLETE );
 				publication.setKeywordStatus( CompletionStatus.NOT_COMPLETE );
 				eventPublications.add( publication );
+
+				// create publication and event relations
+				publication.setEvent( event );
+				event.addPublication( publication );
 			}
 
 			// create publication sources and assign it to publication
@@ -363,7 +371,6 @@ public class EventPublicationCollectionService
 	public void extractPublicationInformationDetailFromSources( List<Publication> eventPublications ) throws ParseException
 	{
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/d", Locale.ENGLISH );
-		Calendar calendar = Calendar.getInstance();
 		Set<String> existingMainSourceUrl = new HashSet<String>();
 
 		for ( Publication publication : eventPublications )
@@ -371,7 +378,6 @@ public class EventPublicationCollectionService
 			for ( PublicationSource pubSource : publication.getPublicationSources() )
 			{
 				Date publicationDate = null;
-				PublicationType publicationType = null;
 				// Get unique characteristic on each of the source
 				if ( pubSource.getSourceType() == SourceType.DBLP )
 				{
@@ -543,6 +549,10 @@ public class EventPublicationCollectionService
 						publication.setKeywordStatus( CompletionStatus.PARTIALLY_COMPLETE );
 					}
 				}
+
+				// publication type
+				if ( publication.getPublicationType() == null || pubSource.getSourceType().equals( SourceType.DBLP ) && pubSource.getPublicationType() != null )
+					publication.setPublicationType( PublicationType.valueOf( pubSource.getPublicationType() ) );
 
 				// SOME CODE COMMENTED, SINCE THE SOURCE CURRENTLY ONLY DBLP
 				// set publication date

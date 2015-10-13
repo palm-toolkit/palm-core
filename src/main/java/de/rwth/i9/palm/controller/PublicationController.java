@@ -72,8 +72,8 @@ public class PublicationController
 	 * Get the list of publications based on the following parameters
 	 * 
 	 * @param query
-	 * @param conferenceName
-	 * @param conferenceId
+	 * @param eventName
+	 * @param eventId
 	 * @param page
 	 * @param maxresult
 	 * @param response
