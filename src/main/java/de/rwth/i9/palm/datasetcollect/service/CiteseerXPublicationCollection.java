@@ -117,10 +117,10 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 					{
 						publicationDetails.put( "date", venueAndYear.substring( venueAndYear.length() - 4 ) );
 						if ( venueAndYear.length() > 10 )
-							publicationDetails.put( "venue", venueAndYear.substring( 0, venueAndYear.length() - 4 ).replace( "-", "" ).trim() );
+							publicationDetails.put( "eventName", venueAndYear.substring( 0, venueAndYear.length() - 4 ).replace( "-", "" ).trim() );
 					}
 					else
-						publicationDetails.put( "venue", venueAndYear.replace( "-", "" ).trim() );
+						publicationDetails.put( "eventName", venueAndYear.replace( "-", "" ).trim() );
 				}
 	
 				publicationMapLists.add( publicationDetails );
@@ -163,7 +163,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		Elements venue = publicationDetailHeader.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_VENUE );
 
 		if ( venue != null && venue.select( "td" ).size()>1)
-			publicationDetailMaps.put( "venue", venue.select( "td" ).get( 1 ).text() );
+			publicationDetailMaps.put( "eventName", venue.select( "td" ).get( 1 ).text() );
 
 		publicationDetailMaps.put( "abstract", document.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_ABSTRACT ).select( "p" ).text() );
 

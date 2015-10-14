@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -124,7 +123,7 @@ public class DblpPublicationCollection extends PublicationCollection
 		List<Map<String, String>> publicationMapLists = new ArrayList<Map<String, String>>();
 
 			// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie() );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie( source ) );
 
 		if ( document == null )
 			return Collections.emptyList();
@@ -187,7 +186,7 @@ public class DblpPublicationCollection extends PublicationCollection
 					publicationDetails.put( "coauthorUrl", authorUrl );
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
-					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+					publicationDetails.put( "datePublished", dataElement.select( "[itemprop=datePublished]" ).text() );
 					if ( dataElement.select( "[itemprop=pagination]" ) != null )
 						publicationDetails.put( "page", dataElement.select( "[itemprop=pagination]" ).text() );
 
@@ -253,16 +252,16 @@ public class DblpPublicationCollection extends PublicationCollection
 					publicationDetails.put( "coauthorUrl", authorUrl );
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
-					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+					publicationDetails.put( "datePublished", dataElement.select( "[itemprop=datePublished]" ).text() );
 					publicationDetails.put( "source", SourceType.DBLP.toString() );
 
 					Element eventElement = dataElement.select( "> a" ).first();
 					if ( eventElement != null )
 					{
-						publicationDetails.put( "event_url", eventElement.absUrl( "href" ) );
-						publicationDetails.put( "event_short", eventElement.select( "[itemprop=name]" ).text() );
-						publicationDetails.put( "event_volume", eventElement.select( "[itemprop=volumeNumber]" ).text() );
-						publicationDetails.put( "event_number", eventElement.select( "[itemprop=issueNumber]" ).text() );
+						publicationDetails.put( "eventUrl", eventElement.absUrl( "href" ) );
+						publicationDetails.put( "eventName", eventElement.select( "[itemprop=name]" ).text() );
+						publicationDetails.put( "eventVolume", eventElement.select( "[itemprop=volumeNumber]" ).text() );
+						publicationDetails.put( "eventNumber", eventElement.select( "[itemprop=issueNumber]" ).text() );
 					}
 
 					String page = dataElement.select( "[itemprop=pagination]" ).text();
@@ -316,20 +315,20 @@ public class DblpPublicationCollection extends PublicationCollection
 					publicationDetails.put( "coauthorUrl", authorUrl );
 
 					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
-					publicationDetails.put( "year", dataElement.select( "[itemprop=datePublished]" ).text() );
+					publicationDetails.put( "datePublished", dataElement.select( "[itemprop=datePublished]" ).text() );
 					publicationDetails.put( "source", SourceType.DBLP.toString() );
 
 					Element eventElement = dataElement.select( "> a" ).first();
 					if ( eventElement != null )
 					{
-						publicationDetails.put( "event_url", eventElement.absUrl( "href" ) );
+						publicationDetails.put( "eventUrl", eventElement.absUrl( "href" ) );
 						String eventShort = eventElement.select( "[itemprop=name]" ).text();
 						if ( eventShort.contains( ")" ) )
 						{
 							eventShort = eventShort.replace( ")", "" );
 							String[] eventShortSplit = eventShort.split( "\\(" );
-							publicationDetails.put( "event_short", eventShortSplit[0].trim() );
-							publicationDetails.put( "event_volume", eventShortSplit[1].trim() );
+							publicationDetails.put( "eventName", eventShortSplit[0].trim() );
+							publicationDetails.put( "eventVolume", eventShortSplit[1].trim() );
 						}
 						else
 						{
@@ -346,76 +345,6 @@ public class DblpPublicationCollection extends PublicationCollection
 			}
 		}
 		return publicationMapLists;
-	}
-
-	public static Map<String, String> getPublicationDetailByPublicationUrl( String url ) throws IOException
-	{
-		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
-
-		Document document = null;
-
-		try
-		{
-			// Using jsoup java html parser library
-			document = Jsoup.connect( url ).userAgent( "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21" ).timeout( 5000 ).get();
-		}
-		catch ( Exception e )
-		{
-			return Collections.emptyMap();
-		}
-		if ( document == null )
-			return Collections.emptyMap();
-
-		Elements publicationDetailHeader = document.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_HEADER );
-
-		if ( publicationDetailHeader.size() == 0 )
-		{
-			log.info( "No publication detail found " );
-			return Collections.emptyMap();
-		}
-
-		publicationDetailMaps.put( "title", publicationDetailHeader.select( "h2" ).first().text() );
-		publicationDetailMaps.put( "doc", publicationDetailHeader.select( "a" ).first().text() );
-		publicationDetailMaps.put( "doc_url", publicationDetailHeader.select( "a" ).first().absUrl( "href" ) );
-
-		String coAuthor = publicationDetailHeader.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_COAUTHOR ).text();
-		if ( coAuthor.startsWith( "by" ) )
-			coAuthor = coAuthor.substring( 2 );
-		// remove non-ASCII character
-		coAuthor = coAuthor.replaceAll( "[^\\x00-\\x7F]", " " ).trim();
-		publicationDetailMaps.put( "coauthor", coAuthor );
-
-		Elements venue = publicationDetailHeader.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_VENUE );
-
-		if ( venue != null && venue.select( "td" ).size() > 1 )
-			publicationDetailMaps.put( "venue", venue.select( "td" ).get( 1 ).text() );
-
-		publicationDetailMaps.put( "abstract", document.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_ABSTRACT ).select( "p" ).text() );
-
-		return publicationDetailMaps;
-	}
-	
-	public static Map<String, Object> getVenueDetail( String url, String venueType, String crawlType )
-	{
-		Map<String, Object> venueDetail = new LinkedHashMap<String, Object>();
-
-		if ( url == null )
-			return Collections.emptyMap();
-		// chack
-		if ( venueDetail == null )
-		{
-
-		}
-
-		return venueDetail;
-	}
-
-	private static Map<String, String> getDblpCookie()
-	{
-		Map<String, String> cookies = new HashMap<String, String>();
-		cookies.put( "dblp-search-mode", "c" );
-		cookies.put( "dblp-view", "t" );
-		return cookies;
 	}
 
 	/**

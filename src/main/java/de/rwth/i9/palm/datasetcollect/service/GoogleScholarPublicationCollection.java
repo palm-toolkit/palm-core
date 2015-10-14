@@ -103,7 +103,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			publicationDetails.put( "coauthor", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).first().text() );
 			String venue = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).get( 1 ).text().trim();
 			if( !venue.equals( "" ))
-				publicationDetails.put( "venue", venue );
+				publicationDetails.put( "eventName", venue );
 			String noCitation = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_NOCITATION ).text().replaceAll( "[^\\d]", "" );
 			if( !noCitation.equals( "" ))
 				publicationDetails.put( "citedby", noCitation );
@@ -112,7 +112,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 				continue;
 
 			// only pick publication with date
-			publicationDetails.put( "year", date );
+			publicationDetails.put( "datePublished", date );
 
 			publicationMapLists.add( publicationDetails );
 		}

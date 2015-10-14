@@ -43,15 +43,5 @@ public class DblpPublicationCollectionTest
 			System.out.println();
 		}
 	}
-
-	@Test
-	@Ignore
-	public void getPublicationDetailByPublicationUrlTest() throws IOException
-	{
-		Map<String, String> publicationDetailMaps = DblpPublicationCollection.getPublicationDetailByPublicationUrl( "https://scholar.google.com/citations?view_op=view_citation&hl=en&user=gyLI8FYAAAAJ&citation_for_view=gyLI8FYAAAAJ:u5HHmVD_uO8C" );
-
-		for ( Entry<String, String> eachPublicationDetail : publicationDetailMaps.entrySet() )
-			System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
-
-	}
+	
 }

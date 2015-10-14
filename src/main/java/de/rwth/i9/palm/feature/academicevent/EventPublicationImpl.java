@@ -1,4 +1,4 @@
-package de.rwth.i9.palm.feature.researcher;
+package de.rwth.i9.palm.feature.academicevent;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -13,37 +13,38 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
-public class ResearcherPublicationImpl implements ResearcherPublication
+public class EventPublicationImpl implements EventPublication
 {
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public Map<String, Object> getPublicationListByAuthorId( String authorId )
+	public Map<String, Object> getPublicationListByEventId( String eventId )
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		// get author
-		Author targetAuthor = persistenceStrategy.getAuthorDAO().getById( authorId );
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
 
-		if ( targetAuthor == null )
+		if ( event == null )
 		{
 			responseMap.put( "status", "error" );
-			responseMap.put( "message", "Error - author not found" );
+			responseMap.put( "message", "Error - venue not found" );
 			return responseMap;
 		}
 
-		if ( targetAuthor.getPublications() == null || targetAuthor.getPublications().isEmpty() )
+		if ( event.getPublications() == null || event.getPublications().isEmpty() )
 		{
 			responseMap.put( "status", "error" );
-			responseMap.put( "message", "Error - author not found" );
+			responseMap.put( "message", "Error - venue contain no publication" );
 			return responseMap;
 		}
 
@@ -52,7 +53,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
 
 		// get publication list
-		List<Publication> publications = new ArrayList<Publication>( targetAuthor.getPublications() );
+		List<Publication> publications = new ArrayList<Publication>( event.getPublications() );
 
 		// sort based on period
 		Collections.sort( publications, new PublicationByDateComparator() );

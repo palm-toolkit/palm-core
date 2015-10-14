@@ -74,7 +74,7 @@ public class PublicationSearchImpl implements PublicationSearch
 					pub.put( "cited", Integer.toString( publication.getCitedBy() ) );
 
 				if ( publication.getPublicationDate() != null )
-					pub.put( "year", dateFormat.format( publication.getPublicationDate() ) );
+					pub.put( "date published", dateFormat.format( publication.getPublicationDate() ) );
 
 				List<Object> authorObject = new ArrayList<Object>();
 

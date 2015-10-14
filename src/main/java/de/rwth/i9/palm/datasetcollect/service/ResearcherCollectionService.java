@@ -141,13 +141,13 @@ public class ResearcherCollectionService
 
 			// remove author if its only from mendeley
 			// since mendeley also put non researcher on its api result
-			// the source ulr of mendeley will be "MENDELEY"
+			// the source URL of mendeley will be "MENDELEY"
 			// which are less then 10 character in length
 			for ( Iterator<Map<String, String>> iteratorAuthor = mergedAuthorList.iterator(); iteratorAuthor.hasNext(); )
 			{
 				Map<String, String> authorMap = iteratorAuthor.next();
 
-				if ( authorMap.get( "source" ).length() < 10 )
+				if ( authorMap.get( "source" ).equals( "MENDELEY" ) )
 					iteratorAuthor.remove();
 			}
 

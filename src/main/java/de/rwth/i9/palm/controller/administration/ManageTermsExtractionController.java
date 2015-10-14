@@ -30,7 +30,7 @@ import de.rwth.i9.palm.service.ApplicationService;
 import de.rwth.i9.palm.wrapper.ExtractionServiceListWrapper;
 
 @Controller
-@SessionAttributes( "sourceListWrapper" )
+@SessionAttributes( "extractionServiceListWrapper" )
 @RequestMapping( value = "/admin/termextraction" )
 public class ManageTermsExtractionController
 {

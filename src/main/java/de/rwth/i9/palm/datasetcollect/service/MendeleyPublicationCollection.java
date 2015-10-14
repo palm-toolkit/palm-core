@@ -248,7 +248,7 @@ public class MendeleyPublicationCollection extends PublicationCollection
 				publicationDetailMap.put( "type", pubType );
 		}
 		if ( !publicationNode.path( "year" ).isMissingNode() )
-			publicationDetailMap.put( "year", publicationNode.path( "year" ).textValue() );
+			publicationDetailMap.put( "datePublished", publicationNode.path( "year" ).textValue() );
 		if ( !publicationNode.path( "abstract" ).isMissingNode() )
 			publicationDetailMap.put( "abstract", publicationNode.path( "abstract" ).textValue().replaceAll( "\\\\n", " " ) );
 		if ( !publicationNode.path( "keywords" ).isMissingNode() )
