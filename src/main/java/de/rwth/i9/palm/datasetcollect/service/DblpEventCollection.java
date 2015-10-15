@@ -271,8 +271,11 @@ public class DblpEventCollection extends PublicationCollection
 			else
 				authorUrl += "null ";
 		}
-		publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 1 ) );
-		publicationDetails.put( "coauthorUrl", authorUrl );
+		if ( !authorNames.equals( "" ) )
+		{
+			publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 1 ) );
+			publicationDetails.put( "coauthorUrl", authorUrl );
+		}
 
 		// other general information
 		publicationDetails.put( "title", dataElement.select( "span.title" ).text() );

@@ -309,8 +309,20 @@ public class EventPublicationCollectionService
 				// set event date
 				if ( event.getDate() == null && publicationMap.get( "datePublished" ) != null )
 				{
-					event.setDate( dateFormat.parse( publicationMap.get( "datePublished" ) ) );
-					event.setDateFormat( "yyyy/M" );
+					String pubSourceDate = publicationMap.get( "datePublished" );
+					String publicationDateFormat = "yyyy/M/d";
+					if ( pubSourceDate.length() == 4 )
+					{
+						pubSourceDate += "/1/1";
+						publicationDateFormat = "yyyy";
+					}
+					else if ( pubSourceDate.length() < 8 )
+					{
+						pubSourceDate += "/1";
+						publicationDateFormat = "yyyy/M";
+					}
+					event.setDate( dateFormat.parse( pubSourceDate ) );
+					event.setDateFormat( publicationDateFormat );
 				}
 				if ( publicationMap.get( "pages" ) != null )
 					publicationSource.setPages( publicationMap.get( "pages" ) );
