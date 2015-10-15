@@ -28,6 +28,9 @@ public class HtmlPublicationCollection
 	{
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
 
+		if ( url.contains( "dl.acm.org/" ) )
+			url = url.replace( "citation.cfm", "tab_abstract.cfm" );
+
 		// Using jsoup java html parser library
 		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 10000 );
 
@@ -35,15 +38,16 @@ public class HtmlPublicationCollection
 			return Collections.emptyMap();
 
 		// Special case
-		if ( url.contains( "ieeexplore.ieee.org/" ) )
+		// usually URL is the DOI, therefore use document.baseUri() to get real URL
+		if ( document.baseUri().contains( "ieeexplore.ieee.org/" ) )
 		{
-			Element elementOfInterest = document.select( "div.article" ).first();
+			Element elementOfInterest = document.select( "#articleDetails" ).select( ".article" ).first();
 			if ( elementOfInterest != null )
 			{
 				publicationDetailMaps.put( "abstract", elementOfInterest.text() );
 			}
 		}
-		else if ( url.contains( "igi-global.com/" ) )
+		else if ( document.baseUri().contains( "igi-global.com/" ) )
 		{
 			Element elementOfInterest = document.select( "#abstract" ).first();
 			if ( elementOfInterest != null )
@@ -53,6 +57,11 @@ public class HtmlPublicationCollection
 						publicationDetailMaps.put( "abstract", ( (TextNode) child ).text() );
 			}
 		}
+		else if ( document.baseUri().contains( "dl.acm.org/" ) )
+		{
+			publicationDetailMaps.put( "abstract", document.text() );
+		}
+
 		// General case
 		else
 		{
