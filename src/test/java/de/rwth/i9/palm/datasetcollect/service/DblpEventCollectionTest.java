@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -17,6 +18,7 @@ public class DblpEventCollectionTest
 {
 	@SuppressWarnings( "unchecked" )
 	@Test
+	@Ignore
 	public void getPublicationListByVenueUrlTest() throws IOException
 	{
 		String url = "http://dblp.uni-trier.de/db/journals/jkm/jkm16.html#Chatti12";
@@ -49,5 +51,18 @@ public class DblpEventCollectionTest
 
 	}
 	
+	@Test
+	public void searchVenueOnDBLPTest() throws IOException
+	{
+		String url = "http://dblp.uni-trier.de/search/venue?q=educational";
+		Map<String, String> venueListMap = DblpEventCollection.getEventFromDBLPSearch( url, null );
+
+		// print map
+		for ( Map.Entry<String, String> entry : venueListMap.entrySet() )
+		{
+			System.out.println( entry.getKey() + " > url : " + entry.getValue() );
+		}
+
+	}
 	
 }

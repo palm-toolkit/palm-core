@@ -480,6 +480,44 @@ public class DblpEventCollection extends PublicationCollection
 	}
 
 	/**
+	 * Searching venues on DBLP
+	 */
+	public static Map<String, String> getEventFromDBLPSearch( String url, Source source )
+	{
+		// the url of querying venue will be
+		// http://dblp.uni-trier.de/search/venue?q=educational
+
+		// The Map will be in format[ venue name, venue url] map
+		Map<String, String> venueListMap = new LinkedHashMap<String, String>();
+
+		// Using jsoup java html parser library
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie( source ) );
+
+		if ( document == null )
+			return Collections.emptyMap();
+
+		Element venueListUl = document.select( "#breadcrumbs" ).first()
+				.nextElementSibling()
+				.select( "> div" ).first()
+				.select( "ul" ).first();
+
+		if ( venueListUl == null )
+			return Collections.emptyMap();
+
+		for ( Element venueLi : venueListUl.children() )
+		{
+			Element venueAHref = venueLi.select( "a" ).first();
+
+			if ( venueAHref == null )
+				continue;
+
+			venueListMap.put( venueAHref.text(), venueAHref.absUrl( "href" ) );
+		}
+
+		return venueListMap;
+	}
+
+	/**
 	 * There is an API available, but not really useful for getting the complete
 	 * information of author and venue
 	 * http://www.dblp.org/search/api/?q=ulrik%20schroeder&h=1000&c=4&f=0&format
