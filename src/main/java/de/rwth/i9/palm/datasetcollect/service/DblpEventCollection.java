@@ -204,7 +204,7 @@ public class DblpEventCollection extends PublicationCollection
 					mainHeaderInformation.put( "year", venueNameAndYear.substring( venueNameAndYear.length() - 4 ) );
 				}
 
-				/// get city and country
+				/// get city, state and country
 				/// e.g. Lisbon, Portugal
 
 				// first check, if there is other unnecessary information
@@ -222,8 +222,17 @@ public class DblpEventCollection extends PublicationCollection
 				String[] venueCityAndCountryArray = venueCityAndCountry.split( "," );
 				if ( venueCityAndCountryArray.length > 1 )
 				{
-					mainHeaderInformation.put( "city", venueCityAndCountryArray[0].trim() );
-					mainHeaderInformation.put( "country", venueCityAndCountryArray[1].trim() );
+					if ( venueCityAndCountryArray.length == 2 )
+					{
+						mainHeaderInformation.put( "city", venueCityAndCountryArray[0].trim() );
+						mainHeaderInformation.put( "country", venueCityAndCountryArray[1].trim() );
+					}
+					else
+					{
+						mainHeaderInformation.put( "city", venueCityAndCountryArray[0].trim() );
+						mainHeaderInformation.put( "state", venueCityAndCountryArray[1].trim() );
+						mainHeaderInformation.put( "country", venueCityAndCountryArray[2].trim() );
+					}
 				}
 			}
 
@@ -515,6 +524,210 @@ public class DblpEventCollection extends PublicationCollection
 		}
 
 		return venueListMap;
+	}
+
+	/**
+	 * Get list of venue
+	 */
+	@SuppressWarnings( "unchecked" )
+	public static Map<String, Object> getEventListFromDBLP( String url, Source source )
+	{
+		Map<String, Object> mainEventMap = new LinkedHashMap<String, Object>();
+
+		// Using jsoup java html parser library
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie( source ) );
+
+		if ( document == null )
+			return Collections.emptyMap();
+
+		Element mainContainer = document.select( "#main" ).first();
+
+		if ( mainContainer == null )
+		{
+			log.info( "Main container not found " );
+			return Collections.emptyMap();
+		}
+
+		// contain list of conference / journal in specific year
+		List<Object> eventList = new ArrayList<Object>();
+
+		// contains header information only for conference type
+		Map<String, Object> conferenceOnSpecificYear = null;
+
+		for ( Element element : mainContainer.children() )
+		{
+
+			if ( element.tagName().equals( "header" ) )
+			{
+				if ( mainEventMap.get( "type" ) != null )
+				{
+					if ( mainEventMap.get( "type" ).equals( PublicationType.CONFERENCE ) )
+					{
+						// put conference based on year to list
+						if ( conferenceOnSpecificYear != null )
+						{
+							if ( conferenceOnSpecificYear.get( "volume" ) != null )
+								eventList.add( conferenceOnSpecificYear );
+						}
+
+						// get header information from conference
+						String headerText = element.text();
+						String[] headerTextSplit = headerText.split( ":" );
+
+						if ( headerTextSplit.length == 0 )
+							continue;
+
+						String year = null;
+						if ( headerTextSplit[0].length() > 8 )
+							year = headerTextSplit[0].substring( headerTextSplit[0].length() - 4 );
+
+						// create new conference per year object
+						conferenceOnSpecificYear = new LinkedHashMap<String, Object>();
+						conferenceOnSpecificYear.put( "year", year );
+					}
+				}
+				else
+				{
+					if ( element.attr( "id" ) != null && element.attr( "id" ).equals( "headline" ) )
+						mainEventMap.put( "title", element.text() );
+				}
+			}
+
+			else if ( element.tagName().equals( "ul" ) )
+			{
+
+				for ( Element eventLiElement : element.children() )
+				{
+					if ( mainEventMap.get( "type" ).equals( PublicationType.JOURNAL ) )
+					{
+						Map<String, Object> journalOnSpecificYear = getDblpJournal( eventLiElement );
+						// add journal on specific year
+						if ( !journalOnSpecificYear.isEmpty() )
+							eventList.add( getDblpJournal( eventLiElement ) );
+					}
+					else if ( mainEventMap.get( "type" ).equals( PublicationType.CONFERENCE ) )
+					{
+						Map<String, String> conferenceVolumeUrl = getDblpConferenceUrl( eventLiElement );
+						// add journal on specific year
+						if ( !conferenceVolumeUrl.isEmpty() )
+						{
+							Map<String, String> volumeMap = null;
+							if ( conferenceOnSpecificYear.get( "volume" ) == null )
+							{
+								// create volume new map
+								volumeMap = new LinkedHashMap<String, String>();
+								conferenceOnSpecificYear.put( "volume", volumeMap );
+							}
+							else
+							{
+								volumeMap = (Map<String, String>) conferenceOnSpecificYear.get( "volume" );
+							}
+							volumeMap.putAll( conferenceVolumeUrl );
+
+						}
+					}
+				}
+			}
+
+			else if ( element.tagName().equals( "div" ) )
+			{
+				if ( element.attr( "id" ) != null && element.attr( "id" ).equals( "breadcrumbs" ) )
+				{
+					String breadCrumbsLabel = element.text();
+					if ( breadCrumbsLabel.toLowerCase().contains( "journals" ) )
+						mainEventMap.put( "type", PublicationType.JOURNAL );
+					else if ( breadCrumbsLabel.toLowerCase().contains( "conferences" ) )
+						mainEventMap.put( "type", PublicationType.CONFERENCE );
+				}
+			}
+		}
+
+		// only on conference, insert last object
+		if ( mainEventMap.get( "type" ).equals( PublicationType.CONFERENCE ) )
+		{
+			if ( conferenceOnSpecificYear != null )
+				eventList.add( conferenceOnSpecificYear );
+		}
+
+		// put event list
+		mainEventMap.put( "events", eventList );
+
+		return mainEventMap;
+	}
+
+	/**
+	 * Get DBLP journal
+	 * 
+	 * @param eventLiElement
+	 * @return
+	 */
+	private static Map<String, Object> getDblpJournal( Element eventLiElement )
+	{
+		Map<String, Object> dblpJournal = new LinkedHashMap<String, Object>();
+
+		String eventLiText = eventLiElement.text();
+		Elements eventLiChildren = eventLiElement.select( "a" );
+
+		if ( eventLiChildren == null )
+			return Collections.emptyMap();
+
+		// put list of event volume object here
+		Map<String, String> volumeMap = new LinkedHashMap<String, String>();
+
+		String[] eventLiTextSplit = eventLiText.split( ":" );
+
+		if ( eventLiTextSplit.length != 2 )
+			return Collections.emptyMap();
+
+		if ( eventLiChildren.size() == 1 )
+		{
+			String volume = "0";
+			if ( eventLiTextSplit[0].length() > 6 )
+			{
+				volume = eventLiTextSplit[0].substring( 7 );
+			}
+
+			// volume , here only one volume
+			volumeMap.put( volume, eventLiChildren.get( 0 ).absUrl( "href" ) );
+
+			// put year and volume
+			dblpJournal.put( "year", eventLiTextSplit[1] );
+			dblpJournal.put( "volume", volumeMap );
+		}
+		else
+		{
+			// put year
+			dblpJournal.put( "year", eventLiTextSplit[0] );
+
+			// put volume
+			for ( Element volumeElement : eventLiChildren )
+			{
+				volumeMap.put( volumeElement.text(), volumeElement.absUrl( "href" ) );
+			}
+			dblpJournal.put( "volume", volumeMap );
+		}
+
+		return dblpJournal;
+	}
+
+	/**
+	 * Get DBLP conference
+	 * 
+	 * @param conferenceOnSpecificYear
+	 */
+	private static Map<String, String> getDblpConferenceUrl( Element eventLiElement )
+	{
+		Map<String, String> dblpConference = new LinkedHashMap<String, String>();
+	
+		String linklUrl = eventLiElement.select( ".publ" ).select( ".head>a" ).first().absUrl( "href" );
+		String title =  eventLiElement.select( ".data" ).select( ".title" ).first().text();
+
+		if ( linklUrl== null ||  title == null )
+			return Collections.emptyMap();
+		
+		dblpConference.put( title, linklUrl );
+
+		return dblpConference;
 	}
 
 	/**

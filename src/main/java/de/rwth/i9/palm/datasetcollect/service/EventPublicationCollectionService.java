@@ -205,11 +205,15 @@ public class EventPublicationCollectionService
 
 		for ( Map<String, String> publicationMap : publicationDetailMapList )
 		{
-			Publication publication = null;
-			String publicationTitle = publicationMap.get( "title" );
-
-			if ( publicationTitle == null )
+			if ( publicationMap == null )
 				continue;
+
+			Publication publication = null;
+
+			if ( publicationMap.get( "title" ) == null )
+				continue;
+
+			String publicationTitle = publicationMap.get( "title" );
 
 			// check publication with the current selected list.
 			if ( !eventPublications.isEmpty() )

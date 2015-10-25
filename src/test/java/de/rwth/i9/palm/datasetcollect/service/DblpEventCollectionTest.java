@@ -52,6 +52,7 @@ public class DblpEventCollectionTest
 	}
 	
 	@Test
+	@Ignore
 	public void searchVenueOnDBLPTest() throws IOException
 	{
 		String url = "http://dblp.uni-trier.de/search/venue?q=educational";
@@ -65,4 +66,50 @@ public class DblpEventCollectionTest
 
 	}
 	
+	@SuppressWarnings( "unchecked" )
+	@Test
+	public void getEventMainPageTest() throws IOException
+	{
+		String url = "http://dblp.uni-trier.de/db/conf/accv/";
+		url = "http://dblp.uni-trier.de/db/journals/ai/";
+
+		Map<String, Object> venueDetailMap = DblpEventCollection.getEventListFromDBLP( url, null );
+
+		// List<Map<String,String>> publicationMapList = (List<Map<String,
+		// String>>) venueDetail.get( "publications" );
+
+		// print map
+		for ( Map.Entry<String, Object> entry : venueDetailMap.entrySet() )
+		{
+			if ( entry.getKey().equals( "events" ) )
+			{
+				// print Event detail
+				System.out.println( "Events : \n" );
+				for ( Map<String, Object> eachEventYearMap : (List<Map<String, Object>>) entry.getValue() )
+				{
+
+					for ( Entry<String, Object> eachEventYearEntry : eachEventYearMap.entrySet() )
+					{
+						if ( eachEventYearEntry.getKey().equals( "volume" ) )
+						{
+
+							for ( Entry<String, String> eachEventVolumeEntry : ( (Map<String, String>) eachEventYearEntry.getValue() ).entrySet() )
+								System.out.println( eachEventVolumeEntry.getKey() + " : " + eachEventVolumeEntry.getValue() );
+							System.out.println();
+						}
+						else
+						{
+							System.out.println( eachEventYearEntry.getKey() + " : " + eachEventYearEntry.getValue() );
+						}
+
+					}
+				}
+			}
+			else
+			{
+				System.out.println( entry.getKey() + " : " + entry.getValue() );
+			}
+		}
+	}
+
 }
