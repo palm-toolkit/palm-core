@@ -491,10 +491,10 @@ public class DblpEventCollection extends PublicationCollection
 	/**
 	 * Searching venues on DBLP
 	 */
-	public static Map<String, String> getEventFromDBLPSearch( String url, Source source )
+	public static Map<String, String> getEventFromDBLPSearch( String query, Source source )
 	{
 		// the url of querying venue will be
-		// http://dblp.uni-trier.de/search/venue?q=educational
+		String url = "http://dblp.uni-trier.de/search/venue?q=" + query.replace( " ", "+" );
 
 		// The Map will be in format[ venue name, venue url] map
 		Map<String, String> venueListMap = new LinkedHashMap<String, String>();

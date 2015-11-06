@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.datasetcollect.service.DblpEventCollection;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.SessionDataSet;
@@ -89,6 +90,13 @@ public class AcademicEventController
 	public @ResponseBody Map<String, Object> getPublicationList( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response)
 	{
 		return academicEventFeature.getEventPublication().getPublicationListByEventId( authorId );
+	}
+
+	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, String> getEventAutoComplete( @RequestParam( value = "query", required = false ) final String query, final HttpServletResponse response)
+	{
+		return DblpEventCollection.getEventFromDBLPSearch( query, null );
 	}
 
 }

@@ -54,6 +54,7 @@ public class PublicationController
 	@Transactional
 	public ModelAndView publicationPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
+			@RequestParam( value = "publicationId", required = false ) final String publicationId, 
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// get current session object
@@ -65,6 +66,10 @@ public class PublicationController
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.PUBLICATION, WidgetStatus.DEFAULT );
 		// assign the model
 		model.addObject( "widgets", widgets );
+
+		if ( publicationId != null )
+			model.addObject( "publicationId", publicationId );
+
 		return model;
 	}
 
@@ -82,6 +87,7 @@ public class PublicationController
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getPublicationList( 
+			@RequestParam( value = "publicationId", required = false ) String publicationId,
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "event", required = false ) String eventName,
 			@RequestParam( value = "eventid", required = false ) String eventId,
