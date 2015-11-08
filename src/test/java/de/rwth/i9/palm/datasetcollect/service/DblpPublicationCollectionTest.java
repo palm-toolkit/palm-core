@@ -12,15 +12,31 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
+import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceProperty;
+
 @RunWith( SpringJUnit4ClassRunner.class )
 @ContextConfiguration( loader = AnnotationConfigContextLoader.class )
 public class DblpPublicationCollectionTest
 {
 	@Test
-	@Ignore
 	public void getListOfAuthorsTest() throws IOException
 	{
-		List<Map<String, String>> authorList = DblpPublicationCollection.getListOfAuthors( "mohamed amine chatti" );
+		SourceProperty sourceProperty1 = new SourceProperty();
+		sourceProperty1.setMainIdentifier( "cookie" );
+		sourceProperty1.setSecondaryIdentifier( "dblp-view" );
+		sourceProperty1.setValue( "t" );
+
+		SourceProperty sourceProperty2 = new SourceProperty();
+		sourceProperty2.setMainIdentifier( "cookie" );
+		sourceProperty2.setSecondaryIdentifier( "dblp-search-mode" );
+		sourceProperty2.setValue( "c" );
+
+		Source source = new Source();
+		source.addSourceProperty( sourceProperty1 );
+		source.addSourceProperty( sourceProperty2 );
+
+		List<Map<String, String>> authorList = DblpPublicationCollection.getListOfAuthors( "chatti", source );
 
 		for ( Map<String, String> eachAuthor : authorList )
 		{

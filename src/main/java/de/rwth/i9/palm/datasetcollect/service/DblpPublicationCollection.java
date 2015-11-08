@@ -44,7 +44,7 @@ public class DblpPublicationCollection extends PublicationCollection
 
 		String url = "http://dblp.uni-trier.de/search/author?q=" + authorName.replace( " ", "+" );
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie( source ) );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 15000, getDblpCookie( source ) );
 
 		if ( document == null )
 			return Collections.emptyList();
@@ -54,9 +54,9 @@ public class DblpPublicationCollection extends PublicationCollection
 		if ( pageTitle.toLowerCase().contains( "author search" ) )
 		{
 
-			Element authorContainer = document.select( "header.nowrap" ).first();
+			Element authorContainer = document.select( "div#completesearch-authors>div" ).first();
 
-			Elements authorListNodes = authorContainer.nextElementSibling().select( "ul" ).first().select( "li" );
+			Elements authorListNodes = authorContainer.select( "ul" ).first().select( "li" );
 
 			if ( authorListNodes.size() == 0 )
 			{
@@ -354,6 +354,9 @@ public class DblpPublicationCollection extends PublicationCollection
 	 */
 	private static Map<String, String> getDblpCookie( Source source )
 	{
+		if ( source == null )
+			return Collections.emptyMap();
+
 		Map<String, String> cookies = new HashMap<String, String>();
 
 		for ( SourceProperty sourceProperty : source.getSourceProperties() )
