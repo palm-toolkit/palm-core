@@ -212,9 +212,9 @@ public class ResearcherController
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
 			@RequestParam( value = "name", required = false ) final String name, 
-			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-		return researcherFeature.getResearcherApi().getAuthorAutoComplete( name );
+		return researcherFeature.getResearcherApi().getAuthorAutoCompleteFromNetworkAndDb( name );
 	}
 	
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
