@@ -505,22 +505,36 @@ public class DblpEventCollection extends PublicationCollection
 		if ( document == null )
 			return Collections.emptyMap();
 
-		Element venueListUl = document.select( "#breadcrumbs" ).first()
-				.nextElementSibling()
-				.select( "> div" ).first()
-				.select( "ul" ).first();
-
-		if ( venueListUl == null )
-			return Collections.emptyMap();
-
-		for ( Element venueLi : venueListUl.children() )
+		// find out page is author page or search page
+		if ( document.baseUri().equals( url ) )
 		{
-			Element venueAHref = venueLi.select( "a" ).first();
 
-			if ( venueAHref == null )
-				continue;
+			Element venueListUl = document.select( "#completesearch-venues>div" ).first().select( "ul" ).first();
 
-			venueListMap.put( venueAHref.text(), venueAHref.absUrl( "href" ) );
+			if ( venueListUl == null )
+				return Collections.emptyMap();
+
+			for ( Element venueLi : venueListUl.children() )
+			{
+				Element venueAHref = venueLi.select( "a" ).first();
+
+				if ( venueAHref == null )
+					continue;
+
+				venueListMap.put( venueAHref.text(), venueAHref.absUrl( "href" ) );
+			}
+		}
+		else
+		{
+			String venueUrl = document.baseUri();
+			int cutToIndex = venueUrl.indexOf( "?" );
+			if ( cutToIndex != -1 )
+				venueUrl = venueUrl.substring( 0, cutToIndex );
+
+			String venueTitle = document.select( "#headline" ).first().text();
+
+			if ( venueUrl != null && venueTitle != null )
+				venueListMap.put( venueTitle, venueUrl );
 		}
 
 		return venueListMap;
