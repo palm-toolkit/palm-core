@@ -43,7 +43,9 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 		if ( authorListNodes.size() == 0 )
 		{
-			log.info( "No author with name '{}' with selector '{}' on google scholar '{}'", authorName, HtmlSelectorConstant.GS_AUTHOR_LIST_CONTAINER, url );
+			// log.info( "No author with name '{}' with selector '{}' on google
+			// scholar '{}'", authorName,
+			// HtmlSelectorConstant.GS_AUTHOR_LIST_CONTAINER, url );
 			return Collections.emptyList();
 		}
 

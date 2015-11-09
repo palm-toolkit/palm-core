@@ -1,9 +1,10 @@
 package de.rwth.i9.palm.persistence.relational;
 
-import org.apache.log4j.Logger;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
@@ -16,7 +17,6 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
-//import de.rwth.i9.palm.model.PublicationOld;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @RunWith( SpringJUnit4ClassRunner.class )
@@ -28,7 +28,7 @@ public class PublicationOldPersistenceTest extends AbstractTransactionalJUnit4Sp
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	final Logger logger = Logger.getLogger( PublicationOldPersistenceTest.class );
+	private final static Logger log = LoggerFactory.getLogger( PublicationOldPersistenceTest.class );
 
 	@BeforeTransaction
 	public void beforeTransaction()

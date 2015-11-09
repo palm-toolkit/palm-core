@@ -48,7 +48,9 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 
 		if ( authorListNodes.size() == 0 )
 		{
-			log.info( "No author with name '{}' with selector '{}' on CiteSeerX '{}'", authorName, HtmlSelectorConstant.CSX_AUTHOR_LIST, url );
+			// log.info( "No author with name '{}' with selector '{}' on
+			// CiteSeerX '{}'", authorName,
+			// HtmlSelectorConstant.CSX_AUTHOR_LIST, url );
 			return Collections.emptyList();
 		}
 

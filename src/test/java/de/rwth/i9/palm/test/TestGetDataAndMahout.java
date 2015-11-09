@@ -1,21 +1,16 @@
 package de.rwth.i9.palm.test;
 
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.sql.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
@@ -28,9 +23,7 @@ import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
 import de.rwth.i9.palm.config.WebAppConfigTest;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.Publication;
-//import de.rwth.i9.palm.model.PublicationOld;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @RunWith( SpringJUnit4ClassRunner.class )
@@ -45,7 +38,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	final Logger logger = Logger.getLogger( TestGetDataAndMahout.class );
+	private final static Logger log = LoggerFactory.getLogger( TestGetDataAndMahout.class );
 
 	@Test
 	@Ignore

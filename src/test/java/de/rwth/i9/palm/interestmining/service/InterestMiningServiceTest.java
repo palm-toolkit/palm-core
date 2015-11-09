@@ -3,10 +3,11 @@ package de.rwth.i9.palm.interestmining.service;
 import java.text.ParseException;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
@@ -36,7 +37,7 @@ public class InterestMiningServiceTest extends AbstractTransactionalJUnit4Spring
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	final Logger logger = Logger.getLogger( InterestMiningServiceTest.class );
+	private final static Logger log = LoggerFactory.getLogger( InterestMiningServiceTest.class );
 
 	@Test
 	@Ignore

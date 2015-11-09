@@ -7,10 +7,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.log4j.Logger;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
@@ -41,7 +42,7 @@ public class PublicationCollectionWithTransactionalTest extends AbstractTransact
 	@Autowired
 	private AsynchronousPublicationDetailCollectionService asynchronousPublicationDetailCollectionService;
 
-	final Logger logger = Logger.getLogger( PublicationCollectionWithTransactionalTest.class );
+	private final static Logger log = LoggerFactory.getLogger( PublicationCollectionWithTransactionalTest.class );
 
 	@Test
 

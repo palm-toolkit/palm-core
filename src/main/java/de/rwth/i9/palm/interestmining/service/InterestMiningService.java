@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ import de.rwth.i9.palm.service.ApplicationService;
 public class InterestMiningService
 {
 
-	final Logger logger = Logger.getLogger( InterestMiningService.class );
+	private final static Logger logger = LoggerFactory.getLogger( InterestMiningService.class );
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -78,6 +79,7 @@ public class InterestMiningService
 		}
 
 		// update for all author interest profile
+		updateAuthorInterest = true;
 		if ( !updateAuthorInterest )
 		{
 			// get interest profile from author
@@ -125,7 +127,8 @@ public class InterestMiningService
 			// construct the cluster
 			logger.info( "Construct publication cluster " );
 			constructPublicationClusterByLanguageAndYear( author, publicationClustersMap );
-
+			// may be you have to turn off the connection with team viewer and
+			// share only screens in skype No no its ok
 			// cluster is ready
 			if ( !publicationClustersMap.isEmpty() )
 			{
@@ -482,6 +485,10 @@ public class InterestMiningService
 				wordFreqInterestProfile.doWordFreqCalculation( authorInterest, publicationCluster, yearFactor, totalYearFactor, numberOfExtractionService );
 			}
 			// Put other default interest profiles
+			else if ( interestProfileDefault.getName().toLowerCase().equals( "lda" ) )
+			{
+
+			}
 
 			// check author interest calculation result
 			if ( authorInterest.getTermWeights() != null && !authorInterest.getTermWeights().isEmpty() )
