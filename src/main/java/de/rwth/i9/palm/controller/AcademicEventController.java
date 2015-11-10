@@ -94,7 +94,7 @@ public class AcademicEventController
 
 	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, String> getEventAutoComplete( @RequestParam( value = "query", required = false ) final String query, final HttpServletResponse response)
+	public @ResponseBody List<Object> getEventAutoComplete( @RequestParam( value = "query", required = false ) final String query, final HttpServletResponse response)
 	{
 		return DblpEventCollection.getEventFromDBLPSearch( query, null );
 	}

@@ -491,19 +491,19 @@ public class DblpEventCollection extends PublicationCollection
 	/**
 	 * Searching venues on DBLP
 	 */
-	public static Map<String, String> getEventFromDBLPSearch( String query, Source source )
+	public static List<Object> getEventFromDBLPSearch( String query, Source source )
 	{
 		// the url of querying venue will be
 		String url = "http://dblp.uni-trier.de/search/venue?q=" + query.replace( " ", "+" );
 
 		// The Map will be in format[ venue name, venue url] map
-		Map<String, String> venueListMap = new LinkedHashMap<String, String>();
+		List<Object> venueListObject = new ArrayList<Object>();
 
 		// Using jsoup java html parser library
 		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 5000, getDblpCookie( source ) );
 
 		if ( document == null )
-			return Collections.emptyMap();
+			return Collections.emptyList();
 
 		// find out page is author page or search page
 		if ( document.baseUri().equals( url ) )
@@ -512,7 +512,7 @@ public class DblpEventCollection extends PublicationCollection
 			Element venueListUl = document.select( "#completesearch-venues>div" ).first().select( "ul" ).first();
 
 			if ( venueListUl == null )
-				return Collections.emptyMap();
+				return Collections.emptyList();
 
 			for ( Element venueLi : venueListUl.children() )
 			{
@@ -521,7 +521,26 @@ public class DblpEventCollection extends PublicationCollection
 				if ( venueAHref == null )
 					continue;
 
-				venueListMap.put( venueAHref.text(), venueAHref.absUrl( "href" ) );
+				Map<String, String> venueMap = new LinkedHashMap<String, String>();
+				String venueUrl = venueAHref.absUrl( "href" );
+				String venueName = venueAHref.text();
+				String venueType = "journal";
+				String venueShortName = null;
+
+				if ( venueUrl.startsWith( "http://dblp.uni-trier.de/db/conf" ) )
+					venueType = "conference";
+
+				int shortNameIndex = venueName.indexOf( "(" );
+				if ( shortNameIndex > 5 )
+					venueShortName = venueName.substring( shortNameIndex + 1, venueName.length() - 1 );
+
+				venueMap.put( "name", venueName );
+				if ( venueShortName != null )
+					venueMap.put( "abbr", venueShortName );
+				venueMap.put( "url", venueUrl );
+				venueMap.put( "type", venueType );
+
+				venueListObject.add( venueMap );
 			}
 		}
 		else
@@ -531,13 +550,33 @@ public class DblpEventCollection extends PublicationCollection
 			if ( cutToIndex != -1 )
 				venueUrl = venueUrl.substring( 0, cutToIndex );
 
-			String venueTitle = document.select( "#headline" ).first().text();
+			String venueName = document.select( "#headline" ).first().text();
 
-			if ( venueUrl != null && venueTitle != null )
-				venueListMap.put( venueTitle, venueUrl );
+			if ( venueUrl != null && venueName != null )
+			{
+
+				Map<String, String> venueMap = new LinkedHashMap<String, String>();
+				String venueType = "journal";
+				String venueShortName = null;
+
+				if ( venueUrl.startsWith( "http://dblp.uni-trier.de/db/conf" ) )
+					venueType = "conference";
+
+				int shortNameIndex = venueName.indexOf( "(" );
+				if ( shortNameIndex > 5 )
+					venueShortName = venueName.substring( shortNameIndex + 1, venueName.length() - 1 );
+
+				venueMap.put( "name", venueName );
+				if ( venueShortName != null )
+					venueMap.put( "abbr", venueShortName );
+				venueMap.put( "url", venueUrl );
+				venueMap.put( "type", venueType );
+
+				venueListObject.add( venueMap );
+			}
 		}
 
-		return venueListMap;
+		return venueListObject;
 	}
 
 	/**

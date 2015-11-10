@@ -56,13 +56,13 @@ public class DblpEventCollectionTest
 	public void searchVenueOnDBLPTest() throws IOException
 	{
 		String url = "http://dblp.uni-trier.de/search/venue?q=educational";
-		Map<String, String> venueListMap = DblpEventCollection.getEventFromDBLPSearch( url, null );
-
-		// print map
-		for ( Map.Entry<String, String> entry : venueListMap.entrySet() )
-		{
-			System.out.println( entry.getKey() + " > url : " + entry.getValue() );
-		}
+//		Map<String, String> venueListMap = DblpEventCollection.getEventFromDBLPSearch( url, null );
+//
+//		// print map
+//		for ( Map.Entry<String, String> entry : venueListMap.entrySet() )
+//		{
+//			System.out.println( entry.getKey() + " > url : " + entry.getValue() );
+//		}
 
 	}
 	
