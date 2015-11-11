@@ -58,8 +58,11 @@ public class ResearcherCollectionService
 	 * @throws ParseException
 	 */
 	@Transactional
-	public void collectAuthorInformationFromNetwork( String query ) throws IOException, InterruptedException, ExecutionException, ParseException, OAuthSystemException, OAuthProblemException
+	public List<Author> collectAuthorInformationFromNetwork( String query, boolean stored ) throws IOException, InterruptedException, ExecutionException, ParseException, OAuthSystemException, OAuthProblemException
 	{
+		// authors container
+		List<Author> authors = new ArrayList<Author>();
+
 		// container
 		List<Future<List<Map<String, String>>>> authorFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
 
@@ -85,18 +88,22 @@ public class ResearcherCollectionService
 		}
 
 		// merge the result
-		this.mergeAuthorInformation( authorFutureLists );
+		this.mergeAuthorInformation( authorFutureLists, authors, stored );
+
+		return authors;
 	}
 
 	/**
 	 * Merging author information from multiple resources
 	 * 
 	 * @param authorFutureLists
+	 * @param authors2
+	 * @param stored
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
 	@Transactional
-	public void mergeAuthorInformation( List<Future<List<Map<String, String>>>> authorFutureLists ) throws InterruptedException, ExecutionException
+	private void mergeAuthorInformation( List<Future<List<Map<String, String>>>> authorFutureLists, List<Author> authors2, boolean stored ) throws InterruptedException, ExecutionException
 	{
 		if ( authorFutureLists.size() > 0 )
 		{
@@ -110,7 +117,7 @@ public class ResearcherCollectionService
 					if ( authorMap.get( "name" ) == null )
 						continue;
 
-					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim();
+					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).replace( "-", " " ).trim();
 
 					// check if author already on array list
 					Integer authorIndex = indexHelper.get( authorName );
@@ -265,7 +272,11 @@ public class ResearcherCollectionService
 				}
 				author.setAuthorSources( authorSources );
 
-				persistenceStrategy.getAuthorDAO().persist( author );
+				authors2.add( author );
+
+				// if stored, then save author to database
+				if ( stored )
+					persistenceStrategy.getAuthorDAO().persist( author );
 			}
 
 		}

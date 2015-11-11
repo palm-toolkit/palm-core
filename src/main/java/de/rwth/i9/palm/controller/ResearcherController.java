@@ -208,7 +208,7 @@ public class ResearcherController
 		return null;
 	}
 	
-	@RequestMapping( value = "/getResearcherAutocomplete", method = RequestMethod.GET )
+	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
 			@RequestParam( value = "name", required = false ) final String name, 

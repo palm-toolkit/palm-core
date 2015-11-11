@@ -116,7 +116,7 @@ public class ResearcherCollectionServiceWithoutPersist
 					if ( authorMap.get( "name" ) == null )
 						continue;
 
-					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim();
+					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).replace( "-", " " ).trim();
 
 					// check if author already on array list
 					Integer authorIndex = indexHelper.get( authorName );

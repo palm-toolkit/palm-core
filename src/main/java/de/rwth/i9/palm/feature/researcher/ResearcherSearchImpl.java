@@ -89,7 +89,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 			collectFromNetwork = true;
 			// collect author from network
 			if ( collectFromNetwork )
-				researcherCollectionService.collectAuthorInformationFromNetwork( query );
+				researcherCollectionService.collectAuthorInformationFromNetwork( query, true );
 		}
 
 		// get the researcher

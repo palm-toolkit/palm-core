@@ -13,7 +13,7 @@ import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionServiceWithoutPersist;
+import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -26,7 +26,7 @@ public class ResearcherApiImpl implements ResearcherApi
 	private PersistenceStrategy persistenceStrategy;
 
 	@Autowired
-	private ResearcherCollectionServiceWithoutPersist researcherCollectionServiceWithoutPersist;
+	private ResearcherCollectionService researcherCollectionService;
 
 	@Override
 	public Map<String, Object> getAuthorAutoComplete( String namePrefix )
@@ -74,7 +74,7 @@ public class ResearcherApiImpl implements ResearcherApi
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
-		List<Author> authors = researcherCollectionServiceWithoutPersist.collectAuthorInformationFromNetwork( namePrefix );
+		List<Author> authors = researcherCollectionService.collectAuthorInformationFromNetwork( namePrefix, false );
 
 		if ( authors.isEmpty() )
 		{
