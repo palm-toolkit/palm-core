@@ -56,7 +56,15 @@ public class DblpPublicationCollection extends PublicationCollection
 
 			Element authorContainer = document.select( "div#completesearch-authors>div" ).first();
 
-			Elements authorListNodes = authorContainer.select( "ul" ).first().select( "li" );
+			Element authorListCont = authorContainer.select( "ul" ).first();
+
+			if ( authorListCont == null )
+				return Collections.emptyList();
+
+			Elements authorListNodes = authorListCont.select( "li" );
+
+			if ( authorListNodes == null )
+				return Collections.emptyList();
 
 			if ( authorListNodes.size() == 0 )
 			{

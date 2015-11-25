@@ -72,7 +72,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 	
 	@Test
-
+	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		int count = 0;

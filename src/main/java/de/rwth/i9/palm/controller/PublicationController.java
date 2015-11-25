@@ -54,7 +54,7 @@ public class PublicationController
 	@Transactional
 	public ModelAndView publicationPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
-			@RequestParam( value = "publicationId", required = false ) final String publicationId, 
+			@RequestParam( value = "id", required = false ) final String publicationId, 
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// get current session object

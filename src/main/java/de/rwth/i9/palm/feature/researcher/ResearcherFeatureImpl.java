@@ -14,6 +14,9 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	private ResearcherInterestEvolution researcherInterestEvolution;
 	
 	@Autowired( required = false )
+	private ResearcherMining researcherMining;
+
+	@Autowired( required = false )
 	private ResearcherPublication researcherPublication;
 
 	@Autowired( required = false )
@@ -44,6 +47,15 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherInterestEvolution = new ResearcherInterestEvolutionImpl();
 
 		return this.researcherInterestEvolution;
+	}
+
+	@Override
+	public ResearcherMining getResearcherMining()
+	{
+		if ( this.researcherMining == null )
+			this.researcherMining = new ResearcherMiningImpl();
+
+		return this.researcherMining;
 	}
 
 	@Override

@@ -1,17 +1,18 @@
 package de.rwth.i9.palm.feature.researcher;
 
 import java.io.IOException;
-import java.text.ParseException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 
+import de.rwth.i9.palm.model.Author;
+
 public interface ResearcherSearch
 {
-	public Map<String, Object> getResearcherListByQuery( String query, Integer page, Integer maxresult ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
+	public List<Author> getResearcherListByQuery( String query, String queryType, Integer startPage, Integer maxresult, String source, String fulltext, boolean persist ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
 
-	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
+	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<Author> researchers );
 }

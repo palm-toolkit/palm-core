@@ -63,7 +63,9 @@ public class ManagePublicationController
 	 */
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.GET )
-	public ModelAndView getExtractionService( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response) throws InterruptedException
+	public ModelAndView addNewPublication( 
+			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
+			final HttpServletResponse response) throws InterruptedException
 	{
 		// get current session object
 		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
@@ -92,7 +94,9 @@ public class ManagePublicationController
 	 */
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.POST )
-	public @ResponseBody Map<String, Object> saveExtractionService( @ModelAttribute( "publication" ) Publication publication, final HttpServletResponse response) throws InterruptedException
+	public @ResponseBody Map<String, Object> saveNewPublication( 
+			@ModelAttribute( "publication" ) Publication publication, 
+			final HttpServletResponse response) throws InterruptedException
 	{
 
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -113,12 +117,14 @@ public class ManagePublicationController
 	 * @throws SAXException
 	 */
 	@RequestMapping( value = "/upload", method = RequestMethod.POST )
-	public @ResponseBody Map<String, Object> multiUpload( MultipartHttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException
+	public @ResponseBody Map<String, Object> multiUpload( 
+			MultipartHttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException
 	{
 		return uploadAndExtractPdf( request );
 	}
 
-	private Map<String, Object> uploadAndExtractPdf( MultipartHttpServletRequest request ) throws IOException, InterruptedException, ExecutionException
+	private Map<String, Object> uploadAndExtractPdf( 
+			MultipartHttpServletRequest request ) throws IOException, InterruptedException, ExecutionException
 	{
 		// build an iterator
 		Iterator<String> itr = request.getFileNames();
@@ -136,5 +142,38 @@ public class ManagePublicationController
 			break;
 		}
 		return extractedPdfMap;
+	}
+	
+	/**
+	 * Load the add publication form together with publication object
+	 * 
+	 * @param sessionId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/edit", method = RequestMethod.GET )
+	public ModelAndView editPublication( 
+			@RequestParam( value = "sessionid", required = false ) final String sessionId,
+			@RequestParam( value = "id") final String publicationId,
+			final HttpServletResponse response) throws InterruptedException
+	{
+		// get current session object
+		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+
+		// set model and view
+		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.PUBLICATION, "edit" );
+
+		// create blank Publication
+		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
+		publication.setAuthors();
+
+		// assign the model
+		model.addObject( "widgets", widgets );
+		model.addObject( "publication", publication );
+
+		return model;
 	}
 }

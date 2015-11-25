@@ -2,21 +2,20 @@ package de.rwth.i9.palm.feature.researcher;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
 import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.model.Author;
@@ -24,11 +23,11 @@ import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.RequestType;
 import de.rwth.i9.palm.model.UserRequest;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.util.IdentifierFactory;
 
 @Component
 public class ResearcherSearchImpl implements ResearcherSearch
 {
+	private final static Logger LOGGER = LoggerFactory.getLogger( ResearcherSearchImpl.class );
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -36,222 +35,148 @@ public class ResearcherSearchImpl implements ResearcherSearch
 	@Autowired
 	private ResearcherCollectionService researcherCollectionService;
 
-	@Autowired
-	private PublicationCollectionService publicationCollectionService;
-
 	@Override
-	public Map<String, Object> getResearcherListByQuery( String query, Integer page, Integer maxresult ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public List<Author> getResearcherListByQuery( 
+			String query, 
+			String queryType, 
+			Integer startPage, 
+			Integer maxresult, 
+			String source, 
+			String fulltextSearch, 
+			boolean persist ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-		boolean collectFromNetwork = false;
+		// researchers list container
+		List<Author> researcherList = new ArrayList<Author>();
 
-		if ( query == null )
-			query = "";
-
-		if ( page == null )
-			page = 0;
-
-		if ( maxresult == null )
-			maxresult = 50;
-
-		if ( !query.equals( "" ) && page == 0 )
+		// get authors from the datasource
+		if ( source.equals( "internal" ) )
 		{
-			// check whether the author query ever executed before
-			UserRequest userRequest = persistenceStrategy.getUserRequestDAO().getByTypeAndQuery( RequestType.SEARCHAUTHOR, query );
-
-			// get current timestamp
-			java.util.Date date = new java.util.Date();
-			Timestamp currentTimestamp = new Timestamp( date.getTime() );
-
-			if ( userRequest == null )
-			{ // there is no kind of request before
-				// perform fetching data through academic network
-				collectFromNetwork = true;
-				// persist current request
-				userRequest = new UserRequest();
-				userRequest.setQueryString( query );
-				userRequest.setRequestDate( currentTimestamp );
-				userRequest.setRequestType( RequestType.SEARCHAUTHOR );
-				persistenceStrategy.getUserRequestDAO().persist( userRequest );
-			}
+			// the authors is querying from database
+			if( fulltextSearch.equals( "no" ))
+				researcherList.addAll( persistenceStrategy.getAuthorDAO().getAuthorListWithPaging( query, startPage, maxresult ) );
 			else
-			{
-				// check if the existing userRequest obsolete (longer than a
-				// week)
-				if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, userRequest.getRequestDate() ) > 24 * 7 )
-				{
-					// update current timestamp
-					userRequest.setRequestDate( currentTimestamp );
-					persistenceStrategy.getUserRequestDAO().persist( userRequest );
-					collectFromNetwork = true;
-				}
-			}
-
-			collectFromNetwork = true;
-			// collect author from network
-			if ( collectFromNetwork )
-				researcherCollectionService.collectAuthorInformationFromNetwork( query, true );
+				researcherList.addAll( persistenceStrategy.getAuthorDAO().getAuthorListByFullTextSearchWithPaging( query, startPage, maxresult ) );
 		}
-
-		// get the researcher
-		Map<String, Object> researcherMap = null;
-		if ( collectFromNetwork )
-			researcherMap = persistenceStrategy.getAuthorDAO().getAuthorWithPaging( query, page, maxresult );
-		else
-			researcherMap = persistenceStrategy.getAuthorDAO().getAuthorByFullTextSearchWithPaging( query, page, maxresult );
-
-		// create JSON mapper for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-
-		responseMap.put( "query", query );
-		responseMap.put( "page", page );
-		responseMap.put( "maxresult", maxresult );
-
-		// create the json structure for researcher list
-		if ( researcherMap != null )
+		else if ( source.equals( "external" ) )
 		{
-			responseMap.put( "count", researcherMap.get( "count" ) );
-
-			@SuppressWarnings( "unchecked" )
-			List<Author> researchers = (List<Author>) researcherMap.get( "result" );
-			List<Map<String, String>> researcherList = new ArrayList<Map<String, String>>();
-
-			for ( Author researcher : researchers )
-			{
-				Map<String, String> pub = new LinkedHashMap<String, String>();
-				pub.put( "id", researcher.getId() );
-				pub.put( "name", WordUtils.capitalize( researcher.getName() ) );
-				if ( researcher.getPhotoUrl() != null )
-					pub.put( "photo", researcher.getPhotoUrl() );
-
-				String otherDetail = "";
-				if ( researcher.getOtherDetail() != null )
-					otherDetail += researcher.getOtherDetail();
-				if ( researcher.getDepartment() != null )
-					otherDetail += ", " + researcher.getDepartment();
-				if ( !otherDetail.equals( "" ) )
-					pub.put( "detail", otherDetail );
-				if ( researcher.getInstitutions() != null )
-					for ( Institution institution : researcher.getInstitutions() )
-					{
-						if ( pub.get( "aff" ) != null )
-							pub.put( "aff", pub.get( "aff" ) + ", " + institution.getName() );
-						else
-							pub.put( "aff", institution.getName() );
-					}
-				if ( researcher.getCitedBy() > 0 )
-					pub.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
-
-				researcherList.add( pub );
-			}
-			responseMap.put( "researcher", researcherList );
+			// the authors are querying from external (academic networks)
 
 		}
-		else
+		else if ( source.equals( "all" ) )
 		{
-			responseMap.put( "count", 0 );
+			// the authors are combination from internal and external sources
+			if ( !query.equals( "" ) && startPage == 0 )
+			{
+				// collect author from network
+//				if ( isCollectAuthorFromNetworkNeeded( query ) )
+					researcherList.addAll( researcherCollectionService.collectAuthorInformationFromNetwork( query, persist ) );
+//				else
+//				{
+//					// the authors is querying from database
+//					if ( fulltextSearch.equals( "no" ) )
+//						researcherList.addAll( persistenceStrategy.getAuthorDAO().getAuthorListWithPaging( query, startPage, maxresult ) );
+//					else
+//						researcherList.addAll( persistenceStrategy.getAuthorDAO().getAuthorListByFullTextSearchWithPaging( query, startPage, maxresult ) );
+//				}
+			}
 		}
 
-		return responseMap;// TODO Auto-generated method stub
+		return researcherList;
 	}
 
-	@Override
-	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	/**
+	 * Print the result to Map object (JSON)
+	 * 
+	 * @param responseMap
+	 * @param researcherMap
+	 */
+	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<Author> researchers )
 	{
-		// create JSON mapper for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-
-		// get author
-		Author author = this.getTargetAuthor( responseMap, id, name, uri, affiliation );
-		if ( author == null )
+		// create the json structure for researcher list
+		if ( researchers == null || researchers.isEmpty() )
+		{
+			responseMap.put( "count", 0 );
 			return responseMap;
+		}
 
-		// pid must exist
-		if ( pid == null )
-			pid = IdentifierFactory.getNextDefaultIdentifier();
+		List<Map<String, String>> researcherList = new ArrayList<Map<String, String>>();
 
-		// check whether it is necessary to collect information from network
-		if ( this.isFetchDatasetFromNetwork( author ) || force.equals( "true" ) )
-			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author, pid );
+		for ( Author researcher : researchers )
+		{
+			Map<String, String> researcherMap = new LinkedHashMap<String, String>();
+			researcherMap.put( "id", researcher.getId() );
+			researcherMap.put( "name", WordUtils.capitalize( researcher.getName() ) );
+			if ( researcher.getPhotoUrl() != null )
+				researcherMap.put( "photo", researcher.getPhotoUrl() );
+
+			String otherDetail = "";
+			if ( researcher.getOtherDetail() != null )
+				otherDetail += researcher.getOtherDetail();
+			if ( researcher.getDepartment() != null )
+				otherDetail += ", " + researcher.getDepartment();
+			if ( !otherDetail.equals( "" ) )
+				researcherMap.put( "detail", otherDetail );
+			if ( researcher.getInstitutions() != null )
+				for ( Institution institution : researcher.getInstitutions() )
+				{
+					if ( researcherMap.get( "aff" ) != null )
+						researcherMap.put( "aff", researcherMap.get( "aff" ) + ", " + institution.getName() );
+					else
+						researcherMap.put( "aff", institution.getName() );
+				}
+			if ( researcher.getCitedBy() > 0 )
+				researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
+
+			researcherList.add( researcherMap );
+		}
+		responseMap.put( "count", researcherList.size() );
+		responseMap.put( "researcher", researcherList );
 
 		return responseMap;
 	}
 
 	/**
-	 * Get author object based on query
+	 * Check whether a query have been executed before and not more than a week
+	 * since query is executed
 	 * 
-	 * @param responseMap
-	 * @param id
-	 * @param name
-	 * @param uri
-	 * @param affiliation
+	 * @param query
 	 * @return
 	 */
-	private Author getTargetAuthor( Map<String, Object> responseMap, String id, String name, String uri, String affiliation )
+	private boolean isCollectAuthorFromNetworkNeeded( String query )
 	{
-		Author author = null;
-		if ( id == null && name == null && uri == null )
-		{
-			responseMap.put( "result", "error" );
-			responseMap.put( "reason", "no author selected" );
-		}
-		else
-		{
+		boolean collectFromNetwork = false;
+		// check whether the author query ever executed before
+		UserRequest userRequest = persistenceStrategy.getUserRequestDAO().getByTypeAndQuery( RequestType.SEARCHAUTHOR, query );
 
-			if ( id != null )
-				author = persistenceStrategy.getAuthorDAO().getById( id );
-			else if ( uri != null )
-				author = persistenceStrategy.getAuthorDAO().getByUri( uri );
-			else if ( name != null && affiliation != null )
-			{
-				List<Author> authors = persistenceStrategy.getAuthorDAO().getAuthorByNameAndInstitution( name, affiliation );
-				if ( !authors.isEmpty() )
-					author = authors.get( 0 );
-			}
-
-			if ( author == null )
-			{
-				responseMap.put( "result", "error" );
-				responseMap.put( "reason", "no author found" );
-			}
-			// add author information
-			responseMap.put( "id", author.getId() );
-			responseMap.put( "name", author.getName() );
-		}
-		return author;
-	}
-
-	/**
-	 * Check whether fetching to network is necessary
-	 * 
-	 * @param author
-	 * @return
-	 */
-	private boolean isFetchDatasetFromNetwork( Author author )
-	{
 		// get current timestamp
 		java.util.Date date = new java.util.Date();
 		Timestamp currentTimestamp = new Timestamp( date.getTime() );
-		if ( author.getRequestDate() != null )
-		{
-			// check if the existing author publication is obsolete
-			if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, author.getRequestDate() ) > 24 * 7 )
-			{
-				// update current timestamp
-				author.setRequestDate( currentTimestamp );
-				persistenceStrategy.getAuthorDAO().persist( author );
-				return true;
-			}
+
+		if ( userRequest == null )
+		{ // there is no kind of request before
+			// perform fetching data through academic network
+			collectFromNetwork = true;
+			// persist current request
+			userRequest = new UserRequest();
+			userRequest.setQueryString( query );
+			userRequest.setRequestDate( currentTimestamp );
+			userRequest.setRequestType( RequestType.SEARCHAUTHOR );
+			persistenceStrategy.getUserRequestDAO().persist( userRequest );
 		}
 		else
 		{
-			// update current timestamp
-			author.setRequestDate( currentTimestamp );
-			persistenceStrategy.getAuthorDAO().persist( author );
-			return true;
+			// check if the existing userRequest obsolete (longer than a
+			// week)
+			if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, userRequest.getRequestDate() ) > 24 * 7 )
+			{
+				// update current timestamp
+				userRequest.setRequestDate( currentTimestamp );
+				persistenceStrategy.getUserRequestDAO().persist( userRequest );
+				collectFromNetwork = true;
+			}
 		}
 
-		// return false;
-		return false;
+		return collectFromNetwork;
 	}
 
 }

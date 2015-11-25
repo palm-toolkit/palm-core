@@ -14,6 +14,8 @@ public interface ResearcherFeature
 	
 	public ResearcherInterestEvolution getResearcherInterestEvolution();
 
+	public ResearcherMining getResearcherMining();
+
 	public ResearcherPublication getResearcherPublication();
 
 	public ResearcherSearch getResearcherSearch();

@@ -36,7 +36,7 @@ public class DblpPublicationCollectionTest
 		source.addSourceProperty( sourceProperty1 );
 		source.addSourceProperty( sourceProperty2 );
 
-		List<Map<String, String>> authorList = DblpPublicationCollection.getListOfAuthors( "chatti", source );
+		List<Map<String, String>> authorList = DblpPublicationCollection.getListOfAuthors( "mohamed amine chatti", source );
 
 		for ( Map<String, String> eachAuthor : authorList )
 		{
