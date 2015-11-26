@@ -1,11 +1,13 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.ParseException;
@@ -24,6 +26,7 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.datasetcollect.service.DblpEventCollection;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -67,13 +70,52 @@ public class AcademicEventController
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getConferenceList( 
 			@RequestParam( value = "query", required = false ) String query, 
-			@RequestParam( value = "page", required = false ) Integer page, 
-			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
-			final HttpServletResponse response)
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			@RequestParam( value = "source", required = false ) String source,
+			@RequestParam( value = "persist", required = false ) String persist,
+			HttpServletRequest request,
+			HttpServletResponse response)
 	{
-		return academicEventFeature.getEventSearch().getEventListByQuery( query, page, maxresult );
+		if ( query == null ) 		query = "";
+		if ( startPage == null )	startPage = 0;
+		if ( maxresult == null )	maxresult = 50;
+		if ( source == null )		source = "internal";
+		if ( persist == null )		persist = "no";
+		
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		boolean persistResult = false;
+
+		responseMap.put( "query", query );
+		responseMap.put( "startPage", startPage );
+		responseMap.put( "maxresult", maxresult );
+		responseMap.put( "source", source );
+
+		if ( !persist.equals( "no" ) )
+		{
+			responseMap.put( "persist", persist );
+			persistResult = true;
+		}
+		
+		List<EventGroup> eventGroups = academicEventFeature.getEventSearch().getEventGroupListByQuery( query, startPage, maxresult, source, persistResult );
+
+		// put in session
+		request.getSession().setAttribute( "eventGroups", eventGroups );
+
+		return academicEventFeature.getEventSearch().printJsonOutput( responseMap, eventGroups );
 	}
 	
+	@RequestMapping( value = "/fetchGroup", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> fetchEventGroupFromDblp( @RequestParam( value = "id", required = false ) final String id, @RequestParam( value = "pid", required = false ) final String pid, @RequestParam( value = "force", required = false ) final String force, HttpServletRequest request, HttpServletResponse response) throws ParseException, IOException, InterruptedException, ExecutionException, java.text.ParseException, TimeoutException, OAuthSystemException, OAuthProblemException
+	{
+		@SuppressWarnings( "unchecked" )
+		List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
+
+		return academicEventFeature.getEventMining().fetchEventGroupData( id, pid, sessionEventGroups );
+	}
+
 	@RequestMapping( value = "/fetch", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> fetchEventFromDblp( 
@@ -82,7 +124,7 @@ public class AcademicEventController
 			@RequestParam( value = "force", required = false ) final String force,
 			final HttpServletResponse response ) throws ParseException, IOException, InterruptedException, ExecutionException, java.text.ParseException, TimeoutException, OAuthSystemException, OAuthProblemException 
 	{
-		return academicEventFeature.getEventSearch().fetchEventData( id, pid, force );
+		return academicEventFeature.getEventMining().fetchEventData( id, pid, force );
 	}
 
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )

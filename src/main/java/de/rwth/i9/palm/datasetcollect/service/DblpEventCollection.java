@@ -532,7 +532,10 @@ public class DblpEventCollection extends PublicationCollection
 
 				int shortNameIndex = venueName.indexOf( "(" );
 				if ( shortNameIndex > 5 )
+				{
 					venueShortName = venueName.substring( shortNameIndex + 1, venueName.length() - 1 );
+					venueName = venueName.substring( 0, shortNameIndex - 1 );
+				}
 
 				venueMap.put( "name", venueName );
 				if ( venueShortName != null )
@@ -564,7 +567,10 @@ public class DblpEventCollection extends PublicationCollection
 
 				int shortNameIndex = venueName.indexOf( "(" );
 				if ( shortNameIndex > 5 )
+				{
+					venueName = venueName.substring( 0, shortNameIndex - 1 );
 					venueShortName = venueName.substring( shortNameIndex + 1, venueName.length() - 1 );
+				}
 
 				venueMap.put( "name", venueName );
 				if ( venueShortName != null )

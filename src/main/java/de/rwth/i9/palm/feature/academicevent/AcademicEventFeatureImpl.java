@@ -5,10 +5,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class AcademicEventFeatureImpl implements AcademicEventFeature
 {
 	@Autowired( required = false )
+	private EventMining eventMining;
+
+	@Autowired( required = false )
 	private EventPublication eventPublication;
 
 	@Autowired( required = false )
 	private EventSearch eventSearch;
+
+	@Override
+	public EventMining getEventMining()
+	{
+		if ( this.eventMining == null )
+			this.eventMining = new EventMiningImpl();
+
+		return this.eventMining;
+	}
 
 	@Override
 	public EventPublication getEventPublication()
