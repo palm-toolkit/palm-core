@@ -163,6 +163,7 @@ public class ResearcherCollectionService
 			{
 				String name = mergedAuthor.get( "name" ).toLowerCase().replace( ".", "" ).trim();
 				String institution = "";
+				String academicStatus = "";
 				String otherDetail = "";
 
 				String affliliation = mergedAuthor.get( "affiliation" );
@@ -172,14 +173,23 @@ public class ResearcherCollectionService
 					String[] authorDetails = affliliation.split( "," );
 					for ( int i = 0; i < authorDetails.length; i++ )
 					{
-						// from word U"nivers"ity
-						if ( authorDetails[i].contains( "nivers" ) || authorDetails[i].contains( "nstit" ) )
-							institution = authorDetails[i].trim().toLowerCase();
+						// from word U"nivers"ity, institut, collage, state, school, technology, faculdade, education, hochschule, rieure						
+						if ( authorDetails[i].contains( "nivers" ) || authorDetails[i].contains( "nstit" ) ||
+							 authorDetails[i].contains( "ollag" ) || authorDetails[i].contains( "tate" ) ||
+							 authorDetails[i].contains( "echn" ) || authorDetails[i].contains( "choo" ) ||
+							 authorDetails[i].contains( "acul" ) || authorDetails[i].contains( "ochs" ) ||
+							 authorDetails[i].contains( "duca" ) || authorDetails[i].contains( "ieur" ))
+							institution = authorDetails[i].trim();
+						else if ( authorDetails[i].contains( "rof" ) || authorDetails[i].contains( "esearch" ) || authorDetails[i].contains( "octor" ) )
+							academicStatus = authorDetails[i].trim().toLowerCase();
 						else
 						{
-							if ( !otherDetail.equals( "" ) )
-								otherDetail += ", ";
-							otherDetail += authorDetails[i];
+							if ( authorDetails[i].length() > 16 )
+							{
+								if ( !otherDetail.equals( "" ) )
+									otherDetail += ", ";
+								otherDetail += authorDetails[i];
+							}
 						}
 					}
 				}
@@ -200,9 +210,19 @@ public class ResearcherCollectionService
 
 					if ( !institution.equals( "" ) )
 					{
+						String institutionName = institution.toLowerCase().replace( "university", "" )
+								.replace( "college", "" ).replace( "state", "" )
+								.replace( "institute", "" ).replace( "school", "" )
+								.replace( "academy", "" );
+						Institution institutionObject = null;
 						// find institution on database
-						Institution institutionObject = persistenceStrategy.getInstitutionDAO().getByName( institution );
-						if ( institutionObject == null )
+						List<Institution> institutionObjects = persistenceStrategy.getInstitutionDAO().getWithFullTextSearch( institutionName );
+						if ( !institutionObjects.isEmpty() )
+						{
+							// get the first one which is more likely correct
+							institutionObject = institutionObjects.get( 0 );
+						}
+						else
 						{
 							institutionObject = new Institution();
 							institutionObject.setName( institution );
@@ -210,6 +230,11 @@ public class ResearcherCollectionService
 						}
 
 						author.addInstitution( institutionObject );
+					}
+
+					if ( !academicStatus.equals( "" ) )
+					{
+						author.setAcademicStatus( academicStatus );
 					}
 
 				}

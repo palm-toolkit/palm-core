@@ -82,6 +82,11 @@ public class ResearcherController
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.RESEARCHER, WidgetStatus.DEFAULT );
 		// assign the model
 		model.addObject( "widgets", widgets );
+		// assign query
+		if ( id != null )
+			model.addObject( "targetId", id );
+		if ( name != null )
+			model.addObject( "targetName", name );
 		return model;
 	}
 
@@ -142,6 +147,7 @@ public class ResearcherController
 		
 		List<Author> authors = researcherFeature.getResearcherSearch().getResearcherListByQuery( query, queryType, startPage, maxresult, source, fulltextSearch, persistResult );
 		
+		// store in session
 		request.getSession().setAttribute( "authors", authors );
 		
 		return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, authors );

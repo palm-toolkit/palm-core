@@ -55,7 +55,7 @@ public class ApplicationService
 
 		if ( freemarkerConfiguration != null )
 		{
-			log.info( "freemarkerConfiguration" );
+			log.info( "freemarkerConfiguration initialized" );
 		}
 	}
 

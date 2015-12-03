@@ -200,15 +200,15 @@ public class ResearcherCollectionServiceWithoutPersist
 					if ( !institution.equals( "" ) )
 					{
 						// find institution on database
-						Institution institutionObject = persistenceStrategy.getInstitutionDAO().getByName( institution );
-						if ( institutionObject == null )
-						{
-							institutionObject = new Institution();
-							institutionObject.setName( institution );
-							institutionObject.setURI( institution.replace( " ", "-" ) );
-						}
-
-						author.addInstitution( institutionObject );
+//						Institution institutionObject = persistenceStrategy.getInstitutionDAO().getByName( institution );
+//						if ( institutionObject == null )
+//						{
+//							institutionObject = new Institution();
+//							institutionObject.setName( institution );
+//							institutionObject.setURI( institution.replace( " ", "-" ) );
+//						}
+//
+//						author.addInstitution( institutionObject );
 					}
 
 				}

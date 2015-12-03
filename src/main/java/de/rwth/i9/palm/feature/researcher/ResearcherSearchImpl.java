@@ -3,6 +3,7 @@ package de.rwth.i9.palm.feature.researcher;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.helper.DateTimeHelper;
+import de.rwth.i9.palm.helper.comparator.AuthorByNoCitationComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.RequestType;
@@ -59,7 +61,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 		}
 		else if ( source.equals( "external" ) )
 		{
-			// the authors are querying from external (academic networks)
+			// TODO: the authors are querying from external (academic networks)
 
 		}
 		else if ( source.equals( "all" ) )
@@ -99,23 +101,20 @@ public class ResearcherSearchImpl implements ResearcherSearch
 			return responseMap;
 		}
 
-		List<Map<String, String>> researcherList = new ArrayList<Map<String, String>>();
+		// sort based on citedby
+		Collections.sort( researchers, new AuthorByNoCitationComparator() );
+
+		List<Map<String, Object>> researcherList = new ArrayList<Map<String, Object>>();
 
 		for ( Author researcher : researchers )
 		{
-			Map<String, String> researcherMap = new LinkedHashMap<String, String>();
+			Map<String, Object> researcherMap = new LinkedHashMap<String, Object>();
 			researcherMap.put( "id", researcher.getId() );
 			researcherMap.put( "name", WordUtils.capitalize( researcher.getName() ) );
 			if ( researcher.getPhotoUrl() != null )
 				researcherMap.put( "photo", researcher.getPhotoUrl() );
-
-			String otherDetail = "";
-			if ( researcher.getOtherDetail() != null )
-				otherDetail += researcher.getOtherDetail();
-			if ( researcher.getDepartment() != null )
-				otherDetail += ", " + researcher.getDepartment();
-			if ( !otherDetail.equals( "" ) )
-				researcherMap.put( "detail", otherDetail );
+			if ( researcher.getAcademicStatus() != null )
+				researcherMap.put( "status", researcher.getAcademicStatus() );
 			if ( researcher.getInstitutions() != null )
 				for ( Institution institution : researcher.getInstitutions() )
 				{
@@ -126,6 +125,16 @@ public class ResearcherSearchImpl implements ResearcherSearch
 				}
 			if ( researcher.getCitedBy() > 0 )
 				researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
+
+			String otherDetail = "";
+			if ( researcher.getOtherDetail() != null )
+				otherDetail += researcher.getOtherDetail();
+			if ( researcher.getDepartment() != null )
+				otherDetail += ", " + researcher.getDepartment();
+			if ( !otherDetail.equals( "" ) )
+				researcherMap.put( "detail", otherDetail );
+
+			researcherMap.put( "isAdded", researcher.isAdded() );
 
 			researcherList.add( researcherMap );
 		}

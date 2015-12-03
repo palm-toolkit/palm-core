@@ -28,6 +28,7 @@ import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.CompletionStatus;
+import de.rwth.i9.palm.model.Country;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.FileType;
@@ -114,14 +115,22 @@ public class EventPublicationCollectionService
 		{
 			if ( eventDetailMap.get( "country" ) != null && eventDetailMap.get( "city" ) != null )
 			{
+				// get country
+				Country country = persistenceStrategy.getCountryDAO().getCountryByName( (String) eventDetailMap.get( "country" ) );
+				if ( country == null )
+				{
+					country = new Country();
+					country.setName( (String) eventDetailMap.get( "country" ) );
+					persistenceStrategy.getCountryDAO().persist( country );
+				}
 				// set event location
-				Location location = persistenceStrategy.getLocationDAO().getByCountryAndCity( (String) eventDetailMap.get( "country" ), (String) eventDetailMap.get( "city" ) );
+				Location location = persistenceStrategy.getLocationDAO().getByCountryAndCity( country, (String) eventDetailMap.get( "city" ) );
 
 				if ( location == null )
 				{
 					location = new Location();
 					location.setCity( (String) eventDetailMap.get( "city" ) );
-					location.setCountry( (String) eventDetailMap.get( "country" ) );
+					location.setCountry( country );
 
 					persistenceStrategy.getLocationDAO().persist( location );
 				}

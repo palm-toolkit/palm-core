@@ -79,7 +79,7 @@ public class ResearcherMiningImpl implements ResearcherMining
 			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author, pid );
 
 
-		responseMap.put( "publication-count", author.getPublicationAuthors().size() );
+		//responseMap.put( "publication-count", author.getPublicationAuthors().size() );
 
 		return responseMap;
 	}
