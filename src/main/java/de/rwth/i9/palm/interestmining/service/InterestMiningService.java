@@ -79,7 +79,7 @@ public class InterestMiningService
 		}
 
 		// update for all author interest profile
-		updateAuthorInterest = true;
+		// updateAuthorInterest = true;
 		if ( !updateAuthorInterest )
 		{
 			// get interest profile from author

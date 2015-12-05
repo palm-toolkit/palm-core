@@ -141,10 +141,11 @@ public class ManageResearcherController
 		// set based on user input
 		newAuthor.setName( author.getName() );
 		newAuthor.setAcademicStatus( author.getAcademicStatus() );
-		newAuthor.setPhotoUrl( author.getPhotoUrl() );
+		if ( author.getPhotoUrl().startsWith( "http:" ) )
+			newAuthor.setPhotoUrl( author.getPhotoUrl() );
 		newAuthor.setAdded( true );
 
-		if ( author.getInstitutions() == null && author.getAffiliation() != null )
+		if ( author.getInstitutions() == null && !author.getAffiliation().equals( "" ) )
 		{
 			Institution institution = null;
 			List<Institution> institutions = persistenceStrategy.getInstitutionDAO().getWithFullTextSearch( author.getAffiliation() );

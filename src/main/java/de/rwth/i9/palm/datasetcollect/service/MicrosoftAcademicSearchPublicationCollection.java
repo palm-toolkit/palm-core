@@ -81,13 +81,45 @@ public class MicrosoftAcademicSearchPublicationCollection extends PublicationCol
 
 		if ( publicationResultNode.isArray() )
 			for ( JsonNode publicationNode : publicationResultNode )
+				if ( isPublicationAuthorCorrect( author, publicationNode ) )
 					publicationMapLists.add( extractPublicationDetail( publicationNode ) );
 		else
-			publicationMapLists.add( extractPublicationDetail( publicationResultNode ) );
+			if ( isPublicationAuthorCorrect( author, publicationResultNode ) )
+				publicationMapLists.add( extractPublicationDetail( publicationResultNode ) );
 
 		return publicationMapLists;
 	}
 	
+	/*
+	 * check if author on publication match with target author
+	 */
+	public static boolean isPublicationAuthorCorrect( Author author, JsonNode publicationNode )
+	{
+		if ( !publicationNode.path( "Author" ).isMissingNode() )
+		{
+			if ( publicationNode.path( "Author" ).isArray() )
+			{
+				for ( JsonNode authorNode : publicationNode.path( "Author" ) )
+				{
+					String authorName = "";
+					if ( !authorNode.path( "FirstName" ).isMissingNode() )
+						authorName += authorNode.path( "FirstName" ).textValue().toLowerCase() + " ";
+					if ( !authorNode.path( "MiddleName" ).isMissingNode() )
+						authorName += authorNode.path( "MiddleName" ).textValue().toLowerCase() + " ";
+					if ( !authorNode.path( "LastName" ).isMissingNode() )
+						authorName += authorNode.path( "LastName" ).textValue().toLowerCase();
+
+					authorName = authorName.trim();
+
+					if ( !authorName.equals( "" ) && authorName.equals( author.getName().toLowerCase() ) )
+						return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	/**
 	 * Parse publication detail into java map
 	 * 

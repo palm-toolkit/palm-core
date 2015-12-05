@@ -216,12 +216,24 @@ public class PublicationCollectionService
 		// get current year
 		int currentYear = Calendar.getInstance().get( Calendar.YEAR );
 
+		// get number of active sources
+		int numberOfActiveSources = 0;
+		// getSourceMap
+		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
+
+		for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
+		{
+			if ( sourceEntry.getValue().isActive() )
+				numberOfActiveSources++;
+		}
+
+		// filter incorrect publication
 		for ( Iterator<Publication> iteratorPublication = selectedPublications.iterator(); iteratorPublication.hasNext(); )
 		{
 			Publication publication = iteratorPublication.next();
 
 			// The pattern of incorrect publication
-			if ( publication.getPublicationSources().size() == 1 )
+			if ( publication.getPublicationSources().size() == 1 && numberOfActiveSources > 1 )
 			{
 				List<PublicationSource> publicationSource = new ArrayList<>( publication.getPublicationSources() );
 

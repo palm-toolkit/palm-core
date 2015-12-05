@@ -45,7 +45,7 @@ public class PublicationCollectionWithTransactionalTest extends AbstractTransact
 	private final static Logger log = LoggerFactory.getLogger( PublicationCollectionWithTransactionalTest.class );
 
 	@Test
-
+	@Ignore
 	public void testPublicationInformationEnrichment() throws IOException, InterruptedException, ExecutionException, TimeoutException
 	{
 		List<Author> authors = persistenceStrategy.getAuthorDAO().getByName( "mohamed amine chatti" );

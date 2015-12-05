@@ -178,6 +178,9 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 	 */
 	private static Map<String, String> getGoogleScholarCookie( Source source )
 	{
+		if ( source == null )
+			return Collections.emptyMap();
+
 		Map<String, String> cookies = new HashMap<String, String>();
 
 		for ( SourceProperty sourceProperty : source.getSourceProperties() )

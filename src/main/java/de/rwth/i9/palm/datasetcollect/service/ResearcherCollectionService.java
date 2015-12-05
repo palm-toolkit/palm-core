@@ -88,7 +88,7 @@ public class ResearcherCollectionService
 		}
 
 		// merge the result
-		this.mergeAuthorInformation( authorFutureLists, authors, stored );
+		this.mergeAuthorInformation( authorFutureLists, authors, stored, sourceMap );
 
 		return authors;
 	}
@@ -99,14 +99,22 @@ public class ResearcherCollectionService
 	 * @param authorFutureLists
 	 * @param authors2
 	 * @param stored
+	 * @param sourceMap 
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
 	@Transactional
-	private void mergeAuthorInformation( List<Future<List<Map<String, String>>>> authorFutureLists, List<Author> authors2, boolean stored ) throws InterruptedException, ExecutionException
+	private void mergeAuthorInformation( List<Future<List<Map<String, String>>>> authorFutureLists, List<Author> authors2, boolean stored, Map<String, Source> sourceMap ) throws InterruptedException, ExecutionException
 	{
 		if ( authorFutureLists.size() > 0 )
 		{
+			// get number of active sources
+			int numberOfActiveSources = 0;
+			for( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() ){
+				if( sourceEntry.getValue().isActive())
+					numberOfActiveSources++;
+			}
+			
 			List<Map<String, String>> mergedAuthorList = new ArrayList<Map<String, String>>();
 			Map<String, Integer> indexHelper = new HashMap<String, Integer>();
 			for ( Future<List<Map<String, String>>> authorFutureList : authorFutureLists )
@@ -150,15 +158,18 @@ public class ResearcherCollectionService
 			// since mendeley also put non researcher on its api result
 			// the source URL of mendeley will be "MENDELEY"
 			// which are less then 10 character in length
-			for ( Iterator<Map<String, String>> iteratorAuthor = mergedAuthorList.iterator(); iteratorAuthor.hasNext(); )
+			if ( numberOfActiveSources > 1 )
 			{
-				Map<String, String> authorMap = iteratorAuthor.next();
-
-				if ( authorMap.get( "source" ).equals( "MENDELEY" ) )
-					iteratorAuthor.remove();
+				for ( Iterator<Map<String, String>> iteratorAuthor = mergedAuthorList.iterator(); iteratorAuthor.hasNext(); )
+				{
+					Map<String, String> authorMap = iteratorAuthor.next();
+	
+					if ( authorMap.get( "source" ).equals( "MENDELEY" ) )
+						iteratorAuthor.remove();
+				}
 			}
 
-			// update database
+			// merger data
 			for ( Map<String, String> mergedAuthor : mergedAuthorList )
 			{
 				String name = mergedAuthor.get( "name" ).toLowerCase().replace( ".", "" ).trim();
@@ -193,7 +204,12 @@ public class ResearcherCollectionService
 						}
 					}
 				}
-				List<Author> authors = persistenceStrategy.getAuthorDAO().getAuthorByNameAndInstitution( name, institution );
+
+				// check source academic status from mendeley
+				if ( academicStatus.equals( "" ) && mergedAuthor.get( "academicStatus" ) != null )
+					academicStatus = mergedAuthor.get( "academicStatus" );
+
+				List<Author> authors = persistenceStrategy.getAuthorDAO().getByName( name );
 				Author author = null;
 
 				if ( authors.isEmpty() )
@@ -207,40 +223,37 @@ public class ResearcherCollectionService
 					String firstName = name.substring( 0, name.length() - lastName.length() ).replace( ".", "" ).trim();
 					if ( !firstName.equals( "" ) )
 						author.setFirstName( firstName );
-
-					if ( !institution.equals( "" ) )
-					{
-						String institutionName = institution.toLowerCase().replace( "university", "" )
-								.replace( "college", "" ).replace( "state", "" )
-								.replace( "institute", "" ).replace( "school", "" )
-								.replace( "academy", "" );
-						Institution institutionObject = null;
-						// find institution on database
-						List<Institution> institutionObjects = persistenceStrategy.getInstitutionDAO().getWithFullTextSearch( institutionName );
-						if ( !institutionObjects.isEmpty() )
-						{
-							// get the first one which is more likely correct
-							institutionObject = institutionObjects.get( 0 );
-						}
-						else
-						{
-							institutionObject = new Institution();
-							institutionObject.setName( institution );
-							institutionObject.setURI( institution.replace( " ", "-" ) );
-						}
-
-						author.addInstitution( institutionObject );
-					}
-
-					if ( !academicStatus.equals( "" ) )
-					{
-						author.setAcademicStatus( academicStatus );
-					}
-
 				}
 				else
 				{
 					author = authors.get( 0 );
+				}
+
+				// set academic status and affliation
+				if ( !institution.equals( "" ) && ( author.getInstitutions() == null || author.getInstitutions().isEmpty() ) )
+				{
+					String institutionName = institution.toLowerCase().replace( "university", "" ).replace( "college", "" ).replace( "state", "" ).replace( "institute", "" ).replace( "school", "" ).replace( "academy", "" );
+					Institution institutionObject = null;
+					// find institution on database
+					List<Institution> institutionObjects = persistenceStrategy.getInstitutionDAO().getWithFullTextSearch( institutionName );
+					if ( !institutionObjects.isEmpty() )
+					{
+						// get the first one which is more likely correct
+						institutionObject = institutionObjects.get( 0 );
+					}
+					else
+					{
+						institutionObject = new Institution();
+						institutionObject.setName( institution );
+						institutionObject.setURI( institution.replace( " ", "-" ) );
+					}
+
+					author.addInstitution( institutionObject );
+				}
+
+				if ( !academicStatus.equals( "" ) && author.getAcademicStatus() == null )
+				{
+					author.setAcademicStatus( academicStatus );
 				}
 
 				// author alias if exist

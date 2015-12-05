@@ -32,7 +32,6 @@ public class MendeleyPublicationCollection extends PublicationCollection
 	{
 		super();
 	}
-
 	/**
 	 * Get possible author
 	 * 
@@ -200,7 +199,9 @@ public class MendeleyPublicationCollection extends PublicationCollection
 					if ( !authorNode.path( "last_name" ).isMissingNode() )
 						authorName += authorNode.path( "last_name" ).textValue().toLowerCase();
 
-					if ( !authorName.equals( "" ) && authorName.equals( author.getName() ) )
+					authorName = authorName.trim();
+
+					if ( !authorName.equals( "" ) && authorName.equals( author.getName().toLowerCase() ) )
 						return true;
 				}
 			}
@@ -248,7 +249,7 @@ public class MendeleyPublicationCollection extends PublicationCollection
 				publicationDetailMap.put( "type", pubType );
 		}
 		if ( !publicationNode.path( "year" ).isMissingNode() )
-			publicationDetailMap.put( "datePublished", publicationNode.path( "year" ).textValue() );
+			publicationDetailMap.put( "datePublished", String.valueOf( publicationNode.path( "year" ).intValue() ) );
 		if ( !publicationNode.path( "abstract" ).isMissingNode() )
 			publicationDetailMap.put( "abstract", publicationNode.path( "abstract" ).textValue().replaceAll( "\\\\n", " " ) );
 		if ( !publicationNode.path( "keywords" ).isMissingNode() )

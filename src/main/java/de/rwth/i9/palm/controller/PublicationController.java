@@ -54,7 +54,7 @@ public class PublicationController
 	@Transactional
 	public ModelAndView publicationPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
-			@RequestParam( value = "id", required = false ) final String publicationId, 
+ @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "title", required = false ) final String title,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// get current session object
@@ -68,7 +68,10 @@ public class PublicationController
 		model.addObject( "widgets", widgets );
 
 		if ( publicationId != null )
-			model.addObject( "publicationId", publicationId );
+			model.addObject( "targetId", publicationId );
+
+		if ( title != null )
+			model.addObject( "targetTitle", title );
 
 		return model;
 	}
