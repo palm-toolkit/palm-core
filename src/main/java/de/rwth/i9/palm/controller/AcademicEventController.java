@@ -52,7 +52,16 @@ public class AcademicEventController
 
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
-	public ModelAndView mainPage( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response ) throws InterruptedException
+	public ModelAndView eventPage( 
+			@RequestParam( value = "sessionid", required = false ) final String sessionId,
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "eventId", required = false ) final String eventId, 
+			@RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "type", required = false ) final String type,
+			@RequestParam( value = "year", required = false ) final String year,
+			@RequestParam( value = "volume", required = false ) final String volume,
+			@RequestParam( value = "publicationId", required = false ) final String publicationId,
+			final HttpServletResponse response) throws InterruptedException
 	{
 		// get current session object
 		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
@@ -63,6 +72,21 @@ public class AcademicEventController
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CONFERENCE, WidgetStatus.DEFAULT );
 		// assign the model
 		model.addObject( "widgets", widgets );
+		// assign query
+		if ( id != null )
+			model.addObject( "targetId", id );
+		if ( eventId != null )
+			model.addObject( "targetEventId", eventId );
+		if ( name != null )
+			model.addObject( "targetName", name );
+		if ( type != null )
+			model.addObject( "targetType", type );
+		if ( year != null )
+			model.addObject( "targetYear", year );
+		if ( name != null )
+			model.addObject( "targetVolume", volume );
+		if ( publicationId != null )
+			model.addObject( "publicationId", publicationId );
 		return model;
 	}
 
@@ -72,6 +96,7 @@ public class AcademicEventController
 			@RequestParam( value = "query", required = false ) String query, 
 			@RequestParam( value = "startPage", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			@RequestParam( value = "type", required = false ) String type,
 			@RequestParam( value = "source", required = false ) String source,
 			@RequestParam( value = "persist", required = false ) String persist,
 			HttpServletRequest request,
@@ -80,6 +105,7 @@ public class AcademicEventController
 		if ( query == null ) 		query = "";
 		if ( startPage == null )	startPage = 0;
 		if ( maxresult == null )	maxresult = 50;
+		if ( type == null )			type = "all";
 		if ( source == null )		source = "internal";
 		if ( persist == null )		persist = "no";
 		
@@ -88,6 +114,7 @@ public class AcademicEventController
 		boolean persistResult = false;
 
 		responseMap.put( "query", query );
+		responseMap.put( "type", type );
 		responseMap.put( "startPage", startPage );
 		responseMap.put( "maxresult", maxresult );
 		responseMap.put( "source", source );
@@ -98,7 +125,7 @@ public class AcademicEventController
 			persistResult = true;
 		}
 		
-		List<EventGroup> eventGroups = academicEventFeature.getEventSearch().getEventGroupListByQuery( query, startPage, maxresult, source, persistResult );
+		List<EventGroup> eventGroups = academicEventFeature.getEventSearch().getEventGroupListByQuery( query, startPage, maxresult, source, type, persistResult );
 
 		// put in session
 		request.getSession().setAttribute( "eventGroups", eventGroups );
@@ -108,7 +135,12 @@ public class AcademicEventController
 	
 	@RequestMapping( value = "/fetchGroup", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> fetchEventGroupFromDblp( @RequestParam( value = "id", required = false ) final String id, @RequestParam( value = "pid", required = false ) final String pid, @RequestParam( value = "force", required = false ) final String force, HttpServletRequest request, HttpServletResponse response) throws ParseException, IOException, InterruptedException, ExecutionException, java.text.ParseException, TimeoutException, OAuthSystemException, OAuthProblemException
+	public @ResponseBody Map<String, Object> fetchEventGroupFromDblp( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "pid", required = false ) final String pid, 
+			@RequestParam( value = "force", required = false ) final String force, 
+			HttpServletRequest request, HttpServletResponse response) throws ParseException, 
+			IOException, InterruptedException, ExecutionException, java.text.ParseException, TimeoutException, OAuthSystemException, OAuthProblemException
 	{
 		@SuppressWarnings( "unchecked" )
 		List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
@@ -138,7 +170,7 @@ public class AcademicEventController
 	@Transactional
 	public @ResponseBody List<Object> getEventAutoComplete( @RequestParam( value = "query", required = false ) final String query, final HttpServletResponse response)
 	{
-		return DblpEventCollection.getEventFromDBLPSearch( query, null );
+		return DblpEventCollection.getEventFromDBLPSearch( query, "all", null );
 	}
 
 }

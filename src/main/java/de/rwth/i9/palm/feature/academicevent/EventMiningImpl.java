@@ -136,22 +136,13 @@ public class EventMiningImpl implements EventMining
 
 		responseMap.put( "status", "ok" );
 
-		// TODO check for expiration date
-		// add date to event group
-		java.util.Date date = new java.util.Date();
-		Timestamp currentTimestamp = new Timestamp( date.getTime() );
-		eventGroup.setRequestDate( currentTimestamp );
-
-		// persist
-		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
-
 		String year = "";
-		List<Event> events = null;
 
-		// get list of events
-		if ( eventGroup.getEvents() == null || eventGroup.getEvents().isEmpty() )
+		// check whether it'S necessary to fetch
+		if ( isFetchDatasetFromGroupDBLP( eventGroup ) )
 		{
-			events = new ArrayList<Event>();
+
+			List<Event> eventExternals = new ArrayList<Event>();
 
 			Map<String, Object> venueDetailMap = DblpEventCollection.getEventListFromDBLP( eventGroup.getDblpUrl(), null );
 
@@ -168,18 +159,23 @@ public class EventMiningImpl implements EventMining
 							if ( eachEventYearEntry.getKey().equals( "volume" ) )
 							{
 								int position = 0;
+								int volume = 0;
 								for ( Entry<String, String> eachEventVolumeEntry : ( (Map<String, String>) eachEventYearEntry.getValue() ).entrySet() )
 								{
 									Event newEvent = new Event();
+									String name = eachEventVolumeEntry.getKey();
 									newEvent.setYear( year );
 									newEvent.setPosition( position );
-									newEvent.setName( eachEventVolumeEntry.getKey() );
+									newEvent.setName( name );
 									newEvent.setDblpUrl( eachEventVolumeEntry.getValue() );
-									newEvent.setEventGroup( eventGroup );
-									eventGroup.addEvent( newEvent );
-									persistenceStrategy.getEventDAO().persist( newEvent );
 
 									position++;
+									if ( name.toLowerCase().contains( "volume" ) )
+									{
+										volume++;
+										newEvent.setVolume( String.valueOf( volume ) );
+									}
+									eventGroup.addEvent( newEvent );
 								}
 							}
 							else if ( eachEventYearEntry.getKey().equals( "year" ) )
@@ -192,27 +188,50 @@ public class EventMiningImpl implements EventMining
 					}
 				}
 			}
-			// persist
+
+			// save eventGroup
 			persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 		}
-		else
-		{
-			events = eventGroup.getEvents();
-		}
+
+		List<Event> events = eventGroup.getEvents();
+
+		if ( events == null || events.isEmpty() )
+			return responseMap;
+
 		// sort collections based on year
 		Collections.sort( events, new EventByYearComparator() );
 
+		// put event group map to json
+		Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
+		eventGroupMap.put( "id", eventGroup.getId() );
+		eventGroupMap.put( "name", WordUtils.capitalize( eventGroup.getName() ) );
+		if ( eventGroup.getNotation() != null )
+			eventGroupMap.put( "abbr", eventGroup.getNotation() );
+		eventGroupMap.put( "url", eventGroup.getDblpUrl() );
+		if ( eventGroup.getDescription() != null )
+			eventGroupMap.put( "description", eventGroup.getDescription() );
+		eventGroupMap.put( "type", eventGroup.getPublicationType().toString().toLowerCase() );
+
+		eventGroupMap.put( "isAdded", eventGroup.isAdded() );
+
+		responseMap.put( "eventGroup", eventGroupMap );
+
 		// print event in json
 
-		List<Map<String, String>> eventList = new ArrayList<Map<String, String>>();
+		List<Object> eventList = new ArrayList<Object>();
 
 		for ( Event event : events )
 		{
-			Map<String, String> eventMap = new LinkedHashMap<String, String>();
+			Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 			eventMap.put( "id", event.getId() );
 			eventMap.put( "name", WordUtils.capitalize( event.getName() ) );
 			eventMap.put( "year", event.getYear() );
 			eventMap.put( "url", event.getDblpUrl() );
+
+			if ( event.getVolume() != null )
+				eventMap.put( "volume", event.getVolume() );
+
+			eventMap.put( "isAdded", event.isAdded() );
 
 			eventList.add( eventMap );
 		}
@@ -220,5 +239,39 @@ public class EventMiningImpl implements EventMining
 		responseMap.put( "events", eventList );
 
 		return responseMap;
+	}
+
+	/**
+	 * Check whether fetching to network is necessary
+	 * 
+	 * @param author
+	 * @return
+	 */
+	private boolean isFetchDatasetFromGroupDBLP( EventGroup eventGroup )
+	{
+		// get current timestamp
+		java.util.Date date = new java.util.Date();
+		Timestamp currentTimestamp = new Timestamp( date.getTime() );
+		if ( eventGroup.getRequestDate() != null )
+		{
+			// check if the existing author publication is obsolete
+			if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, eventGroup.getRequestDate() ) > 24 * 7 )
+			{
+				// update current timestamp
+				eventGroup.setRequestDate( currentTimestamp );
+				persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+				return true;
+			}
+		}
+		else
+		{
+			// update current timestamp
+			eventGroup.setRequestDate( currentTimestamp );
+			persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+			return true;
+		}
+
+		// return false;
+		return false;
 	}
 }

@@ -801,7 +801,7 @@ public class PublicationCollectionService
 					if ( pubSource.getSourceType().equals( SourceType.DBLP ) && pubSource.getVenue() != null && pubSource.getVenueUrl() != null )
 					{
 						String eventName = pubSource.getVenue();
-						EventGroup eventGroup = persistenceStrategy.getEventDAO().getEventGroupByEventNameOrNotation( eventName );
+						EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getEventGroupByEventNameOrNotation( eventName );
 						if ( eventGroup == null )
 						{
 							// create event group

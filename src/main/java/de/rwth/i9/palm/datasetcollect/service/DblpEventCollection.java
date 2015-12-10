@@ -490,8 +490,10 @@ public class DblpEventCollection extends PublicationCollection
 
 	/**
 	 * Searching venues on DBLP
+	 * 
+	 * @param type
 	 */
-	public static List<Object> getEventFromDBLPSearch( String query, Source source )
+	public static List<Object> getEventFromDBLPSearch( String query, String type, Source source )
 	{
 		// the url of querying venue will be
 		String url = "http://dblp.uni-trier.de/search/venue?q=" + query.replace( " ", "+" );
@@ -529,6 +531,12 @@ public class DblpEventCollection extends PublicationCollection
 
 				if ( venueUrl.startsWith( "http://dblp.uni-trier.de/db/conf" ) )
 					venueType = "conference";
+
+				// filter
+				if ( type.equals( "journal" ) && ( venueType.equals( "conference" ) || venueType.equals( "workshop" ) ) )
+					continue;
+				if ( venueType.equals( "journal" ) && ( type.equals( "conference" ) || type.equals( "workshop" ) ) )
+					continue;
 
 				int shortNameIndex = venueName.indexOf( "(" );
 				if ( shortNameIndex > 5 )

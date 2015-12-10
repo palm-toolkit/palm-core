@@ -72,7 +72,8 @@ public class DblpEventCollectionTest
 	{
 		String url = "http://dblp.uni-trier.de/db/conf/accv/";
 		// url = "http://dblp.uni-trier.de/db/journals/ai/";
-		url = "http://dblp.uni-trier.de/db/conf/edm/";
+		// url = "http://dblp.uni-trier.de/db/conf/edm/";
+		url = "http://dblp.uni-trier.de/db/conf/csedu/";
 
 		Map<String, Object> venueDetailMap = DblpEventCollection.getEventListFromDBLP( url, null );
 

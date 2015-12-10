@@ -31,7 +31,7 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 			return responseMap;
 		}
 
-		responseMap.put( "status", "OK" );
+		responseMap.put( "status", "ok" );
 
 		// put publication detail
 		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
@@ -39,7 +39,7 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 		if ( publication.getPublicationDate() != null )
 		{
 			SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd" );
-			publicationMap.put( "publication date", sdf.format( publication.getPublicationDate() ) );
+			publicationMap.put( "publicationDate", sdf.format( publication.getPublicationDate() ) );
 		}
 
 		if ( publication.getLanguage() != null )
@@ -59,8 +59,28 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 		{
 			Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 			eventMap.put( "id", publication.getEvent().getId() );
-			eventMap.put( "name", publication.getEvent().getEventGroup().getName() );
+			eventMap.put( "name", publication.getEvent().getName() );
+
+			if ( publication.getEvent().getVolume() != null )
+				eventMap.put( "volume", publication.getEvent().getVolume() );
+			if ( publication.getEvent().getYear() != null )
+				eventMap.put( "year", publication.getEvent().getYear() );
+			eventMap.put( "isAdded", publication.getEvent().isAdded() );
+
 			publicationMap.put( "event", eventMap );
+
+			if ( publication.getEvent().getEventGroup() != null )
+			{
+				Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
+				eventGroupMap.put( "id", publication.getEvent().getEventGroup().getId() );
+				eventGroupMap.put( "name", publication.getEvent().getEventGroup().getName() );
+
+				if ( publication.getEvent().getEventGroup().getNotation() != null )
+					eventGroupMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
+				eventGroupMap.put( "isAdded", publication.getEvent().getEventGroup().isAdded() );
+
+				publicationMap.put( "eventGroup", eventGroupMap );
+			}
 		}
 
 		if ( publication.getAdditionalInformation() != null )

@@ -64,8 +64,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
 			publicationMap.put( "id", publication.getId() );
 			publicationMap.put( "title", publication.getTitle() );
-			if ( publication.getAbstractText() != null )
-				publicationMap.put( "abstract", publication.getAbstractText() );
+			//if ( publication.getAbstractText() != null )
+				//publicationMap.put( "abstract", publication.getAbstractText() );
 			// coauthor
 			List<Map<String, Object>> coathorList = new ArrayList<Map<String, Object>>();
 			for ( Author author : publication.getCoAuthors() )

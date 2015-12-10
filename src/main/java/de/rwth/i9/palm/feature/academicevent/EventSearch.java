@@ -7,7 +7,7 @@ import de.rwth.i9.palm.model.EventGroup;
 
 public interface EventSearch
 {
-	public List<EventGroup> getEventGroupListByQuery( String query, Integer startPage, Integer maxresult, String source, boolean persistResult );
+	public List<EventGroup> getEventGroupListByQuery( String query, Integer startPage, Integer maxresult, String source, String type, boolean persistResult );
 
 	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<EventGroup> eventGroups );
 }

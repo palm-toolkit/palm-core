@@ -21,23 +21,26 @@ public class EventSearchImpl implements EventSearch
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public List<EventGroup> getEventGroupListByQuery( String query, Integer startPage, Integer maxResult, String source, boolean persistResult )
+	public List<EventGroup> getEventGroupListByQuery( String query, Integer startPage, Integer maxResult, String source, String type, boolean persistResult )
 	{
 		List<EventGroup> eventGroups = new ArrayList<EventGroup>();
 
 		// get authors from the datasource
 		if ( source.equals( "internal" ) )
 		{
-			eventGroups.addAll( persistenceStrategy.getEventDAO().getEventGroupListWithPaging( query, startPage, maxResult ) );
+			//
+			///eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListWithPaging( query, type, startPage, maxResult ) );
+			// set lucene fulltext search by default
+			eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListFullTextSearchWithPaging( query, type, startPage, maxResult ));
 		}
 		else if ( source.equals( "all" ) )
 		{
 			// TODO: change implementation
 			// get event from DBLP
-			List<Object> dblpEvents = DblpEventCollection.getEventFromDBLPSearch( query, null );
+			List<Object> dblpEvents = DblpEventCollection.getEventFromDBLPSearch( query, type, null );
 
 			// combine
-			eventGroups.addAll( persistenceStrategy.getEventDAO().getEventGroupListWithPaging( query, startPage, maxResult ) );
+			eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListWithPaging( query, type, startPage, maxResult ) );
 
 			if ( dblpEvents != null && !dblpEvents.isEmpty() )
 			{
@@ -66,6 +69,7 @@ public class EventSearchImpl implements EventSearch
 						EventGroup newEventGroup = new EventGroup();
 						newEventGroup.setDblpUrl( eventGroupUrl );
 						newEventGroup.setName( dblpEventMap.get( "name" ) );
+						newEventGroup.setNotation( dblpEventMap.get( "abbr" ) );
 						newEventGroup.setPublicationType( PublicationType.valueOf( dblpEventMap.get( "type" ).toUpperCase() ) );
 
 						eventGroups.add( newEventGroup );
@@ -86,19 +90,21 @@ public class EventSearchImpl implements EventSearch
 			return responseMap;
 		}
 
-		List<Map<String, String>> eventGroupList = new ArrayList<Map<String, String>>();
+		List<Map<String, Object>> eventGroupList = new ArrayList<Map<String, Object>>();
 
 		for ( EventGroup eventGroup : eventGroups )
 		{
-			Map<String, String> eventGroupMap = new LinkedHashMap<String, String>();
+			Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
 			eventGroupMap.put( "id", eventGroup.getId() );
 			eventGroupMap.put( "name", WordUtils.capitalize( eventGroup.getName() ) );
 			if ( eventGroup.getNotation() != null )
-				eventGroupMap.put( "name abbr", eventGroup.getNotation() );
+				eventGroupMap.put( "abbr", eventGroup.getNotation() );
 			eventGroupMap.put( "url", eventGroup.getDblpUrl() );
 			if ( eventGroup.getDescription() != null )
 				eventGroupMap.put( "description", eventGroup.getDescription() );
 			eventGroupMap.put( "type", eventGroup.getPublicationType().toString().toLowerCase() );
+
+			eventGroupMap.put( "isAdded", eventGroup.isAdded() );
 			// TODO:Event
 			// List<Event> events = eventGroup.getEvents();
 

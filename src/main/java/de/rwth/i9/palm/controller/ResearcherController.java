@@ -67,7 +67,7 @@ public class ResearcherController
 	 */
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
-	public ModelAndView mainPage( 
+	public ModelAndView researcherPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
 			@RequestParam( value = "id", required = false ) final String id, 
 			@RequestParam( value = "name", required = false ) final String name,
@@ -288,7 +288,11 @@ public class ResearcherController
 	
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationList( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getPublicationList( 
+			@RequestParam( value = "id", required = false ) final String authorId,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			final HttpServletResponse response)
 	{
 		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId );
 	}

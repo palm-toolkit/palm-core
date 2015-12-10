@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 public class AlchemyAPITopicExtractionTest
 {
 	@Test
+	@Ignore
 	public void getListOfAuthorsTest() throws RestClientException, UnsupportedEncodingException
 	{
 		String endpoint = "http://access.alchemyapi.com/calls/text/TextGetRankedKeywords";

@@ -20,6 +20,7 @@ import de.rwth.i9.palm.model.SourceProperty;
 public class DblpPublicationCollectionTest
 {
 	@Test
+	@Ignore
 	public void getListOfAuthorsTest() throws IOException
 	{
 		SourceProperty sourceProperty1 = new SourceProperty();
@@ -47,10 +48,24 @@ public class DblpPublicationCollectionTest
 	}
 
 	@Test
-	@Ignore
+
 	public void getListOfPublicationTest() throws IOException
 	{
-		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/db/conf/csedu/csedu2009-1.html" );
+		SourceProperty sourceProperty1 = new SourceProperty();
+		sourceProperty1.setMainIdentifier( "cookie" );
+		sourceProperty1.setSecondaryIdentifier( "dblp-view" );
+		sourceProperty1.setValue( "t" );
+
+		SourceProperty sourceProperty2 = new SourceProperty();
+		sourceProperty2.setMainIdentifier( "cookie" );
+		sourceProperty2.setSecondaryIdentifier( "dblp-search-mode" );
+		sourceProperty2.setValue( "c" );
+
+		Source source = new Source();
+		source.addSourceProperty( sourceProperty1 );
+		source.addSourceProperty( sourceProperty2 );
+
+		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/c/Chatti:Mohamed_Amine", source );
 
 		for ( Map<String, String> eachPublicationMap : publicationMapLists )
 		{
