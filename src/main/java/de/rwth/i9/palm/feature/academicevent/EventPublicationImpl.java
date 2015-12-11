@@ -11,7 +11,7 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
+import de.rwth.i9.palm.helper.comparator.PublicationByPageComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.Institution;
@@ -56,7 +56,7 @@ public class EventPublicationImpl implements EventPublication
 		List<Publication> publications = new ArrayList<Publication>( event.getPublications() );
 
 		// sort based on period
-		Collections.sort( publications, new PublicationByDateComparator() );
+		Collections.sort( publications, new PublicationByPageComparator() );
 
 		for ( Publication publication : publications )
 		{

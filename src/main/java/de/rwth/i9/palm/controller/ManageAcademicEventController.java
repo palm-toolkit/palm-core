@@ -165,7 +165,7 @@ public class ManageAcademicEventController
 		if( publication != null && eventGroup.getDblpUrl() == null){
 			// create new event
 			Event event = new Event();
-			event.setName( eventGroup.getName() );
+			// event.setName( eventGroup.getName() );
 			if( volume != null )
 				event.setVolume( volume );
 			if( year != null )
