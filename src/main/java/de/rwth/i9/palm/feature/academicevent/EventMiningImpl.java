@@ -42,7 +42,7 @@ public class EventMiningImpl implements EventMining
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
-		// get author
+		// get event
 		Event event = persistenceStrategy.getEventDAO().getById( id );
 		if ( event == null )
 		{
@@ -148,32 +148,37 @@ public class EventMiningImpl implements EventMining
 
 			for ( Map.Entry<String, Object> entry : venueDetailMap.entrySet() )
 			{
+				int position = 0;
 				// only event information needed
 				if ( entry.getKey().equals( "events" ) )
 				{
 					for ( Map<String, Object> eachEventYearMap : (List<Map<String, Object>>) entry.getValue() )
 					{
-
 						for ( Entry<String, Object> eachEventYearEntry : eachEventYearMap.entrySet() )
 						{
 							if ( eachEventYearEntry.getKey().equals( "volume" ) )
 							{
-								int position = 0;
 								int volume = 0;
 								for ( Entry<String, String> eachEventVolumeEntry : ( (Map<String, String>) eachEventYearEntry.getValue() ).entrySet() )
 								{
 									Event newEvent = new Event();
 									String name = eachEventVolumeEntry.getKey();
 									newEvent.setYear( year );
-									newEvent.setPosition( position );
+
 									newEvent.setName( name );
 									newEvent.setDblpUrl( eachEventVolumeEntry.getValue() );
 
-									position++;
 									if ( name.toLowerCase().contains( "volume" ) )
 									{
 										volume++;
 										newEvent.setVolume( String.valueOf( volume ) );
+										newEvent.setPosition( volume );
+									}
+									else
+									{
+										position = volume;
+										position++;
+										newEvent.setPosition( position );
 									}
 									eventGroup.addEvent( newEvent );
 								}

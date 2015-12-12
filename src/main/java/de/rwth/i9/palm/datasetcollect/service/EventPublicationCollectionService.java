@@ -88,8 +88,8 @@ public class EventPublicationCollectionService
 		if ( event.getDblpUrl() == null )
 		{
 			// TODO update author sources
-			responseMap.put( "result", "error" );
-			responseMap.put( "reason", "event doesn't have DBLP URL to crawl" );
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "event doesn't have DBLP URL to crawl" );
 		}
 
 		// getSourceMap
@@ -166,7 +166,7 @@ public class EventPublicationCollectionService
 		// should be implemented here
 
 		// second, extract and combine information from multiple sources
-		this.extractPublicationInformationDetailFromSources( eventPublications );
+		this.extractPublicationInformationDetailFromSources( event, eventPublications );
 
 		// process log
 		applicationService.putProcessLog( pid, "Done merging " + publicationDetailMapList.size() + " publications<br><br>", "append" );
@@ -187,6 +187,7 @@ public class EventPublicationCollectionService
 			publication.setContentUpdated( true );
 			persistenceStrategy.getPublicationDAO().persist( publication );
 		}
+
 		persistenceStrategy.getEventDAO().persist( event );
 	}
 
@@ -211,6 +212,8 @@ public class EventPublicationCollectionService
 
 		// set event crawlDate
 		event.setCrawlDate( currentTimestamp );
+		// set event is added true
+		event.setAdded( true );
 
 		for ( Map<String, String> publicationMap : publicationDetailMapList )
 		{
@@ -393,10 +396,12 @@ public class EventPublicationCollectionService
 	 * @throws ExecutionException
 	 * @throws ParseException
 	 */
-	public void extractPublicationInformationDetailFromSources( List<Publication> eventPublications ) throws ParseException
+	public void extractPublicationInformationDetailFromSources( Event event, List<Publication> eventPublications ) throws ParseException
 	{
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/d", Locale.ENGLISH );
 		Set<String> existingMainSourceUrl = new HashSet<String>();
+
+		int numberOfTotalAuthor = 0;
 
 		for ( Publication publication : eventPublications )
 		{
@@ -547,6 +552,9 @@ public class EventPublicationCollectionService
 								// persist new source
 								persistenceStrategy.getAuthorDAO().persist( author );
 							}
+
+							// sum number of participant
+							numberOfTotalAuthor++;
 						}
 					}
 				}
@@ -639,6 +647,10 @@ public class EventPublicationCollectionService
 				}
 			}
 		}
+
+		// set number of publications and participants
+		event.setNumberPaper( eventPublications.size() );
+		event.setNumberParticipant( numberOfTotalAuthor );
 
 	}
 
