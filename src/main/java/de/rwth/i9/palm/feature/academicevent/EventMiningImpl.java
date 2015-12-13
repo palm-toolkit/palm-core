@@ -24,6 +24,7 @@ import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.helper.comparator.EventByYearComparator;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.PublicationType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.util.IdentifierFactory;
 
@@ -136,13 +137,19 @@ public class EventMiningImpl implements EventMining
 
 		responseMap.put( "status", "ok" );
 
-		String year = "";
+		// event properties
+		String year = null;
+		String number = null;
+		String abbr = null;
+		String city = null;
+		String state = null;
+		String country = null;
 
 		// check whether it'S necessary to fetch
 		if ( isFetchDatasetFromGroupDBLP( eventGroup ) )
 		{
 
-			List<Event> eventExternals = new ArrayList<Event>();
+			// List<Event> eventExternals = new ArrayList<Event>();
 
 			Map<String, Object> venueDetailMap = DblpEventCollection.getEventListFromDBLP( eventGroup.getDblpUrl(), null );
 
@@ -166,6 +173,9 @@ public class EventMiningImpl implements EventMining
 									newEvent.setYear( year );
 
 									newEvent.setName( name );
+
+									extractAdditionalInformationDBLPConference( name, eventGroup, newEvent );
+
 									newEvent.setDblpUrl( eachEventVolumeEntry.getValue() );
 
 									if ( name.toLowerCase().contains( "volume" ) )
@@ -180,15 +190,46 @@ public class EventMiningImpl implements EventMining
 										position++;
 										newEvent.setPosition( position );
 									}
+
+									if ( number != null )
+										newEvent.addOrUpdateAdditionalInformation( "number", number );
+									if ( abbr != null )
+										newEvent.addOrUpdateAdditionalInformation( "abbr", abbr );
+									if ( city != null )
+										newEvent.addOrUpdateAdditionalInformation( "city", city );
+									if ( state != null )
+										newEvent.addOrUpdateAdditionalInformation( "state", state );
+									if ( country != null )
+										newEvent.addOrUpdateAdditionalInformation( "country", country );
+									
 									eventGroup.addEvent( newEvent );
 								}
 							}
 							else if ( eachEventYearEntry.getKey().equals( "year" ) )
 							{
+								// reset 
+								year = null;number = null;abbr = null;city = null;state = null;country = null;
+								
+								// get year
 								if ( eachEventYearMap.get( "year" ) != null && !eachEventYearMap.get( "year" ).equals( "" ) )
-								year = (String) eachEventYearMap.get( "year" );
+									year = (String) eachEventYearMap.get( "year" );
+								// get number
+								if ( eachEventYearMap.get( "number" ) != null && !eachEventYearMap.get( "number" ).equals( "" ) )
+									number = (String) eachEventYearMap.get( "number" );
+								// get abbr
+								if ( eachEventYearMap.get( "abbr" ) != null && !eachEventYearMap.get( "abbr" ).equals( "" ) )
+									abbr = (String) eachEventYearMap.get( "abbr" );
+								// get city
+								if ( eachEventYearMap.get( "city" ) != null && !eachEventYearMap.get( "city" ).equals( "" ) )
+									city = (String) eachEventYearMap.get( "city" );
+								// get state
+								if ( eachEventYearMap.get( "state" ) != null && !eachEventYearMap.get( "state" ).equals( "" ) )
+									state = (String) eachEventYearMap.get( "state" );
+								// get country
+								if ( eachEventYearMap.get( "country" ) != null && !eachEventYearMap.get( "country" ).equals( "" ) )
+									country = (String) eachEventYearMap.get( "country" );
 							}
-
+								
 						}
 					}
 				}
@@ -231,10 +272,48 @@ public class EventMiningImpl implements EventMining
 			eventMap.put( "id", event.getId() );
 			eventMap.put( "name", WordUtils.capitalize( event.getName() ) );
 			eventMap.put( "year", event.getYear() );
-			eventMap.put( "url", event.getDblpUrl() );
+			if ( event.getDblpUrl() != null )
+				eventMap.put( "url", event.getDblpUrl() );
 
 			if ( event.getVolume() != null )
 				eventMap.put( "volume", event.getVolume() );
+
+			Map<String, Object> additionalInformationMap = null;
+			if ( event.getAdditionalInformation() != null )
+				additionalInformationMap = event.getAdditionalInformationAsMap();
+
+			if ( additionalInformationMap != null && !additionalInformationMap.isEmpty() )
+			{
+				if ( additionalInformationMap.get( "number" ) != null )
+					eventMap.put( "number", additionalInformationMap.get( "number" ) );
+
+				if ( additionalInformationMap.get( "date" ) != null )
+					eventMap.put( "date", additionalInformationMap.get( "date" ) );
+
+				String location = "";
+				if ( event.getLocation() != null )
+				{
+					if ( event.getLocation().getCity() != null )
+						location = event.getLocation().getCity();
+					if ( event.getLocation().getState() != null )
+						location += ", " + event.getLocation().getState();
+					if ( event.getLocation().getCountry() != null )
+						location += ", " + event.getLocation().getCountry().getName();
+				}
+
+				if ( location.equals( "" ) )
+				{
+					if ( additionalInformationMap.get( "city" ) != null )
+						location = (String) additionalInformationMap.get( "city" );
+					if ( additionalInformationMap.get( "state" ) != null )
+						location += ", " + (String) additionalInformationMap.get( "state" );
+					if ( additionalInformationMap.get( "country" ) != null )
+						location += ", " + (String) additionalInformationMap.get( "country" );
+				}
+
+				if ( !location.equals( "" ) )
+					eventMap.put( "location", location );
+			}
 
 			eventMap.put( "isAdded", event.isAdded() );
 
@@ -244,6 +323,41 @@ public class EventMiningImpl implements EventMining
 		responseMap.put( "events", eventList );
 
 		return responseMap;
+	}
+
+	/**
+	 * Extract additional information to event
+	 * 
+	 * @param name
+	 * @param eventGroup
+	 * @param newEvent
+	 */
+	private void extractAdditionalInformationDBLPConference( String name, EventGroup eventGroup, Event newEvent )
+	{
+		if ( eventGroup.getPublicationType().equals( PublicationType.CONFERENCE ) )
+		{
+			// get the event  date
+			String[] nameArray = name.split( "," );
+			for( String namePart : nameArray ){
+				if( namePart.length() < 18 ){
+					String namePartLowercase = namePart.toLowerCase();
+					if( namePartLowercase.contains( "january" ) || namePartLowercase.contains( "february" ) ||
+						namePartLowercase.contains( "march" ) || namePartLowercase.contains( "april" ) ||
+						namePartLowercase.contains( "may" ) || namePartLowercase.contains( "june" ) ||
+						namePartLowercase.contains( "july" ) || namePartLowercase.contains( "august" ) ||
+						namePartLowercase.contains( "september" ) || namePartLowercase.contains( "october" ) ||
+						namePartLowercase.contains( "november" ) || namePartLowercase.contains( "descember" ) ){
+						newEvent.addOrUpdateAdditionalInformation( "date", namePart.trim() );
+						break;
+					}
+				}
+			}
+
+		}
+		else if ( eventGroup.getPublicationType().equals( PublicationType.JOURNAL ) )
+		{
+
+		}
 	}
 
 	/**

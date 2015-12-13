@@ -548,6 +548,17 @@ public class DblpEventCollection extends PublicationCollection
 				venueMap.put( "name", venueName );
 				if ( venueShortName != null )
 					venueMap.put( "abbr", venueShortName );
+				else
+				{
+					int cutIndex = 0;
+					if ( venueType.equals( "conference" ) )
+						cutIndex = 33;
+					else
+						cutIndex = 37;
+					String venueShortFromUrl = venueUrl.substring( cutIndex ).replaceAll( "\\/", "" ).toUpperCase();
+					if ( venueShortFromUrl.length() < 9 )
+						venueMap.put( "abbr", venueShortFromUrl );
+				}
 				venueMap.put( "url", venueUrl );
 				venueMap.put( "type", venueType );
 
@@ -576,13 +587,24 @@ public class DblpEventCollection extends PublicationCollection
 				int shortNameIndex = venueName.indexOf( "(" );
 				if ( shortNameIndex > 5 )
 				{
-					venueName = venueName.substring( 0, shortNameIndex - 1 );
 					venueShortName = venueName.substring( shortNameIndex + 1, venueName.length() - 1 );
+					venueName = venueName.substring( 0, shortNameIndex - 1 );
 				}
 
 				venueMap.put( "name", venueName );
 				if ( venueShortName != null )
 					venueMap.put( "abbr", venueShortName );
+				else
+				{
+					int cutIndex = 0;
+					if ( venueType.equals( "conference" ) )
+						cutIndex = 33;
+					else
+						cutIndex = 37;
+					String venueShortFromUrl = venueUrl.substring( cutIndex ).replaceAll( "\\/", "" ).toUpperCase();
+					if ( venueShortFromUrl.length() < 9 )
+						venueMap.put( "abbr", venueShortFromUrl );
+				}
 				venueMap.put( "url", venueUrl );
 				venueMap.put( "type", venueType );
 
@@ -644,13 +666,40 @@ public class DblpEventCollection extends PublicationCollection
 						if ( headerTextSplit.length == 0 )
 							continue;
 
-						String year = null;
-						if ( headerTextSplit[0].length() > 8 )
-							year = headerTextSplit[0].substring( headerTextSplit[0].length() - 4 );
-
 						// create new conference per year object
 						conferenceOnSpecificYear = new LinkedHashMap<String, Object>();
-						conferenceOnSpecificYear.put( "year", year );
+
+						if ( headerTextSplit[0].length() > 8 )
+							conferenceOnSpecificYear.put( "year", headerTextSplit[0].substring( headerTextSplit[0].length() - 4 ) );
+
+						int dotIndex = headerTextSplit[0].indexOf( "." );
+						if ( dotIndex > 0 )
+						{
+							conferenceOnSpecificYear.put( "number", headerTextSplit[0].substring( 0, dotIndex ).trim() );
+							conferenceOnSpecificYear.put( "abbr", headerTextSplit[0].substring( dotIndex + 1, headerTextSplit[0].length() - 4 ).trim() );
+						}
+
+						if ( headerTextSplit.length > 0 )
+						{
+							String[] conferenceLocation = headerTextSplit[1].split( "," );
+							if ( conferenceLocation.length == 3 )
+							{
+								conferenceOnSpecificYear.put( "city", conferenceLocation[0].trim() );
+								conferenceOnSpecificYear.put( "state", conferenceLocation[1].trim() );
+								conferenceOnSpecificYear.put( "country", conferenceLocation[2].replace( "The ", "" ).trim() );
+							}
+							else if ( conferenceLocation.length == 2 )
+							{
+								conferenceOnSpecificYear.put( "city", conferenceLocation[0].trim() );
+								conferenceOnSpecificYear.put( "country", conferenceLocation[1].replace( "The ", "" ).trim() );
+							}
+							else
+							{
+								conferenceOnSpecificYear.put( "country", conferenceLocation[0].replace( "The", "" ).trim() );
+							}
+						}
+
+
 					}
 				}
 				else
@@ -755,21 +804,21 @@ public class DblpEventCollection extends PublicationCollection
 			}
 
 			// volume , here only one volume
-			volumeMap.put( volume, eventLiChildren.get( 0 ).absUrl( "href" ) );
+			volumeMap.put( volume.trim(), eventLiChildren.get( 0 ).absUrl( "href" ) );
 
 			// put year and volume
-			dblpJournal.put( "year", eventLiTextSplit[1] );
+			dblpJournal.put( "year", eventLiTextSplit[1].trim() );
 			dblpJournal.put( "volume", volumeMap );
 		}
 		else
 		{
 			// put year
-			dblpJournal.put( "year", eventLiTextSplit[0] );
+			dblpJournal.put( "year", eventLiTextSplit[0].trim() );
 
 			// put volume
 			for ( Element volumeElement : eventLiChildren )
 			{
-				volumeMap.put( volumeElement.text(), volumeElement.absUrl( "href" ) );
+				volumeMap.put( volumeElement.text().trim(), volumeElement.absUrl( "href" ) );
 			}
 			dblpJournal.put( "volume", volumeMap );
 		}

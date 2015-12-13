@@ -133,18 +133,20 @@ public class ManageAcademicEventController
 		// set event type, incase changed
 		if ( type != null )
 		{
-			if ( !type.equals( eventGroup.getPublicationType().toString().toLowerCase() ) )
+			try
 			{
-				try
-				{
-					PublicationType pubType = PublicationType.valueOf( type.toUpperCase() );
-					eventGroup.setPublicationType( pubType );
-				}
-				catch ( Exception e )
-				{
-				}
+				PublicationType pubType = PublicationType.valueOf( type.toUpperCase() );
+				eventGroup.setPublicationType( pubType );
+			}
+			catch ( Exception e )
+			{
 			}
 		}
+
+		// TODO
+		// check for duplication
+		// check dblpurl or notation
+
 		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 		
 		// if event exist
