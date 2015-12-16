@@ -133,8 +133,8 @@ public class AcademicEventController
 		return academicEventFeature.getEventSearch().printJsonOutput( responseMap, eventGroups );
 	}
 	
-	@RequestMapping( value = "/fetchGroup", method = RequestMethod.GET )
 	@Transactional
+	@RequestMapping( value = "/fetchGroup", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> fetchEventGroupFromDblp( 
 			@RequestParam( value = "id", required = false ) final String id, 
 			@RequestParam( value = "pid", required = false ) final String pid, 
@@ -143,7 +143,7 @@ public class AcademicEventController
 			IOException, InterruptedException, ExecutionException, java.text.ParseException, TimeoutException, OAuthSystemException, OAuthProblemException
 	{
 		@SuppressWarnings( "unchecked" )
-		List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
+		List<EventGroup> sessionEventGroups = null;// (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
 
 		return academicEventFeature.getEventMining().fetchEventGroupData( id, pid, sessionEventGroups );
 	}
