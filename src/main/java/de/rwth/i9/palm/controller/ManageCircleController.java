@@ -1,0 +1,138 @@
+package de.rwth.i9.palm.controller;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.tika.exception.TikaException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.servlet.ModelAndView;
+import org.xml.sax.SAXException;
+
+import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.SessionDataSet;
+import de.rwth.i9.palm.model.Widget;
+import de.rwth.i9.palm.model.WidgetType;
+import de.rwth.i9.palm.pdfextraction.service.PdfExtractionService;
+import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.service.ApplicationService;
+
+@Controller
+@SessionAttributes( "circle" )
+@RequestMapping( value = "/circle" )
+public class ManageCircleController
+{
+	private static final String LINK_NAME = "administration";
+
+	@Autowired
+	private ApplicationContextService appService;
+
+	@Autowired
+	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private ApplicationService applicationService;
+
+	@Autowired
+	private PdfExtractionService pdfExtractionService;
+
+	/**
+	 * Load the add circle form together with circle object
+	 * 
+	 * @param sessionId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/add", method = RequestMethod.GET )
+	public ModelAndView addNewCircle( 
+			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
+			final HttpServletResponse response) throws InterruptedException
+	{
+		// get current session object
+		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+
+		// set model and view
+		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.CIRCLE, "add" );
+
+		// create blank Circle
+		Circle circle = new Circle();
+
+		// assign the model
+		model.addObject( "widgets", widgets );
+		model.addObject( "circle", circle );
+
+		return model;
+	}
+
+	/**
+	 * Save changes from Add circle detail, via Spring binding
+	 * 
+	 * @param extractionServiceListWrapper
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/add", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> saveNewCircle( 
+			@ModelAttribute( "circle" ) Circle circle, 
+			final HttpServletResponse response) throws InterruptedException
+	{
+
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		return responseMap;
+	}
+
+	/**
+	 * Load the add circle form together with circle object
+	 * 
+	 * @param sessionId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/edit", method = RequestMethod.GET )
+	public ModelAndView editCircle( 
+			@RequestParam( value = "sessionid", required = false ) final String sessionId,
+			@RequestParam( value = "id") final String circleId,
+			final HttpServletResponse response) throws InterruptedException
+	{
+		// get current session object
+		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+
+		// set model and view
+		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.CIRCLE, "edit" );
+
+		// create blank Circle
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+
+		// assign the model
+		model.addObject( "widgets", widgets );
+		model.addObject( "circle", circle );
+
+		return model;
+	}
+}
