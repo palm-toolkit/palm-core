@@ -20,7 +20,7 @@ import de.rwth.i9.palm.model.SourceProperty;
 public class DblpPublicationCollectionTest
 {
 	@Test
-	@Ignore
+
 	public void getListOfAuthorsTest() throws IOException
 	{
 		SourceProperty sourceProperty1 = new SourceProperty();
@@ -37,7 +37,7 @@ public class DblpPublicationCollectionTest
 		source.addSourceProperty( sourceProperty1 );
 		source.addSourceProperty( sourceProperty2 );
 
-		List<Map<String, String>> authorList = DblpPublicationCollection.getListOfAuthors( "mohamed amine chatti", source );
+		List<Map<String, String>> authorList = DblpPublicationCollection.getListOfAuthors( "hendrik thüs", source );
 
 		for ( Map<String, String> eachAuthor : authorList )
 		{
@@ -48,7 +48,7 @@ public class DblpPublicationCollectionTest
 	}
 
 	@Test
-
+	@Ignore
 	public void getListOfPublicationTest() throws IOException
 	{
 		SourceProperty sourceProperty1 = new SourceProperty();

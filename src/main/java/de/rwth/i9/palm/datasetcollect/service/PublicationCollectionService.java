@@ -132,7 +132,7 @@ public class PublicationCollectionService
 		applicationService.putProcessLog( pid, "Done collecting publications list from Academic Networks<br><br>", "append" );
 
 		// process log
-		applicationService.putProcessLog( pid, "Merging publication list...<br>", "append" );
+		applicationService.putProcessLog( pid, "Merging publications...<br>", "append" );
 
 		// merge the result
 		this.mergePublicationInformation( publicationFutureLists, author, sourceMap, pid );
@@ -163,7 +163,7 @@ public class PublicationCollectionService
 			this.constructPublicationWithSources( selectedPublications, publicationFutureLists , author );
 			
 			// process log
-			applicationService.putProcessLog( pid, "Done in merging publication list<br><br>", "append" );
+			applicationService.putProcessLog( pid, "Done merging " + selectedPublications.size() + " publications", "append" );
 
 			// process log
 			applicationService.putProcessLog( pid, "Removing incorrect publications...<br>", "append" );
@@ -459,6 +459,7 @@ public class PublicationCollectionService
 
 				publicationSource.setSourceType( SourceType.valueOf( publicationMap.get( "source" ).toUpperCase() ) );
 
+				// TODO : this should be automatically signed from sources
 				if ( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) || publicationSource.getSourceType().equals( SourceType.CITESEERX ) || publicationSource.getSourceType().equals( SourceType.DBLP ) )
 					publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
 				else if ( publicationSource.getSourceType().equals( SourceType.MENDELEY ) || publicationSource.getSourceType().equals( SourceType.MAS ) )
@@ -496,11 +497,25 @@ public class PublicationCollectionService
 				// add venue detail for DBLP
 				if ( publicationSource.getSourceType().equals( SourceType.DBLP ) )
 				{
+					log.info( "eventUrl : " + publicationMap.get( "eventUrl" ) );
 					// venue url
 					if ( publicationMap.get( "eventUrl" ) != null )
+					{
 						publicationSource.setVenueUrl( publicationMap.get( "eventUrl" ) );
+
+						// Set publication type Workshop based on Url
+						if ( publicationSource.getVenueUrl().endsWith( "w.html" ) && publicationSource.getPublicationType().equals( "CONFERENCE" ) )
+							publicationSource.setPublicationType( "WORKSHOP" );
+
+					}
 					if ( publicationMap.get( "eventName" ) != null )
 						publicationSource.setVenue( publicationMap.get( "eventName" ) );
+					else
+					{
+						if ( publicationMap.get( "eventShortName" ) != null )
+							publicationSource.setVenue( publicationMap.get( "eventShortName" ) );
+					}
+
 					if ( publicationMap.get( "eventVolume" ) != null )
 						publicationSource.addOrUpdateAdditionalInformation( "volume", publicationMap.get( "eventVolume" ) );
 					if ( publicationMap.get( "eventNumber" ) != null )
@@ -796,11 +811,18 @@ public class PublicationCollectionService
 				publication.setPublicationType( publicationType );
 
 
-				if ( publicationType.equals( PublicationType.CONFERENCE ) || publicationType.equals( PublicationType.JOURNAL ) )
+				if ( publicationType.equals( PublicationType.CONFERENCE ) || publicationType.equals( PublicationType.WORKSHOP ) || publicationType.equals( PublicationType.JOURNAL ) )
 				{
 					if ( pubSource.getSourceType().equals( SourceType.DBLP ) && pubSource.getVenue() != null && pubSource.getVenueUrl() != null )
 					{
 						String eventName = pubSource.getVenue();
+						if ( publicationType.equals( PublicationType.WORKSHOP ) )
+						{
+							int workshopStringIndex = eventName.toLowerCase().indexOf( " w" );
+							if ( workshopStringIndex > 0 )
+								eventName = eventName.substring( 0, workshopStringIndex ).trim();
+						}
+
 						EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getEventGroupByEventNameOrNotation( eventName );
 						if ( eventGroup == null )
 						{
@@ -822,6 +844,9 @@ public class PublicationCollectionService
 
 							eventGroup.addEvent( event );
 							publication.setEvent( event );
+
+							// persistenceStrategy.getEventDAO().persist( event
+							// );
 						}
 						else
 						{
@@ -848,6 +873,15 @@ public class PublicationCollectionService
 								event.setEventGroup( eventGroup );
 
 								eventGroup.addEvent( event );
+								publication.setEvent( event );
+
+								// persistenceStrategy.getEventDAO().persist(
+								// event );
+							}
+							else
+							{
+								// event and eventgroup already exist
+								// set publication with this event
 								publication.setEvent( event );
 							}
 

@@ -1,15 +1,11 @@
 package de.rwth.i9.palm.controller;
 
-import java.io.IOException;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.tika.exception.TikaException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import org.xml.sax.SAXException;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Circle;
@@ -39,7 +32,7 @@ import de.rwth.i9.palm.service.ApplicationService;
 @RequestMapping( value = "/circle" )
 public class ManageCircleController
 {
-	private static final String LINK_NAME = "administration";
+	private static final String LINK_NAME = "circle";
 
 	@Autowired
 	private ApplicationContextService appService;

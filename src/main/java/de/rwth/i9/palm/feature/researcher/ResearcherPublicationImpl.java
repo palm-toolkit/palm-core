@@ -84,6 +84,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				if ( author.getPhotoUrl() != null )
 					authorMap.put( "photo", author.getPhotoUrl() );
 
+				authorMap.put( "isAdded", author.isAdded() );
+
 				coathorList.add( authorMap );
 			}
 			publicationMap.put( "coauthor", coathorList );
@@ -115,6 +117,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
 				eventMap.put( "name", publication.getEvent().getEventGroup().getName() );
+				eventMap.put( "isAdded", publication.getEvent().isAdded() );
 				publicationMap.put( "event", eventMap );
 			}
 

@@ -93,28 +93,52 @@ public class DblpPublicationCollection extends PublicationCollection
 		{
 			Map<String, String> eachAuthorMap = new LinkedHashMap<String, String>();
 
+			// get author name from URL
 			// e.g:http://dblp.uni-trier.de/pers/hd/c/Chatti:Mohamed_Amine?q=mohamed+amin+chatti
 			String[] urlAuthorQuery = document.baseUri().split( "\\?" );
 
-			// e.g:http://dblp.uni-trier.de/pers/hd/c/Chatti:Mohamed_Amine
-			String[] urlAuthor = urlAuthorQuery[0].split( "/" );
+			if ( pageTitle.startsWith( "dblp: " ) )
+			{
+				// get author name from page title
+				String authorNameFromPageTitle = pageTitle.substring( 6 ).trim();
+				String[] authorNameArray = authorNameFromPageTitle.split( " " );
+				String lastName = authorNameArray[authorNameArray.length - 1];
+				String firstName = authorNameFromPageTitle.substring( 0, authorNameFromPageTitle.length() - lastName.length() ).trim();
 
-			// Chatti:Mohamed_Amine
-			String[] authorSplitName = urlAuthor[urlAuthor.length - 1].split( ":" );
+				// set author name
+				eachAuthorMap.put( "name", firstName + " " + lastName );
+				eachAuthorMap.put( "lastName", lastName );
+				eachAuthorMap.put( "firstName", firstName );
+				// set source
+				eachAuthorMap.put( "source", SourceType.DBLP.toString() );
+				// set author url
+				eachAuthorMap.put( "url", urlAuthorQuery[0] );
 
-			String firstName = authorSplitName[1].replace( "_", " " ).toLowerCase();
-			String lastName = authorSplitName[0].toLowerCase();
+				authorList.add( eachAuthorMap );
+			}
+			else
+			{
 
-			// get author name
-			eachAuthorMap.put( "name", firstName + " " + lastName );
-			eachAuthorMap.put( "lastName", lastName );
-			eachAuthorMap.put( "firstName", firstName );
-			// set source
-			eachAuthorMap.put( "source", SourceType.DBLP.toString() );
-			// get author url
-			eachAuthorMap.put( "url", urlAuthorQuery[0] );
+				// e.g:http://dblp.uni-trier.de/pers/hd/c/Chatti:Mohamed_Amine
+				String[] urlAuthor = urlAuthorQuery[0].split( "/" );
 
-			authorList.add( eachAuthorMap );
+				// Chatti:Mohamed_Amine
+				String[] authorSplitName = urlAuthor[urlAuthor.length - 1].split( ":" );
+
+				String firstName = authorSplitName[1].replace( "_", " " ).toLowerCase();
+				String lastName = authorSplitName[0].toLowerCase();
+
+				// set author name
+				eachAuthorMap.put( "name", firstName + " " + lastName );
+				eachAuthorMap.put( "lastName", lastName );
+				eachAuthorMap.put( "firstName", firstName );
+				// set source
+				eachAuthorMap.put( "source", SourceType.DBLP.toString() );
+				// set author url
+				eachAuthorMap.put( "url", urlAuthorQuery[0] );
+
+				authorList.add( eachAuthorMap );
+			}
 		}
 
 		return authorList;
@@ -268,10 +292,17 @@ public class DblpPublicationCollection extends PublicationCollection
 					Element eventElement = dataElement.select( "> a" ).first();
 					if ( eventElement != null )
 					{
-						publicationDetails.put( "eventUrl", eventElement.absUrl( "href" ) );
+						String eventUrl = eventElement.absUrl( "href" );
+						if ( eventUrl.contains( "#" ) )
+							publicationDetails.put( "eventUrl", eventUrl.split( "#" )[0] );
+						else
+							publicationDetails.put( "eventUrl", eventUrl );
+
 						publicationDetails.put( "eventName", eventElement.select( "[itemprop=name]" ).text() );
-						publicationDetails.put( "eventVolume", eventElement.select( "[itemprop=volumeNumber]" ).text() );
-						publicationDetails.put( "eventNumber", eventElement.select( "[itemprop=issueNumber]" ).text() );
+						if ( eventElement.select( "[itemprop=volumeNumber]" ) != null )
+							publicationDetails.put( "eventVolume", eventElement.select( "[itemprop=volumeNumber]" ).text() );
+						if ( eventElement.select( "[itemprop=issueNumber]" ) != null )
+							publicationDetails.put( "eventNumber", eventElement.select( "[itemprop=issueNumber]" ).text() );
 					}
 
 					String page = dataElement.select( "[itemprop=pagination]" ).text();
@@ -331,7 +362,12 @@ public class DblpPublicationCollection extends PublicationCollection
 					Element eventElement = dataElement.select( "> a" ).first();
 					if ( eventElement != null )
 					{
-						publicationDetails.put( "eventUrl", eventElement.absUrl( "href" ) );
+						String eventUrl = eventElement.absUrl( "href" );
+						if ( eventUrl.contains( "#" ) )
+							publicationDetails.put( "eventUrl", eventUrl.split( "#" )[0] );
+						else
+							publicationDetails.put( "eventUrl", eventUrl );
+
 						String eventShort = eventElement.select( "[itemprop=name]" ).text();
 						if ( eventShort.contains( ")" ) )
 						{
@@ -342,7 +378,7 @@ public class DblpPublicationCollection extends PublicationCollection
 						}
 						else
 						{
-							publicationDetails.put( "event_short", eventShort.trim() );
+							publicationDetails.put( "eventShortName", eventShort.trim() );
 						}
 					}
 
