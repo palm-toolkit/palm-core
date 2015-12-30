@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.controller;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,9 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
@@ -88,11 +91,43 @@ public class ManageCircleController
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveNewCircle( 
-			@ModelAttribute( "circle" ) Circle circle, 
+			@ModelAttribute( "circle" ) Circle circle,
+			@RequestParam( value = "circleResearcher") final String circleResearcherIds,
+			@RequestParam( value = "circlePublication") final String circlePublicationIds,
 			final HttpServletResponse response) throws InterruptedException
 	{
+		if ( circle == null )
+			return Collections.emptyMap();
 
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( !circleResearcherIds.equals( "" ) )
+		{
+			// split by underscore
+			String[] idsArray = circleResearcherIds.split( "_" );
+
+			for ( String researcherId : idsArray )
+			{
+				Author author = persistenceStrategy.getAuthorDAO().getById( researcherId );
+				if ( author != null )
+					circle.addAuthor( author );
+			}
+		}
+
+		if ( !circlePublicationIds.equals( "" ) )
+		{
+			// split by underscore
+			String[] idsArray = circlePublicationIds.split( "_" );
+
+			for ( String researcherId : idsArray )
+			{
+				Publication publication = persistenceStrategy.getPublicationDAO().getById( researcherId );
+				if ( publication != null )
+					circle.addPublication( publication );
+			}
+		}
+
+		persistenceStrategy.getCircleDAO().persist( circle );
 
 		return responseMap;
 	}

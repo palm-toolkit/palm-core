@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -54,7 +56,8 @@ public class PublicationController
 	@Transactional
 	public ModelAndView publicationPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
- @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "title", required = false ) final String title,
+			@RequestParam( value = "id", required = false ) final String publicationId, 
+			@RequestParam( value = "title", required = false ) final String title,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// get current session object
@@ -87,18 +90,57 @@ public class PublicationController
 	 * @param response
 	 * @return JSON Map
 	 */
+	@SuppressWarnings( "unchecked" )
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getPublicationList( 
-			@RequestParam( value = "publicationId", required = false ) String publicationId,
 			@RequestParam( value = "query", required = false ) String query,
-			@RequestParam( value = "event", required = false ) String eventName,
-			@RequestParam( value = "eventid", required = false ) String eventId,
+			@RequestParam( value = "publicationType", required = false ) String publicationType,
+			@RequestParam( value = "authorId", required = false ) String authorId,
+			@RequestParam( value = "eventId", required = false ) String eventId,
 			@RequestParam( value = "page", required = false ) Integer page, 
-			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			@RequestParam( value = "source", required = false ) String source,
+			@RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch,
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response )
 	{
-		return publicationFeature.getPublicationSearch().getPublicationListByQueryAndEvent( query, eventName, eventId, page, maxresult );
+		/* == Set Default Values== */
+		if ( query == null ) 			query = "";
+		if ( publicationType == null ) 	publicationType = "all";
+		if ( page == null )				page = 0;
+		if ( maxresult == null )		maxresult = 50;
+		if ( fulltextSearch == null )	fulltextSearch = "yes";
+		else							fulltextSearch = "no";
+		if ( orderBy == null )
+			orderBy = "citation";
+		// Currently, system only provides query on internal database
+		source = "internal";
+			
+		
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		responseMap.put( "query", query );
+		if ( !publicationType.equals( "name" ) )
+			responseMap.put( "publicationType", publicationType );
+		responseMap.put( "page", page );
+		responseMap.put( "maxresult", maxresult );
+		responseMap.put( "fulltextSearch", fulltextSearch );
+		responseMap.put( "orderBy", orderBy );
+		
+		Map<String, Object> publicationMap = publicationFeature.getPublicationSearch().getPublicationListByQuery( query, publicationType, authorId, eventId, page, maxresult, source, fulltextSearch, orderBy );
+		
+		if ( (Integer) publicationMap.get( "totalCount" ) > 0 )
+		{
+			responseMap.put( "totalCount", (Integer) publicationMap.get( "totalCount" ) );
+			return publicationFeature.getPublicationSearch().printJsonOutput( responseMap, (List<Publication>) publicationMap.get( "publications" ) );
+		}
+		else
+		{
+			responseMap.put( "totalCount", 0 );
+			return responseMap;
+		}
 	}
 
 	/**

@@ -106,7 +106,12 @@ public class PublicationDetailImpl implements PublicationDetail
 				publicationSourceMap.put( "cited by", publicationSource.getCitedBy() );
 
 			if ( publicationSource.getVenue() != null )
-				publicationSourceMap.put( publicationSource.getPublicationType().toLowerCase(), publicationSource.getVenue() );
+			{
+				if ( publicationSource.getPublicationType() != null )
+					publicationSourceMap.put( publicationSource.getPublicationType().toLowerCase(), publicationSource.getVenue() );
+				else
+					publicationSourceMap.put( "unknown", publicationSource.getVenue() );
+			}
 
 			if ( publicationSource.getAdditionalInformation() != null )
 				publicationSourceMap.putAll( publicationSource.getAdditionalInformationAsMap() );

@@ -107,7 +107,7 @@ public class ResearcherController
 	 */
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> getAuthorList( 
+	public @ResponseBody Map<String, Object> getAuthorList(
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "queryType", required = false ) String queryType,
 			@RequestParam( value = "startPage", required = false ) Integer startPage, 

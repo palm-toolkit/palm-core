@@ -143,7 +143,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 			researcherList.add( researcherMap );
 		}
 		responseMap.put( "count", researcherList.size() );
-		responseMap.put( "researcher", researcherList );
+		responseMap.put( "researchers", researcherList );
 
 		return responseMap;
 	}
