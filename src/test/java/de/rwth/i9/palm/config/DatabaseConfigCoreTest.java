@@ -24,6 +24,7 @@ import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.CircleWidget;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 //import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
@@ -140,6 +141,7 @@ public class DatabaseConfigCoreTest
 						AuthorInterest.class,
 						AuthorInterestProfile.class,
 						Circle.class,
+						CircleWidget.class,
 						Event.class,
 						EventGroup.class,
 						ExtractionService.class,
