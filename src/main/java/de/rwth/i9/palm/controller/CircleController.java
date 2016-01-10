@@ -2,6 +2,7 @@ package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -18,7 +19,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -38,6 +41,9 @@ public class CircleController
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private CircleFeature circleFeature;
 
 	/**
 	 * Get the circle page
@@ -88,12 +94,46 @@ public class CircleController
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getCircleList( 
 			@RequestParam( value = "id", required = false ) String circleId,
+ @RequestParam( value = "creatorId", required = false ) String creatorId,
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "page", required = false ) Integer page, 
-			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
+ @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response )
 	{
-		return Collections.emptyMap();// circleFeature.getCircleSearch().getCircleListByQueryAndEvent( query, page, maxresult );
+		/* == Set Default Values== */
+		if ( query == null )
+			query = "";
+		if ( page == null )
+			page = 0;
+		if ( maxresult == null )
+			maxresult = 50;
+		if ( fulltextSearch == null )
+			fulltextSearch = "no";
+		else
+			fulltextSearch = "yes";
+		if ( orderBy == null )
+			orderBy = "citation";
+
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		responseMap.put( "query", query );
+		responseMap.put( "page", page );
+		responseMap.put( "maxresult", maxresult );
+		responseMap.put( "orderBy", orderBy );
+
+		Map<String, Object> circleMap = circleFeature.getCircleSearch().getCircleListByQuery( query, creatorId, page, maxresult, fulltextSearch, orderBy );
+
+		if ( (Integer) circleMap.get( "totalCount" ) > 0 )
+		{
+			responseMap.put( "totalCount", (Integer) circleMap.get( "totalCount" ) );
+			return circleFeature.getCircleSearch().printJsonOutput( responseMap, (List<Circle>) circleMap.get( "circles" ) );
+		}
+		else
+		{
+			responseMap.put( "totalCount", 0 );
+			return responseMap;
+		}
 	}
 
 	/**

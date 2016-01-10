@@ -3,6 +3,8 @@ package de.rwth.i9.palm.service;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +19,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
  * Service class which should provide methods for security affairs. The
  * authentification itself is managed by Spring.
  * 
+ * @author original matthaeus @gesis.org
  */
 @Service
 public class SecurityService
@@ -107,8 +110,19 @@ public class SecurityService
 	 * @param functionName
 	 * @return
 	 */
+	@Transactional
 	public boolean isAuthorizedForFunction( final String functionName )
 	{
 		return persistenceStrategy.getUserDAO().isAuthorizedForFunction( getUser(), functionName );
+	}
+
+	/**
+	 * @param functionName
+	 * @return
+	 */
+	@Transactional
+	public boolean isAuthorizedForRole( final String roleName )
+	{
+		return persistenceStrategy.getUserDAO().isAuthorizedForRole( getUser(), roleName );
 	}
 }

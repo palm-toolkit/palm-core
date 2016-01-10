@@ -17,19 +17,7 @@ public class ApplicationContextService
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	/**
-	 * Tries to obtain the sessionDataSet-object from different sources: <br>
-	 * <br>
-	 * 1) from the session. This assumes the sessionDataSet-object to be a
-	 * session-scoped object. If there is no sessionDataSet-object saved in the
-	 * session, it is tried to obtain it <br>
-	 * 2) from the property files. <br>
-	 * <br>
-	 * If there is no sessionDataSet-object saved for the user, a new
-	 * sessionDataSet-object is finally created.
-	 * 
-	 * @return A not null sessionDataSet-object.
-	 */
+	/* THIS CODE IS UNUSED AND SUBJECT TO BE DELETED */
 	public SessionDataSet getCurrentSessionDataSet()
 	{
 		// first, get sessionDataSet from request context
@@ -54,12 +42,6 @@ public class ApplicationContextService
 		return sessionDataSet;
 	}
 
-	/**
-	 * Saves the given <i>sessionDataSet</i> in the session. If the
-	 * sessionDataSet has no username assigned, the username is obtained.
-	 *
-	 * @param sessionDataSet
-	 */
 	public void setCurrentSessionDataSet( final SessionDataSet sessionDataSet )
 	{
 		// set username for sessionDataSet

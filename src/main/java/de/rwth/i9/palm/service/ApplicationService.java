@@ -19,6 +19,7 @@ import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.InterestProfile;
 import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import freemarker.template.TemplateModelException;
 
 @Service
 public class ApplicationService
@@ -30,6 +31,9 @@ public class ApplicationService
 
 	@Autowired( required = false )
 	private FreeMarkerConfigurer freemarkerConfiguration;
+
+	@Autowired
+	private SecurityService securityService;
 
 	// caching the sources
 	private Map<String, Source> academicNetworkSourcesCache;
@@ -47,7 +51,7 @@ public class ApplicationService
 	private Map<String, ProcessLogHelper> processLogMap;
 
 	@PostConstruct
-	public void init()
+	public void init() throws TemplateModelException
 	{
 		log.info( "Initializing..." );
 
@@ -55,8 +59,14 @@ public class ApplicationService
 
 		if ( freemarkerConfiguration != null )
 		{
-			log.info( "freemarkerConfiguration initialized" );
+			exposeFreemarkerSecurityService();
 		}
+	}
+
+	private void exposeFreemarkerSecurityService() throws TemplateModelException
+	{
+		freemarkerConfiguration.getConfiguration().setSharedVariable( "securityService", securityService );
+		log.debug( "TemplateSecurityService exposed." );
 	}
 
 	/* Source cache */

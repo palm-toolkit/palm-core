@@ -9,5 +9,5 @@ public interface CircleSearch
 {
 	public Map<String, Object> getCircleListByQuery( String query, String creatorId, Integer page, Integer maxresult, String fulltextSearch, String orderBy );
 
-	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<Circle> Circles );
+	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<Circle> circles );
 }
