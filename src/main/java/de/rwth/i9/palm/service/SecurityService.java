@@ -80,6 +80,7 @@ public class SecurityService
 	 * 
 	 * @return
 	 */
+	@Transactional
 	public User getUser()
 	{
 		String username = getUsername();
