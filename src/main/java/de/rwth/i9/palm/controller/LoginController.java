@@ -15,7 +15,8 @@ public class LoginController
 	@RequestMapping( method = RequestMethod.GET )
 	public ModelAndView login(
 			@RequestParam(value="form", required = false) String formMode,
-			@RequestParam(value="auth", required = false) String auth)
+			@RequestParam(value="auth", required = false) String auth,
+			@RequestParam(value="info", required = false) String info)
 	{
 		ModelAndView mav = null;
 		if ( formMode != null && formMode.equals( "true" ) )
@@ -23,8 +24,10 @@ public class LoginController
 		else
 			mav = new ModelAndView( "login" );
 		
-		if( auth != null && auth.equalsIgnoreCase( "fail" ))
-			mav.addObject( "auth", "fail" );
+		if( auth != null)
+			mav.addObject( "auth", auth );
+		if( info != null)
+			mav.addObject( "info", info );
 		
 		return mav;
 	}

@@ -69,7 +69,7 @@ public class ManageResearcherController
 		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.RESEARCHER, "add" );
 
-		// create blank Publication
+		// create blank Author
 		Author author = null;
 		if ( id != null )
 			author = persistenceStrategy.getAuthorDAO().getById( id );

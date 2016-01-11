@@ -100,11 +100,10 @@ public class SecurityService
 	public boolean isUserAuthenticated()
 	{
 
-		// if ( !getAuthentication().isAuthenticated() )
-		// return false;
+		if ( !getAuthentication().isAuthenticated() )
+			return false;
 
-		// return true;
-		return false;
+		return true;
 	}
 
 	/**

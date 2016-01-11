@@ -17,7 +17,7 @@ public class ApplicationContextService
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	/* THIS CODE IS UNUSED AND SUBJECT TO BE DELETED */
+	/* THIS CODE IS SUBJECT TO BE CHANGED */
 	public SessionDataSet getCurrentSessionDataSet()
 	{
 		// first, get sessionDataSet from request context
