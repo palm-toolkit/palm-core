@@ -76,6 +76,10 @@ public class CircleSearchImpl implements CircleSearch
 			if ( circle.getPublications() != null )
 				circleMap.put( "numberPublications", circle.getPublications().size() );
 
+			// check autowired with security service here
+			circleMap.put( "isLock", circle.isLock() );
+			circleMap.put( "isValid", circle.isValid() );
+
 			circleList.add( circleMap );
 		}
 

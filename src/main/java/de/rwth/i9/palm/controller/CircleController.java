@@ -1,7 +1,6 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -155,6 +154,6 @@ public class CircleController
 			@RequestParam( value = "uri", required = false ) final String uri, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return Collections.emptyMap(); //circleFeature.getCircleDetail().getCircleDetailById( id );
+		return circleFeature.getCircleDetail().getCircleDetailById( id );
 	}
 }

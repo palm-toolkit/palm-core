@@ -37,8 +37,10 @@ public class CircleFeatureImpl implements CircleFeature
 	@Override
 	public CircleDetail getCircleDetail()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		if ( this.circleDetail == null )
+			this.circleDetail = new CircleDetailImpl();
+
+		return this.circleDetail;
 	}
 
 	@Override
