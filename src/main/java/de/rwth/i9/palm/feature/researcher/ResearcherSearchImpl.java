@@ -38,26 +38,27 @@ public class ResearcherSearchImpl implements ResearcherSearch
 	private ResearcherCollectionService researcherCollectionService;
 
 	@Override
-	public List<Author> getResearcherListByQuery( 
+	public Map<String, Object> getResearcherMapByQuery( 
 			String query, 
 			String queryType, 
 			Integer startPage, 
 			Integer maxresult, 
 			String source, 
+ String addedAuthor, 
 			String fulltextSearch, 
 			boolean persist ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		// researchers list container
-		List<Author> researcherList = new ArrayList<Author>();
+		Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 
 		// get authors from the datasource
 		if ( source.equals( "internal" ) )
 		{
 			// the authors is querying from database
 			if( fulltextSearch.equals( "no" ))
-				researcherList.addAll( persistenceStrategy.getAuthorDAO().getAuthorListWithPaging( query, startPage, maxresult ) );
+				authorMap = persistenceStrategy.getAuthorDAO().getAuthorWithPaging( query, addedAuthor, startPage, maxresult );
 			else
-				researcherList.addAll( persistenceStrategy.getAuthorDAO().getAuthorListByFullTextSearchWithPaging( query, startPage, maxresult ) );
+				authorMap = persistenceStrategy.getAuthorDAO().getAuthorByFullTextSearchWithPaging( query, addedAuthor, startPage, maxresult );
 		}
 		else if ( source.equals( "external" ) )
 		{
@@ -71,8 +72,11 @@ public class ResearcherSearchImpl implements ResearcherSearch
 			{
 				// collect author from network
 //				if ( isCollectAuthorFromNetworkNeeded( query ) )
-					researcherList.addAll( researcherCollectionService.collectAuthorInformationFromNetwork( query, persist ) );
-//				else
+				List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( query, persist );
+				authorMap.put( "totalCount", researcherList.size() );
+				authorMap.put( "authors", researcherList );
+				
+				//				else
 //				{
 //					// the authors is querying from database
 //					if ( fulltextSearch.equals( "no" ) )
@@ -83,7 +87,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 			}
 		}
 
-		return researcherList;
+		return authorMap;
 	}
 
 	/**

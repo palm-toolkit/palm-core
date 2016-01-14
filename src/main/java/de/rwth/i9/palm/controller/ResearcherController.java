@@ -113,6 +113,7 @@ public class ResearcherController
 			@RequestParam( value = "startPage", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "source", required = false ) String source,
+ @RequestParam( value = "addedAuthor", required = false ) String addedAuthor,
 			@RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch,
 			@RequestParam( value = "persist", required = false ) String persist,
 			HttpServletRequest request,
@@ -124,6 +125,8 @@ public class ResearcherController
 		if ( startPage == null )		startPage = 0;
 		if ( maxresult == null )		maxresult = 50;
 		if ( source == null )			source = "internal";
+		if ( addedAuthor == null )
+			addedAuthor = "no";
 		if ( fulltextSearch == null )	fulltextSearch = "no";
 		if ( persist == null )			persist = "no";
 
@@ -144,13 +147,16 @@ public class ResearcherController
 			responseMap.put( "persist", persist );
 			persistResult = true;
 		}
+		if ( addedAuthor.equals( "yes" ) )
+			responseMap.put( "addedAuthor", addedAuthor );
 		
-		List<Author> authors = researcherFeature.getResearcherSearch().getResearcherListByQuery( query, queryType, startPage, maxresult, source, fulltextSearch, persistResult );
+		Map<String, Object> authorsMap = researcherFeature.getResearcherSearch().getResearcherMapByQuery( query, queryType, startPage, maxresult, source, addedAuthor, fulltextSearch, persistResult );
 		
 		// store in session
-		request.getSession().setAttribute( "authors", authors );
+		if ( source.equals( "external" ) )
+			request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
 		
-		return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, authors );
+		return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, (List<Author>) authorsMap.get( "authors" ) );
 	}
 	
 	@Transactional

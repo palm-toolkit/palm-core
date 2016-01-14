@@ -19,7 +19,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
  * Service class which should provide methods for security affairs. The
  * authentification itself is managed by Spring.
  * 
- * @author original matthaeus @gesis.org
+ * @author matthaeus @gesis.org
  */
 @Service
 public class SecurityService
@@ -74,7 +74,7 @@ public class SecurityService
 	}
 
 	/**
-	 * Returns the {@link User}-object of the missy model associated with the
+	 * Returns the {@link User}-object of the PALM model associated with the
 	 * current Spring-logged in User-object by username. The username is
 	 * retrieved via {@link SecurityService.getUsername()}.
 	 * 

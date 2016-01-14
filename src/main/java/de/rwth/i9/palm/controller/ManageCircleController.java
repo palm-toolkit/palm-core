@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.controller;
 
+import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,12 +24,12 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.SessionDataSet;
+import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
-import de.rwth.i9.palm.pdfextraction.service.PdfExtractionService;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationContextService;
-import de.rwth.i9.palm.service.ApplicationService;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @SessionAttributes( "circle" )
@@ -44,10 +45,7 @@ public class ManageCircleController
 	private PersistenceStrategy persistenceStrategy;
 
 	@Autowired
-	private ApplicationService applicationService;
-
-	@Autowired
-	private PdfExtractionService pdfExtractionService;
+	private SecurityService securityService;
 
 	/**
 	 * Load the add circle form together with circle object
@@ -127,7 +125,32 @@ public class ManageCircleController
 			}
 		}
 
+		// add creator from securityService
+		User user = securityService.getUser();
+
+		if ( user == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "errorMessage", "user not found" );
+			return responseMap;
+		}
+		circle.setCreator( user );
+
+		// add date
+		// get current timestamp
+		java.util.Date date = new java.util.Date();
+		Timestamp currentTimestamp = new Timestamp( date.getTime() );
+		circle.setCreationDate( currentTimestamp );
+
 		persistenceStrategy.getCircleDAO().persist( circle );
+
+		responseMap.put( "status", "ok" );
+
+		// put back some of the information
+		Map<String, String> circleMap = new LinkedHashMap<String, String>();
+		circleMap.put( "id", circle.getId() );
+
+		responseMap.put( "circle", circleMap );
 
 		return responseMap;
 	}

@@ -12,7 +12,7 @@ import de.rwth.i9.palm.model.Author;
 
 public interface ResearcherSearch
 {
-	public List<Author> getResearcherListByQuery( String query, String queryType, Integer startPage, Integer maxresult, String source, String fulltext, boolean persist ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
+	public Map<String, Object> getResearcherMapByQuery( String query, String queryType, Integer startPage, Integer maxresult, String source, String fulltext, String fulltextSearch, boolean persist ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
 
 	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<Author> researchers );
 }

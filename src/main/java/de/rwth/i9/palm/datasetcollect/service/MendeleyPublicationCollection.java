@@ -3,6 +3,7 @@ package de.rwth.i9.palm.datasetcollect.service;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,10 @@ public class MendeleyPublicationCollection extends PublicationCollection
 		SourceProperty searchProfileProperty = source.getSourcePropertyByIdentifiers( "catalog", "SEARCH_PROFILE" );
 		// for token properties
 		SourceProperty tokenProperty = source.getSourcePropertyByIdentifiers( "oauth2", "TOKEN" );
+
+		// if token null
+		if ( tokenProperty.getValue() == null )
+			return Collections.emptyList();
 
 		String authorCatalog = searchProfileProperty.getValue() + "?query=" + URLEncoder.encode( authorName, "UTF-8" ).replace( "+", "%20" );
 		// get the resources ( authors or publications )
@@ -154,6 +159,10 @@ public class MendeleyPublicationCollection extends PublicationCollection
 		SourceProperty searchCatalogProperty = source.getSourcePropertyByIdentifiers( "catalog", "SEARCH_CATALOG" );
 		// for token properties
 		SourceProperty tokenProperty = source.getSourcePropertyByIdentifiers( "oauth2", "TOKEN" );
+
+		// if token null
+		if ( tokenProperty.getValue() == null )
+			return Collections.emptyList();
 
 		String publicationCatalog = searchCatalogProperty.getValue() + "?author=" + URLEncoder.encode( author.getName(), "UTF-8" ).replace( "+", "%20" ) + "&limit=100";
 		// get the resources ( authors or publications )
