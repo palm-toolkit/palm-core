@@ -87,6 +87,11 @@ public class SecurityService
 
 		User user = persistenceStrategy.getUserDAO().getByUsername( username );
 
+		// set affiliation
+		if ( user.getAuthor() != null )
+			if ( user.getAuthor().getInstitutions() != null && !user.getAuthor().getInstitutions().isEmpty() )
+				user.getAuthor().setAffiliation( user.getAuthor().getInstitutions().get( 0 ).getName() );
+
 		return user;
 	}
 
