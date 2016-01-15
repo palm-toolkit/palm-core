@@ -22,14 +22,12 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Publication;
-import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
@@ -38,9 +36,6 @@ import de.rwth.i9.palm.service.SecurityService;
 public class PublicationController
 {
 	private static final String LINK_NAME = "publication";
-
-	@Autowired
-	private ApplicationContextService appService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -67,11 +62,8 @@ public class PublicationController
 			@RequestParam( value = "title", required = false ) final String title,
 			final HttpServletResponse response ) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
-
 		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "publication", LINK_NAME, sessionDataSet );
+		ModelAndView model = TemplateHelper.createViewWithLink( "publication", LINK_NAME );
 
 		List<Widget> widgets = new ArrayList<Widget>();
 

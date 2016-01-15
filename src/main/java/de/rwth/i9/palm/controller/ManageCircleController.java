@@ -23,12 +23,10 @@ import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Publication;
-import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
@@ -37,9 +35,6 @@ import de.rwth.i9.palm.service.SecurityService;
 public class ManageCircleController
 {
 	private static final String LINK_NAME = "circle";
-
-	@Autowired
-	private ApplicationContextService appService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -58,14 +53,17 @@ public class ManageCircleController
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.GET )
 	public ModelAndView addNewCircle( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
 			final HttpServletResponse response) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = null;
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
+		if ( securityService.getUser() == null )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.CIRCLE, "add" );
 
 		// create blank Circle
@@ -166,15 +164,18 @@ public class ManageCircleController
 	@Transactional
 	@RequestMapping( value = "/edit", method = RequestMethod.GET )
 	public ModelAndView editCircle( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId,
 			@RequestParam( value = "id") final String circleId,
 			final HttpServletResponse response) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = null;
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
+		if ( securityService.getUser() == null )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.CIRCLE, "edit" );
 
 		// create blank Circle

@@ -31,12 +31,11 @@ import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Publication;
-import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @RequestMapping( value = "/researcher" )
@@ -46,7 +45,7 @@ public class ResearcherController
 	private static final String LINK_NAME = "researcher";
 
 	@Autowired
-	private ApplicationContextService appService;
+	private SecurityService securityService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -68,16 +67,11 @@ public class ResearcherController
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
 	public ModelAndView researcherPage( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
 			@RequestParam( value = "id", required = false ) final String id, 
 			@RequestParam( value = "name", required = false ) final String name,
 			final HttpServletResponse response ) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
-
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "researcher", LINK_NAME, sessionDataSet );
+		ModelAndView model = TemplateHelper.createViewWithLink( "researcher", LINK_NAME );
 
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.RESEARCHER, WidgetStatus.DEFAULT );
 		// assign the model

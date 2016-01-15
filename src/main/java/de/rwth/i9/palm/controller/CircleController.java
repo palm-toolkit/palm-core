@@ -21,12 +21,10 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Circle;
-import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
 
 @Controller
 @SessionAttributes( { "sessionDataSet" } )
@@ -34,9 +32,6 @@ import de.rwth.i9.palm.service.ApplicationContextService;
 public class CircleController
 {
 	private static final String LINK_NAME = "circle";
-
-	@Autowired
-	private ApplicationContextService appService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -55,15 +50,11 @@ public class CircleController
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
 	public ModelAndView circlePage( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
  @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "name", required = false ) final String name,
 			final HttpServletResponse response ) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
-
 		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "circle", LINK_NAME, sessionDataSet );
+		ModelAndView model = TemplateHelper.createViewWithLink( "circle", LINK_NAME );
 
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CIRCLE, WidgetStatus.DEFAULT );
 		// assign the model

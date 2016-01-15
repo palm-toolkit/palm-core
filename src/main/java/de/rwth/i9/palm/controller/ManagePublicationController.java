@@ -26,13 +26,11 @@ import org.xml.sax.SAXException;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Publication;
-import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.pdfextraction.service.PdfExtractionService;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
-import de.rwth.i9.palm.service.ApplicationService;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @SessionAttributes( "publication" )
@@ -42,16 +40,13 @@ public class ManagePublicationController
 	private static final String LINK_NAME = "administration";
 
 	@Autowired
-	private ApplicationContextService appService;
-
-	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
 	@Autowired
-	private ApplicationService applicationService;
+	private PdfExtractionService pdfExtractionService;
 
 	@Autowired
-	private PdfExtractionService pdfExtractionService;
+	private SecurityService securityService;
 
 	/**
 	 * Load the add publication form together with publication object
@@ -64,14 +59,17 @@ public class ManagePublicationController
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.GET )
 	public ModelAndView addNewPublication( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
 			final HttpServletResponse response) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = null;
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
+		if ( securityService.getUser() == null )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.PUBLICATION, "add" );
 
 		// create blank Publication
@@ -159,11 +157,15 @@ public class ManagePublicationController
 			@RequestParam( value = "id") final String publicationId,
 			final HttpServletResponse response) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = null;
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
+		if ( securityService.getUser() == null )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.PUBLICATION, "edit" );
 
 		// create blank Publication

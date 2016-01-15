@@ -20,29 +20,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.datasetcollect.service.DblpEventCollection;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.EventGroup;
-import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
 
 @Controller
-@SessionAttributes( { "sessionDataSet" } )
 @RequestMapping( value = "/venue" )
 public class AcademicEventController
 {
 	private static final String LINK_NAME = "venue";
-
-	@Autowired
-	private ApplicationContextService appService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -53,7 +46,6 @@ public class AcademicEventController
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
 	public ModelAndView eventPage( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId,
 			@RequestParam( value = "id", required = false ) final String id,
 			@RequestParam( value = "eventId", required = false ) final String eventId, 
 			@RequestParam( value = "name", required = false ) final String name,
@@ -63,11 +55,8 @@ public class AcademicEventController
 			@RequestParam( value = "publicationId", required = false ) final String publicationId,
 			final HttpServletResponse response) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
-
 		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "conference", LINK_NAME, sessionDataSet );
+		ModelAndView model = TemplateHelper.createViewWithLink( "conference", LINK_NAME );
 
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CONFERENCE, WidgetStatus.DEFAULT );
 		// assign the model

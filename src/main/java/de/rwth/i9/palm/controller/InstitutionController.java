@@ -18,16 +18,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
 
 @Controller
 @RequestMapping( value = "/institution" )
 public class InstitutionController
 {
-
-	@Autowired
-	private ApplicationContextService appService;
-
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 	/**
@@ -39,7 +34,7 @@ public class InstitutionController
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getInstitution( 
 			@RequestParam( value = "query", required = false ) String query,
- @RequestParam( value = "maxresult", required = false ) String maxresult,
+			@RequestParam( value = "maxresult", required = false ) String maxresult,
 			HttpServletRequest request,
 			HttpServletResponse response )
 	{

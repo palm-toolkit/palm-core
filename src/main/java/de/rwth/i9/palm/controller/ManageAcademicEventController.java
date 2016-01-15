@@ -17,17 +17,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
-import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationType;
-import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @SessionAttributes( "eventGroup" )
@@ -37,13 +35,10 @@ public class ManageAcademicEventController
 	private static final String LINK_NAME = "administration";
 
 	@Autowired
-	private ApplicationContextService appService;
+	private SecurityService securityService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
-
-	@Autowired
-	private AcademicEventFeature academicEventFeature;
 
 	/**
 	 * Load the add eventGroup form together with eventGroup object
@@ -56,7 +51,6 @@ public class ManageAcademicEventController
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.GET )
 	public ModelAndView addNewEventGroup(
-			@RequestParam( value = "sessionid", required = false ) final String sessionId,
 			@RequestParam( value = "eventId", required = false ) final String eventId, 
 			@RequestParam( value = "name", required = false ) final String name,
 			@RequestParam( value = "type", required = false ) final String type,
@@ -65,11 +59,15 @@ public class ManageAcademicEventController
 			@RequestParam( value = "publicationId", required = false ) final String publicationId,
 			final HttpServletResponse response) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = null;
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
+		if ( securityService.getUser() == null )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.CONFERENCE, "add" );
 
 		// EventGroup
@@ -218,15 +216,18 @@ public class ManageAcademicEventController
 	@Transactional
 	@RequestMapping( value = "/edit", method = RequestMethod.GET )
 	public ModelAndView editEventGroup( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId,
 			@RequestParam( value = "id") final String eventGroupId,
 			final HttpServletResponse response) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = null;
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "dialogIframeLayout", LINK_NAME, sessionDataSet );
+		if ( securityService.getUser() == null )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.CONFERENCE, "edit" );
 
 		// create blank EventGroup

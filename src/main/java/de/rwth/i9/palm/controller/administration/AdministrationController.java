@@ -10,32 +10,31 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
-import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @RequestMapping( value = "/admin" )
 public class AdministrationController
 {
-
 	private static final String LINK_NAME = "administration";
 
 	@Autowired
-	private ApplicationContextService appService;
-
-	@Autowired
-	private PersistenceStrategy persistenceStrategy;
+	private SecurityService securityService;
 
 	@RequestMapping( method = RequestMethod.GET )
 	public ModelAndView landing( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId,
 			@RequestParam( value = "page", required = false ) final String page,
 			final HttpServletResponse response ) throws InterruptedException
 	{
-		ModelAndView model = TemplateHelper.createViewWithLink( "administration", LINK_NAME );
+		ModelAndView model = null;
 
-		if ( sessionId != null && sessionId.equals( "0" ) )
-			response.setHeader( "SESSION_INVALID", "yes" );
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "administration", LINK_NAME );
 
 		if( page != null)
 			model.addObject( "activeMenu", page );
