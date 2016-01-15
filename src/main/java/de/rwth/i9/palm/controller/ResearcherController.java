@@ -105,6 +105,7 @@ public class ResearcherController
 	 * @throws OAuthSystemException 
 	 * @throws org.apache.http.ParseException 
 	 */
+	@SuppressWarnings( "unchecked" )
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getAuthorList(
@@ -113,7 +114,7 @@ public class ResearcherController
 			@RequestParam( value = "startPage", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "source", required = false ) String source,
- @RequestParam( value = "addedAuthor", required = false ) String addedAuthor,
+			@RequestParam( value = "addedAuthor", required = false ) String addedAuthor,
 			@RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch,
 			@RequestParam( value = "persist", required = false ) String persist,
 			HttpServletRequest request,
@@ -137,7 +138,7 @@ public class ResearcherController
 		responseMap.put( "query", query );
 		if ( !queryType.equals( "name" ) )
 			responseMap.put( "queryType", queryType );
-		responseMap.put( "startPage", startPage );
+		responseMap.put( "page", startPage );
 		responseMap.put( "maxresult", maxresult );
 		responseMap.put( "source", source );
 		if ( !fulltextSearch.equals( "no" ) )
@@ -156,7 +157,17 @@ public class ResearcherController
 		if ( source.equals( "external" ) )
 			request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
 		
-		return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, (List<Author>) authorsMap.get( "authors" ) );
+		if ( (Integer) authorsMap.get( "totalCount" ) > 0 )
+		{
+			responseMap.put( "totalCount", (Integer) authorsMap.get( "totalCount" ) );
+			return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, (List<Author>) authorsMap.get( "authors" ) );
+		}
+		else
+		{
+			responseMap.put( "totalCount", 0 );
+			responseMap.put( "count", 0 );
+			return responseMap;
+		}
 	}
 	
 	@Transactional
@@ -301,6 +312,39 @@ public class ResearcherController
 			final HttpServletResponse response)
 	{
 		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId );
+	}
+
+	@RequestMapping( value = "/coAuhtorList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getCoAuthorList( 
+			@RequestParam( value = "id", required = false ) final String authorId, 
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author ) );
+
+		return responseMap;
 	}
 
 }

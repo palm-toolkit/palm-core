@@ -139,6 +139,7 @@ public class PublicationController
 		else
 		{
 			responseMap.put( "totalCount", 0 );
+			responseMap.put( "count", 0 );
 			return responseMap;
 		}
 	}
