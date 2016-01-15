@@ -2,6 +2,7 @@ package de.rwth.i9.palm.service;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 
 import javax.transaction.Transactional;
 
@@ -12,6 +13,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -88,27 +90,30 @@ public class SecurityService
 		User user = persistenceStrategy.getUserDAO().getByUsername( username );
 
 		// set affiliation
-		if ( user.getAuthor() != null )
+		if ( user != null && user.getAuthor() != null )
 			if ( user.getAuthor().getInstitutions() != null && !user.getAuthor().getInstitutions().isEmpty() )
-				user.getAuthor().setAffiliation( user.getAuthor().getInstitutions().get( 0 ).getName() );
+			{
+				for ( Iterator<Institution> it = user.getAuthor().getInstitutions().iterator(); it.hasNext(); )
+				{
+					Institution institution = it.next();
+					user.getAuthor().setAffiliation( institution.getName() );
+				}
+			}
 
 		return user;
 	}
 
 	/**
-	 * Returns true or false in case the User is authenticated with the
-	 * application or not. This is not self-managed, but managed by Spring
-	 * itself.
-	 * 
+	 * @deprecated Buggy implementation
 	 * @return
 	 */
 	public boolean isUserAuthenticated()
 	{
 
-		if ( !getAuthentication().isAuthenticated() )
+		// if ( !getAuthentication().isAuthenticated() )
 			return false;
 
-		return true;
+		// return true;
 	}
 
 	/**

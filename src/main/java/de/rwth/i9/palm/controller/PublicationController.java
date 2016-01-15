@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +23,14 @@ import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.SessionDataSet;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @SessionAttributes( { "sessionDataSet" } )
@@ -43,6 +47,9 @@ public class PublicationController
 
 	@Autowired
 	private PublicationFeature publicationFeature;
+
+	@Autowired
+	private SecurityService securityService;
 
 	/**
 	 * Get the publication page
@@ -66,7 +73,25 @@ public class PublicationController
 		// set model and view
 		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "publication", LINK_NAME, sessionDataSet );
 
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.PUBLICATION, WidgetStatus.DEFAULT );
+		List<Widget> widgets = new ArrayList<Widget>();
+
+		User user = securityService.getUser();
+
+		if ( user != null )
+		{
+			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.PUBLICATION, WidgetStatus.ACTIVE );
+			for ( UserWidget userWidget : userWidgets )
+			{
+				Widget widget = userWidget.getWidget();
+				widget.setColor( userWidget.getWidgetColor() );
+				widget.setWidgetHeight( userWidget.getWidgetHeight() );
+				widget.setWidgetWidth( userWidget.getWidgetWidth() );
+				widget.setPosition( userWidget.getPosition() );
+
+				widgets.add( widget );
+			}
+		} else
+			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.PUBLICATION, WidgetStatus.DEFAULT ));
 		// assign the model
 		model.addObject( "widgets", widgets );
 
