@@ -10,6 +10,8 @@ public interface ResearcherFeature
 {
 	public ResearcherApi getResearcherApi();
 
+	public ResearcherBasicInformation getResearcherBasicInformation();
+
 	public ResearcherCoauthor getResearcherCoauthor();
 
 	public ResearcherInterest getResearcherInterest();

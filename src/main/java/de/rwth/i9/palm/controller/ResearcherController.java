@@ -311,6 +311,20 @@ public class ResearcherController
 		return null;
 	}
 	
+	/**
+	 * @deprecated
+	 * Use to get list of relate author,
+	 * API deprecated and replace with extended API on author search
+	 * @param name
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws org.apache.http.ParseException
+	 * @throws OAuthSystemException
+	 * @throws OAuthProblemException
+	 */
 	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
@@ -320,6 +334,14 @@ public class ResearcherController
 		return researcherFeature.getResearcherApi().getAuthorAutoCompleteFromNetworkAndDb( name );
 	}
 	
+	/**
+	 * Get PublicationMap (JSON), containing publication basic information and detail.
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationList( 
@@ -331,6 +353,14 @@ public class ResearcherController
 		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId );
 	}
 
+	/**
+	 * Get coauthorMap of given author
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping( value = "/coAuhtorList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getCoAuthorList( 
@@ -360,6 +390,45 @@ public class ResearcherController
 
 		// get coauthor calculation
 		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author ) );
+
+		return responseMap;
+	}
+	
+	/**
+	 * Get coauthorMap of given author
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/basicInformation", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getBasicInformationMap( 
+			@RequestParam( value = "id", required = false ) final String authorId,
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( researcherFeature.getResearcherBasicInformation().getResearcherBasicInformationMap( author ) );
 
 		return responseMap;
 	}

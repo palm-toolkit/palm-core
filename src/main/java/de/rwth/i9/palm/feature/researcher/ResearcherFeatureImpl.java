@@ -8,6 +8,9 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	private ResearcherApi researcherApi;
 
 	@Autowired( required = false )
+	private ResearcherBasicInformation researcherBasicInformation;
+
+	@Autowired( required = false )
 	private ResearcherCoauthor researcherCoauthor;
 
 	@Autowired( required = false )
@@ -32,6 +35,15 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherApi = new ResearcherApiImpl();
 
 		return this.researcherApi;
+	}
+
+	@Override
+	public ResearcherBasicInformation getResearcherBasicInformation()
+	{
+		if ( this.researcherBasicInformation == null )
+			this.researcherBasicInformation = new ResearcherBasicInformationImpl();
+
+		return this.researcherBasicInformation;
 	}
 
 	@Override
