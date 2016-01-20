@@ -171,7 +171,7 @@ public class ResearcherController
 		Map<String, Object> authorsMap = researcherFeature.getResearcherSearch().getResearcherMapByQuery( query, queryType, startPage, maxresult, source, addedAuthor, fulltextSearch, persistResult );
 		
 		// store in session
-		if ( source.equals( "external" ) )
+		if ( source.equals( "external" ) || source.equals( "all" ) )
 			request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
 		
 		if ( (Integer) authorsMap.get( "totalCount" ) > 0 )
