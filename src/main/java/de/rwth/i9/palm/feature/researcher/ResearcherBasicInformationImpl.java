@@ -1,16 +1,15 @@
 package de.rwth.i9.palm.feature.researcher;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationComparator;
+import org.apache.commons.lang3.text.WordUtils;
+
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
@@ -28,61 +27,157 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 			responseMap.put( "count", 0 );
 			return responseMap;
 		}
+		// author data
+		responseMap.put( "author", printAuthorInformation( author ) );
 
-		// prepare a list of map object containing coauthor properties and
-		Map<String, Integer> coAuthorCollaborationCountMap = new HashMap<String, Integer>();
-		// Prepare set of coauthor HashSet;
-		Set<Author> coauthorSet = new HashSet<Author>();
-		// number of collaboration
+		// prepare a list of map object containing year as the key and number of
+		// publication and citation ays value
+		Map<Integer, Object> publicationCitationYearlyMap = new HashMap<Integer, Object>();
+
+		// prapare data format for year
+		SimpleDateFormat df = new SimpleDateFormat( "yyyy" );
+
+		// get maximum and minimum of year value
+		int minYear = 0, maxYear = 0;
+
+		// count number of publication and citation per year
 		for ( Publication publication : author.getPublications() )
 		{
-			for ( Author coAuthor : publication.getAuthors() )
+			// just skip publication without date
+			if ( publication.getPublicationDate() == null )
+				continue;
+			// get publication year
+			Integer year = Integer.parseInt( df.format( publication.getPublicationDate() ) );
+
+			// get year timespan
+			if ( minYear == 0 && maxYear == 0 )
 			{
-				// just skip if its himself
-				if ( coAuthor.equals( author ) )
-					continue;
+				minYear = year;
+				maxYear = year;
+			}
 
-				coauthorSet.add( coAuthor );
+			if ( minYear > year )
+				minYear = year;
 
-				if ( coAuthorCollaborationCountMap.get( coAuthor.getId() ) == null )
-					coAuthorCollaborationCountMap.put( coAuthor.getId(), 1 );
-				else
-					coAuthorCollaborationCountMap.put( coAuthor.getId(), coAuthorCollaborationCountMap.get( coAuthor.getId() ) + 1 );
+			if ( maxYear < year )
+				maxYear = year;
+
+			// check whether the year is available on the map key
+			if ( publicationCitationYearlyMap.get( year ) == null )
+			{
+				// still not available put new map
+				Map<String, Integer> publicationCitationMap = new LinkedHashMap<String, Integer>();
+				publicationCitationMap.put( "totalPublication", 1 );
+				publicationCitationMap.put( "totalCitation", publication.getCitedBy() );
+				// put into yearly map
+				publicationCitationYearlyMap.put( year, publicationCitationMap );
+			}
+			else
+			{
+				Map<String, Integer> publicationCitationMap = (Map<String, Integer>) publicationCitationYearlyMap.get( year );
+				publicationCitationMap.put( "totalPublication", publicationCitationMap.get( "totalPublication" ) + 1 );
+				publicationCitationMap.put( "totalCitation", publicationCitationMap.get( "totalCitation" ) + publication.getCitedBy() );
 			}
 		}
 
-		// prepare list of object map containing coAuthor detrail
-		List<Map<String, Object>> coAuthorList = new ArrayList<Map<String, Object>>();
-
-		for ( Author coAuthor : coauthorSet )
-		{
-			// only copy necessary attributes
-			Map<String, Object> coAuthorMap = new LinkedHashMap<String, Object>();
-			coAuthorMap.put( "id", coAuthor.getId() );
-			coAuthorMap.put( "name", coAuthor.getName() );
-			if ( coAuthor.getInstitutions() != null && !coAuthor.getInstitutions().isEmpty() )
-			{
-				for ( Iterator<Institution> it = coAuthor.getInstitutions().iterator(); it.hasNext(); )
-				{
-					Institution institution = it.next();
-					coAuthorMap.put( "affiliation", institution.getName() );
-				}
-			}
-			if( coAuthor.getPhotoUrl() != null )
-				coAuthorMap.put( "photo", coAuthor.getPhotoUrl() );
-			coAuthorMap.put( "isAdded", coAuthor.isAdded() );
-			coAuthorMap.put( "coautorTimes", coAuthorCollaborationCountMap.get( coAuthor.getId() ) );
-			
-			// add into list
-			coAuthorList.add( coAuthorMap );
-		}
-		
-		Collections.sort( coAuthorList, new CoAuthorByNumberOfCollaborationComparator() );
 		// put coauthor to responseMap
-		responseMap.put( "count", coAuthorList.size() );
-		responseMap.put( "coAuthors", coAuthorList );
+		responseMap.put( "yearlyPublicationData", publicationCitationYearlyMap );
+
+
+		// D3 visualization data
+		responseMap.put( "d3data", printYearlyPublicationInformation( publicationCitationYearlyMap, minYear, maxYear ) );
 
 		return responseMap;
+	}
+
+	private List<Object> printYearlyPublicationInformation( Map<Integer, Object> publicationCitationYearlyMap, int minYear, int maxYear )
+	{
+		if ( minYear == 0 && maxYear == 0 )
+		{
+			return Collections.emptyList();
+		}
+		// main list contain 2 map
+		List<Object> visualList = new ArrayList<Object>();
+
+		// publication information
+		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
+		publicationMap.put( "key", "Publication" );
+		publicationMap.put( "bar", true );
+		publicationMap.put( "color", "#ccf" );
+		List<Object> publicationValues = new ArrayList<Object>();
+		publicationMap.put( "values", publicationValues );
+
+		Map<String, Object> citationMap = new LinkedHashMap<String, Object>();
+		citationMap.put( "key", "Citation" );
+		citationMap.put( "color", "#333" );
+		List<Object> citationValues = new ArrayList<Object>();
+		citationMap.put( "values", citationValues );
+
+		// put into main list
+		visualList.add( publicationMap );
+		visualList.add( citationMap );
+
+		for ( int i = minYear; i <= maxYear; i++ )
+		{
+			if ( publicationCitationYearlyMap.get( i ) != null )
+			{
+				@SuppressWarnings( "unchecked" )
+				Map<String, Integer> publicationCitationMap = (Map<String, Integer>) publicationCitationYearlyMap.get( i );
+				publicationValues.add( new int[] { i, publicationCitationMap.get( "totalPublication" ) } );
+				citationValues.add( new int[] { i, publicationCitationMap.get( "totalCitation" ) } );
+			}
+			else
+			{
+				publicationValues.add( new int[] { i, 0 } );
+				citationValues.add( new int[] { i, 0 } );
+			}
+		}
+
+		return visualList;
+	}
+
+	/**
+	 * Print researcher data
+	 * 
+	 * @param researcher
+	 * @return
+	 */
+	private Map<String, Object> printAuthorInformation( Author researcher )
+	{
+
+		Map<String, Object> researcherMap = new LinkedHashMap<String, Object>();
+		researcherMap.put( "id", researcher.getId() );
+		researcherMap.put( "name", WordUtils.capitalize( researcher.getName() ) );
+		if ( researcher.getPhotoUrl() != null )
+			researcherMap.put( "photo", researcher.getPhotoUrl() );
+		if ( researcher.getAcademicStatus() != null )
+			researcherMap.put( "status", researcher.getAcademicStatus() );
+		if ( researcher.getInstitutions() != null )
+			for ( Institution institution : researcher.getInstitutions() )
+			{
+				if ( researcherMap.get( "aff" ) != null )
+					researcherMap.put( "aff", researcherMap.get( "aff" ) + ", " + institution.getName() );
+				else
+					researcherMap.put( "aff", institution.getName() );
+			}
+		if ( researcher.getCitedBy() > 0 )
+			researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
+
+		if ( researcher.getPublicationAuthors() != null )
+			researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
+		else
+			researcherMap.put( "publicationsNumber", 0 );
+		String otherDetail = "";
+		if ( researcher.getOtherDetail() != null )
+			otherDetail += researcher.getOtherDetail();
+		if ( researcher.getDepartment() != null )
+			otherDetail += ", " + researcher.getDepartment();
+		if ( !otherDetail.equals( "" ) )
+			researcherMap.put( "detail", otherDetail );
+
+		researcherMap.put( "isAdded", researcher.isAdded() );
+
+		return researcherMap;
 	}
 
 }
