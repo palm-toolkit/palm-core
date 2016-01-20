@@ -31,6 +31,8 @@ import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
@@ -73,7 +75,28 @@ public class ResearcherController
 	{
 		ModelAndView model = TemplateHelper.createViewWithLink( "researcher", LINK_NAME );
 
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.RESEARCHER, WidgetStatus.DEFAULT );
+		List<Widget> widgets = new ArrayList<Widget>();
+
+		User user = securityService.getUser();
+
+		if ( user != null )
+		{
+			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.RESEARCHER, WidgetStatus.ACTIVE );
+			for ( UserWidget userWidget : userWidgets )
+			{
+				Widget widget = userWidget.getWidget();
+				widget.setColor( userWidget.getWidgetColor() );
+				widget.setWidgetHeight( userWidget.getWidgetHeight() );
+				widget.setWidgetWidth( userWidget.getWidgetWidth() );
+				widget.setPosition( userWidget.getPosition() );
+
+				widgets.add( widget );
+			}
+		}
+		else
+			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.RESEARCHER, WidgetStatus.DEFAULT ) );
+		// assign the model
+		model.addObject( "widgets", widgets );
 		// assign the model
 		model.addObject( "widgets", widgets );
 		// assign query
