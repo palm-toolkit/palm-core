@@ -186,6 +186,18 @@ public class PublicationCollectionService
 			// fourth, second checking, after the information has been merged
 			this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
 
+			// count total citation on author
+			int citation = 0;
+			for ( Publication publication : selectedPublications )
+			{
+				citation += publication.getCitedBy();
+			}
+			if ( author.getCitedBy() < citation )
+			{
+				author.setCitedBy( citation );
+				persistenceStrategy.getAuthorDAO().persist( author );
+			}
+
 			// process log
 			applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html...<br>", "append" );
 
@@ -794,7 +806,7 @@ public class PublicationCollectionService
 			}
 
 			// set publication date
-			if ( publication.getPublicationDate() == null && publicationDate == null && pubSource.getDate() != null )
+			if ( publication.getPublicationDate() == null && publicationDate == null && pubSource.getDate() != null && !pubSource.getDate().equals( "" ) )
 			{
 				publicationDate = dateFormat.parse( pubSource.getDate() + "/1/1" );
 				publication.setPublicationDate( publicationDate );
