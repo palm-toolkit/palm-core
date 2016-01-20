@@ -1,11 +1,15 @@
 package de.rwth.i9.palm.feature.researcher;
 
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.text.WordUtils;
@@ -103,13 +107,11 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
 		publicationMap.put( "key", "Publication" );
 		publicationMap.put( "bar", true );
-		publicationMap.put( "color", "#ccf" );
 		List<Object> publicationValues = new ArrayList<Object>();
 		publicationMap.put( "values", publicationValues );
 
 		Map<String, Object> citationMap = new LinkedHashMap<String, Object>();
 		citationMap.put( "key", "Citation" );
-		citationMap.put( "color", "#333" );
 		List<Object> citationValues = new ArrayList<Object>();
 		citationMap.put( "values", citationValues );
 
@@ -119,17 +121,31 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 
 		for ( int i = minYear; i <= maxYear; i++ )
 		{
+			String string = Integer.toString( i );
+			DateFormat format = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
+			Long unixDate = (long) 0;
+			try
+			{
+				Date date = format.parse( string );
+				unixDate = date.getTime();
+			}
+			catch ( ParseException e )
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 			if ( publicationCitationYearlyMap.get( i ) != null )
 			{
 				@SuppressWarnings( "unchecked" )
 				Map<String, Integer> publicationCitationMap = (Map<String, Integer>) publicationCitationYearlyMap.get( i );
-				publicationValues.add( new int[] { i, publicationCitationMap.get( "totalPublication" ) } );
-				citationValues.add( new int[] { i, publicationCitationMap.get( "totalCitation" ) } );
+				publicationValues.add( new Long[] { unixDate, (long) publicationCitationMap.get( "totalPublication" ) } );
+				citationValues.add( new Long[] { unixDate, (long) publicationCitationMap.get( "totalCitation" ) } );
 			}
 			else
 			{
-				publicationValues.add( new int[] { i, 0 } );
-				citationValues.add( new int[] { i, 0 } );
+				publicationValues.add( new Long[] { unixDate, (long) 0 } );
+				citationValues.add( new Long[] { unixDate, (long) 0 } );
 			}
 		}
 
