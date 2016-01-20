@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ResearcherFeatureImpl implements ResearcherFeature
 {
 	@Autowired( required = false )
+	private ResearcherAcademicEventTree researcherAcademicEventTree;
+
+	@Autowired( required = false )
 	private ResearcherApi researcherApi;
 
 	@Autowired( required = false )
@@ -27,6 +30,15 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 
 	@Autowired( required = false )
 	private ResearcherSearch researcherSearch;
+
+	@Override
+	public ResearcherAcademicEventTree getResearcherAcademicEventTree()
+	{
+		if ( this.researcherAcademicEventTree == null )
+			this.researcherAcademicEventTree = new ResearcherAcademicEventTreeImpl();
+
+		return this.researcherAcademicEventTree;
+	}
 
 	@Override
 	public ResearcherApi getResearcherApi()

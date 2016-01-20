@@ -395,7 +395,7 @@ public class ResearcherController
 	}
 	
 	/**
-	 * Get coauthorMap of given author
+	 * Get basic information of given author
 	 * @param authorId
 	 * @param startPage
 	 * @param maxresult
@@ -429,6 +429,46 @@ public class ResearcherController
 
 		// get coauthor calculation
 		responseMap.putAll( researcherFeature.getResearcherBasicInformation().getResearcherBasicInformationMap( author ) );
+
+		return responseMap;
+	}
+	
+	/**
+	 * Get academic event tree of given author
+	 * 
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/academicEventTree", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getAcademicEventTreeMap( 
+			@RequestParam( value = "id", required = false ) final String authorId,
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAcademicEventTree( author ) );
 
 		return responseMap;
 	}
