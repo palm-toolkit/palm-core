@@ -1,19 +1,15 @@
 package de.rwth.i9.palm.feature.researcher;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationComparator;
+import de.rwth.i9.palm.helper.TreeHelper;
+import de.rwth.i9.palm.helper.comparator.TreeDirectChildByChildNumberComparator;
+import de.rwth.i9.palm.helper.comparator.TreeDirectChildByNaturalOrderComparator;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationType;
 
 public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventTree
 {
@@ -28,59 +24,114 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 			responseMap.put( "count", 0 );
 			return responseMap;
 		}
+		// prepare tree helper
+		TreeHelper rootTreeHelper = new TreeHelper();
+		rootTreeHelper.setKey( "EventTree" );
+		rootTreeHelper.setTitle( "EventTree" );
 
-		// prepare a list of map object containing coauthor properties and
-		Map<String, Integer> coAuthorCollaborationCountMap = new HashMap<String, Integer>();
-		// Prepare set of coauthor HashSet;
-		Set<Author> coauthorSet = new HashSet<Author>();
-		// number of collaboration
 		for ( Publication publication : author.getPublications() )
 		{
-			for ( Author coAuthor : publication.getAuthors() )
+			if ( publication.getPublicationType() == null )
+				continue;
+			if ( publication.getPublicationType().equals( PublicationType.BOOK ) )
+				continue;
+
+			if ( publication.getEvent() != null )
 			{
-				// just skip if its himself
-				if ( coAuthor.equals( author ) )
-					continue;
+				TreeHelper treeHelperLv1 = TreeHelper.findNodeByKey( rootTreeHelper, publication.getEvent().getEventGroup().getId() );
+				
+				if( treeHelperLv1 == null ){
+					// create first level (conference group)
+					treeHelperLv1 = new TreeHelper();
+					treeHelperLv1.setKey( publication.getEvent().getEventGroup().getId() );
+					String nodeTitle =  publication.getEvent().getEventGroup().getName();
+					if( !nodeTitle.equals( publication.getEvent().getEventGroup().getNotation() ) )
+						nodeTitle += " (" + publication.getEvent().getEventGroup().getNotation() + ") ";
+					treeHelperLv1.setTitle( nodeTitle );
+					treeHelperLv1.setType( publication.getEvent().getEventGroup().getPublicationType().toString() );
+					
+					// add first level as child of root
+					rootTreeHelper.addChild( treeHelperLv1 );
+					
+					// create second level ( conference year )
+					TreeHelper treeHelperLv2 = new TreeHelper();
+					treeHelperLv2.setKey( publication.getEvent().getId() );
+					if( publication.getEvent().getName() != null)
+						nodeTitle = publication.getEvent().getName();
+					else{
+						if( publication.getEvent().getVolume() != null )
+							nodeTitle = "Volume " + publication.getEvent().getVolume() + ", " + publication.getEvent().getYear();
+						else
+							nodeTitle = publication.getEvent().getYear();
+					}
+					treeHelperLv2.setTitle( nodeTitle );
+					treeHelperLv2.setType( publication.getPublicationType().toString() );
+					
+					// add second level as child of first level
+					treeHelperLv1.addChild( treeHelperLv2 );
+					
+					// add third level for publication
+					// create second level ( publication )
+					TreeHelper treeHelperLv3 = new TreeHelper();
+					treeHelperLv3.setKey( publication.getId() );
+					treeHelperLv3.setTitle( publication.getTitle() );
+					treeHelperLv3.setType( publication.getPublicationType().toString() );
 
-				coauthorSet.add( coAuthor );
+					// add second level as child of first level
+					treeHelperLv2.addChild( treeHelperLv3 );
 
-				if ( coAuthorCollaborationCountMap.get( coAuthor.getId() ) == null )
-					coAuthorCollaborationCountMap.put( coAuthor.getId(), 1 );
-				else
-					coAuthorCollaborationCountMap.put( coAuthor.getId(), coAuthorCollaborationCountMap.get( coAuthor.getId() ) + 1 );
-			}
-		}
+				} else{
 
-		// prepare list of object map containing coAuthor detrail
-		List<Map<String, Object>> coAuthorList = new ArrayList<Map<String, Object>>();
+					TreeHelper treeHelperLv2 = TreeHelper.findNodeByKey( treeHelperLv1, publication.getEvent().getId() );
 
-		for ( Author coAuthor : coauthorSet )
-		{
-			// only copy necessary attributes
-			Map<String, Object> coAuthorMap = new LinkedHashMap<String, Object>();
-			coAuthorMap.put( "id", coAuthor.getId() );
-			coAuthorMap.put( "name", coAuthor.getName() );
-			if ( coAuthor.getInstitutions() != null && !coAuthor.getInstitutions().isEmpty() )
-			{
-				for ( Iterator<Institution> it = coAuthor.getInstitutions().iterator(); it.hasNext(); )
-				{
-					Institution institution = it.next();
-					coAuthorMap.put( "affiliation", institution.getName() );
+					if ( treeHelperLv2 == null )
+					{
+						// create second level ( conference year )
+						String nodeTitle = "";
+						treeHelperLv2 = new TreeHelper();
+						treeHelperLv2.setKey( publication.getEvent().getId() );
+						if ( publication.getEvent().getName() != null )
+							nodeTitle = publication.getEvent().getName();
+						else
+						{
+							if ( publication.getEvent().getVolume() != null )
+								nodeTitle = "Volume " + publication.getEvent().getVolume() + ", " + publication.getEvent().getYear();
+							else
+								nodeTitle = publication.getEvent().getYear();
+						}
+						treeHelperLv2.setTitle( nodeTitle );
+						treeHelperLv2.setType( publication.getPublicationType().toString() );
+
+						// add second level as child of first level
+						treeHelperLv1.addChild( treeHelperLv2 );
+					}
+					
+					// add third level for publication
+					// create second level ( publication )
+					TreeHelper treeHelperLv3 = new TreeHelper();
+					treeHelperLv3.setKey( publication.getId() );
+					treeHelperLv3.setTitle( publication.getTitle() );
+					treeHelperLv3.setType( publication.getPublicationType().toString() );
+
+					// add second level as child of first level
+					treeHelperLv2.addChild( treeHelperLv3 );
 				}
 			}
-			if( coAuthor.getPhotoUrl() != null )
-				coAuthorMap.put( "photo", coAuthor.getPhotoUrl() );
-			coAuthorMap.put( "isAdded", coAuthor.isAdded() );
-			coAuthorMap.put( "coautorTimes", coAuthorCollaborationCountMap.get( coAuthor.getId() ) );
-			
-			// add into list
-			coAuthorList.add( coAuthorMap );
+			// Event from additional information is not included
+			else if ( publication.getAdditionalInformation() != null )
+			{
+			}
 		}
-		
-		Collections.sort( coAuthorList, new CoAuthorByNumberOfCollaborationComparator() );
+		// sort
+		Collections.sort( rootTreeHelper.getChildren(), new TreeDirectChildByChildNumberComparator() );
+
+		// short children
+		for ( TreeHelper th : rootTreeHelper.getChildren() )
+		{
+			Collections.sort( th.getChildren(), new TreeDirectChildByNaturalOrderComparator() );
+		}
 		// put coauthor to responseMap
-		responseMap.put( "count", coAuthorList.size() );
-		responseMap.put( "coAuthors", coAuthorList );
+		responseMap.put( "evenTree", rootTreeHelper);
 
 		return responseMap;
 	}
