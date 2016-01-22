@@ -36,6 +36,7 @@ public class TreeHelper
 	private String key;
 	private String type;
 	private String link;
+	private boolean isFolder = false;
 	private boolean expand;
 	private List<TreeHelper> children = null;
 	@JsonIgnore
@@ -139,6 +140,16 @@ public class TreeHelper
 	public void setLink( String link )
 	{
 		this.link = link;
+	}
+
+	public boolean isFolder()
+	{
+		return isFolder;
+	}
+
+	public void setFolder( boolean isFolder )
+	{
+		this.isFolder = isFolder;
 	}
 
 }

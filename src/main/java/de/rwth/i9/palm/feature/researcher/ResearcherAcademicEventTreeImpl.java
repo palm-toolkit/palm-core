@@ -49,6 +49,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 						nodeTitle += " (" + publication.getEvent().getEventGroup().getNotation() + ") ";
 					treeHelperLv1.setTitle( nodeTitle );
 					treeHelperLv1.setType( publication.getEvent().getEventGroup().getPublicationType().toString() );
+					treeHelperLv1.setFolder( true );
 					
 					// add first level as child of root
 					rootTreeHelper.addChild( treeHelperLv1 );
@@ -66,6 +67,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					}
 					treeHelperLv2.setTitle( nodeTitle );
 					treeHelperLv2.setType( publication.getPublicationType().toString() );
+					treeHelperLv2.setFolder( true );
 					
 					// add second level as child of first level
 					treeHelperLv1.addChild( treeHelperLv2 );
@@ -101,6 +103,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 						}
 						treeHelperLv2.setTitle( nodeTitle );
 						treeHelperLv2.setType( publication.getPublicationType().toString() );
+						treeHelperLv2.setFolder( true );
 
 						// add second level as child of first level
 						treeHelperLv1.addChild( treeHelperLv2 );
