@@ -104,7 +104,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			publicationDetails.put( "title", eachPublicationRow.select( "a" ).first().text() );
 			publicationDetails.put( "coauthor", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).first().text() );
 			String venue = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).get( 1 ).text().trim();
-			if( !venue.equals( "" ))
+			if ( !venue.equals( "" ) && venue.length() < 80 )
 				publicationDetails.put( "eventName", venue );
 			String noCitation = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_NOCITATION ).text().replaceAll( "[^\\d]", "" );
 			if( !noCitation.equals( "" ))

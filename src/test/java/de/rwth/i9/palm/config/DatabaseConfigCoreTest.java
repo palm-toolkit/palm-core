@@ -25,9 +25,10 @@ import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.CircleWidget;
+import de.rwth.i9.palm.model.Config;
+import de.rwth.i9.palm.model.ConfigProperty;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
-//import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
 import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.ExtractionServiceProperty;
 import de.rwth.i9.palm.model.Function;
@@ -37,7 +38,6 @@ import de.rwth.i9.palm.model.InterestAuthor;
 import de.rwth.i9.palm.model.InterestProfile;
 import de.rwth.i9.palm.model.InterestProfileProperty;
 import de.rwth.i9.palm.model.Location;
-import de.rwth.i9.palm.model.PalmConfiguration;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationAuthor;
 import de.rwth.i9.palm.model.PublicationFile;
@@ -142,6 +142,8 @@ public class DatabaseConfigCoreTest
 						AuthorInterestProfile.class,
 						Circle.class,
 						CircleWidget.class,
+						Config.class,
+						ConfigProperty.class,
 						Event.class,
 						EventGroup.class,
 						ExtractionService.class,
@@ -153,7 +155,6 @@ public class DatabaseConfigCoreTest
 						InterestProfileProperty.class,
 						Institution.class,
 						Location.class,
-						PalmConfiguration.class,
 						Publication.class,
 						PublicationAuthor.class,
 						PublicationFile.class,
