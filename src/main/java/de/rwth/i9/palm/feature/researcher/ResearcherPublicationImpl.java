@@ -95,7 +95,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 
 			if ( publication.getPublicationDate() != null )
 			{
-				SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd" );
+				SimpleDateFormat sdf = new SimpleDateFormat( publication.getPublicationDateFormat() );
 				publicationMap.put( "date", sdf.format( publication.getPublicationDate() ) );
 			}
 
@@ -116,7 +116,10 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			{
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
-				eventMap.put( "name", publication.getEvent().getEventGroup().getName() );
+				String eventName = publication.getEvent().getEventGroup().getName();
+				if ( !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
+					eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
+				eventMap.put( "name", eventName );
 				eventMap.put( "isAdded", publication.getEvent().isAdded() );
 				publicationMap.put( "event", eventMap );
 			}

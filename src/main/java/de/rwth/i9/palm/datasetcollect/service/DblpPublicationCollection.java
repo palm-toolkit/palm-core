@@ -340,6 +340,9 @@ public class DblpPublicationCollection extends PublicationCollection
 
 					Element dataElement = eachPublication.select( "div.data" ).first();
 
+					if ( dataElement == null )
+						continue;
+
 					Elements authorElements = dataElement.select( "[itemprop=author]" );
 					String authorNames = "";
 					String authorUrl = "";
