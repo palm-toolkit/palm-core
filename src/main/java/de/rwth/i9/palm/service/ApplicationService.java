@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import de.rwth.i9.palm.helper.ProcessLogHelper;
+import de.rwth.i9.palm.model.Config;
 import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.InterestProfile;
 import de.rwth.i9.palm.model.Source;
@@ -43,6 +44,9 @@ public class ApplicationService
 
 	// caching interest profiles
 	private Map<String, InterestProfile> interestProfileCache;
+
+	// caching config profiles
+	private Map<String, Config> configCache;
 
 	// user process log
 	private Map<String, Map<String, String>> userProcessLogMap;
@@ -112,6 +116,35 @@ public class ApplicationService
 	public void updateInterestProfilesCache()
 	{
 		interestProfileCache = persistenceStrategy.getInterestProfileDAO().getInterestProfileMap();
+	}
+
+	/* config cache */
+	@Transactional
+	public Map<String, Config> getConfig()
+	{
+		if ( configCache == null || configCache.isEmpty() )
+			updateConfigCache();
+		return configCache;
+	}
+
+	@Transactional
+	public String getConfigValue( String configName, String Identifier1, String identifier2 )
+	{
+		if ( configCache == null || configCache.isEmpty() )
+			updateConfigCache();
+
+		Config config = configCache.get( configName );
+
+		if ( config == null )
+			return null;
+
+		return config.getConfigPropertyValueByIdentifiers( Identifier1, identifier2 );
+	}
+
+	@Transactional
+	public void updateConfigCache()
+	{
+		configCache = persistenceStrategy.getConfigDAO().getConfigMap();
 	}
 
 	/* user log map */

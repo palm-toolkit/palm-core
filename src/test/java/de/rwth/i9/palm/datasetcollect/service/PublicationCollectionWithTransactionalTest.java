@@ -59,7 +59,7 @@ public class PublicationCollectionWithTransactionalTest extends AbstractTransact
 	{
 
 		Publication publication = persistenceStrategy.getPublicationDAO().getById( "8af08983-9b1e-4d6e-b771-5fc092cd444e" );
-		Future<Publication> publicationFuture = asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication );
+		Future<Publication> publicationFuture = asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication, true, true );
 
 		publicationFuture.get();
 		

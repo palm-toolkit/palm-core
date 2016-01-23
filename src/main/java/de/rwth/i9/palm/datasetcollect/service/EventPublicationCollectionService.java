@@ -671,11 +671,23 @@ public class EventPublicationCollectionService
 		LOGGER.info( "Start publications enrichment by extract HTML and PDF" );
 		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
 
+		// get application setting whether enrichment with HTML or pdf is
+		// possible
+		boolean isHtmlParsingEnable = false;
+		String htmlParsingEnable = applicationService.getConfigValue( "conference", "source", "html" );
+		if ( htmlParsingEnable != null && htmlParsingEnable.equals( "yes" ) )
+			isHtmlParsingEnable = true;
+
+		boolean isPdfParsingEnable = false;
+		String pdfParsingEnable = applicationService.getConfigValue( "conference", "source", "pdf" );
+		if ( pdfParsingEnable != null && pdfParsingEnable.equals( "yes" ) )
+			isPdfParsingEnable = true;
+
 		for ( Publication publication : eventPublications )
 		{
 			// only proceed for publication with not complete abstract
 			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
-				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication ) );
+				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication, isHtmlParsingEnable, isPdfParsingEnable ) );
 		}
 
 		// check process completion

@@ -310,7 +310,9 @@ public class ResearcherCollectionService
 				}
 				author.setAuthorSources( authorSources );
 
-				authors2.add( author );
+				// incase of duplication
+				if ( !authors2.contains( author ) )
+					authors2.add( author );
 
 				// if stored, then save author to database
 				if ( stored )

@@ -24,6 +24,7 @@ import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.PublicationType;
 import de.rwth.i9.palm.model.SourceMethod;
 import de.rwth.i9.palm.model.SourceType;
+import de.rwth.i9.palm.service.ApplicationService;
 
 /**
  * 
@@ -41,10 +42,15 @@ public class AsynchronousPublicationDetailCollectionService
 	@Autowired
 	private PalmAnalytics palmAnalitics;
 
+	@Autowired
+	private ApplicationService applicationService;
+
 	/**
 	 * Collect publication detail from a publication from multiple source
 	 * 
 	 * @param publication
+	 * @param isPdfParsingEnable
+	 * @param isHtmlParsingEnable
 	 * @return
 	 * @throws IOException
 	 * @throws InterruptedException
@@ -52,11 +58,16 @@ public class AsynchronousPublicationDetailCollectionService
 	 * @throws TimeoutException
 	 */
 	@Async
-	public Future<Publication> asyncEnrichPublicationInformationFromOriginalSource( Publication publication ) throws IOException, InterruptedException, ExecutionException, TimeoutException
+	public Future<Publication> asyncEnrichPublicationInformationFromOriginalSource( Publication publication, boolean isHtmlParsingEnable, boolean isPdfParsingEnable ) throws IOException, InterruptedException, ExecutionException, TimeoutException
 	{
+		// to make this process more efficient
+		// prioritize the HTML extraction first over pdf
+
 		log.info( "Start enrichment process for publication " + publication.getTitle() );
 		// multithread publication source
 		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();
+		// only extract one of the page
+		boolean isOneSourceAlreadExtracted = false;
 
 		if ( publication.getPublicationFiles() != null )
 		{
@@ -65,7 +76,10 @@ public class AsynchronousPublicationDetailCollectionService
 				if ( !publicationFile.isChecked() && publication.getPublicationType() != null )
 				{
 
-					if ( publicationFile.getFileType().equals( FileType.PDF ) && publication.getPublicationType().equals( PublicationType.CONFERENCE ) )
+					if ( isOneSourceAlreadExtracted )
+						break;
+
+					if ( isPdfParsingEnable && publicationFile.getFileType().equals( FileType.PDF ) && publication.getPublicationType().equals( PublicationType.CONFERENCE ) )
 					{
 						PublicationSource publicationSource = new PublicationSource();
 						publicationSource.setSourceUrl( publicationFile.getUrl() );
@@ -73,12 +87,14 @@ public class AsynchronousPublicationDetailCollectionService
 						publicationSource.setSourceType( SourceType.PDF );
 						publicationSource.setPublicationType( publication.getPublicationType().toString() );
 
+						isOneSourceAlreadExtracted = true;
+
 						publicationFile.setChecked( true );
 
 						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromPdf( publicationSource, publicationFile ) );
 					}
 
-					if ( publicationFile.getFileType().equals( FileType.HTML ) )
+					if ( isHtmlParsingEnable && publicationFile.getFileType().equals( FileType.HTML ) )
 					{
 						PublicationSource publicationSource = new PublicationSource();
 						publicationSource.setSourceUrl( publicationFile.getUrl() );
@@ -87,6 +103,8 @@ public class AsynchronousPublicationDetailCollectionService
 						publicationSource.setPublicationType( publication.getPublicationType().toString() );
 
 						publicationFile.setChecked( true );
+
+						isOneSourceAlreadExtracted = true;
 
 						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInfromationFromHtml( publicationSource, publicationFile ) );
 					}

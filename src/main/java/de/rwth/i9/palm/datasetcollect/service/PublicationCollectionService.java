@@ -966,11 +966,26 @@ public class PublicationCollectionService
 		log.info( "Start publications enrichment for Auhtor " + pivotAuthor.getName() );
 		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
 
+		// get application setting whether enrichment with HTML or pdf is
+		// possible
+		boolean isHtmlParsingEnable = false;
+		String htmlParsingEnable = applicationService.getConfigValue( "publication", "source", "html" );
+		if ( htmlParsingEnable != null && htmlParsingEnable.equals( "yes" ) )
+			isHtmlParsingEnable = true;
+		
+		boolean isPdfParsingEnable = false;
+		String pdfParsingEnable = applicationService.getConfigValue( "publication", "source", "pdf" );
+		if ( pdfParsingEnable != null && pdfParsingEnable.equals( "yes" ) )
+			isPdfParsingEnable = true;
+
 		for ( Publication publication : selectedPublications )
 		{
 			// only proceed for publication with not complete abstract
-			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
-				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication ) );
+
+			// if ( !publication.getAbstractStatus().equals(
+			// CompletionStatus.COMPLETE ) )
+			if ( publication.getAbstractStatus().equals( CompletionStatus.NOT_COMPLETE ) )
+				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication, isHtmlParsingEnable, isPdfParsingEnable ) );
 		}
 
 		// check process completion

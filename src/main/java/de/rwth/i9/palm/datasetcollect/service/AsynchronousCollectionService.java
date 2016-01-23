@@ -180,19 +180,22 @@ public class AsynchronousCollectionService
 		if ( publicationDetailMap.get( "Journal" ) != null )
 		{
 			publicationSource.setPublicationType( "JOURNAL" );
-			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "Journal" ), 200 ) );
+			if ( publicationDetailMap.get( "Journal" ).length() < 100 )
+				publicationSource.setVenue( publicationDetailMap.get( "Journal" ) );
 		}
 
 		if ( publicationDetailMap.get( "Book" ) != null )
 		{
 			publicationSource.setPublicationType( "BOOK" );
-			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "Book" ), 200 ) );
+			if ( publicationDetailMap.get( "Book" ).length() < 100 )
+				publicationSource.setVenue( publicationDetailMap.get( "Book" ) );
 		}
 
 		if ( publicationDetailMap.get( "Conference" ) != null )
 		{
 			publicationSource.setPublicationType( "CONFERENCE" );
-			publicationSource.setVenue( TextUtils.cutTextToLength( publicationDetailMap.get( "Conference" ), 200 ) );
+			if ( publicationDetailMap.get( "Conference" ).length() < 100 )
+				publicationSource.setVenue( publicationDetailMap.get( "Conference" ) );
 		}
 
 		if ( publicationDetailMap.get( "Pages" ) != null )
