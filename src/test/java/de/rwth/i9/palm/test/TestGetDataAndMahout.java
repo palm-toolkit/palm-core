@@ -122,7 +122,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 
 	
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase2() throws FileNotFoundException, UnsupportedEncodingException
 	{
 
@@ -133,7 +132,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			{	
 				for(Publication publication : author.getPublications()){
 					if (publication.getAbstractText()!= null){
-					PrintWriter pub = new PrintWriter("C:/Users/Piro/Desktop/Publications/Publications" + publication.getId() +".txt", "UTF-8");
+						PrintWriter pub = new PrintWriter( "/Publications" + publication.getId() + ".txt", "UTF-8" );
 					pub.println( publication.getTitle());
 					pub.println( publication.getAbstractText());
 					pub.println();
