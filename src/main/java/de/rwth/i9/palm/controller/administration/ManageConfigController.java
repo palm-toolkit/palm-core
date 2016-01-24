@@ -131,8 +131,8 @@ public class ManageConfigController
 		responseMap.put( "status", "ok" );
 		responseMap.put( "format", "json" );
 
-		// update application service source cache
-		applicationService.updateAcademicNetworkSourcesCache();
+		// update application config cache
+		applicationService.updateConfigCache();
 
 		return responseMap;
 	}

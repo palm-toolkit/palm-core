@@ -158,7 +158,7 @@ public class EventPublicationCollectionService
 		applicationService.putProcessLog( pid, "Merging " + publicationDetailMapList.size() + " publications with existing publication on Database...<br>", "append" );
 
 		// first, construct the publication
-		// get it from database or create new if still doesn't exist
+		// get it from database or create new if it still doesn't exist
 		this.constructPublicationFromDblpEvent( eventPublications, publicationDetailMapList, event );
 
 		// To this point the publication has title and author, any additional
@@ -412,7 +412,7 @@ public class EventPublicationCollectionService
 				if ( pubSource.getSourceType() == SourceType.DBLP )
 				{
 					// publication date
-					if ( pubSource.getDate() != null )
+					if ( pubSource.getDate() != null && !publication.equals( "" ) )
 					{
 						String pubSourceDate = pubSource.getDate();
 						String publicationDateFormat = "yyyy/M/d";

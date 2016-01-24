@@ -39,7 +39,7 @@ public class AdministrationController
 		if( page != null)
 			model.addObject( "activeMenu", page );
 		else
-			model.addObject( "activeMenu", "researcher" );
+			model.addObject( "activeMenu", "config-researcher" );
 
 		return model;
 	}
