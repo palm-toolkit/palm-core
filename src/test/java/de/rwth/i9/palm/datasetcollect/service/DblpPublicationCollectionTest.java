@@ -20,7 +20,7 @@ import de.rwth.i9.palm.model.SourceProperty;
 public class DblpPublicationCollectionTest
 {
 	@Test
-
+	@Ignore
 	public void getListOfAuthorsTest() throws IOException
 	{
 		SourceProperty sourceProperty1 = new SourceProperty();
@@ -39,11 +39,14 @@ public class DblpPublicationCollectionTest
 
 		List<Map<String, String>> authorList = DblpPublicationCollection.getListOfAuthors( "hendrik thüs", source );
 
+
 		for ( Map<String, String> eachAuthor : authorList )
 		{
+
 			for ( Entry<String, String> eachAuthorDetail : eachAuthor.entrySet() )
 				System.out.println( eachAuthorDetail.getKey() + " : " + eachAuthorDetail.getValue() );
 			System.out.println();
+
 		}
 	}
 
@@ -65,13 +68,16 @@ public class DblpPublicationCollectionTest
 		source.addSourceProperty( sourceProperty1 );
 		source.addSourceProperty( sourceProperty2 );
 
-		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/c/Chatti:Mohamed_Amine", source );
+		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/j/Jarke:Matthias", source );
+		int count = 1;
 
 		for ( Map<String, String> eachPublicationMap : publicationMapLists )
 		{
+			System.out.println( count );
 			for ( Entry<String, String> eachPublicationDetail : eachPublicationMap.entrySet() )
 				System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
 			System.out.println();
+			count++;
 		}
 	}
 	

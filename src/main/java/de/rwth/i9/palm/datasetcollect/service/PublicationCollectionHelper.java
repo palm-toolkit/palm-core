@@ -25,7 +25,8 @@ public class PublicationCollectionHelper
 						.connect( url )
 						.userAgent( "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" )
 						.header( "Accept", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" )
-						.timeout( timeout );
+						.timeout( timeout )
+						.maxBodySize(0);
 			
 			if( cookies != null )
 				jsoupConnection.cookies( cookies );

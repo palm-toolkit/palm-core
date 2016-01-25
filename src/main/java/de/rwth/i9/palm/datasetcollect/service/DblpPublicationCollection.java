@@ -315,7 +315,6 @@ public class DblpPublicationCollection extends PublicationCollection
 			}
 			else if ( sectionHeader.attr( "id" ).equals( "inproceedings" ) )
 			{
-
 				Elements publicationList = publicationSection.select( "ul.publ-list li.inproceedings" );
 
 				for ( Element eachPublication : publicationList )
