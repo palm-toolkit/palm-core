@@ -163,7 +163,7 @@ public class PublicationCollectionService
 			this.constructPublicationWithSources( selectedPublications, publicationFutureLists , author );
 			
 			// process log
-			applicationService.putProcessLog( pid, "Done merging " + selectedPublications.size() + " publications", "append" );
+			applicationService.putProcessLog( pid, "Done merging " + selectedPublications.size() + " publications<br><br>", "append" );
 
 			// process log
 			applicationService.putProcessLog( pid, "Removing incorrect publications...<br>", "append" );
@@ -509,7 +509,7 @@ public class PublicationCollectionService
 				// add venue detail for DBLP
 				if ( publicationSource.getSourceType().equals( SourceType.DBLP ) )
 				{
-					log.info( "eventUrl : " + publicationMap.get( "eventUrl" ) );
+					//log.info( "eventUrl : " + publicationMap.get( "eventUrl" ) );
 					// venue url
 					if ( publicationMap.get( "eventUrl" ) != null )
 					{
