@@ -79,6 +79,7 @@ public class AcademicEventController
 		return model;
 	}
 
+	@SuppressWarnings( "unchecked" )
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getConferenceList( 
@@ -114,12 +115,23 @@ public class AcademicEventController
 			persistResult = true;
 		}
 		
-		List<EventGroup> eventGroups = academicEventFeature.getEventSearch().getEventGroupListByQuery( query, startPage, maxresult, source, type, persistResult );
+		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, startPage, maxresult, source, type, persistResult );
 
-		// put in session
-		request.getSession().setAttribute( "eventGroups", eventGroups );
+		// store in session
+		if ( source.equals( "external" ) || source.equals( "all" ) )
+			request.getSession().setAttribute( "eventGroups", eventGroupsMap.get( "eventGroups" ) );
 
-		return academicEventFeature.getEventSearch().printJsonOutput( responseMap, eventGroups );
+		if ( (Integer) eventGroupsMap.get( "totalCount" ) > 0 )
+		{
+			responseMap.put( "totalCount", (Integer) eventGroupsMap.get( "totalCount" ) );
+			return academicEventFeature.getEventSearch().printJsonOutput( responseMap, (List<EventGroup>) eventGroupsMap.get( "eventGroups" ) );
+		}
+		else
+		{
+			responseMap.put( "totalCount", 0 );
+			responseMap.put( "count", 0 );
+			return responseMap;
+		}
 	}
 	
 	@Transactional

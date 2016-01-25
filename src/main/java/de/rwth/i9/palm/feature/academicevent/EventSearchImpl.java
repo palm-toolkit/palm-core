@@ -28,8 +28,6 @@ public class EventSearchImpl implements EventSearch
 		// get authors from the datasource
 		if ( source.equals( "internal" ) )
 		{
-			//
-			///eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListWithPaging( query, type, startPage, maxResult ) );
 			// set lucene fulltext search by default
 			eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListFullTextSearchWithPaging( query, type, startPage, maxResult ));
 		}
@@ -80,6 +78,68 @@ public class EventSearchImpl implements EventSearch
 		}
 
 		return eventGroups;
+	}
+
+	@Override
+	public Map<String, Object> getEventGroupMapByQuery( String query, Integer startPage, Integer maxresult, String source, String type, boolean persistResult )
+	{
+		Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
+
+		// get authors from the datasource
+		if ( source.equals( "internal" ) )
+		{
+			// set lucene fulltext search by default
+			eventGroupMap = persistenceStrategy.getEventGroupDAO().getEventGroupMapFullTextSearchWithPaging( query, type, startPage, maxresult );
+		}
+		else if ( source.equals( "all" ) )
+		{
+			// TODO: change implementation
+			// get event from DBLP
+			List<Object> dblpEvents = DblpEventCollection.getEventFromDBLPSearch( query, type, null );
+
+			// combine
+			List<EventGroup> eventGroups = persistenceStrategy.getEventGroupDAO().getEventGroupListWithPaging( query, type, startPage, maxresult );
+
+			if ( dblpEvents != null && !dblpEvents.isEmpty() )
+			{
+				for ( Object dblpEventObject : dblpEvents )
+				{
+					Map<String, String> dblpEventMap = (Map<String, String>) dblpEventObject;
+
+					String eventGroupUrl = dblpEventMap.get( "url" );
+
+					// check if there is already in eventgroup
+					boolean isExist = false;
+					if ( !eventGroups.isEmpty() )
+					{
+						for ( EventGroup eachEventGroup : eventGroups )
+						{
+							if ( eventGroupUrl.equals( eachEventGroup.getDblpUrl() ) )
+							{
+								isExist = true;
+								break;
+							}
+						}
+					}
+
+					if ( !isExist )
+					{
+						EventGroup newEventGroup = new EventGroup();
+						newEventGroup.setDblpUrl( eventGroupUrl );
+						newEventGroup.setName( dblpEventMap.get( "name" ) );
+						newEventGroup.setNotation( dblpEventMap.get( "abbr" ) );
+						newEventGroup.setPublicationType( PublicationType.valueOf( dblpEventMap.get( "type" ).toUpperCase() ) );
+
+						eventGroups.add( newEventGroup );
+					}
+
+				}
+			}
+			eventGroupMap.put( "totalCount", eventGroups.size() );
+			eventGroupMap.put( "eventGroups", eventGroups );
+		}
+
+		return eventGroupMap;
 	}
 
 	@Override
