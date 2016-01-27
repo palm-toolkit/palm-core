@@ -119,6 +119,7 @@ public class PublicationController
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "source", required = false ) String source,
 			@RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch,
+			@RequestParam( value = "year", required = false ) String year,
 			@RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response )
 	{
@@ -129,8 +130,8 @@ public class PublicationController
 		if ( maxresult == null )		maxresult = 50;
 		if ( fulltextSearch == null )	fulltextSearch = "yes";
 		else							fulltextSearch = "no";
-		if ( orderBy == null )
-			orderBy = "citation";
+		if ( year == null )				year = "all";
+		if ( orderBy == null )			orderBy = "citation";
 		// Currently, system only provides query on internal database
 		source = "internal";
 			
@@ -141,12 +142,14 @@ public class PublicationController
 		responseMap.put( "query", query );
 		if ( !publicationType.equals( "name" ) )
 			responseMap.put( "publicationType", publicationType );
+		if ( !year.equals( "all" ) )
+			responseMap.put( "year", publicationType );
 		responseMap.put( "page", page );
 		responseMap.put( "maxresult", maxresult );
 		responseMap.put( "fulltextSearch", fulltextSearch );
 		responseMap.put( "orderBy", orderBy );
 		
-		Map<String, Object> publicationMap = publicationFeature.getPublicationSearch().getPublicationListByQuery( query, publicationType, authorId, eventId, page, maxresult, source, fulltextSearch, orderBy );
+		Map<String, Object> publicationMap = publicationFeature.getPublicationSearch().getPublicationListByQuery( query, publicationType, authorId, eventId, page, maxresult, source, fulltextSearch, year, orderBy );
 		
 		if ( (Integer) publicationMap.get( "totalCount" ) > 0 )
 		{

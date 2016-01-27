@@ -1,13 +1,21 @@
 package de.rwth.i9.palm.feature.publication;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
+import de.rwth.i9.palm.model.PublicationSource;
+import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -36,10 +44,35 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 		// put publication detail
 		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
 
+		publicationMap.put( "title", publication.getTitle() );
+
+		List<Map<String, Object>> coathorList = new ArrayList<Map<String, Object>>();
+		for ( Author author : publication.getCoAuthors() )
+		{
+			Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
+			authorMap.put( "id", author.getId() );
+			authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
+			if ( author.getInstitutions() != null )
+				for ( Institution institution : author.getInstitutions() )
+				{
+					if ( authorMap.get( "aff" ) != null )
+						authorMap.put( "aff", authorMap.get( "aff" ) + ", " + institution.getName() );
+					else
+						authorMap.put( "aff", institution.getName() );
+				}
+			if ( author.getPhotoUrl() != null )
+				authorMap.put( "photo", author.getPhotoUrl() );
+
+			authorMap.put( "isAdded", author.isAdded() );
+
+			coathorList.add( authorMap );
+		}
+		publicationMap.put( "authors", coathorList );
+
 		if ( publication.getPublicationDate() != null )
 		{
-			SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd" );
-			publicationMap.put( "publicationDate", sdf.format( publication.getPublicationDate() ) );
+			SimpleDateFormat sdf = new SimpleDateFormat( publication.getPublicationDateFormat() );
+			publicationMap.put( "date", sdf.format( publication.getPublicationDate() ) );
 		}
 
 		if ( publication.getLanguage() != null )
@@ -59,28 +92,12 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 		{
 			Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 			eventMap.put( "id", publication.getEvent().getId() );
-			eventMap.put( "name", publication.getEvent().getName() );
-
-			if ( publication.getEvent().getVolume() != null )
-				eventMap.put( "volume", publication.getEvent().getVolume() );
-			if ( publication.getEvent().getYear() != null )
-				eventMap.put( "year", publication.getEvent().getYear() );
+			String eventName = publication.getEvent().getEventGroup().getName();
+			if ( !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
+				eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
+			eventMap.put( "name", eventName );
 			eventMap.put( "isAdded", publication.getEvent().isAdded() );
-
 			publicationMap.put( "event", eventMap );
-
-			if ( publication.getEvent().getEventGroup() != null )
-			{
-				Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
-				eventGroupMap.put( "id", publication.getEvent().getEventGroup().getId() );
-				eventGroupMap.put( "name", publication.getEvent().getEventGroup().getName() );
-
-				if ( publication.getEvent().getEventGroup().getNotation() != null )
-					eventGroupMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
-				eventGroupMap.put( "isAdded", publication.getEvent().getEventGroup().isAdded() );
-
-				publicationMap.put( "eventGroup", eventGroupMap );
-			}
 		}
 
 		if ( publication.getAdditionalInformation() != null )
@@ -89,6 +106,41 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 		if ( publication.getStartPage() > 0 )
 			publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
 
+		List<Object> sources = new ArrayList<Object>();
+		for ( PublicationSource pubSource : publication.getPublicationSources() )
+		{
+			if ( pubSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) || pubSource.getSourceType().equals( SourceType.CITESEERX ) )
+			{
+				Map<String, Object> sourceMap = new LinkedHashMap<String, Object>();
+				String label = "Google Scholar";
+				if ( pubSource.getSourceType().equals( SourceType.CITESEERX ) )
+					label = "CiteseerX";
+				sourceMap.put( "source", label );
+				sourceMap.put( "url", pubSource.getSourceUrl() );
+				sources.add( sourceMap );
+			}
+		}
+		if ( !sources.isEmpty() )
+			publicationMap.put( "sources", sources );
+
+		List<Object> files = new ArrayList<Object>();
+		if ( publication.getPublicationFiles() != null )
+		{
+			for ( PublicationFile pubFile : publication.getPublicationFiles() )
+			{
+				Map<String, Object> fileMap = new LinkedHashMap<String, Object>();
+				fileMap.put( "type", pubFile.getFileType().toString() );
+				fileMap.put( "source", pubFile.getSourceType().toString().toLowerCase() );
+				if ( pubFile.getSource() != null && !pubFile.getSource().equals( "" ) )
+					fileMap.put( "label", pubFile.getSource() );
+				fileMap.put( "url", pubFile.getUrl() );
+
+				files.add( fileMap );
+			}
+		}
+
+		if ( !files.isEmpty() )
+			publicationMap.put( "files", files );
 
 		responseMap.put( "publication", publicationMap );
 

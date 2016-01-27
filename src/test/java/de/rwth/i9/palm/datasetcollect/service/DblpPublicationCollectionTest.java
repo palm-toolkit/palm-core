@@ -51,7 +51,6 @@ public class DblpPublicationCollectionTest
 	}
 
 	@Test
-	@Ignore
 	public void getListOfPublicationTest() throws IOException
 	{
 		SourceProperty sourceProperty1 = new SourceProperty();
@@ -68,7 +67,7 @@ public class DblpPublicationCollectionTest
 		source.addSourceProperty( sourceProperty1 );
 		source.addSourceProperty( sourceProperty2 );
 
-		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/j/Jarke:Matthias", source );
+		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/s/Schroeder:Ulrik", source );
 		int count = 1;
 
 		for ( Map<String, String> eachPublicationMap : publicationMapLists )

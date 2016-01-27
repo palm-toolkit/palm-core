@@ -4,5 +4,5 @@ import java.util.Map;
 
 public interface ResearcherPublication
 {
-	public Map<String, Object> getPublicationListByAuthorId( String authorId );
+	public Map<String, Object> getPublicationListByAuthorId( String authorId, String query, String year, Integer startPage, Integer maxresult, String orderBy );
 }

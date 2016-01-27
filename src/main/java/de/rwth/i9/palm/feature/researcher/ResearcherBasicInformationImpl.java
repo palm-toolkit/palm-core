@@ -139,13 +139,13 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 			{
 				@SuppressWarnings( "unchecked" )
 				Map<String, Integer> publicationCitationMap = (Map<String, Integer>) publicationCitationYearlyMap.get( i );
-				publicationValues.add( new Long[] { unixDate, (long) publicationCitationMap.get( "totalPublication" ) } );
-				citationValues.add( new Long[] { unixDate, (long) publicationCitationMap.get( "totalCitation" ) } );
+				publicationValues.add( new Object[] { unixDate, publicationCitationMap.get( "totalPublication" ), Integer.toString( i ) } );
+				citationValues.add( new Object[] { unixDate, publicationCitationMap.get( "totalCitation" ) } );
 			}
 			else
 			{
-				publicationValues.add( new Long[] { unixDate, (long) 0 } );
-				citationValues.add( new Long[] { unixDate, (long) 0 } );
+				publicationValues.add( new Object[] { unixDate, 0 } );
+				citationValues.add( new Object[] { unixDate, 0 } );
 			}
 		}
 

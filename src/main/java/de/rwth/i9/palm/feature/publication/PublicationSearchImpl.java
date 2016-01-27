@@ -25,7 +25,7 @@ public class PublicationSearchImpl implements PublicationSearch
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public Map<String, Object> getPublicationListByQuery( String query, String publicationType, String authorId, String eventId, Integer page, Integer maxresult, String source, String fulltextSearch, String orderBy )
+	public Map<String, Object> getPublicationListByQuery( String query, String publicationType, String authorId, String eventId, Integer page, Integer maxresult, String source, String fulltextSearch, String year, String orderBy )
 	{
 		Map<String, Object> publicationMap;
 
@@ -39,9 +39,9 @@ public class PublicationSearchImpl implements PublicationSearch
 
 		// get the publication
 		if( fulltextSearch.equals( "yes" )){
-			publicationMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( query, publicationType, author, event, page, maxresult, orderBy );
+			publicationMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( query, publicationType, author, event, page, maxresult, year, orderBy );
 		} else {
-			publicationMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( query, publicationType, author, event, page, maxresult, orderBy );
+			publicationMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( query, publicationType, author, event, page, maxresult, year, orderBy );
 		}
 
 		return publicationMap;
@@ -63,22 +63,22 @@ public class PublicationSearchImpl implements PublicationSearch
 
 		for ( Publication publication : publications )
 		{
-			Map<String, Object> pub = new LinkedHashMap<String, Object>();
-			pub.put( "id", publication.getId() );
+			Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
+			publicationMap.put( "id", publication.getId() );
 
 			if ( publication.getPublicationType() != null )
 			{
 				String publicationType = publication.getPublicationType().toString();
 				publicationType = publicationType.substring( 0, 1 ).toUpperCase() + publicationType.toLowerCase().substring( 1 );
-				pub.put( "type", publicationType );
+				publicationMap.put( "type", publicationType );
 			}
 
-			pub.put( "title", publication.getTitle() );
+			publicationMap.put( "title", publication.getTitle() );
 			if ( publication.getCitedBy() > 0 )
-				pub.put( "cited", Integer.toString( publication.getCitedBy() ) );
+				publicationMap.put( "cited", Integer.toString( publication.getCitedBy() ) );
 
 			if ( publication.getPublicationDate() != null )
-				pub.put( "date published", dateFormat.format( publication.getPublicationDate() ) );
+				publicationMap.put( "date published", dateFormat.format( publication.getPublicationDate() ) );
 
 			List<Object> authorObject = new ArrayList<Object>();
 
@@ -95,14 +95,46 @@ public class PublicationSearchImpl implements PublicationSearch
 						else
 							authorMap.put( "aff", institution.getName() );
 					}
-				if ( author.getPhotoUrl() != null )
-					authorMap.put( "photo", author.getPhotoUrl() );
+				// if ( author.getPhotoUrl() != null )
+				// authorMap.put( "photo", author.getPhotoUrl() );
+
+				authorMap.put( "isAdded", author.isAdded() );
 
 				authorObject.add( authorMap );
 			}
-			pub.put( "authors", authorObject );
+			publicationMap.put( "authors", authorObject );
 
-			publicationList.add( pub );
+			if ( publication.getPublicationDate() != null )
+			{
+				SimpleDateFormat sdf = new SimpleDateFormat( publication.getPublicationDateFormat() );
+				publicationMap.put( "date", sdf.format( publication.getPublicationDate() ) );
+			}
+
+			if ( publication.getLanguage() != null )
+				publicationMap.put( "language", publication.getLanguage() );
+
+			if ( publication.getCitedBy() != 0 )
+				publicationMap.put( "cited", publication.getCitedBy() );
+
+			if ( publication.getEvent() != null )
+			{
+				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
+				eventMap.put( "id", publication.getEvent().getId() );
+				String eventName = publication.getEvent().getEventGroup().getName();
+				if ( !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
+					eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
+				eventMap.put( "name", eventName );
+				eventMap.put( "isAdded", publication.getEvent().isAdded() );
+				publicationMap.put( "event", eventMap );
+			}
+
+			if ( publication.getAdditionalInformation() != null )
+				publicationMap.putAll( publication.getAdditionalInformationAsMap() );
+
+			if ( publication.getStartPage() > 0 )
+				publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
+
+			publicationList.add( publicationMap );
 		}
 
 		responseMap.put( "count", publicationList.size() );

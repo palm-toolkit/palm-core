@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
@@ -40,6 +41,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
+@SessionAttributes( "author" )
 @RequestMapping( value = "/researcher" )
 public class ResearcherController
 {
@@ -71,6 +73,7 @@ public class ResearcherController
 	public ModelAndView researcherPage( 
 			@RequestParam( value = "id", required = false ) final String id, 
 			@RequestParam( value = "name", required = false ) final String name,
+ @RequestParam( value = "add", required = false ) final String add,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		ModelAndView model = TemplateHelper.createViewWithLink( "researcher", LINK_NAME );
@@ -104,6 +107,8 @@ public class ResearcherController
 			model.addObject( "targetId", id );
 		if ( name != null )
 			model.addObject( "targetName", name );
+		if ( add != null )
+			model.addObject( "targetAdd", add );
 		return model;
 	}
 
@@ -327,7 +332,7 @@ public class ResearcherController
 	 */
 	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
+	public @ResponseBody Map<String, Object> getAuthorAutocomplete( 
 			@RequestParam( value = "name", required = false ) final String name, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
@@ -346,11 +351,18 @@ public class ResearcherController
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationList( 
 			@RequestParam( value = "id", required = false ) final String authorId,
+			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "year", required = false ) String year,
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
 			@RequestParam( value = "startPage", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			final HttpServletResponse response)
 	{
-		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId );
+		if ( year == null )				year = "all";
+		if ( query == null )			query = "";
+		if ( orderBy == null )			orderBy = "date";
+		
+		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId, query, year, startPage, maxresult, orderBy );
 	}
 
 	/**

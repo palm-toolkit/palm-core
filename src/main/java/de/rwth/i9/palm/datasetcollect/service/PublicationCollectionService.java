@@ -188,9 +188,14 @@ public class PublicationCollectionService
 
 			// count total citation on author
 			int citation = 0;
+			SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
+
 			for ( Publication publication : selectedPublications )
 			{
 				citation += publication.getCitedBy();
+				// set publication year
+				if ( publication.getPublicationDate() != null )
+					publication.setYear( sdf.format( publication.getPublicationDate() ) );
 			}
 			if ( author.getCitedBy() < citation )
 			{
@@ -256,6 +261,16 @@ public class PublicationCollectionService
 				// 3. The title of publication contains "special issue article"
 				if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.GOOGLESCHOLAR ) )
 				{
+					// The pattern of incorrect publication
+					// For google scholar :
+					// 3. The title of publication contains "special issue
+					// article"
+					if ( publication.getTitle().toLowerCase().contains( "special issue article" ) )
+					{
+						iteratorPublication.remove();
+						continue;
+					}
+
 					// removing condition
 					if ( publicationSource.get( 0 ).getDate() == null )
 					{
@@ -284,25 +299,29 @@ public class PublicationCollectionService
 
 				// The pattern of incorrect publication
 				// For Mendeley is master thesis also recorded
+				// indicated by publication doesn't have type, and its contain
+				// exact keyword "master-thesis"
 				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.MENDELEY ) )
 				{
-					if ( publicationSource.get( 0 ).getAbstractText() != null && publicationSource.get( 0 ).getAbstractText().contains( "master thesis" ) )
+					if ( publication.getPublicationType() == null || ( publicationSource.get( 0 ).getAbstractText() != null && publicationSource.get( 0 ).getAbstractText().contains( "master thesis" ) ) )
 					{
 						iteratorPublication.remove();
 						continue;
 					}
 				}
-			}
 
-			// The pattern of incorrect publication
-			// For google scholar :
-			// 3. The title of publication contains "special issue article"
-			if ( publication.getTitle().toLowerCase().contains( "special issue article" ) )
-			{
-				iteratorPublication.remove();
-				continue;
+				// The pattern of incorrect publication
+				// For Citeseer is incorrect publication title (only part, duplicated or incorrect at all)
+				// sometimes 
+//				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.CITESEERX ) )
+//				{
+//					if ( publication.getPublicationType() == null)
+//					{
+//						iteratorPublication.remove();
+//						continue;
+//					}
+//				}
 			}
-
 		}
 	}
 
@@ -658,8 +677,13 @@ public class PublicationCollectionService
 				}
 				if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
 				{
-					publication.setKeywordText( pubSource.getKeyword() );
-					publication.setKeywordStatus( CompletionStatus.COMPLETE );
+					// check for incorrect keyword, for abnormally a lot of
+					// keyword
+					if ( pubSource.getKeyword().split( "," ).length < 10 )
+					{
+						publication.setKeywordText( pubSource.getKeyword() );
+						publication.setKeywordStatus( CompletionStatus.COMPLETE );
+					}
 				}
 
 			}
@@ -680,9 +704,20 @@ public class PublicationCollectionService
 				}
 			}
 			// for general information
+			
+			boolean checkforCoAuthor = true;
+			// sometimes mendeley source is not reliable
+			if ( pubSource.getSourceType().equals( SourceType.MENDELEY ) && publication.getPublicationSources().size() > 1 )
+				checkforCoAuthor = false; // Author for Mendeley is unreliable
+			// no need to reinsert author from Mendeley, if the authors are
+			// already exist
+			if ( pubSource.getSourceType().equals( SourceType.MENDELEY ) && publication.getPublicationAuthors() != null && !publication.getPublicationAuthors().isEmpty() )
+				checkforCoAuthor = false;
+
 			// author
-			if ( pubSource.getCoAuthors() != null )
+			if ( pubSource.getCoAuthors() != null && checkforCoAuthor )
 			{
+
 				String[] authorsArray = pubSource.getCoAuthors().split( "," );
 				// for DBLP where the coauthor have a source link
 				String[] authorsUrlArray = null;
@@ -738,7 +773,7 @@ public class PublicationCollectionService
 										if ( coAuthorDb.isAliasNameFromFirstName( firstName ) )
 										{
 											// TODO: check with institution for
-											// higher acuracy
+											// higher accuracy
 											persistenceStrategy.getAuthorDAO().persist( coAuthorDb );
 
 											author = coAuthorDb;
@@ -929,7 +964,8 @@ public class PublicationCollectionService
 					else
 						pubFile.setSource( mainSources[i] );
 
-					if ( mainSourceUrls[i].toLowerCase().endsWith( ".pdf" ) || mainSourceUrls[i].toLowerCase().endsWith( "pdf.php" ) || mainSources[i].toLowerCase().contains( "pdf" ) )
+					if ( mainSourceUrls[i].toLowerCase().endsWith( ".pdf" ) || mainSourceUrls[i].toLowerCase().endsWith( "pdf.php" ) || 
+							mainSources[i].toLowerCase().contains( "pdf" ) || mainSourceUrls[i].contains( "download" ))
 						pubFile.setFileType( FileType.PDF );
 					else if ( mainSourceUrls[i].toLowerCase().endsWith( ".xml" ) )
 					{

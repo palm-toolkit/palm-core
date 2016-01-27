@@ -141,7 +141,7 @@ public class ManageResearcherController
 			newAuthor.setPhotoUrl( author.getPhotoUrl() );
 		newAuthor.setAdded( true );
 
-		if ( author.getInstitutions() == null && !author.getAffiliation().equals( "" ) )
+		if ( ( author.getInstitutions() == null || author.getInstitutions().isEmpty() ) && !author.getAffiliation().equals( "" ) )
 		{
 			Institution institution = null;
 			List<Institution> institutions = persistenceStrategy.getInstitutionDAO().getWithFullTextSearch( author.getAffiliation() );
