@@ -45,6 +45,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		targetAuthorMap.put( "id", targetAuthor.getId() );
 		targetAuthorMap.put( "name", targetAuthor.getName() );
 		responseMap.put( "author", targetAuthorMap );
+		responseMap.put( "totalPublication", targetAuthor.getPublications().size() );
 
 		if ( targetAuthor.getPublications() == null || targetAuthor.getPublications().isEmpty() )
 		{

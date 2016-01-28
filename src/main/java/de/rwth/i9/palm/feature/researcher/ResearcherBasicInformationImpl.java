@@ -15,8 +15,10 @@ import java.util.Map;
 import org.apache.commons.lang3.text.WordUtils;
 
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.SourceType;
 
 public class ResearcherBasicInformationImpl implements ResearcherBasicInformation
 {
@@ -33,6 +35,26 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 		}
 		// author data
 		responseMap.put( "author", printAuthorInformation( author ) );
+
+		// sources data
+		List<Object> sources = new ArrayList<Object>();
+		for ( AuthorSource authorSource : author.getAuthorSources() )
+		{
+			if ( authorSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) || authorSource.getSourceType().equals( SourceType.CITESEERX ) )
+			{
+				Map<String, Object> sourceMap = new LinkedHashMap<String, Object>();
+				String label = "Google Scholar";
+				if ( authorSource.getSourceType().equals( SourceType.CITESEERX ) )
+					label = "CiteseerX";
+				if ( authorSource.getSourceType().equals( SourceType.DBLP ) )
+					label = "DBLP";
+				sourceMap.put( "source", label );
+				sourceMap.put( "url", authorSource.getSourceUrl() );
+				sources.add( sourceMap );
+			}
+		}
+		if ( !sources.isEmpty() )
+			responseMap.put( "sources", sources );
 
 		// prepare a list of map object containing year as the key and number of
 		// publication and citation ays value

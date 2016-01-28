@@ -48,4 +48,19 @@ public class DataController
 		return "re indexing author complete";
 	}
 
+	@Transactional
+	@RequestMapping( value = "/publication/reindex", method = RequestMethod.GET )
+	public @ResponseBody String publicationReindex()
+	{
+		try
+		{
+			persistenceStrategy.getPublicationDAO().doReindexing();
+		}
+		catch ( InterruptedException e )
+		{
+			return ( e.getMessage() );
+		}
+		return "re indexing author complete";
+	}
+
 }

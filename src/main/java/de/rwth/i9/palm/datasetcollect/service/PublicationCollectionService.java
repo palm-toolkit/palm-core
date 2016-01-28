@@ -833,7 +833,7 @@ public class PublicationCollectionService
 			// keyword
 			if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
 			{
-				if ( publication.getKeywordText() == null )
+				if ( publication.getKeywordText() == null && pubSource.getKeyword().split( "," ).length < 10 )
 				{
 					publication.setKeywordText( pubSource.getKeyword() );
 					publication.setKeywordStatus( CompletionStatus.PARTIALLY_COMPLETE );
