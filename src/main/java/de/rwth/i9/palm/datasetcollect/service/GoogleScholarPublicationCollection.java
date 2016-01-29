@@ -166,7 +166,13 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		Elements publicationDetailsRows = publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP );
 
 		for ( Element publicationDetail : publicationDetailsRows )
+		{
 			publicationDetailMaps.put( publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_LABEL ).text(), publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_VALUE ).text() );
+			if ( publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_LABEL ).text().equals( "Total citations" ) )
+			{
+				// TODO: record publication citation yearly
+			}
+		}
 
 		return publicationDetailMaps;
 	}

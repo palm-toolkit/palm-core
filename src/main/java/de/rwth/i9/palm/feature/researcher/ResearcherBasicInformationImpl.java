@@ -40,7 +40,9 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 		List<Object> sources = new ArrayList<Object>();
 		for ( AuthorSource authorSource : author.getAuthorSources() )
 		{
-			if ( authorSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) || authorSource.getSourceType().equals( SourceType.CITESEERX ) )
+			if ( authorSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) || 
+					authorSource.getSourceType().equals( SourceType.CITESEERX ) ||
+					authorSource.getSourceType().equals( SourceType.DBLP))
 			{
 				Map<String, Object> sourceMap = new LinkedHashMap<String, Object>();
 				String label = "Google Scholar";

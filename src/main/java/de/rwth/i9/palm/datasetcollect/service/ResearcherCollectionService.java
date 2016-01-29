@@ -3,6 +3,7 @@ package de.rwth.i9.palm.datasetcollect.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -294,15 +295,20 @@ public class ResearcherCollectionService
 				{
 					String[] sources = mergedAuthor.get( "source" ).split( " " );
 					String[] sourceUrls = mergedAuthor.get( "url" ).split( " " );
+					// checking for duplication
+					Set<String> registeredSourceUlr = new HashSet<String>();
 					for ( int i = 0; i < sources.length; i++ )
 					{
-						if ( !sources[i].equals( "" ) )
+						// prevent empty string and duplicated source
+						if ( !sources[i].equals( "" ) && !registeredSourceUlr.contains( sourceUrls[i] ) )
 						{
 							AuthorSource as = new AuthorSource();
 							as.setName( name );
 							as.setSourceUrl( sourceUrls[i] );
 							as.setSourceType( SourceType.valueOf( sources[i].toUpperCase() ) );
 							as.setAuthor( author );
+
+							registeredSourceUlr.add( sourceUrls[i] );
 
 							authorSources.add( as );
 						}

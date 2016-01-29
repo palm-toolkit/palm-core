@@ -33,7 +33,7 @@ public class HtmlPublicationCollectionTest
 		// input = "http://www.igi-global.com/article/toward-personal-learning-environment-framework/48222";
 		// input = "http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4032537";
 		// input = "http://dl.acm.org/citation.cfm?id=2337376";
-		input = "http://www.emeraldinsight.com/doi/full/10.1108/17440081011034466";
+		// input = "http://www.emeraldinsight.com/doi/full/10.1108/17440081011034466";
 
 		Map<String, String> publicationDetailMaps = HtmlPublicationCollection.getPublicationInformationFromHtmlPage( input );
 
