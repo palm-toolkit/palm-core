@@ -19,6 +19,40 @@ public class DataController
 	private PersistenceStrategy persistenceStrategy;
 
 	@Transactional
+	@RequestMapping( value = "/all/reindex", method = RequestMethod.GET )
+	public @ResponseBody String allReindex()
+	{
+		try
+		{
+			persistenceStrategy.getInstitutionDAO().doReindexing();
+		}
+		catch ( InterruptedException e )
+		{
+			return ( e.getMessage() );
+		}
+
+		try
+		{
+			persistenceStrategy.getAuthorDAO().doReindexing();
+		}
+		catch ( InterruptedException e )
+		{
+			return ( e.getMessage() );
+		}
+
+		try
+		{
+			persistenceStrategy.getPublicationDAO().doReindexing();
+		}
+		catch ( InterruptedException e )
+		{
+			return ( e.getMessage() );
+		}
+
+		return "re-indexing institution, author and publication complete";
+	}
+
+	@Transactional
 	@RequestMapping( value = "/institution/reindex", method = RequestMethod.GET )
 	public @ResponseBody String institutionReindex()
 	{
@@ -60,7 +94,7 @@ public class DataController
 		{
 			return ( e.getMessage() );
 		}
-		return "re indexing author complete";
+		return "re indexing publication complete";
 	}
 
 }
