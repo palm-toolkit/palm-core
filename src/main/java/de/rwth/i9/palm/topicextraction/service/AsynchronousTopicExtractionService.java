@@ -17,7 +17,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
-import com.google.common.base.Stopwatch;
+//import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
@@ -39,9 +39,9 @@ public class AsynchronousTopicExtractionService
 	@Async
 	public Future<PublicationTopic> getTopicsByAlchemyApi( Publication publication, PublicationTopic publicationTopic, int maxTextLength )
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
+//		Stopwatch stopwatch = Stopwatch.createStarted();
 
-		log.info( "AlchemyAPI extract publication " + publication.getTitle() + " starting" );
+//		log.info( "AlchemyAPI extract publication " + publication.getTitle() + " starting" );
 
 		String text = getPublicationText( publication );
 
@@ -63,9 +63,9 @@ public class AsynchronousTopicExtractionService
 		else
 			publicationTopic.setValid( false );
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
-		log.info( "AlchemyAPI extract publication " + publication.getTitle() + " complete in " + stopwatch );
+//		log.info( "AlchemyAPI extract publication " + publication.getTitle() + " complete in " + stopwatch );
 		return new AsyncResult<PublicationTopic>( publicationTopic );
 	}
 
@@ -83,9 +83,9 @@ public class AsynchronousTopicExtractionService
 	@Async
 	public Future<PublicationTopic> getTopicsByYahooContentAnalysis( Publication publication, PublicationTopic publicationTopic, int maxTextLength ) throws UnsupportedEncodingException, URISyntaxException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
+//		Stopwatch stopwatch = Stopwatch.createStarted();
 
-		log.info( "Yahoo Content Analysis extract publication " + publication.getTitle() + " starting" );
+//		log.info( "Yahoo Content Analysis extract publication " + publication.getTitle() + " starting" );
 
 		String text = getPublicationText( publication );
 
@@ -104,9 +104,9 @@ public class AsynchronousTopicExtractionService
 		else
 			publicationTopic.setValid( false );
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
-		log.info( "Yahoo Content Analysis extract publication " + publication.getTitle() + " complete in " + stopwatch );
+//		log.info( "Yahoo Content Analysis extract publication " + publication.getTitle() + " complete in " + stopwatch );
 		return new AsyncResult<PublicationTopic>( publicationTopic );
 	}
 
@@ -114,9 +114,9 @@ public class AsynchronousTopicExtractionService
 	@Async
 	public Future<PublicationTopic> getTopicsByFiveFilters( Publication publication, PublicationTopic publicationTopic, int maxTextLength ) throws UnsupportedEncodingException, URISyntaxException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
+//		Stopwatch stopwatch = Stopwatch.createStarted();
 
-		log.info( "Five Filters extract publication " + publication.getTitle() + " starting" );
+//		log.info( "Five Filters extract publication " + publication.getTitle() + " starting" );
 
 		String text = getPublicationText( publication );
 
@@ -136,9 +136,9 @@ public class AsynchronousTopicExtractionService
 		else
 			publicationTopic.setValid( false );
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
-		log.info( "Five Filters extract publication " + publication.getTitle() + " complete in " + stopwatch );
+//		log.info( "Five Filters extract publication " + publication.getTitle() + " complete in " + stopwatch );
 		return new AsyncResult<PublicationTopic>( publicationTopic );
 	}
 

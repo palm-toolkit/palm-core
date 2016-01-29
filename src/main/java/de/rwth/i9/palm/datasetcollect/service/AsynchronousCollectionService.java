@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+//import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
-import com.google.common.base.Stopwatch;
+//import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.PublicationFile;
@@ -44,13 +44,13 @@ public class AsynchronousCollectionService
 	@Async
 	public Future<List<Map<String, String>>> getListOfPublicationsGoogleScholar( String url, Source source ) throws IOException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication list from google scholar with url " + url + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "get publication list from google scholar with url " + url + " starting" );
 
 		List<Map<String, String>> publicationMapList = GoogleScholarPublicationCollection.getPublicationListByAuthorUrl( url, source );
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "get publication list from google scholar with url " + url + " complete in " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "get publication list from google scholar with url " + url + " complete in " + stopwatch );
 
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
@@ -66,13 +66,13 @@ public class AsynchronousCollectionService
 	@Async
 	public Future<List<Map<String, String>>> getListOfPublicationCiteseerX( String url, Source source ) throws IOException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication list from citeseerX with query " + url + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "get publication list from citeseerX with query " + url + " starting" );
 
 		List<Map<String, String>> publicationMapList = CiteseerXPublicationCollection.getPublicationListByAuthorUrl( url, source );
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "get publication list from citeSeerX with url " + url + " complete in " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "get publication list from citeSeerX with url " + url + " complete in " + stopwatch );
 
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
@@ -88,13 +88,13 @@ public class AsynchronousCollectionService
 	@Async
 	public Future<List<Map<String, String>>> getListOfPublicationDBLP( String url, Source source ) throws IOException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication list from DBLP with query " + url + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "get publication list from DBLP with query " + url + " starting" );
 
 		List<Map<String, String>> publicationMapList = DblpPublicationCollection.getPublicationListByAuthorUrl( url, source );
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "get publication list from DBLP with url " + url + " complete in " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "get publication list from DBLP with url " + url + " complete in " + stopwatch );
 
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
@@ -111,13 +111,13 @@ public class AsynchronousCollectionService
 	@Async
 	public Future<List<Map<String, String>>> getListOfPublicationDetailMicrosoftAcademicSearch( Author author, Source source ) throws IOException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication detail list from Microsoft Academic Search with author " + author.getName() + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "get publication detail list from Microsoft Academic Search with author " + author.getName() + " starting" );
 
 		List<Map<String, String>> publicationMapList = MicrosoftAcademicSearchPublicationCollection.getPublicationDetailList( author, source );
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "get publication detail list from Microsoft Academic Search with author " + author.getName() + " complete in " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "get publication detail list from Microsoft Academic Search with author " + author.getName() + " complete in " + stopwatch );
 
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
@@ -133,13 +133,13 @@ public class AsynchronousCollectionService
 	@Async
 	public Future<List<Map<String, String>>> getListOfPublicationDetailMendeley( Author author, Source source ) throws IOException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication detail list from Mendeley with author " + author.getName() + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "get publication detail list from Mendeley with author " + author.getName() + " starting" );
 
 		List<Map<String, String>> publicationMapList = MendeleyPublicationCollection.getPublicationDetailList( author, source );
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "get publication detail list from Mendeley with author " + author.getName() + " complete in " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "get publication detail list from Mendeley with author " + author.getName() + " complete in " + stopwatch );
 
 		return new AsyncResult<List<Map<String, String>>>( publicationMapList );
 	}
@@ -155,8 +155,8 @@ public class AsynchronousCollectionService
 	@Async
 	public Future<PublicationSource> getPublicationInformationFromGoogleScholar( PublicationSource publicationSource, Source source ) throws IOException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication detail from google scholar with url " + publicationSource.getSourceUrl() + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "get publication detail from google scholar with url " + publicationSource.getSourceUrl() + " starting" );
 
 		// scrap the webpage
 		Map<String, String> publicationDetailMap = GoogleScholarPublicationCollection.getPublicationDetailByPublicationUrl( publicationSource.getSourceUrl(), source );
@@ -223,8 +223,8 @@ public class AsynchronousCollectionService
 			}
 		}
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "get publication detail from google scholar with url " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "get publication detail from google scholar with url " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
 
 		return new AsyncResult<PublicationSource>( publicationSource );
 	}
@@ -240,8 +240,8 @@ public class AsynchronousCollectionService
 	@Async
 	public Future<PublicationSource> getPublicationInformationFromCiteseerX( PublicationSource publicationSource, Source source ) throws IOException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "get publication detail from citeseerX with url " + publicationSource.getSourceUrl() + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "get publication detail from citeseerX with url " + publicationSource.getSourceUrl() + " starting" );
 
 		// scrap the webpage
 		Map<String, String> publicationDetailMap = CiteseerXPublicationCollection.getPublicationDetailByPublicationUrl( publicationSource.getSourceUrl(), source );
@@ -274,8 +274,8 @@ public class AsynchronousCollectionService
 			}
 		}
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "get publication detail from citeSeerX with url " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "get publication detail from citeSeerX with url " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
 
 		return new AsyncResult<PublicationSource>( publicationSource );
 	}
@@ -291,13 +291,13 @@ public class AsynchronousCollectionService
 	@Async
 	public Future<PublicationSource> getPublicationInfromationFromHtml( PublicationSource publicationSource, PublicationFile publicationFile ) throws IOException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "start : get publication information from Htmlpage " + publicationSource.getSourceUrl() + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "start : get publication information from Htmlpage " + publicationSource.getSourceUrl() + " starting" );
 
 		Map<String, String> publicationInformationMap = HtmlPublicationCollection.getPublicationInformationFromHtmlPage( publicationSource.getSourceUrl() );
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "done :get publication information from Htmlpage " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "done :get publication information from Htmlpage " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
 
 		if ( publicationInformationMap != null && !publicationInformationMap.isEmpty() )
 		{
@@ -322,8 +322,8 @@ public class AsynchronousCollectionService
 	@Async
 	public Future<PublicationSource> getPublicationInformationFromPdf( PublicationSource publicationSource, PublicationFile publicationFile ) throws IOException
 	{
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "start : get publication information from Pdf " + publicationSource.getSourceUrl() + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "start : get publication information from Pdf " + publicationSource.getSourceUrl() + " starting" );
 
 		List<TextSection> textSections = null;
 		
@@ -410,8 +410,8 @@ public class AsynchronousCollectionService
 			publicationFile.setReadable( true );
 		}
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "done : get publication information from pdf " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "done : get publication information from pdf " + publicationSource.getSourceUrl() + " complete in " + stopwatch );
 
 		return new AsyncResult<PublicationSource>( publicationSource );
 	}

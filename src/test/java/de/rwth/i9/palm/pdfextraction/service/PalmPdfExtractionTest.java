@@ -2,13 +2,13 @@ package de.rwth.i9.palm.pdfextraction.service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+//import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
+//import com.google.common.base.Stopwatch;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.parser.PdfTextExtractor;
@@ -36,8 +36,8 @@ public class PalmPdfExtractionTest
 
 		PdfReader reader = new PdfReader( src );
 
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "start extracting pdf" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "start extracting pdf" );
 
 		Rectangle pdfPageSize = reader.getPageSize( 1 );
 		PalmPdfExtractionStrategy palmPdfExtractionStrategy = new PalmPdfExtractionStrategy();
@@ -57,8 +57,8 @@ public class PalmPdfExtractionTest
 				break;
 		}
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
-		log.info( "Complete extracting pdf " + stopwatch );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		log.info( "Complete extracting pdf " + stopwatch );
 
 		List<TextSection> textSections = palmPdfExtractionStrategy.getTextSections();
 
