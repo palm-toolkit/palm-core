@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +27,13 @@ import de.rwth.i9.palm.datasetcollect.service.DblpEventCollection;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @RequestMapping( value = "/venue" )
@@ -42,6 +46,9 @@ public class AcademicEventController
 
 	@Autowired
 	private AcademicEventFeature academicEventFeature;
+
+	@Autowired
+	private SecurityService securityService;
 
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
@@ -58,7 +65,26 @@ public class AcademicEventController
 		// set model and view
 		ModelAndView model = TemplateHelper.createViewWithLink( "conference", LINK_NAME );
 
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CONFERENCE, WidgetStatus.DEFAULT );
+		List<Widget> widgets = new ArrayList<Widget>();
+
+		User user = securityService.getUser();
+
+		if ( user != null )
+		{
+			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.CONFERENCE, WidgetStatus.ACTIVE );
+			for ( UserWidget userWidget : userWidgets )
+			{
+				Widget widget = userWidget.getWidget();
+				widget.setColor( userWidget.getWidgetColor() );
+				widget.setWidgetHeight( userWidget.getWidgetHeight() );
+				widget.setWidgetWidth( userWidget.getWidgetWidth() );
+				widget.setPosition( userWidget.getPosition() );
+
+				widgets.add( widget );
+			}
+		}
+		else
+			widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CONFERENCE, WidgetStatus.DEFAULT );
 		// assign the model
 		model.addObject( "widgets", widgets );
 		// assign query
@@ -190,11 +216,16 @@ public class AcademicEventController
 	@RequestMapping( value = "/basicinformation", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getAcademicEventBasicInformation( 
-			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "type", required = false ) String type, 
 			@RequestParam( value = "uri", required = false ) final String uri, 
 			final HttpServletResponse response)
 	{
-		return academicEventFeature.getEventBasicStatistic().getEventBasicStatisticById( id );
+		if( type == null ) type="event";
+		if ( type.equals( "event" ) )
+			return academicEventFeature.getEventBasicStatistic().getEventBasicStatisticById( id );
+		else
+			return academicEventFeature.getEventBasicStatistic().getEventGroupBasicStatisticById( id );
 	}
 
 }

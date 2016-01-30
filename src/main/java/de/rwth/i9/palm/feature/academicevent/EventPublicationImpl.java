@@ -52,8 +52,16 @@ public class EventPublicationImpl implements EventPublication
 
 		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
 
+
 		// get publication list
 		List<Publication> publications = new ArrayList<Publication>( event.getPublications() );
+
+		// get data name
+		String title = event.getEventGroup().getName();
+		if ( event.getEventGroup().getNotation() != null && !title.equals( event.getEventGroup().getNotation() ) )
+			title = event.getEventGroup().getNotation();
+
+		responseMap.put( "title", title );
 
 		// sort based on period
 		Collections.sort( publications, new PublicationByPageComparator() );

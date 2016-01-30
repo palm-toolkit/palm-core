@@ -401,7 +401,7 @@ public class EventPublicationCollectionService
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/d", Locale.ENGLISH );
 		Set<String> existingMainSourceUrl = new HashSet<String>();
 
-		int numberOfTotalAuthor = 0;
+		Set<String> uniqueParticipantSet = new HashSet<String>();
 
 		for ( Publication publication : eventPublications )
 		{
@@ -554,7 +554,7 @@ public class EventPublicationCollectionService
 							}
 
 							// sum number of participant
-							numberOfTotalAuthor++;
+							uniqueParticipantSet.add( author.getName() );
 						}
 					}
 				}
@@ -650,7 +650,7 @@ public class EventPublicationCollectionService
 
 		// set number of publications and participants
 		event.setNumberPaper( eventPublications.size() );
-		event.setNumberParticipant( numberOfTotalAuthor );
+		event.setNumberParticipant( uniqueParticipantSet.size() );
 
 	}
 
