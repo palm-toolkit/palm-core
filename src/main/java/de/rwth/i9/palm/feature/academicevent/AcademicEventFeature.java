@@ -8,9 +8,12 @@ package de.rwth.i9.palm.feature.academicevent;
  */
 public interface AcademicEventFeature
 {
+	public EventBasicStatistic getEventBasicStatistic();
+
 	public EventMining getEventMining();
 
 	public EventPublication getEventPublication();
 
 	public EventSearch getEventSearch();
+
 }

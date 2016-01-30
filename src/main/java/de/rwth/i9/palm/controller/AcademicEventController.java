@@ -174,4 +174,27 @@ public class AcademicEventController
 		return DblpEventCollection.getEventFromDBLPSearch( query, "all", null );
 	}
 
+	/**
+	 * Get the basic information (publication type, language, etc) from a
+	 * publication
+	 * 
+	 * @param id
+	 *            of publication
+	 * @param uri
+	 * @param response
+	 * @return JSON Map
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 */
+	@RequestMapping( value = "/basicinformation", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getAcademicEventBasicInformation( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "uri", required = false ) final String uri, 
+			final HttpServletResponse response)
+	{
+		return academicEventFeature.getEventBasicStatistic().getEventBasicStatisticById( id );
+	}
+
 }

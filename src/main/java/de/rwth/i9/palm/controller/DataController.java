@@ -19,41 +19,27 @@ public class DataController
 	private PersistenceStrategy persistenceStrategy;
 
 	@Transactional
-	@RequestMapping( value = "/all/reindex", method = RequestMethod.GET )
+	@RequestMapping( value = "/reindex/all", method = RequestMethod.GET )
 	public @ResponseBody String allReindex()
 	{
 		try
 		{
 			persistenceStrategy.getInstitutionDAO().doReindexing();
-		}
-		catch ( InterruptedException e )
-		{
-			return ( e.getMessage() );
-		}
-
-		try
-		{
 			persistenceStrategy.getAuthorDAO().doReindexing();
-		}
-		catch ( InterruptedException e )
-		{
-			return ( e.getMessage() );
-		}
-
-		try
-		{
 			persistenceStrategy.getPublicationDAO().doReindexing();
+			persistenceStrategy.getEventDAO().doReindexing();
+			persistenceStrategy.getEventGroupDAO().doReindexing();
 		}
 		catch ( InterruptedException e )
 		{
 			return ( e.getMessage() );
 		}
 
-		return "re-indexing institution, author and publication complete";
+		return "re-indexing institution, author, publication and event complete";
 	}
 
 	@Transactional
-	@RequestMapping( value = "/institution/reindex", method = RequestMethod.GET )
+	@RequestMapping( value = "/reindex/institution", method = RequestMethod.GET )
 	public @ResponseBody String institutionReindex()
 	{
 		try
@@ -68,7 +54,7 @@ public class DataController
 	}
 
 	@Transactional
-	@RequestMapping( value = "/author/reindex", method = RequestMethod.GET )
+	@RequestMapping( value = "/reindex/author", method = RequestMethod.GET )
 	public @ResponseBody String authorReindex()
 	{
 		try
@@ -83,7 +69,7 @@ public class DataController
 	}
 
 	@Transactional
-	@RequestMapping( value = "/publication/reindex", method = RequestMethod.GET )
+	@RequestMapping( value = "/reindex/publication", method = RequestMethod.GET )
 	public @ResponseBody String publicationReindex()
 	{
 		try
@@ -95,6 +81,22 @@ public class DataController
 			return ( e.getMessage() );
 		}
 		return "re indexing publication complete";
+	}
+
+	@Transactional
+	@RequestMapping( value = "/reindex/event", method = RequestMethod.GET )
+	public @ResponseBody String eventReindex()
+	{
+		try
+		{
+			persistenceStrategy.getEventDAO().doReindexing();
+			persistenceStrategy.getEventGroupDAO().doReindexing();
+		}
+		catch ( InterruptedException e )
+		{
+			return ( e.getMessage() );
+		}
+		return "re indexing event complete";
 	}
 
 }

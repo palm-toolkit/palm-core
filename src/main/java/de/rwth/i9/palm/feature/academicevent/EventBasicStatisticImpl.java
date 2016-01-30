@@ -42,7 +42,7 @@ public class EventBasicStatisticImpl implements EventBasicStatistic
 
 		responseMap.put( "status", "ok" );
 
-		// put publication detail
+		// put eventgroup detail
 		Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 
 		if ( eventGroup.getPublicationType().equals( PublicationType.CONFERENCE ) )

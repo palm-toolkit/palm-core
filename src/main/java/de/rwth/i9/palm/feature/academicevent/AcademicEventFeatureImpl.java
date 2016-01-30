@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class AcademicEventFeatureImpl implements AcademicEventFeature
 {
 	@Autowired( required = false )
+	private EventBasicStatistic eventBasicStatistic;
+
+	@Autowired( required = false )
 	private EventMining eventMining;
 
 	@Autowired( required = false )
@@ -12,6 +15,15 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 
 	@Autowired( required = false )
 	private EventSearch eventSearch;
+
+	@Override
+	public EventBasicStatistic getEventBasicStatistic()
+	{
+		if ( this.eventBasicStatistic == null )
+			this.eventBasicStatistic = new EventBasicStatisticImpl();
+
+		return this.eventBasicStatistic;
+	}
 
 	@Override
 	public EventMining getEventMining()
