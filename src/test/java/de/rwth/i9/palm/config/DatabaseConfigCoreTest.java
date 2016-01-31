@@ -24,6 +24,8 @@ import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.CircleInterest;
+import de.rwth.i9.palm.model.CircleInterestProfile;
 import de.rwth.i9.palm.model.CircleWidget;
 import de.rwth.i9.palm.model.Config;
 import de.rwth.i9.palm.model.ConfigProperty;
@@ -137,41 +139,43 @@ public class DatabaseConfigCoreTest
 		sessionFactoryBean.setHibernateProperties( hibProperties() );
 		sessionFactoryBean.setAnnotatedClasses( new Class<?>[] { 
 				/* model class here */
-			Author.class,
-			AuthorAlias.class,
-			AuthorInterest.class,
-			AuthorInterestProfile.class,
-			Circle.class,
-			CircleWidget.class,
-			Country.class,
-			Config.class,
-			ConfigProperty.class,
-			Event.class,
-			EventGroup.class,
-			ExtractionService.class,
-			ExtractionServiceProperty.class,
-			Function.class,
-			Institution.class,
-			Interest.class,
-			InterestAuthor.class,
-			InterestProfile.class,
-			InterestProfileProperty.class,
-			Location.class,
-			Publication.class,
-			PublicationAuthor.class,
-			PublicationFile.class,
-			PublicationHistory.class,
-			PublicationSource.class,
-			PublicationTopic.class,
-			Role.class,
+				Author.class,
+				AuthorAlias.class,
+				AuthorInterest.class,
+				AuthorInterestProfile.class,
+				Circle.class,
+				CircleInterest.class,
+				CircleInterestProfile.class,
+				CircleWidget.class,
+				Country.class,
+				Config.class,
+				ConfigProperty.class,
+				Event.class,
+				EventGroup.class,
+				ExtractionService.class,
+				ExtractionServiceProperty.class,
+				Function.class,
+				Institution.class,
+				Interest.class,
+				InterestAuthor.class,
+				InterestProfile.class,
+				InterestProfileProperty.class,
+				Location.class,
+				Publication.class,
+				PublicationAuthor.class,
+				PublicationFile.class,
+				PublicationHistory.class,
+				PublicationSource.class,
+				PublicationTopic.class,
+				Role.class,
 				Source.class,
 				SourceProperty.class,
 				Subject.class,
-			User.class,
-			UserRequest.class,
-			UserWidget.class,
-			Widget.class,
-			WeightingAlgorithm.class
+				User.class,
+				UserRequest.class,
+				UserWidget.class,
+				Widget.class,
+				WeightingAlgorithm.class
 				} );
 		return sessionFactoryBean;
 	}
