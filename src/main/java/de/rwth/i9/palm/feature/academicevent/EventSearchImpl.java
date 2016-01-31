@@ -81,7 +81,7 @@ public class EventSearchImpl implements EventSearch
 	}
 
 	@Override
-	public Map<String, Object> getEventGroupMapByQuery( String query, Integer startPage, Integer maxresult, String source, String type, boolean persistResult )
+	public Map<String, Object> getEventGroupMapByQuery( String query, String notation, Integer startPage, Integer maxresult, String source, String type, boolean persistResult )
 	{
 		Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
 
@@ -89,7 +89,7 @@ public class EventSearchImpl implements EventSearch
 		if ( source.equals( "internal" ) )
 		{
 			// set lucene fulltext search by default
-			eventGroupMap = persistenceStrategy.getEventGroupDAO().getEventGroupMapFullTextSearchWithPaging( query, type, startPage, maxresult );
+			eventGroupMap = persistenceStrategy.getEventGroupDAO().getEventGroupMapFullTextSearchWithPaging( query, notation, type, startPage, maxresult );
 		}
 		else if ( source.equals( "all" ) )
 		{

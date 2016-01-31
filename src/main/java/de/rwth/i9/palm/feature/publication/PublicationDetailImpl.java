@@ -68,6 +68,8 @@ public class PublicationDetailImpl implements PublicationDetail
 			if ( author.getPhotoUrl() != null )
 				authorMap.put( "photo", author.getPhotoUrl() );
 
+			authorMap.put( "isAdded", author.isAdded() );
+
 			coathorList.add( authorMap );
 		}
 		publicationMap.put( "coauthor", coathorList );

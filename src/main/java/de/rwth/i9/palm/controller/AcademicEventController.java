@@ -26,6 +26,7 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.datasetcollect.service.DblpEventCollection;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserWidget;
@@ -57,9 +58,11 @@ public class AcademicEventController
 			@RequestParam( value = "eventId", required = false ) final String eventId, 
 			@RequestParam( value = "name", required = false ) final String name,
 			@RequestParam( value = "type", required = false ) final String type,
+			@RequestParam( value = "abbr", required = false ) String notation, 
 			@RequestParam( value = "year", required = false ) final String year,
 			@RequestParam( value = "volume", required = false ) final String volume,
 			@RequestParam( value = "publicationId", required = false ) final String publicationId,
+			@RequestParam( value = "add", required = false ) final String add,
 			final HttpServletResponse response) throws InterruptedException
 	{
 		// set model and view
@@ -90,10 +93,22 @@ public class AcademicEventController
 		// assign query
 		if ( id != null )
 			model.addObject( "targetId", id );
+		else
+		{
+			// get event group id
+			if ( eventId != null )
+			{
+				Event event = persistenceStrategy.getEventDAO().getById( eventId );
+				if ( event != null && event.getEventGroup() != null )
+					model.addObject( "targetId", event.getEventGroup().getId() );
+			}
+		}
 		if ( eventId != null )
 			model.addObject( "targetEventId", eventId );
 		if ( name != null )
 			model.addObject( "targetName", name );
+		if ( notation != null )
+			model.addObject( "targetNotation", notation );
 		if ( type != null )
 			model.addObject( "targetType", type );
 		if ( year != null )
@@ -102,6 +117,8 @@ public class AcademicEventController
 			model.addObject( "targetVolume", volume );
 		if ( publicationId != null )
 			model.addObject( "publicationId", publicationId );
+		if ( add != null )
+			model.addObject( "targetAdd", add );
 		return model;
 	}
 
@@ -110,6 +127,7 @@ public class AcademicEventController
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getConferenceList( 
 			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "abbr", required = false ) String notation, 
 			@RequestParam( value = "startPage", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "type", required = false ) String type,
@@ -141,7 +159,7 @@ public class AcademicEventController
 			persistResult = true;
 		}
 		
-		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, startPage, maxresult, source, type, persistResult );
+		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, notation, startPage, maxresult, source, type, persistResult );
 
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )
@@ -188,9 +206,12 @@ public class AcademicEventController
 
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationList( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getPublicationList( 
+			@RequestParam( value = "id", required = false ) final String eventId, 
+			@RequestParam( value = "publicationId", required = false ) final String publicationId, 
+			final HttpServletResponse response)
 	{
-		return academicEventFeature.getEventPublication().getPublicationListByEventId( authorId );
+		return academicEventFeature.getEventPublication().getPublicationListByEventId( eventId, publicationId );
 	}
 
 	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )

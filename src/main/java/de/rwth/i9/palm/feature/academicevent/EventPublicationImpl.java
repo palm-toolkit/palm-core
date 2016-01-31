@@ -26,7 +26,7 @@ public class EventPublicationImpl implements EventPublication
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public Map<String, Object> getPublicationListByEventId( String eventId )
+	public Map<String, Object> getPublicationListByEventId( String eventId, String publicationId )
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -49,6 +49,9 @@ public class EventPublicationImpl implements EventPublication
 		}
 
 		responseMap.put( "status", "ok" );
+
+		if ( publicationId != null )
+			responseMap.put( "publicationId", publicationId );
 
 		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
 

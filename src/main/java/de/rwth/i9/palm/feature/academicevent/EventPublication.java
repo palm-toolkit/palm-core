@@ -4,5 +4,5 @@ import java.util.Map;
 
 public interface EventPublication
 {
-	public Map<String, Object> getPublicationListByEventId( String eventId );
+	public Map<String, Object> getPublicationListByEventId( String eventId, String publicationId );
 }

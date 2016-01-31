@@ -73,7 +73,7 @@ public class ResearcherController
 	public ModelAndView researcherPage( 
 			@RequestParam( value = "id", required = false ) final String id, 
 			@RequestParam( value = "name", required = false ) final String name,
- @RequestParam( value = "add", required = false ) final String add,
+			@RequestParam( value = "add", required = false ) final String add,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		ModelAndView model = TemplateHelper.createViewWithLink( "researcher", LINK_NAME );
