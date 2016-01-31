@@ -29,13 +29,14 @@ public class DataController
 			persistenceStrategy.getPublicationDAO().doReindexing();
 			persistenceStrategy.getEventDAO().doReindexing();
 			persistenceStrategy.getEventGroupDAO().doReindexing();
+			persistenceStrategy.getCircleDAO().doReindexing();
 		}
 		catch ( InterruptedException e )
 		{
 			return ( e.getMessage() );
 		}
 
-		return "re-indexing institution, author, publication and event complete";
+		return "re-indexing institutions, authors, publications, events and circles complete";
 	}
 
 	@Transactional
@@ -99,4 +100,18 @@ public class DataController
 		return "re indexing event complete";
 	}
 
+	@Transactional
+	@RequestMapping( value = "/reindex/circle", method = RequestMethod.GET )
+	public @ResponseBody String circleReindex()
+	{
+		try
+		{
+			persistenceStrategy.getCircleDAO().doReindexing();
+		}
+		catch ( InterruptedException e )
+		{
+			return ( e.getMessage() );
+		}
+		return "re indexing circle complete";
+	}
 }

@@ -199,7 +199,7 @@ public class PublicationController
 	 * @throws IOException
 	 * @throws ExecutionException
 	 */
-	@RequestMapping( value = "/basicstatistic", method = RequestMethod.GET )
+	@RequestMapping( value = "/basicInformation", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
 			@RequestParam( value = "id", required = false ) final String id, 

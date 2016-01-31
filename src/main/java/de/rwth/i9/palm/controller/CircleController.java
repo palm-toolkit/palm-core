@@ -147,4 +147,97 @@ public class CircleController
 	{
 		return circleFeature.getCircleDetail().getCircleDetailById( id );
 	}
+
+	@RequestMapping( value = "/basicInformation", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getBasicInformationMap( 
+			@RequestParam( value = "id", required = false ) final String circleid, 
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( circleid == null || circleid.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circleid null" );
+			return responseMap;
+		}
+
+		// get author
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleid );
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.put( "circle", circleFeature.getCircleBasicInformation().getCircleBasicInformationMap( circle ) );
+
+		return responseMap;
+	}
+
+	@RequestMapping( value = "/researcherList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getCircleResearcher( 
+			@RequestParam( value = "id", required = false ) final String circleid, 
+			@RequestParam( value = "uri", required = false ) final String uri, 
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( circleid == null || circleid.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circleid null" );
+			return responseMap;
+		}
+
+		// get author
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleid );
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( circleFeature.getCircleResearcher().getCircleResearcherMap( circle ) );
+
+		return responseMap;
+	}
+	
+	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getCirclePublication( 
+			@RequestParam( value = "id", required = false ) final String circleid,
+			@RequestParam( value = "uri", required = false ) final String uri, 
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( circleid == null || circleid.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circleid null" );
+			return responseMap;
+		}
+
+		// get author
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleid );
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( circleFeature.getCirclePublication().getCirclePublicationMap( circle ) );
+
+		return responseMap;
+	}
+
 }

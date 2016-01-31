@@ -18,6 +18,12 @@ public class CircleFeatureImpl implements CircleFeature
 	private CircleManage circleManage;
 
 	@Autowired( required = false )
+	private CirclePublication circlePublication;
+
+	@Autowired( required = false )
+	private CircleResearcher circleResearcher;
+
+	@Autowired( required = false )
 	private CircleSearch circleSearch;
 
 	@Override
@@ -30,8 +36,10 @@ public class CircleFeatureImpl implements CircleFeature
 	@Override
 	public CircleBasicInformation getCircleBasicInformation()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		if ( this.circleBasicInformation == null )
+			this.circleBasicInformation = new CircleBasicInformationImpl();
+
+		return this.circleBasicInformation;
 	}
 
 	@Override
@@ -48,6 +56,22 @@ public class CircleFeatureImpl implements CircleFeature
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public CirclePublication getCirclePublication()
+	{
+		if ( this.circlePublication == null )
+			this.circlePublication = new CirclePublicationImpl();
+
+		return this.circlePublication;
+	}
+
+	public CircleResearcher getCircleResearcher()
+	{
+		if ( this.circleResearcher == null )
+			this.circleResearcher = new CircleResearcherImpl();
+
+		return this.circleResearcher;
 	}
 
 	@Override

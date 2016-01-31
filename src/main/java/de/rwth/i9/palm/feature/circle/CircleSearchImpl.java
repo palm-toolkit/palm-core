@@ -32,7 +32,7 @@ public class CircleSearchImpl implements CircleSearch
 		if ( creatorId != null )
 			creator = persistenceStrategy.getAuthorDAO().getById( creatorId );
 
-		circleMap = persistenceStrategy.getCircleDAO().getCircleWithPaging( query, creator, page, maxresult, orderBy );
+		circleMap = persistenceStrategy.getCircleDAO().getCircleFullTextSearchWithPaging( query, creator, page, maxresult, orderBy );
 
 		return circleMap;
 	}
@@ -72,9 +72,16 @@ public class CircleSearchImpl implements CircleSearch
 
 			if ( circle.getAuthors() != null )
 				circleMap.put( "numberAuthors", circle.getAuthors().size() );
+			else
+				circleMap.put( "numberAuthors", 0 );
 
 			if ( circle.getPublications() != null )
 				circleMap.put( "numberPublications", circle.getPublications().size() );
+			else
+				circleMap.put( "numberPublications", 0 );
+
+			if ( circle.getDescription() != null && !circle.getDescription().equals( "" ) )
+				circleMap.put( "description", circle.getDescription() );
 
 			// check autowired with security service here
 			circleMap.put( "isLock", circle.isLock() );
