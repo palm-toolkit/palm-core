@@ -22,6 +22,10 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalyticsImpl;
+import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
+import de.rwth.i9.palm.feature.academicevent.AcademicEventFeatureImpl;
+import de.rwth.i9.palm.feature.circle.CircleFeature;
+import de.rwth.i9.palm.feature.circle.CircleFeatureImpl;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.feature.publication.PublicationFeatureImpl;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
@@ -92,6 +96,14 @@ public class WebAppConfigTest extends WebMvcConfigurerAdapter implements AsyncCo
 	{
 		return new PalmAnalyticsImpl();
 	}
+	
+	/* palm academic event feature */
+	@Bean
+	@Scope( "singleton" )
+	public AcademicEventFeature academicEventFeature()
+	{
+		return new AcademicEventFeatureImpl();
+	}
 
 	/* palm researcher feature */
 	@Bean
@@ -107,6 +119,14 @@ public class WebAppConfigTest extends WebMvcConfigurerAdapter implements AsyncCo
 	public PublicationFeature publicationFeature()
 	{
 		return new PublicationFeatureImpl();
+	}
+
+	/* palm publication feature */
+	@Bean
+	@Scope( "singleton" )
+	public CircleFeature CircleFeature()
+	{
+		return new CircleFeatureImpl();
 	}
 
 	/* Scheduling and ThreadPool */

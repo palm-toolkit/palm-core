@@ -3,6 +3,7 @@ package de.rwth.i9.palm.datasetcollect.service;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,6 @@ public class MendeleyPublicationCollection extends PublicationCollection
 	{
 		super();
 	}
-
 	/**
 	 * Get possible author
 	 * 
@@ -47,6 +47,10 @@ public class MendeleyPublicationCollection extends PublicationCollection
 		SourceProperty searchProfileProperty = source.getSourcePropertyByIdentifiers( "catalog", "SEARCH_PROFILE" );
 		// for token properties
 		SourceProperty tokenProperty = source.getSourcePropertyByIdentifiers( "oauth2", "TOKEN" );
+
+		// if token null
+		if ( tokenProperty.getValue() == null )
+			return Collections.emptyList();
 
 		String authorCatalog = searchProfileProperty.getValue() + "?query=" + URLEncoder.encode( authorName, "UTF-8" ).replace( "+", "%20" );
 		// get the resources ( authors or publications )
@@ -156,6 +160,10 @@ public class MendeleyPublicationCollection extends PublicationCollection
 		// for token properties
 		SourceProperty tokenProperty = source.getSourcePropertyByIdentifiers( "oauth2", "TOKEN" );
 
+		// if token null
+		if ( tokenProperty.getValue() == null )
+			return Collections.emptyList();
+
 		String publicationCatalog = searchCatalogProperty.getValue() + "?author=" + URLEncoder.encode( author.getName(), "UTF-8" ).replace( "+", "%20" ) + "&limit=100";
 		// get the resources ( authors or publications )
 		HttpGet httpGet = new HttpGet( publicationCatalog );
@@ -200,7 +208,9 @@ public class MendeleyPublicationCollection extends PublicationCollection
 					if ( !authorNode.path( "last_name" ).isMissingNode() )
 						authorName += authorNode.path( "last_name" ).textValue().toLowerCase();
 
-					if ( !authorName.equals( "" ) && authorName.equals( author.getName() ) )
+					authorName = authorName.trim();
+
+					if ( !authorName.equals( "" ) && authorName.equals( author.getName().toLowerCase() ) )
 						return true;
 				}
 			}
@@ -248,7 +258,7 @@ public class MendeleyPublicationCollection extends PublicationCollection
 				publicationDetailMap.put( "type", pubType );
 		}
 		if ( !publicationNode.path( "year" ).isMissingNode() )
-			publicationDetailMap.put( "year", publicationNode.path( "year" ).textValue() );
+			publicationDetailMap.put( "datePublished", String.valueOf( publicationNode.path( "year" ).intValue() ) );
 		if ( !publicationNode.path( "abstract" ).isMissingNode() )
 			publicationDetailMap.put( "abstract", publicationNode.path( "abstract" ).textValue().replaceAll( "\\\\n", " " ) );
 		if ( !publicationNode.path( "keywords" ).isMissingNode() )

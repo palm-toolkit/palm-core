@@ -68,6 +68,8 @@ public class PublicationDetailImpl implements PublicationDetail
 			if ( author.getPhotoUrl() != null )
 				authorMap.put( "photo", author.getPhotoUrl() );
 
+			authorMap.put( "isAdded", author.isAdded() );
+
 			coathorList.add( authorMap );
 		}
 		publicationMap.put( "coauthor", coathorList );
@@ -106,16 +108,15 @@ public class PublicationDetailImpl implements PublicationDetail
 				publicationSourceMap.put( "cited by", publicationSource.getCitedBy() );
 
 			if ( publicationSource.getVenue() != null )
-				publicationSourceMap.put( "venue", publicationSource.getVenue() );
+			{
+				if ( publicationSource.getPublicationType() != null )
+					publicationSourceMap.put( publicationSource.getPublicationType().toLowerCase(), publicationSource.getVenue() );
+				else
+					publicationSourceMap.put( "unknown", publicationSource.getVenue() );
+			}
 
-			if ( publicationSource.getPublisher() != null )
-				publicationSourceMap.put( "publisher", publicationSource.getPublisher() );
-
-			if ( publicationSource.getIssue() != null )
-				publicationSourceMap.put( "issue", publicationSource.getIssue() );
-
-			if ( publicationSource.getVolume() != null )
-				publicationSourceMap.put( "volume", publicationSource.getVolume() );
+			if ( publicationSource.getAdditionalInformation() != null )
+				publicationSourceMap.putAll( publicationSource.getAdditionalInformationAsMap() );
 
 			if ( publicationSource.getPages() != null )
 				publicationSourceMap.put( "page", publicationSource.getPages() );

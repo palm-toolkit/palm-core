@@ -70,19 +70,33 @@ public class Oauth2Client
 	 * @throws OAuthSystemException
 	 * @throws OAuthProblemException
 	 */
-	public static String Oauth2ClientRequestToken( String tokenUrl, String clientId, String clientSecret ) throws ParseException, IOException, OAuthSystemException, OAuthProblemException
+	public static String Oauth2ClientRequestToken( String tokenUrl, String clientId, String clientSecret ) throws ParseException, IOException
 	{
 		// configure Oauth2 and get access token
-		OAuthClientRequest request = OAuthClientRequest
-	            .tokenLocation( tokenUrl )
-	            .setClientId( clientId )
-	            .setClientSecret( clientSecret )
-	            .setGrantType(GrantType.CLIENT_CREDENTIALS)
-	            .setScope("all")
-	            .buildBodyMessage();
-	    OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
-	    OAuthJSONAccessTokenResponse tokenResponse = oAuthClient.accessToken(
-	            request, OAuthJSONAccessTokenResponse.class);
+		OAuthClientRequest request = null;
+		OAuthClient oAuthClient = null;
+		OAuthJSONAccessTokenResponse tokenResponse = null;
+
+		try
+		{
+			request = OAuthClientRequest.tokenLocation( tokenUrl ).setClientId( clientId ).setClientSecret( clientSecret ).setGrantType( GrantType.CLIENT_CREDENTIALS ).setScope( "all" ).buildBodyMessage();
+
+			oAuthClient = new OAuthClient( new URLConnectionClient() );
+			tokenResponse = oAuthClient.accessToken( request, OAuthJSONAccessTokenResponse.class );
+		}
+		catch ( OAuthSystemException e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch ( OAuthProblemException e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		if ( tokenResponse == null )
+			return null;
 	    
 	    // return token
 	    return tokenResponse.getAccessToken();

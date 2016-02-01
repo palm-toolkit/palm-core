@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
@@ -21,12 +20,11 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.InterestProfile;
 import de.rwth.i9.palm.model.InterestProfileProperty;
-import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
 import de.rwth.i9.palm.service.ApplicationService;
+import de.rwth.i9.palm.service.SecurityService;
 import de.rwth.i9.palm.wrapper.InterestProfileListWrapper;
 
 @Controller
@@ -37,7 +35,7 @@ public class ManageTermsWeightingController
 	private static final String LINK_NAME = "administration";
 
 	@Autowired
-	private ApplicationContextService appService;
+	private SecurityService securityService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -55,13 +53,17 @@ public class ManageTermsWeightingController
 	 */
 	@Transactional
 	@RequestMapping( method = RequestMethod.GET )
-	public ModelAndView getInterestProfile( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response) throws InterruptedException
+	public ModelAndView getInterestProfile( final HttpServletResponse response ) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = null;
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "widgetLayoutAjax", LINK_NAME, sessionDataSet );
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "widgetLayoutAjax", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.ADMINISTRATION, "termweighting" );
 
 		// get list of interestProfile and sort

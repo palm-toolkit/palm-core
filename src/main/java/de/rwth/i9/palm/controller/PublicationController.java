@@ -1,6 +1,8 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -19,12 +21,14 @@ import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
-import de.rwth.i9.palm.model.SessionDataSet;
+import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @SessionAttributes( { "sessionDataSet" } )
@@ -34,13 +38,13 @@ public class PublicationController
 	private static final String LINK_NAME = "publication";
 
 	@Autowired
-	private ApplicationContextService appService;
-
-	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
 	@Autowired
 	private PublicationFeature publicationFeature;
+
+	@Autowired
+	private SecurityService securityService;
 
 	/**
 	 * Get the publication page
@@ -54,17 +58,41 @@ public class PublicationController
 	@Transactional
 	public ModelAndView publicationPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
+			@RequestParam( value = "id", required = false ) final String publicationId, 
+			@RequestParam( value = "title", required = false ) final String title,
 			final HttpServletResponse response ) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
-
 		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "publication", LINK_NAME, sessionDataSet );
+		ModelAndView model = TemplateHelper.createViewWithLink( "publication", LINK_NAME );
 
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.PUBLICATION, WidgetStatus.DEFAULT );
+		List<Widget> widgets = new ArrayList<Widget>();
+
+		User user = securityService.getUser();
+
+		if ( user != null )
+		{
+			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.PUBLICATION, WidgetStatus.ACTIVE );
+			for ( UserWidget userWidget : userWidgets )
+			{
+				Widget widget = userWidget.getWidget();
+				widget.setColor( userWidget.getWidgetColor() );
+				widget.setWidgetHeight( userWidget.getWidgetHeight() );
+				widget.setWidgetWidth( userWidget.getWidgetWidth() );
+				widget.setPosition( userWidget.getPosition() );
+
+				widgets.add( widget );
+			}
+		} else
+			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.PUBLICATION, WidgetStatus.DEFAULT ));
 		// assign the model
 		model.addObject( "widgets", widgets );
+
+		if ( publicationId != null )
+			model.addObject( "targetId", publicationId );
+
+		if ( title != null )
+			model.addObject( "targetTitle", title );
+
 		return model;
 	}
 
@@ -72,24 +100,68 @@ public class PublicationController
 	 * Get the list of publications based on the following parameters
 	 * 
 	 * @param query
-	 * @param conferenceName
-	 * @param conferenceId
+	 * @param eventName
+	 * @param eventId
 	 * @param page
 	 * @param maxresult
 	 * @param response
 	 * @return JSON Map
 	 */
+	@SuppressWarnings( "unchecked" )
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getPublicationList( 
 			@RequestParam( value = "query", required = false ) String query,
-			@RequestParam( value = "event", required = false ) String eventName,
-			@RequestParam( value = "eventid", required = false ) String eventId,
+			@RequestParam( value = "publicationType", required = false ) String publicationType,
+			@RequestParam( value = "authorId", required = false ) String authorId,
+			@RequestParam( value = "eventId", required = false ) String eventId,
 			@RequestParam( value = "page", required = false ) Integer page, 
-			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			@RequestParam( value = "source", required = false ) String source,
+			@RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch,
+			@RequestParam( value = "year", required = false ) String year,
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response )
 	{
-		return publicationFeature.getPublicationSearch().getPublicationListByQueryAndEvent( query, eventName, eventId, page, maxresult );
+		/* == Set Default Values== */
+		if ( query == null ) 			query = "";
+		if ( publicationType == null ) 	publicationType = "all";
+		if ( page == null )				page = 0;
+		if ( maxresult == null )		maxresult = 50;
+		if ( fulltextSearch == null )	fulltextSearch = "yes";
+		else							fulltextSearch = "no";
+		if ( year == null )				year = "all";
+		if ( orderBy == null )			orderBy = "citation";
+		// Currently, system only provides query on internal database
+		source = "internal";
+			
+		
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		responseMap.put( "query", query );
+		if ( !publicationType.equals( "name" ) )
+			responseMap.put( "publicationType", publicationType );
+		if ( !year.equals( "all" ) )
+			responseMap.put( "year", publicationType );
+		responseMap.put( "page", page );
+		responseMap.put( "maxresult", maxresult );
+		responseMap.put( "fulltextSearch", fulltextSearch );
+		responseMap.put( "orderBy", orderBy );
+		
+		Map<String, Object> publicationMap = publicationFeature.getPublicationSearch().getPublicationListByQuery( query, publicationType, authorId, eventId, page, maxresult, source, fulltextSearch, year, orderBy );
+		
+		if ( (Integer) publicationMap.get( "totalCount" ) > 0 )
+		{
+			responseMap.put( "totalCount", (Integer) publicationMap.get( "totalCount" ) );
+			return publicationFeature.getPublicationSearch().printJsonOutput( responseMap, (List<Publication>) publicationMap.get( "publications" ) );
+		}
+		else
+		{
+			responseMap.put( "totalCount", 0 );
+			responseMap.put( "count", 0 );
+			return responseMap;
+		}
 	}
 
 	/**
@@ -127,7 +199,7 @@ public class PublicationController
 	 * @throws IOException
 	 * @throws ExecutionException
 	 */
-	@RequestMapping( value = "/basicstatistic", method = RequestMethod.GET )
+	@RequestMapping( value = "/basicInformation", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
 			@RequestParam( value = "id", required = false ) final String id, 

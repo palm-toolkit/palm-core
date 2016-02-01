@@ -19,14 +19,13 @@ import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Color;
-import de.rwth.i9.palm.model.SessionDataSet;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetSource;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.model.WidgetWidth;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @RequestMapping( value = "/admin/widget" )
@@ -35,20 +34,24 @@ public class ManageWidgetController
 	private static final String LINK_NAME = "administration";
 
 	@Autowired
-	private ApplicationContextService appService;
+	private SecurityService securityService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
 	@Transactional
 	@RequestMapping( value = "/overview", method = RequestMethod.GET )
-	public ModelAndView overviewWidget( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response ) throws InterruptedException
+	public ModelAndView overviewWidget( final HttpServletResponse response ) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = null;
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "widgetLayout", LINK_NAME, sessionDataSet );
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "widgetLayoutAjax", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.ADMINISTRATION, "add" );
 
 		// get all widget enums
@@ -69,14 +72,17 @@ public class ManageWidgetController
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.GET )
 	public ModelAndView addWidget( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
 			final HttpServletResponse response ) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = null;
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "widgetLayoutAjax", LINK_NAME, sessionDataSet );
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "widgetLayoutAjax", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.ADMINISTRATION, "add" );
 		
 		// get all widget enums

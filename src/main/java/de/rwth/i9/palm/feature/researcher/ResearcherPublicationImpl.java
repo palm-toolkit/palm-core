@@ -24,8 +24,9 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> getPublicationListByAuthorId( String authorId )
+	public Map<String, Object> getPublicationListByAuthorId( String authorId, String query, String year, Integer startPage, Integer maxresult, String orderBy )
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -40,23 +41,52 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			return responseMap;
 		}
 
+		Map<String, Object> targetAuthorMap = new LinkedHashMap<String, Object>();
+		targetAuthorMap.put( "id", targetAuthor.getId() );
+		targetAuthorMap.put( "name", targetAuthor.getName() );
+		responseMap.put( "author", targetAuthorMap );
+		responseMap.put( "totalPublication", targetAuthor.getPublications().size() );
+
 		if ( targetAuthor.getPublications() == null || targetAuthor.getPublications().isEmpty() )
 		{
 			responseMap.put( "status", "error" );
-			responseMap.put( "message", "Error - author not found" );
+			responseMap.put( "message", "Error - author contain no publications" );
 			return responseMap;
 		}
 
-		responseMap.put( "status", "ok" );
-
-		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
-
+		List<Publication> publications = null;
 		// get publication list
-		List<Publication> publications = new ArrayList<Publication>( targetAuthor.getPublications() );
+		if ( !query.equals( "" ) || !year.equals( "all" ) || startPage != null || maxresult != null )
+		{
+			Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( query, "all", targetAuthor, null, startPage, maxresult, year, orderBy );
+			publications = (List<Publication>) publicationsMap.get( "publications" );
+		}
+		else
+		{
+			publications = new ArrayList<Publication>( targetAuthor.getPublications() );
+		}
 
+		// get available year
+		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( targetAuthor ) );
+
+		if ( publications == null || publications.isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "message", "Error - empty publication" );
+			return responseMap;
+		}
 		// sort based on period
 		Collections.sort( publications, new PublicationByDateComparator() );
 
+		responseMap.put( "status", "ok" );
+
+		if ( !year.equals( "all" ) )
+			responseMap.put( "year", year );
+
+		if ( maxresult != null )
+			responseMap.put( "maxresult", maxresult );
+
+		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
 		for ( Publication publication : publications )
 		{
 
@@ -64,8 +94,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
 			publicationMap.put( "id", publication.getId() );
 			publicationMap.put( "title", publication.getTitle() );
-			if ( publication.getAbstractText() != null )
-				publicationMap.put( "abstract", publication.getAbstractText() );
+			//if ( publication.getAbstractText() != null )
+				//publicationMap.put( "abstract", publication.getAbstractText() );
 			// coauthor
 			List<Map<String, Object>> coathorList = new ArrayList<Map<String, Object>>();
 			for ( Author author : publication.getCoAuthors() )
@@ -84,16 +114,18 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				if ( author.getPhotoUrl() != null )
 					authorMap.put( "photo", author.getPhotoUrl() );
 
+				authorMap.put( "isAdded", author.isAdded() );
+
 				coathorList.add( authorMap );
 			}
 			publicationMap.put( "coauthor", coathorList );
 
-			if ( publication.getKeywordText() != null )
-				publicationMap.put( "keyword", publication.getKeywordText() );
+			// if ( publication.getKeywordText() != null )
+			// publicationMap.put( "keyword", publication.getKeywordText() );
 
 			if ( publication.getPublicationDate() != null )
 			{
-				SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd" );
+				SimpleDateFormat sdf = new SimpleDateFormat( publication.getPublicationDateFormat() );
 				publicationMap.put( "date", sdf.format( publication.getPublicationDate() ) );
 			}
 
@@ -115,20 +147,19 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
 				eventMap.put( "name", publication.getEvent().getEventGroup().getName() );
+				if ( !publication.getEvent().getEventGroup().getNotation().equals( publication.getEvent().getEventGroup().getName() ) )
+					eventMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
+				eventMap.put( "isAdded", publication.getEvent().isAdded() );
+				if ( publication.getEvent().getEventGroup() != null )
+					eventMap.put( "isGroupAdded", publication.getEvent().getEventGroup().isAdded() );
 				publicationMap.put( "event", eventMap );
 			}
 
-			if ( publication.getVolume() != null )
-				publicationMap.put( "volume", publication.getVolume() );
+			if ( publication.getAdditionalInformation() != null )
+				publicationMap.putAll( publication.getAdditionalInformationAsMap() );
 
-			if ( publication.getIssue() != null )
-				publicationMap.put( "issue", publication.getIssue() );
-
-			if ( publication.getPages() != null )
-				publicationMap.put( "pages", publication.getPages() );
-
-			if ( publication.getPublisher() != null )
-				publicationMap.put( "publisher", publication.getPublisher() );
+			if ( publication.getStartPage() > 0 )
+				publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
 
 			publicationList.add( publicationMap );
 		}

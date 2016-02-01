@@ -70,6 +70,7 @@ public class PublicationCollectionService
 	 * 
 	 * @param responseMap
 	 * @param author
+	 * @param pid
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
@@ -79,8 +80,11 @@ public class PublicationCollectionService
 	 * @throws OAuthProblemException
 	 * @throws OAuthSystemException
 	 */
-	public void collectPublicationListFromNetwork( Map<String, Object> responseMap, Author author ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public void collectPublicationListFromNetwork( Map<String, Object> responseMap, Author author, String pid ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
+		// process log
+		applicationService.putProcessLog( pid, "Collecting publications list from Academic Networks...<br>", "replace" );
+
 		// get author sources
 		Set<AuthorSource> authorSources = author.getAuthorSources();
 		if ( authorSources == null )
@@ -124,8 +128,14 @@ public class PublicationCollectionService
 			publicationFuture.get();
 		}
 
+		// process log
+		applicationService.putProcessLog( pid, "Done collecting publications list from Academic Networks<br><br>", "append" );
+
+		// process log
+		applicationService.putProcessLog( pid, "Merging publications...<br>", "append" );
+
 		// merge the result
-		this.mergePublicationInformation( publicationFutureLists, author, sourceMap );
+		this.mergePublicationInformation( publicationFutureLists, author, sourceMap, pid );
 	}
 	
 	/**
@@ -134,35 +144,74 @@ public class PublicationCollectionService
 	 * @param publicationFutureLists
 	 * @param author
 	 * @param sourceMap
+	 * @param pid
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 * @throws IOException
 	 * @throws ParseException
 	 * @throws TimeoutException
 	 */
-	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists, Author author, Map<String, Source> sourceMap ) throws InterruptedException, ExecutionException, IOException, ParseException, TimeoutException
+	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists, Author author, Map<String, Source> sourceMap, String pid ) throws InterruptedException, ExecutionException, IOException, ParseException, TimeoutException
 	{
 		if ( publicationFutureLists.size() > 0 )
 		{
 			// list/set of selected publication, either from database or completely new 
 			List<Publication> selectedPublications = new ArrayList<Publication>();
-			
+
 			// first, construct the publication
 			// get it from database or create new if still doesn't exist
 			this.constructPublicationWithSources( selectedPublications, publicationFutureLists , author );
 			
+			// process log
+			applicationService.putProcessLog( pid, "Done merging " + selectedPublications.size() + " publications<br><br>", "append" );
+
+			// process log
+			applicationService.putProcessLog( pid, "Removing incorrect publications...<br>", "append" );
+
 			// second, remove incorrect publication based on investigation
 			this.removeIncorrectPublicationFromPublicationList( selectedPublications );
+
+			// process log
+			applicationService.putProcessLog( pid, "Done removing incorrect publications<br><br>", "append" );
+
+			// process log
+			applicationService.putProcessLog( pid, "Extracting publications details...<br>", "append" );
 
 			// third, extract and combine information from multiple sources
 			this.extractPublicationInformationDetailFromSources( selectedPublications, author, sourceMap );
 
+			// process log
+			applicationService.putProcessLog( pid, "Done extracting publications details<br><br>", "append" );
+
 			// fourth, second checking, after the information has been merged
 			this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
+
+			// count total citation on author
+			int citation = 0;
+			SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
+
+			for ( Publication publication : selectedPublications )
+			{
+				citation += publication.getCitedBy();
+				// set publication year
+				if ( publication.getPublicationDate() != null )
+					publication.setYear( sdf.format( publication.getPublicationDate() ) );
+			}
+			if ( author.getCitedBy() < citation )
+			{
+				author.setCitedBy( citation );
+				persistenceStrategy.getAuthorDAO().persist( author );
+			}
+
+			// process log
+			applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html...<br>", "append" );
 
 			// enrich the publication information by extract information
 			// from html or pdf source
 			this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
+
+			// process log
+			applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
 
 			// at the end save everything
 			for ( Publication publication : selectedPublications )
@@ -184,12 +233,24 @@ public class PublicationCollectionService
 		// get current year
 		int currentYear = Calendar.getInstance().get( Calendar.YEAR );
 
+		// get number of active sources
+		int numberOfActiveSources = 0;
+		// getSourceMap
+		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
+
+		for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
+		{
+			if ( sourceEntry.getValue().isActive() )
+				numberOfActiveSources++;
+		}
+
+		// filter incorrect publication
 		for ( Iterator<Publication> iteratorPublication = selectedPublications.iterator(); iteratorPublication.hasNext(); )
 		{
 			Publication publication = iteratorPublication.next();
 
 			// The pattern of incorrect publication
-			if ( publication.getPublicationSources().size() == 1 )
+			if ( publication.getPublicationSources().size() == 1 && numberOfActiveSources > 1 )
 			{
 				List<PublicationSource> publicationSource = new ArrayList<>( publication.getPublicationSources() );
 
@@ -200,6 +261,16 @@ public class PublicationCollectionService
 				// 3. The title of publication contains "special issue article"
 				if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.GOOGLESCHOLAR ) )
 				{
+					// The pattern of incorrect publication
+					// For google scholar :
+					// 3. The title of publication contains "special issue
+					// article"
+					if ( publication.getTitle().toLowerCase().contains( "special issue article" ) )
+					{
+						iteratorPublication.remove();
+						continue;
+					}
+
 					// removing condition
 					if ( publicationSource.get( 0 ).getDate() == null )
 					{
@@ -228,25 +299,29 @@ public class PublicationCollectionService
 
 				// The pattern of incorrect publication
 				// For Mendeley is master thesis also recorded
+				// indicated by publication doesn't have type, and its contain
+				// exact keyword "master-thesis"
 				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.MENDELEY ) )
 				{
-					if ( publicationSource.get( 0 ).getAbstractText().contains( "master thesis" ) )
+					if ( publication.getPublicationType() == null || ( publicationSource.get( 0 ).getAbstractText() != null && publicationSource.get( 0 ).getAbstractText().contains( "master thesis" ) ) )
 					{
 						iteratorPublication.remove();
 						continue;
 					}
 				}
-			}
 
-			// The pattern of incorrect publication
-			// For google scholar :
-			// 3. The title of publication contains "special issue article"
-			if ( publication.getTitle().toLowerCase().contains( "special issue article" ) )
-			{
-				iteratorPublication.remove();
-				continue;
+				// The pattern of incorrect publication
+				// For Citeseer is incorrect publication title (only part, duplicated or incorrect at all)
+				// sometimes 
+//				else if ( publicationSource.get( 0 ).getSourceType().equals( SourceType.CITESEERX ) )
+//				{
+//					if ( publication.getPublicationType() == null)
+//					{
+//						iteratorPublication.remove();
+//						continue;
+//					}
+//				}
 			}
-
 		}
 	}
 
@@ -292,7 +367,7 @@ public class PublicationCollectionService
 	private boolean isPublicationDuplicated( Publication publication, List<Publication> selectedPublications )
 	{
 		int lengthOfComparedTitleText = 40; 
-		int lengthOfComparedTitleAbstract = 40; 
+		int lengthOfComparedAbstractText = 40;
 		for ( Publication eachPublication : selectedPublications )
 		{
 			if ( eachPublication.getTitle().length() > publication.getTitle().length() )
@@ -304,12 +379,15 @@ public class PublicationCollectionService
 				String compareTitle2 = eachPublication.getTitle().substring( 0, lengthOfComparedTitleText );
 				if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( compareTitle1.toLowerCase(), compareTitle2.toLowerCase() ) > .9f ){
 					// check abstract
+					if ( eachPublication.getAbstractText() == null || eachPublication.getAbstractText().length() < lengthOfComparedAbstractText )
+						continue;
+
 					if( publication.getAbstractText() == null || publication.getAbstractText().length() < 100 )
 						// just delete publication without abstract or short abstract
 						return true;
 					else{
-						String compareAbstract1 = publication.getAbstractText().substring( 0, lengthOfComparedTitleAbstract );
-						String compareAbstract2 = eachPublication.getAbstractText().substring( 0, lengthOfComparedTitleAbstract);
+						String compareAbstract1 = publication.getAbstractText().substring( 0, lengthOfComparedAbstractText );
+						String compareAbstract2 = eachPublication.getAbstractText().substring( 0, lengthOfComparedAbstractText );
 						if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( compareAbstract1.toLowerCase(), compareAbstract2.toLowerCase() ) > .9f )
 							return true;
 					}
@@ -332,145 +410,155 @@ public class PublicationCollectionService
 	public void constructPublicationWithSources( List<Publication> selectedPublications,  List<Future<List<Map<String, String>>>> publicationFutureLists , Author author ) throws InterruptedException, ExecutionException{
 		for ( Future<List<Map<String, String>>> publicationFutureList : publicationFutureLists )
 		{
-			if ( publicationFutureList.isDone() )
+			// here, if process has not been completed yet. It will wait,
+			// until process complete
+			List<Map<String, String>> publicationMapLists = publicationFutureList.get();
+			for ( Map<String, String> publicationMap : publicationMapLists )
 			{
-				// here, if process has not been completed yet. It will wait,
-				// until process complete
-				List<Map<String, String>> publicationMapLists = publicationFutureList.get();
-				for ( Map<String, String> publicationMap : publicationMapLists )
+				Publication publication = null;
+				String publicationTitle = publicationMap.get( "title" );
+
+				if ( publicationTitle == null )
+					continue;
+
+				// check publication with the current selected list.
+				if ( !selectedPublications.isEmpty() )
 				{
-					Publication publication = null;
-					String publicationTitle = publicationMap.get( "title" );
-					
-					if( publicationTitle == null )
-						continue;
-					
-					// check publication with the current selected list.
-					if( !selectedPublications.isEmpty()){
-						for( Publication pub : selectedPublications){
-							if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
-							{
-								publication = pub;
-								break;
-							}
-						}
-					}
-					
-					// check with publication from database
-					if ( publication == null )
+					for ( Publication pub : selectedPublications )
 					{
-						// get the publication object
-						List<Publication> fromDbPublications = persistenceStrategy.getPublicationDAO().getPublicationViaPhraseSlopQuery( publicationTitle.toLowerCase(), 2 );
-						// check publication from database
-						if ( !fromDbPublications.isEmpty() )
+						if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 						{
-							if ( fromDbPublications.size() > 1 )
-							{
-								// check with year
-								for ( Publication pub : fromDbPublications )
-								{
-									if ( pub.getPublicationDate() == null )
-										continue;
-
-									Calendar cal = Calendar.getInstance();
-									cal.setTime( pub.getPublicationDate() );
-									if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "year" ) ) )
-									{
-										publication = pub;
-										break;
-									}
-								}
-								// if publication still null, due to publication
-								// date is null
-								if ( publication == null )
-									publication = fromDbPublications.get( 0 );
-							}
-							else
-								publication = fromDbPublications.get( 0 );
-							// added to selected list
-							selectedPublications.add( publication );
+							publication = pub;
+							break;
 						}
-						// remove old publicationSource
-						if ( publication != null )
-							publication.removeNonUserInputPublicationSource();
 					}
+				}
 
-					// if not exist any where create new publication
-					if( publication == null ){
-						publication = new Publication();
-						publication.setTitle( publicationTitle );
-						publication.setAbstractStatus( CompletionStatus.NOT_COMPLETE );
-						publication.setKeywordStatus( CompletionStatus.NOT_COMPLETE );
+				// check with publication from database
+				if ( publication == null )
+				{
+					// get the publication object
+					List<Publication> fromDbPublications = persistenceStrategy.getPublicationDAO().getPublicationViaPhraseSlopQuery( publicationTitle.toLowerCase(), 2 );
+					// check publication from database
+					if ( !fromDbPublications.isEmpty() )
+					{
+						if ( fromDbPublications.size() > 1 )
+						{
+							// check with year
+							for ( Publication pub : fromDbPublications )
+							{
+								if ( pub.getPublicationDate() == null )
+									continue;
+
+								Calendar cal = Calendar.getInstance();
+								cal.setTime( pub.getPublicationDate() );
+								if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "datePublished" ) ) )
+								{
+									publication = pub;
+									break;
+								}
+							}
+							// if publication still null, due to publication
+							// date is null
+							if ( publication == null )
+								publication = fromDbPublications.get( 0 );
+						}
+						else
+							publication = fromDbPublications.get( 0 );
+						// added to selected list
 						selectedPublications.add( publication );
-
-						// persistenceStrategy.getPublicationDAO().persist(
-						// publication );
 					}
-//					// add coauthor
-////					publication.addCoAuthor( author );
-//					PublicationAuthor publicationAuthor = new PublicationAuthor();
-//					publicationAuthor.setPublication( publication );
-//					publicationAuthor.setAuthor( author );
-//
-//					// author.addPublicationAuthor( publicationAuthor );
-//
-//					publication.addPublicationAuthor( publicationAuthor );
-					
+					// remove old publicationSource
+					if ( publication != null )
+						publication.removeNonUserInputPublicationSource();
+				}
 
-					// persistenceStrategy.getAuthorDAO().persist( author );
+				// if not exist any where create new publication
+				if ( publication == null )
+				{
+					publication = new Publication();
+					publication.setTitle( publicationTitle );
+					publication.setAbstractStatus( CompletionStatus.NOT_COMPLETE );
+					publication.setKeywordStatus( CompletionStatus.NOT_COMPLETE );
+					selectedPublications.add( publication );
+				}
 
-					// create publication sources and assign it to publication
-					PublicationSource publicationSource = new PublicationSource();
-					publicationSource.setTitle( publicationTitle );
-					publicationSource.setSourceUrl( publicationMap.get( "url" ) );
-					
-					publicationSource.setSourceType( SourceType.valueOf(publicationMap.get( "source" ).toUpperCase() ) );
-					
-					if( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) ||  
-							publicationSource.getSourceType().equals( SourceType.CITESEERX ) ||
-							publicationSource.getSourceType().equals( SourceType.DBLP ))
-						publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
-					else if ( publicationSource.getSourceType().equals( SourceType.MENDELEY ) ||  
-							publicationSource.getSourceType().equals( SourceType.MAS ))
-						publicationSource.setSourceMethod( SourceMethod.API );
-					
-					publicationSource.setPublication( publication );
+				// create publication sources and assign it to publication
+				PublicationSource publicationSource = new PublicationSource();
+				publicationSource.setTitle( publicationTitle );
+				publicationSource.setSourceUrl( publicationMap.get( "url" ) );
 
-					if ( publicationMap.get( "citedby" ) != null )
-						publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "citedby" ) ) );
+				publicationSource.setSourceType( SourceType.valueOf( publicationMap.get( "source" ).toUpperCase() ) );
 
-					if ( publicationMap.get( "coauthor" ) != null )
-						publicationSource.setCoAuthors( publicationMap.get( "coauthor" ) );
+				// TODO : this should be automatically signed from sources
+				if ( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) || publicationSource.getSourceType().equals( SourceType.CITESEERX ) || publicationSource.getSourceType().equals( SourceType.DBLP ) )
+					publicationSource.setSourceMethod( SourceMethod.PARSEPAGE );
+				else if ( publicationSource.getSourceType().equals( SourceType.MENDELEY ) || publicationSource.getSourceType().equals( SourceType.MAS ) )
+					publicationSource.setSourceMethod( SourceMethod.API );
 
-					if ( publicationMap.get( "coauthorUrl" ) != null )
-						publicationSource.setCoAuthorsUrl( publicationMap.get( "coauthorUrl" ) );
+				publicationSource.setPublication( publication );
 
-					if ( publicationMap.get( "year" ) != null )
-						publicationSource.setDate( publicationMap.get( "year" ) );
+				if ( publicationMap.get( "citedby" ) != null )
+					publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "citedby" ) ) );
 
-					if ( publicationMap.get( "doc" ) != null )
-						publicationSource.setMainSource( publicationMap.get( "doc" ) );
+				if ( publicationMap.get( "coauthor" ) != null )
+					publicationSource.setCoAuthors( publicationMap.get( "coauthor" ) );
 
-					if ( publicationMap.get( "doc_url" ) != null )
-						publicationSource.setMainSourceUrl( publicationMap.get( "doc_url" ) );
+				if ( publicationMap.get( "coauthorUrl" ) != null )
+					publicationSource.setCoAuthorsUrl( publicationMap.get( "coauthorUrl" ) );
 
-					if ( publicationMap.get( "type" ) != null )
-						publicationSource.setPublicationType( publicationMap.get( "type" ) );
-					
-					if ( publicationMap.get( "abstract" ) != null && publicationMap.get( "abstract" ).length() > 250 )
-						publicationSource.setAbstractText( publicationMap.get( "abstract" ) );
+				if ( publicationMap.get( "datePublished" ) != null )
+					publicationSource.setDate( publicationMap.get( "datePublished" ) );
 
-					if ( publicationMap.get( "keyword" ) != null )
-						publicationSource.setKeyword( publicationMap.get( "keyword" ) );
+				if ( publicationMap.get( "doc" ) != null )
+					publicationSource.setMainSource( publicationMap.get( "doc" ) );
 
-					publication.addPublicationSource( publicationSource );
-								
-					
-					// check  print 
+				if ( publicationMap.get( "doc_url" ) != null )
+					publicationSource.setMainSourceUrl( publicationMap.get( "doc_url" ) );
+
+				if ( publicationMap.get( "type" ) != null )
+					publicationSource.setPublicationType( publicationMap.get( "type" ) );
+
+				if ( publicationMap.get( "abstract" ) != null && publicationMap.get( "abstract" ).length() > 250 )
+					publicationSource.setAbstractText( publicationMap.get( "abstract" ) );
+
+				if ( publicationMap.get( "keyword" ) != null )
+					publicationSource.setKeyword( publicationMap.get( "keyword" ) );
+
+				// add venue detail for DBLP
+				if ( publicationSource.getSourceType().equals( SourceType.DBLP ) )
+				{
+					//log.info( "eventUrl : " + publicationMap.get( "eventUrl" ) );
+					// venue url
+					if ( publicationMap.get( "eventUrl" ) != null )
+					{
+						publicationSource.setVenueUrl( publicationMap.get( "eventUrl" ) );
+
+						// Set publication type Workshop based on Url
+						if ( publicationSource.getVenueUrl().endsWith( "w.html" ) && publicationSource.getPublicationType().equals( "CONFERENCE" ) )
+							publicationSource.setPublicationType( "WORKSHOP" );
+
+					}
+					if ( publicationMap.get( "eventName" ) != null )
+						publicationSource.setVenue( publicationMap.get( "eventName" ) );
+					else
+					{
+						if ( publicationMap.get( "eventShortName" ) != null )
+							publicationSource.setVenue( publicationMap.get( "eventShortName" ) );
+					}
+
+					if ( publicationMap.get( "eventVolume" ) != null )
+						publicationSource.addOrUpdateAdditionalInformation( "volume", publicationMap.get( "eventVolume" ) );
+					if ( publicationMap.get( "eventNumber" ) != null )
+						publicationSource.addOrUpdateAdditionalInformation( "number", publicationMap.get( "eventNumber" ) );
+				}
+
+				publication.addPublicationSource( publicationSource );
+
+				// check print
 //					for ( Entry<String, String> eachPublicationDetail : publicationMap.entrySet() )
 //						System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
 //					System.out.println();
-				}
 			}
 		}
 	}
@@ -557,16 +645,23 @@ public class PublicationCollectionService
 				}
 
 				if ( pubSource.getPages() != null )
-					publication.setPages( pubSource.getPages() );
+				{
+					String[] pageSplit = pubSource.getPages().split( "-" );
+					if ( pageSplit.length == 2 )
+					{
+						try
+						{
+							publication.setStartPage( Integer.parseInt( pageSplit[0] ) );
+							publication.setEndPage( Integer.parseInt( pageSplit[1] ) );
+						}
+						catch ( Exception e )
+						{
+						}
+					}
+				}
 
-				if ( pubSource.getPublisher() != null )
-					publication.setPublisher( pubSource.getPublisher() );
-
-				if ( pubSource.getIssue() != null )
-					publication.setIssue( pubSource.getIssue() );
-
-				if ( pubSource.getVolume() != null )
-					publication.setVolume( pubSource.getVolume() );
+				if ( pubSource.getAdditionalInformation() != null )
+					publication.setAdditionalInformation( pubSource.getAdditionalInformation() );
 
 			}
 			else if ( pubSource.getSourceType() == SourceType.CITESEERX )
@@ -582,8 +677,13 @@ public class PublicationCollectionService
 				}
 				if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
 				{
-					publication.setKeywordText( pubSource.getKeyword() );
-					publication.setKeywordStatus( CompletionStatus.COMPLETE );
+					// check for incorrect keyword, for abnormally a lot of
+					// keyword
+					if ( pubSource.getKeyword().split( "," ).length < 10 )
+					{
+						publication.setKeywordText( pubSource.getKeyword() );
+						publication.setKeywordStatus( CompletionStatus.COMPLETE );
+					}
 				}
 
 			}
@@ -591,7 +691,7 @@ public class PublicationCollectionService
 			{
 				if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
 				{ // sometimes MAS abstract is also incorrect
-					if ( publication.getAbstractText().length() < pubSource.getAbstractText().length() )
+					if ( publication.getAbstractText() != null && publication.getAbstractText().length() < pubSource.getAbstractText().length() )
 					{
 						publication.setAbstractText( pubSource.getAbstractText() );
 						publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
@@ -604,9 +704,20 @@ public class PublicationCollectionService
 				}
 			}
 			// for general information
+			
+			boolean checkforCoAuthor = true;
+			// sometimes mendeley source is not reliable
+			if ( pubSource.getSourceType().equals( SourceType.MENDELEY ) && publication.getPublicationSources().size() > 1 )
+				checkforCoAuthor = false; // Author for Mendeley is unreliable
+			// no need to reinsert author from Mendeley, if the authors are
+			// already exist
+			if ( pubSource.getSourceType().equals( SourceType.MENDELEY ) && publication.getPublicationAuthors() != null && !publication.getPublicationAuthors().isEmpty() )
+				checkforCoAuthor = false;
+
 			// author
-			if ( pubSource.getCoAuthors() != null )
+			if ( pubSource.getCoAuthors() != null && checkforCoAuthor )
 			{
+
 				String[] authorsArray = pubSource.getCoAuthors().split( "," );
 				// for DBLP where the coauthor have a source link
 				String[] authorsUrlArray = null;
@@ -662,7 +773,7 @@ public class PublicationCollectionService
 										if ( coAuthorDb.isAliasNameFromFirstName( firstName ) )
 										{
 											// TODO: check with institution for
-											// higher acuracy
+											// higher accuracy
 											persistenceStrategy.getAuthorDAO().persist( coAuthorDb );
 
 											author = coAuthorDb;
@@ -692,18 +803,18 @@ public class PublicationCollectionService
 							publication.addPublicationAuthor( publicationAuthor );
 
 							// assign with authorSource, if exist
-							if ( authorsUrlArray != null && !author.equals( pivotAuthor ) )
-							{
-								AuthorSource authorSource = new AuthorSource();
-								authorSource.setName( author.getName() );
-								authorSource.setSourceUrl( authorsUrlArray[i] );
-								authorSource.setSourceType( pubSource.getSourceType() );
-								authorSource.setAuthor( author );
-
-								author.addAuthorSource( authorSource );
-								// persist new source
-								persistenceStrategy.getAuthorDAO().persist( author );
-							}
+//							if ( authorsUrlArray != null && !author.equals( pivotAuthor ) )
+//							{
+//								AuthorSource authorSource = new AuthorSource();
+//								authorSource.setName( author.getName() );
+//								authorSource.setSourceUrl( authorsUrlArray[i] );
+//								authorSource.setSourceType( pubSource.getSourceType() );
+//								authorSource.setAuthor( author );
+//
+//								author.addAuthorSource( authorSource );
+//								// persist new source
+//								persistenceStrategy.getAuthorDAO().persist( author );
+//							}
 						}
 					}
 				}
@@ -722,14 +833,15 @@ public class PublicationCollectionService
 			// keyword
 			if ( !publication.getKeywordStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getKeyword() != null )
 			{
-				if ( publication.getKeywordText() == null )
+				if ( publication.getKeywordText() == null && pubSource.getKeyword().split( "," ).length < 10 )
 				{
 					publication.setKeywordText( pubSource.getKeyword() );
 					publication.setKeywordStatus( CompletionStatus.PARTIALLY_COMPLETE );
 				}
 			}
 
-			if ( publication.getPublicationDate() == null && publicationDate == null && pubSource.getDate() != null )
+			// set publication date
+			if ( publication.getPublicationDate() == null && publicationDate == null && pubSource.getDate() != null && !pubSource.getDate().equals( "" ) )
 			{
 				publicationDate = dateFormat.parse( pubSource.getDate() + "/1/1" );
 				publication.setPublicationDate( publicationDate );
@@ -739,52 +851,98 @@ public class PublicationCollectionService
 			if ( pubSource.getCitedBy() > 0 && pubSource.getCitedBy() > publication.getCitedBy() )
 				publication.setCitedBy( pubSource.getCitedBy() );
 
-			// venuetype
+			// set event for conference and journal
 			if ( pubSource.getPublicationType() != null )
 			{
 				publicationType = PublicationType.valueOf( pubSource.getPublicationType() );
 				publication.setPublicationType( publicationType );
 
 
-				if ( ( publicationType.equals( "CONFERENCE" ) || publicationType.equals( "JOURNAL" ) ) && pubSource.getVenue() != null && publication.getEvent() == null )
+				if ( publicationType.equals( PublicationType.CONFERENCE ) || publicationType.equals( PublicationType.WORKSHOP ) || publicationType.equals( PublicationType.JOURNAL ) )
 				{
-					String eventName = pubSource.getVenue();
-					EventGroup eventGroup = null;
-					Event event = null;
-					List<EventGroup> eventGroups = persistenceStrategy.getEventDAO().getEventViaFuzzyQuery( eventName, .8f, 1 );
-					if ( eventGroups.isEmpty() )
+					if ( pubSource.getSourceType().equals( SourceType.DBLP ) && pubSource.getVenue() != null && pubSource.getVenueUrl() != null )
 					{
-						if ( publicationType != null )
+						String eventName = pubSource.getVenue();
+						if ( publicationType.equals( PublicationType.WORKSHOP ) )
+						{
+							int workshopStringIndex = eventName.toLowerCase().indexOf( " w" );
+							if ( workshopStringIndex > 0 )
+								eventName = eventName.substring( 0, workshopStringIndex ).trim();
+						}
+
+						EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getEventGroupByEventNameOrNotation( eventName );
+						if ( eventGroup == null )
 						{
 							// create event group
 							eventGroup = new EventGroup();
 							eventGroup.setName( eventName );
-							String notationName = null;
-							String[] eventNameSplit = eventName.split( " " );
-							for ( String eachEventName : eventNameSplit )
-								if ( !eachEventName.equals( "" ) && Character.isUpperCase( eachEventName.charAt( 0 ) ) )
-									notationName += eachEventName.substring( 0, 1 );
-							eventGroup.setNotation( notationName );
+							eventGroup.setNotation( eventName );
 							eventGroup.setPublicationType( publicationType );
 							// create event
-							if ( publicationDate != null )
-							{
-								// save event group
-								persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 
-								calendar.setTime( publicationDate );
+							// save event group
+							persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+
+							Event event = new Event();
+							// event.setDate( publicationDate );
+							event.setYear( pubSource.getDate() );
+							event.setDblpUrl( pubSource.getVenueUrl() );
+							event.setEventGroup( eventGroup );
+
+							eventGroup.addEvent( event );
+							publication.setEvent( event );
+
+							// persistenceStrategy.getEventDAO().persist( event
+							// );
+						}
+						else
+						{
+							Event event = null;
+							List<Event> events = eventGroup.getEvents();
+							String eventYear = pubSource.getDate();
+							for ( Event eachEvent : events )
+							{
+								if ( eachEvent.getYear().equals( eventYear ) )
+								{
+									event = eachEvent;
+									break;
+								}
+							}
+
+							// check whether event already exist, if not create
+							// new one
+							if ( event == null )
+							{
 								event = new Event();
-								event.setDate( publicationDate );
-								event.setYear( Integer.toString( calendar.get( Calendar.YEAR ) ) );
+								// event.setDate( publicationDate );
+								event.setYear( pubSource.getDate() );
+								event.setDblpUrl( pubSource.getVenueUrl() );
 								event.setEventGroup( eventGroup );
+
+								eventGroup.addEvent( event );
+								publication.setEvent( event );
+
+								// persistenceStrategy.getEventDAO().persist(
+								// event );
+							}
+							else
+							{
+								// event and eventgroup already exist
+								// set publication with this event
 								publication.setEvent( event );
 							}
+
 						}
 					}
+					else if ( !pubSource.getSourceType().equals( SourceType.DBLP ) && pubSource.getVenue() != null && publication.getEvent() == null )
+					{
+						publication.addOrUpdateAdditionalInformation( "venue", pubSource.getVenue() );
+					}
 				}
+
 			}
 
-			// original source
+			// original sources (PDF and WebPage)
 			if ( pubSource.getMainSourceUrl() != null )
 			{
 
@@ -806,7 +964,8 @@ public class PublicationCollectionService
 					else
 						pubFile.setSource( mainSources[i] );
 
-					if ( mainSourceUrls[i].toLowerCase().endsWith( ".pdf" ) || mainSourceUrls[i].toLowerCase().endsWith( "pdf.php" ) || mainSources[i].toLowerCase().contains( "pdf" ) )
+					if ( mainSourceUrls[i].toLowerCase().endsWith( ".pdf" ) || mainSourceUrls[i].toLowerCase().endsWith( "pdf.php" ) || 
+							mainSources[i].toLowerCase().contains( "pdf" ) || mainSourceUrls[i].contains( "download" ))
 						pubFile.setFileType( FileType.PDF );
 					else if ( mainSourceUrls[i].toLowerCase().endsWith( ".xml" ) )
 					{
@@ -843,11 +1002,26 @@ public class PublicationCollectionService
 		log.info( "Start publications enrichment for Auhtor " + pivotAuthor.getName() );
 		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
 
+		// get application setting whether enrichment with HTML or pdf is
+		// possible
+		boolean isHtmlParsingEnable = false;
+		String htmlParsingEnable = applicationService.getConfigValue( "publication", "source", "html" );
+		if ( htmlParsingEnable != null && htmlParsingEnable.equals( "yes" ) )
+			isHtmlParsingEnable = true;
+		
+		boolean isPdfParsingEnable = false;
+		String pdfParsingEnable = applicationService.getConfigValue( "publication", "source", "pdf" );
+		if ( pdfParsingEnable != null && pdfParsingEnable.equals( "yes" ) )
+			isPdfParsingEnable = true;
+
 		for ( Publication publication : selectedPublications )
 		{
 			// only proceed for publication with not complete abstract
-			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
-				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication ) );
+
+			// if ( !publication.getAbstractStatus().equals(
+			// CompletionStatus.COMPLETE ) )
+			if ( publication.getAbstractStatus().equals( CompletionStatus.NOT_COMPLETE ) )
+				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication, isHtmlParsingEnable, isPdfParsingEnable ) );
 		}
 
 		// check process completion

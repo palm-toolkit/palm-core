@@ -5,7 +5,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ResearcherFeatureImpl implements ResearcherFeature
 {
 	@Autowired( required = false )
+	private ResearcherAcademicEventTree researcherAcademicEventTree;
+
+	@Autowired( required = false )
 	private ResearcherApi researcherApi;
+
+	@Autowired( required = false )
+	private ResearcherBasicInformation researcherBasicInformation;
+
+	@Autowired( required = false )
+	private ResearcherCoauthor researcherCoauthor;
 
 	@Autowired( required = false )
 	private ResearcherInterest researcherInterest;
@@ -14,10 +23,22 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	private ResearcherInterestEvolution researcherInterestEvolution;
 	
 	@Autowired( required = false )
+	private ResearcherMining researcherMining;
+
+	@Autowired( required = false )
 	private ResearcherPublication researcherPublication;
 
 	@Autowired( required = false )
 	private ResearcherSearch researcherSearch;
+
+	@Override
+	public ResearcherAcademicEventTree getResearcherAcademicEventTree()
+	{
+		if ( this.researcherAcademicEventTree == null )
+			this.researcherAcademicEventTree = new ResearcherAcademicEventTreeImpl();
+
+		return this.researcherAcademicEventTree;
+	}
 
 	@Override
 	public ResearcherApi getResearcherApi()
@@ -26,6 +47,24 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherApi = new ResearcherApiImpl();
 
 		return this.researcherApi;
+	}
+
+	@Override
+	public ResearcherBasicInformation getResearcherBasicInformation()
+	{
+		if ( this.researcherBasicInformation == null )
+			this.researcherBasicInformation = new ResearcherBasicInformationImpl();
+
+		return this.researcherBasicInformation;
+	}
+
+	@Override
+	public ResearcherCoauthor getResearcherCoauthor()
+	{
+		if ( this.researcherCoauthor == null )
+			this.researcherCoauthor = new ResearcherCoauthorImpl();
+
+		return this.researcherCoauthor;
 	}
 
 	@Override
@@ -44,6 +83,15 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherInterestEvolution = new ResearcherInterestEvolutionImpl();
 
 		return this.researcherInterestEvolution;
+	}
+
+	@Override
+	public ResearcherMining getResearcherMining()
+	{
+		if ( this.researcherMining == null )
+			this.researcherMining = new ResearcherMiningImpl();
+
+		return this.researcherMining;
 	}
 
 	@Override

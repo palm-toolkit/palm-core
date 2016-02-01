@@ -43,7 +43,9 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 		if ( authorListNodes.size() == 0 )
 		{
-			log.info( "No author with name '{}' with selector '{}' on google scholar '{}'", authorName, HtmlSelectorConstant.GS_AUTHOR_LIST_CONTAINER, url );
+			// log.info( "No author with name '{}' with selector '{}' on google
+			// scholar '{}'", authorName,
+			// HtmlSelectorConstant.GS_AUTHOR_LIST_CONTAINER, url );
 			return Collections.emptyList();
 		}
 
@@ -102,8 +104,8 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			publicationDetails.put( "title", eachPublicationRow.select( "a" ).first().text() );
 			publicationDetails.put( "coauthor", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).first().text() );
 			String venue = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).get( 1 ).text().trim();
-			if( !venue.equals( "" ))
-				publicationDetails.put( "venue", venue );
+			if ( !venue.equals( "" ) && venue.length() < 80 )
+				publicationDetails.put( "eventName", venue );
 			String noCitation = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_NOCITATION ).text().replaceAll( "[^\\d]", "" );
 			if( !noCitation.equals( "" ))
 				publicationDetails.put( "citedby", noCitation );
@@ -112,7 +114,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 				continue;
 
 			// only pick publication with date
-			publicationDetails.put( "year", date );
+			publicationDetails.put( "datePublished", date );
 
 			publicationMapLists.add( publicationDetails );
 		}
@@ -164,7 +166,13 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 		Elements publicationDetailsRows = publicationDetailContainer.get( 0 ).select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP );
 
 		for ( Element publicationDetail : publicationDetailsRows )
+		{
 			publicationDetailMaps.put( publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_LABEL ).text(), publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_VALUE ).text() );
+			if ( publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_LABEL ).text().equals( "Total citations" ) )
+			{
+				// TODO: record publication citation yearly
+			}
+		}
 
 		return publicationDetailMaps;
 	}
@@ -176,6 +184,9 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 	 */
 	private static Map<String, String> getGoogleScholarCookie( Source source )
 	{
+		if ( source == null )
+			return Collections.emptyMap();
+
 		Map<String, String> cookies = new HashMap<String, String>();
 
 		for ( SourceProperty sourceProperty : source.getSourceProperties() )

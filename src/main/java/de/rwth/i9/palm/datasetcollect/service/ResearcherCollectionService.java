@@ -3,6 +3,7 @@ package de.rwth.i9.palm.datasetcollect.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -58,8 +59,11 @@ public class ResearcherCollectionService
 	 * @throws ParseException
 	 */
 	@Transactional
-	public void collectAuthorInformationFromNetwork( String query ) throws IOException, InterruptedException, ExecutionException, ParseException, OAuthSystemException, OAuthProblemException
+	public List<Author> collectAuthorInformationFromNetwork( String query, boolean stored ) throws IOException, InterruptedException, ExecutionException, ParseException, OAuthSystemException, OAuthProblemException
 	{
+		// authors container
+		List<Author> authors = new ArrayList<Author>();
+
 		// container
 		List<Future<List<Map<String, String>>>> authorFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
 
@@ -85,21 +89,33 @@ public class ResearcherCollectionService
 		}
 
 		// merge the result
-		this.mergeAuthorInformation( authorFutureLists );
+		this.mergeAuthorInformation( authorFutureLists, authors, stored, sourceMap );
+
+		return authors;
 	}
 
 	/**
 	 * Merging author information from multiple resources
 	 * 
 	 * @param authorFutureLists
+	 * @param authors2
+	 * @param stored
+	 * @param sourceMap 
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
 	@Transactional
-	public void mergeAuthorInformation( List<Future<List<Map<String, String>>>> authorFutureLists ) throws InterruptedException, ExecutionException
+	private void mergeAuthorInformation( List<Future<List<Map<String, String>>>> authorFutureLists, List<Author> authors2, boolean stored, Map<String, Source> sourceMap ) throws InterruptedException, ExecutionException
 	{
 		if ( authorFutureLists.size() > 0 )
 		{
+			// get number of active sources
+			int numberOfActiveSources = 0;
+			for( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() ){
+				if( sourceEntry.getValue().isActive())
+					numberOfActiveSources++;
+			}
+			
 			List<Map<String, String>> mergedAuthorList = new ArrayList<Map<String, String>>();
 			Map<String, Integer> indexHelper = new HashMap<String, Integer>();
 			for ( Future<List<Map<String, String>>> authorFutureList : authorFutureLists )
@@ -110,7 +126,7 @@ public class ResearcherCollectionService
 					if ( authorMap.get( "name" ) == null )
 						continue;
 
-					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim();
+					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).replace( "-", " " ).trim();
 
 					// check if author already on array list
 					Integer authorIndex = indexHelper.get( authorName );
@@ -141,21 +157,25 @@ public class ResearcherCollectionService
 
 			// remove author if its only from mendeley
 			// since mendeley also put non researcher on its api result
-			// the source ulr of mendeley will be "MENDELEY"
+			// the source URL of mendeley will be "MENDELEY"
 			// which are less then 10 character in length
-			for ( Iterator<Map<String, String>> iteratorAuthor = mergedAuthorList.iterator(); iteratorAuthor.hasNext(); )
+			if ( numberOfActiveSources > 1 )
 			{
-				Map<String, String> authorMap = iteratorAuthor.next();
-
-				if ( authorMap.get( "source" ).length() < 10 )
-					iteratorAuthor.remove();
+				for ( Iterator<Map<String, String>> iteratorAuthor = mergedAuthorList.iterator(); iteratorAuthor.hasNext(); )
+				{
+					Map<String, String> authorMap = iteratorAuthor.next();
+	
+					if ( authorMap.get( "source" ).equals( "MENDELEY" ) )
+						iteratorAuthor.remove();
+				}
 			}
 
-			// update database
+			// merger data
 			for ( Map<String, String> mergedAuthor : mergedAuthorList )
 			{
 				String name = mergedAuthor.get( "name" ).toLowerCase().replace( ".", "" ).trim();
 				String institution = "";
+				String academicStatus = "";
 				String otherDetail = "";
 
 				String affliliation = mergedAuthor.get( "affiliation" );
@@ -165,18 +185,32 @@ public class ResearcherCollectionService
 					String[] authorDetails = affliliation.split( "," );
 					for ( int i = 0; i < authorDetails.length; i++ )
 					{
-						// from word U"nivers"ity
-						if ( authorDetails[i].contains( "nivers" ) || authorDetails[i].contains( "nstit" ) )
-							institution = authorDetails[i].trim().toLowerCase();
+						// from word U"nivers"ity, institut, collage, state, school, technology, faculdade, education, hochschule, rieure						
+						if ( authorDetails[i].contains( "nivers" ) || authorDetails[i].contains( "nstit" ) ||
+							 authorDetails[i].contains( "ollag" ) || authorDetails[i].contains( "tate" ) ||
+							 authorDetails[i].contains( "echn" ) || authorDetails[i].contains( "choo" ) ||
+							 authorDetails[i].contains( "acul" ) || authorDetails[i].contains( "ochs" ) ||
+							 authorDetails[i].contains( "duca" ) || authorDetails[i].contains( "ieur" ))
+							institution = authorDetails[i].trim();
+						else if ( authorDetails[i].contains( "rof" ) || authorDetails[i].contains( "esearch" ) || authorDetails[i].contains( "octor" ) )
+							academicStatus = authorDetails[i].trim().toLowerCase();
 						else
 						{
-							if ( !otherDetail.equals( "" ) )
-								otherDetail += ", ";
-							otherDetail += authorDetails[i];
+							if ( authorDetails[i].length() > 16 )
+							{
+								if ( !otherDetail.equals( "" ) )
+									otherDetail += ", ";
+								otherDetail += authorDetails[i];
+							}
 						}
 					}
 				}
-				List<Author> authors = persistenceStrategy.getAuthorDAO().getAuthorByNameAndInstitution( name, institution );
+
+				// check source academic status from mendeley
+				if ( academicStatus.equals( "" ) && mergedAuthor.get( "academicStatus" ) != null )
+					academicStatus = mergedAuthor.get( "academicStatus" );
+
+				List<Author> authors = persistenceStrategy.getAuthorDAO().getByName( name );
 				Author author = null;
 
 				if ( authors.isEmpty() )
@@ -190,25 +224,37 @@ public class ResearcherCollectionService
 					String firstName = name.substring( 0, name.length() - lastName.length() ).replace( ".", "" ).trim();
 					if ( !firstName.equals( "" ) )
 						author.setFirstName( firstName );
-
-					if ( !institution.equals( "" ) )
-					{
-						// find institution on database
-						Institution institutionObject = persistenceStrategy.getInstitutionDAO().getByName( institution );
-						if ( institutionObject == null )
-						{
-							institutionObject = new Institution();
-							institutionObject.setName( institution );
-							institutionObject.setURI( institution.replace( " ", "-" ) );
-						}
-
-						author.addInstitution( institutionObject );
-					}
-
 				}
 				else
 				{
 					author = authors.get( 0 );
+				}
+
+				// set academic status and affliation
+				if ( !institution.equals( "" ) && ( author.getInstitutions() == null || author.getInstitutions().isEmpty() ) )
+				{
+					String institutionName = institution.toLowerCase().replace( "university", "" ).replace( "college", "" ).replace( "state", "" ).replace( "institute", "" ).replace( "school", "" ).replace( "academy", "" );
+					Institution institutionObject = null;
+					// find institution on database
+					List<Institution> institutionObjects = persistenceStrategy.getInstitutionDAO().getWithFullTextSearch( institutionName );
+					if ( !institutionObjects.isEmpty() )
+					{
+						// get the first one which is more likely correct
+						institutionObject = institutionObjects.get( 0 );
+					}
+					else
+					{
+						institutionObject = new Institution();
+						institutionObject.setName( institution );
+						institutionObject.setURI( institution.replace( " ", "-" ) );
+					}
+
+					author.addInstitution( institutionObject );
+				}
+
+				if ( !academicStatus.equals( "" ) && author.getAcademicStatus() == null )
+				{
+					author.setAcademicStatus( academicStatus );
 				}
 
 				// author alias if exist
@@ -249,9 +295,12 @@ public class ResearcherCollectionService
 				{
 					String[] sources = mergedAuthor.get( "source" ).split( " " );
 					String[] sourceUrls = mergedAuthor.get( "url" ).split( " " );
+					// checking for duplication
+					Set<String> registeredSourceUlr = new HashSet<String>();
 					for ( int i = 0; i < sources.length; i++ )
 					{
-						if ( !sources[i].equals( "" ) )
+						// prevent empty string and duplicated source
+						if ( !sources[i].equals( "" ) && !registeredSourceUlr.contains( sourceUrls[i] ) )
 						{
 							AuthorSource as = new AuthorSource();
 							as.setName( name );
@@ -259,13 +308,21 @@ public class ResearcherCollectionService
 							as.setSourceType( SourceType.valueOf( sources[i].toUpperCase() ) );
 							as.setAuthor( author );
 
+							registeredSourceUlr.add( sourceUrls[i] );
+
 							authorSources.add( as );
 						}
 					}
 				}
 				author.setAuthorSources( authorSources );
 
-				persistenceStrategy.getAuthorDAO().persist( author );
+				// incase of duplication
+				if ( !authors2.contains( author ) )
+					authors2.add( author );
+
+				// if stored, then save author to database
+				if ( stored )
+					persistenceStrategy.getAuthorDAO().persist( author );
 			}
 
 		}

@@ -7,7 +7,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 @Service
 public class CorePhraseInterestProfile
 {
-	final Logger logger = Logger.getLogger( CorePhraseInterestProfile.class );
+	private final static Logger log = LoggerFactory.getLogger( CorePhraseInterestProfile.class );
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;

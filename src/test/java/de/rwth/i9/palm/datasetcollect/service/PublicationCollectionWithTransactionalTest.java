@@ -7,10 +7,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.log4j.Logger;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
@@ -41,10 +42,10 @@ public class PublicationCollectionWithTransactionalTest extends AbstractTransact
 	@Autowired
 	private AsynchronousPublicationDetailCollectionService asynchronousPublicationDetailCollectionService;
 
-	final Logger logger = Logger.getLogger( PublicationCollectionWithTransactionalTest.class );
+	private final static Logger log = LoggerFactory.getLogger( PublicationCollectionWithTransactionalTest.class );
 
 	@Test
-
+	@Ignore
 	public void testPublicationInformationEnrichment() throws IOException, InterruptedException, ExecutionException, TimeoutException
 	{
 		List<Author> authors = persistenceStrategy.getAuthorDAO().getByName( "mohamed amine chatti" );
@@ -58,7 +59,7 @@ public class PublicationCollectionWithTransactionalTest extends AbstractTransact
 	{
 
 		Publication publication = persistenceStrategy.getPublicationDAO().getById( "8af08983-9b1e-4d6e-b771-5fc092cd444e" );
-		Future<Publication> publicationFuture = asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication );
+		Future<Publication> publicationFuture = asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication, true, true );
 
 		publicationFuture.get();
 		

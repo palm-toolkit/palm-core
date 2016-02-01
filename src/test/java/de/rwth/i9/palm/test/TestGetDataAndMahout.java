@@ -1,10 +1,16 @@
 package de.rwth.i9.palm.test;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
@@ -18,13 +24,13 @@ import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
 import de.rwth.i9.palm.config.WebAppConfigTest;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
-//import de.rwth.i9.palm.model.PublicationOld;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @RunWith( SpringJUnit4ClassRunner.class )
 @ContextConfiguration( classes = { WebAppConfigTest.class, DatabaseConfigCoreTest.class }, loader = AnnotationConfigContextLoader.class )
 @TransactionConfiguration
 @Transactional
+@Ignore
 public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringContextTests
 {
 	@Autowired
@@ -33,9 +39,10 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	final Logger logger = Logger.getLogger( TestGetDataAndMahout.class );
+	private final static Logger log = LoggerFactory.getLogger( TestGetDataAndMahout.class );
 
 	@Test
+	@Ignore
 	public void testGetDataFromDatabase()
 	{
 		System.out.println( "\n========== TEST 1 - Fetch data from database ==========" );
@@ -64,17 +71,78 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			}
 		System.out.println( "\n\n" );
 	}
-
+	
 	@Test
-	public void testGetMethodFromOtherModule()
+	@Ignore
+	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
-		System.out.println( "\n========== TEST 2 - Use some function from other module  ==========" );
-		String text1 = "Technology Enhanced Professional Learning";
-		String text2 = "Technology Enhanced Professional Learner";
-
-		System.out.println( "text1 : " + text1 );
-		System.out.println( "text2 : " + text2 );
-		System.out.println( "Levenshtein Distance : " + palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( text1, text2 ) );
-		System.out.println( "\n\n" );
+		int count = 0;
+		System.out.println( "\n========== TEST 1 - Fetch publications per author from database ==========" );
+		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
+	
+		if( !authors.isEmpty())
+			for (Author author:authors)
+			{	
+				PrintWriter writer = new PrintWriter("C:/Users/Piro/Desktop/Authors/Authors/" + author.getId() +".txt", "UTF-8");
+				writer.println( "Author Name : " + author.getName());
+				for(Publication publication : author.getPublications()){
+					writer.println( publication.getTitle());
+					writer.println(publication.getAbstractText());
+					writer.println();
+					count ++;
+				}
+				writer.println();
+				writer.println( count );
+				count =0;
+				writer.close();
+			}
 	}
+	
+	@Test
+	@Ignore
+	public void testGetDatabaseFromDatabaseOnSpecificYear() throws IOException
+	{
+		System.out.println( "\n========== TEST 3 - Fetch publications per author Yearly from database ==========" );
+		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
+		if( !authors.isEmpty())
+			for (Author author:authors)
+			{	
+			for( int year = 1900 ; year < 2016 ; year ++)
+				for(Publication publication : author.getPublicationsByYear(year )){
+					System.out.println(publication.getTitle());
+					System.out.println(publication.getAbstractText());
+					System.out.println();
+//					PrintWriter writer = new PrintWriter(new BufferedWriter( new FileWriter("C:/Users/Piro/Desktop/Years/Years/" +year +".txt", true)));
+//					writer.println(publication.getTitle());
+//					writer.println(publication.getAbstractText());
+//					writer.println();
+//					writer.close();
+					}
+				}
+			}
+
+	
+	@Test
+	public void testGetDatabaseFromDatabase2() throws FileNotFoundException, UnsupportedEncodingException
+	{
+
+		System.out.println( "\n========== TEST 2 - Fetch publications from database ==========" );
+		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
+		if( !authors.isEmpty())
+			for (Author author:authors)
+			{	
+				for(Publication publication : author.getPublications()){
+					if (publication.getAbstractText()!= null){
+						PrintWriter pub = new PrintWriter( "C:\\Users\\nifry\\Desktop\\Publications\\" + publication.getId() + ".txt", "UTF-8" );
+					pub.println( publication.getTitle());
+					pub.println( publication.getAbstractText());
+					pub.println();
+					pub.close();
+					}
+				}
+
+			}
+		
+	}
+	
 }

@@ -48,7 +48,9 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 
 		if ( authorListNodes.size() == 0 )
 		{
-			log.info( "No author with name '{}' with selector '{}' on CiteSeerX '{}'", authorName, HtmlSelectorConstant.CSX_AUTHOR_LIST, url );
+			// log.info( "No author with name '{}' with selector '{}' on
+			// CiteSeerX '{}'", authorName,
+			// HtmlSelectorConstant.CSX_AUTHOR_LIST, url );
 			return Collections.emptyList();
 		}
 
@@ -56,7 +58,13 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		for ( Element authorListNode : authorListNodes )
 		{
 			Map<String, String> eachAuthorMap = new LinkedHashMap<String, String>();
+
+
 			String name = authorListNode.select( "a" ).first().text();
+			// since Citeseer result is not reliable, it's better to remove
+			// incorrect result
+			if ( !name.toLowerCase().equals( authorName.toLowerCase() ) )
+				continue;
 			// get author name
 			eachAuthorMap.put( "name", name );
 			// set source
@@ -67,7 +75,6 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 			eachAuthorMap.put( "aliases", authorListNode.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).first().select( "td" ).get( 1 ).text() );
 			// get author affiliation
 			eachAuthorMap.put( "affiliation", authorListNode.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).get( 1 ).select( "td" ).get( 1 ).text() );
-
 			authorList.add( eachAuthorMap );
 		}
 
@@ -98,7 +105,13 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 			if( index  > 0 ){
 				Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
 
-				String noCitation = eachPublicationRow.select( "td" ).first().text();
+				String noCitation = eachPublicationRow.select( "td" ).first().text().trim();
+
+				// since most of citeseerx publication without cited are
+				// incorrect
+				if ( noCitation == null || noCitation.equals( "" ) )
+					continue;
+
 				if ( !noCitation.equals( "" ) )
 					publicationDetails.put( "citedby", noCitation );
 
@@ -108,6 +121,11 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 				publicationDetails.put( "url", eachPublicationRow.select( "a" ).first().absUrl( "href" ) );
 				
 				String title = eachPublicationRow.select( "a" ).first().text();
+
+				// sometimes citeseerX contain short invalid publication type
+				if ( title.length() < 10 )
+					continue;
+
 				publicationDetails.put( "title", title );
 
 				String venueAndYear = eachPublicationRow.select( "td" ).get( 1 ).text().substring( title.length() );
@@ -117,10 +135,10 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 					{
 						publicationDetails.put( "date", venueAndYear.substring( venueAndYear.length() - 4 ) );
 						if ( venueAndYear.length() > 10 )
-							publicationDetails.put( "venue", venueAndYear.substring( 0, venueAndYear.length() - 4 ).replace( "-", "" ).trim() );
+							publicationDetails.put( "eventName", venueAndYear.substring( 0, venueAndYear.length() - 4 ).replace( "-", "" ).trim() );
 					}
 					else
-						publicationDetails.put( "venue", venueAndYear.replace( "-", "" ).trim() );
+						publicationDetails.put( "eventName", venueAndYear.replace( "-", "" ).trim() );
 				}
 	
 				publicationMapLists.add( publicationDetails );
@@ -163,7 +181,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 		Elements venue = publicationDetailHeader.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_VENUE );
 
 		if ( venue != null && venue.select( "td" ).size()>1)
-			publicationDetailMaps.put( "venue", venue.select( "td" ).get( 1 ).text() );
+			publicationDetailMaps.put( "eventName", venue.select( "td" ).get( 1 ).text() );
 
 		publicationDetailMaps.put( "abstract", document.select( HtmlSelectorConstant.CSX_PUBLICATION_DETAIL_ABSTRACT ).select( "p" ).text() );
 

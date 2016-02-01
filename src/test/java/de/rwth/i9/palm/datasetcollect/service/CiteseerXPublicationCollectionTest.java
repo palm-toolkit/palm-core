@@ -31,10 +31,9 @@ public class CiteseerXPublicationCollectionTest
 	}
 
 	@Test
-	@Ignore
 	public void getListOfPublicationTest() throws IOException
 	{
-		List<Map<String, String>> publicationMapLists = CiteseerXPublicationCollection.getPublicationListByAuthorUrl( "http://citeseerx.ist.psu.edu/viewauth/summary?aid=1149221" );
+		List<Map<String, String>> publicationMapLists = CiteseerXPublicationCollection.getPublicationListByAuthorUrl( "http://citeseer.ist.psu.edu/viewauth/summary?aid=1797298&list=full", null );
 
 		for ( Map<String, String> eachPublicationMap : publicationMapLists )
 		{

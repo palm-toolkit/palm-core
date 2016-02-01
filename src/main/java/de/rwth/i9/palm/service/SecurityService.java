@@ -2,6 +2,9 @@ package de.rwth.i9.palm.service;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -10,6 +13,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -17,6 +21,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
  * Service class which should provide methods for security affairs. The
  * authentification itself is managed by Spring.
  * 
+ * @author matthaeus @gesis.org
  */
 @Service
 public class SecurityService
@@ -71,44 +76,63 @@ public class SecurityService
 	}
 
 	/**
-	 * Returns the {@link User}-object of the missy model associated with the
+	 * Returns the {@link User}-object of the PALM model associated with the
 	 * current Spring-logged in User-object by username. The username is
 	 * retrieved via {@link SecurityService.getUsername()}.
 	 * 
 	 * @return
 	 */
+	@Transactional
 	public User getUser()
 	{
 		String username = getUsername();
 
 		User user = persistenceStrategy.getUserDAO().getByUsername( username );
 
+		// set affiliation
+		if ( user != null && user.getAuthor() != null )
+			if ( user.getAuthor().getInstitutions() != null && !user.getAuthor().getInstitutions().isEmpty() )
+			{
+				for ( Iterator<Institution> it = user.getAuthor().getInstitutions().iterator(); it.hasNext(); )
+				{
+					Institution institution = it.next();
+					user.getAuthor().setAffiliation( institution.getName() );
+				}
+			}
+
 		return user;
 	}
 
 	/**
-	 * Returns true or false in case the User is authenticated with the
-	 * application or not. This is not self-managed, but managed by Spring
-	 * itself.
-	 * 
+	 * @deprecated Buggy implementation
 	 * @return
 	 */
 	public boolean isUserAuthenticated()
 	{
 
 		// if ( !getAuthentication().isAuthenticated() )
-		// return false;
+			return false;
 
 		// return true;
-		return false;
 	}
 
 	/**
 	 * @param functionName
 	 * @return
 	 */
+	@Transactional
 	public boolean isAuthorizedForFunction( final String functionName )
 	{
 		return persistenceStrategy.getUserDAO().isAuthorizedForFunction( getUser(), functionName );
+	}
+
+	/**
+	 * @param functionName
+	 * @return
+	 */
+	@Transactional
+	public boolean isAuthorizedForRole( final String roleName )
+	{
+		return persistenceStrategy.getUserDAO().isAuthorizedForRole( getUser(), roleName );
 	}
 }

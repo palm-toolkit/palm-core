@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
@@ -22,21 +23,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Publication;
-import de.rwth.i9.palm.model.SessionDataSet;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationContextService;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
+@SessionAttributes( "author" )
 @RequestMapping( value = "/researcher" )
 public class ResearcherController
 {
@@ -44,7 +49,7 @@ public class ResearcherController
 	private static final String LINK_NAME = "researcher";
 
 	@Autowired
-	private ApplicationContextService appService;
+	private SecurityService securityService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -65,21 +70,45 @@ public class ResearcherController
 	 */
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
-	public ModelAndView mainPage( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
+	public ModelAndView researcherPage( 
 			@RequestParam( value = "id", required = false ) final String id, 
 			@RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "add", required = false ) final String add,
 			final HttpServletResponse response ) throws InterruptedException
 	{
-		// get current session object
-		SessionDataSet sessionDataSet = this.appService.getCurrentSessionDataSet();
+		ModelAndView model = TemplateHelper.createViewWithLink( "researcher", LINK_NAME );
 
-		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithSessionDataSet( "researcher", LINK_NAME, sessionDataSet );
+		List<Widget> widgets = new ArrayList<Widget>();
 
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.RESEARCHER, WidgetStatus.DEFAULT );
+		User user = securityService.getUser();
+
+		if ( user != null )
+		{
+			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.RESEARCHER, WidgetStatus.ACTIVE );
+			for ( UserWidget userWidget : userWidgets )
+			{
+				Widget widget = userWidget.getWidget();
+				widget.setColor( userWidget.getWidgetColor() );
+				widget.setWidgetHeight( userWidget.getWidgetHeight() );
+				widget.setWidgetWidth( userWidget.getWidgetWidth() );
+				widget.setPosition( userWidget.getPosition() );
+
+				widgets.add( widget );
+			}
+		}
+		else
+			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.RESEARCHER, WidgetStatus.DEFAULT ) );
 		// assign the model
 		model.addObject( "widgets", widgets );
+		// assign the model
+		model.addObject( "widgets", widgets );
+		// assign query
+		if ( id != null )
+			model.addObject( "targetId", id );
+		if ( name != null )
+			model.addObject( "targetName", name );
+		if ( add != null )
+			model.addObject( "targetAdd", add );
 		return model;
 	}
 
@@ -98,15 +127,90 @@ public class ResearcherController
 	 * @throws OAuthSystemException 
 	 * @throws org.apache.http.ParseException 
 	 */
+	@SuppressWarnings( "unchecked" )
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> getAuthorList( 
-			@RequestParam( value = "query", required = false ) String query, 
-			@RequestParam( value = "page", required = false ) Integer page, 
-			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
-			final HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public @ResponseBody Map<String, Object> getAuthorList(
+			@RequestParam( value = "query", required = false ) String query,
+			@RequestParam( value = "queryType", required = false ) String queryType,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			@RequestParam( value = "source", required = false ) String source,
+			@RequestParam( value = "addedAuthor", required = false ) String addedAuthor,
+			@RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch,
+			@RequestParam( value = "persist", required = false ) String persist,
+			HttpServletRequest request,
+			HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-		return researcherFeature.getResearcherSearch().getResearcherListByQuery( query, page, maxresult );
+		/* == Set Default Values== */
+		if ( query == null ) 			query = "";
+		if ( queryType == null ) 		queryType = "name";
+		if ( startPage == null )		startPage = 0;
+		if ( maxresult == null )		maxresult = 50;
+		if ( source == null )			source = "internal";
+		if ( addedAuthor == null )
+			addedAuthor = "no";
+		if ( fulltextSearch == null )	fulltextSearch = "no";
+		if ( persist == null )			persist = "no";
+
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		boolean persistResult = false;
+
+		responseMap.put( "query", query );
+		if ( !queryType.equals( "name" ) )
+			responseMap.put( "queryType", queryType );
+		responseMap.put( "page", startPage );
+		responseMap.put( "maxresult", maxresult );
+		responseMap.put( "source", source );
+		if ( !fulltextSearch.equals( "no" ) )
+			responseMap.put( "fulltextSearch", fulltextSearch );
+		if ( !persist.equals( "no" ) )
+		{
+			responseMap.put( "persist", persist );
+			persistResult = true;
+		}
+		if ( addedAuthor.equals( "yes" ) )
+			responseMap.put( "addedAuthor", addedAuthor );
+		
+		Map<String, Object> authorsMap = researcherFeature.getResearcherSearch().getResearcherMapByQuery( query, queryType, startPage, maxresult, source, addedAuthor, fulltextSearch, persistResult );
+		
+		// store in session
+		if ( source.equals( "external" ) || source.equals( "all" ) )
+			request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
+		
+		if ( (Integer) authorsMap.get( "totalCount" ) > 0 )
+		{
+			responseMap.put( "totalCount", (Integer) authorsMap.get( "totalCount" ) );
+			return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, (List<Author>) authorsMap.get( "authors" ) );
+		}
+		else
+		{
+			responseMap.put( "totalCount", 0 );
+			responseMap.put( "count", 0 );
+			return responseMap;
+		}
+	}
+	
+	@Transactional
+	@RequestMapping( value = "/session", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> getAuthorFromSession( 
+			HttpServletRequest request,
+			HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		
+		@SuppressWarnings( "unchecked" )
+		List<Author> authors = (List<Author>) request.getSession().getAttribute( "authors" );
+		
+		if ( authors != null && !authors.isEmpty() )
+		{
+			List<AuthorSource> authorSources = new ArrayList<AuthorSource>( authors.get( 0 ).getAuthorSources() );
+
+			return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, authors );
+		}
+		else
+			return Collections.emptyMap();
 	}
 	
 	/**
@@ -136,10 +240,15 @@ public class ResearcherController
 			@RequestParam( value = "name", required = false ) final String name, 
 			@RequestParam( value = "uri", required = false ) final String uri,
 			@RequestParam( value = "affiliation", required = false ) final String affiliation,
+			@RequestParam( value = "pid", required = false ) final String pid, 
 			@RequestParam( value = "force", required = false ) final String force,
-			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+			HttpServletRequest request,
+			HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-		return researcherFeature.getResearcherSearch().fetchResearcherData( id, name, uri, affiliation, force );
+		@SuppressWarnings( "unchecked" )
+		List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
+		
+		return researcherFeature.getResearcherMining().fetchResearcherData( id, name, uri, affiliation, pid, force, sessionAuthors );
 	}
 	
 	/**
@@ -207,20 +316,173 @@ public class ResearcherController
 		return null;
 	}
 	
-	@RequestMapping( value = "/getResearcherAutocomplete", method = RequestMethod.GET )
+	/**
+	 * @deprecated
+	 * Use to get list of relate author,
+	 * API deprecated and replace with extended API on author search
+	 * @param name
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws org.apache.http.ParseException
+	 * @throws OAuthSystemException
+	 * @throws OAuthProblemException
+	 */
+	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationBasicStatistic( 
+	public @ResponseBody Map<String, Object> getAuthorAutocomplete( 
 			@RequestParam( value = "name", required = false ) final String name, 
-			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-		return researcherFeature.getResearcherApi().getAuthorAutoComplete( name );
+		return researcherFeature.getResearcherApi().getAuthorAutoCompleteFromNetworkAndDb( name );
 	}
 	
+	/**
+	 * Get PublicationMap (JSON), containing publication basic information and detail.
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationList( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getPublicationList( 
+			@RequestParam( value = "id", required = false ) final String authorId,
+			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "year", required = false ) String year,
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			final HttpServletResponse response)
 	{
-		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId );
+		if ( year == null )				year = "all";
+		if ( query == null )			query = "";
+		if ( orderBy == null )			orderBy = "date";
+		
+		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId, query, year, startPage, maxresult, orderBy );
+	}
+
+	/**
+	 * Get coauthorMap of given author
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/coAuhtorList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getCoAuthorList( 
+			@RequestParam( value = "id", required = false ) final String authorId, 
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author ) );
+
+		return responseMap;
+	}
+	
+	/**
+	 * Get basic information of given author
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/basicInformation", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getBasicInformationMap( 
+			@RequestParam( value = "id", required = false ) final String authorId,
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( researcherFeature.getResearcherBasicInformation().getResearcherBasicInformationMap( author ) );
+
+		return responseMap;
+	}
+	
+	/**
+	 * Get academic event tree of given author
+	 * 
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/academicEventTree", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getAcademicEventTreeMap( 
+			@RequestParam( value = "id", required = false ) final String authorId,
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAcademicEventTree( author ) );
+
+		return responseMap;
 	}
 
 }

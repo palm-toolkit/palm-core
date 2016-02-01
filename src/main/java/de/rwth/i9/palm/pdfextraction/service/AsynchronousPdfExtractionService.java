@@ -3,7 +3,7 @@ package de.rwth.i9.palm.pdfextraction.service;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+//import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
-import com.google.common.base.Stopwatch;
+//import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationFile;
@@ -25,8 +25,8 @@ public class AsynchronousPdfExtractionService
 	public Future<List<TextSection>> extractPublicationPdfIntoTextSections( Publication publication ) throws IOException
 	{
 
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "Download and Extract pdf " + publication.getTitle() + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "Download and Extract pdf " + publication.getTitle() + " starting" );
 
 		List<TextSection> textSections = null;
 
@@ -45,9 +45,9 @@ public class AsynchronousPdfExtractionService
 			}
 		}
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
-		log.info( "Download and Extract pdf " + publication.getTitle() + " complete in " + stopwatch );
+//		log.info( "Download and Extract pdf " + publication.getTitle() + " complete in " + stopwatch );
 
 		return new AsyncResult<List<TextSection>>( textSections );
 	}
@@ -56,8 +56,8 @@ public class AsynchronousPdfExtractionService
 	public Future<List<TextSection>> extractPublicationPdfIntoTextSections( String url ) throws IOException
 	{
 
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		log.info( "Download and Extract pdf " + url + " starting" );
+//		Stopwatch stopwatch = Stopwatch.createStarted();
+//		log.info( "Download and Extract pdf " + url + " starting" );
 
 		List<TextSection> textSections = null;
 
@@ -70,9 +70,9 @@ public class AsynchronousPdfExtractionService
 			// TODO: handle exception
 		}
 
-		stopwatch.elapsed( TimeUnit.MILLISECONDS );
+//		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
-		log.info( "Download and Extract pdf " + url + " complete in " + stopwatch );
+//		log.info( "Download and Extract pdf " + url + " complete in " + stopwatch );
 
 		return new AsyncResult<List<TextSection>>( textSections );
 	}
