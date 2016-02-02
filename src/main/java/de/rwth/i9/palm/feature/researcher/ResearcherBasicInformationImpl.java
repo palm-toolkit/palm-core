@@ -207,6 +207,13 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 			researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
 		else
 			researcherMap.put( "publicationsNumber", 0 );
+
+		if ( researcher.getEmail() != null && researcher.getEmail() != "" )
+			researcherMap.put( "email", researcher.getEmail() );
+
+		if ( researcher.getHomepage() != null && researcher.getHomepage() != "" )
+			researcherMap.put( "homepage", researcher.getHomepage() );
+
 		String otherDetail = "";
 		if ( researcher.getOtherDetail() != null )
 			otherDetail += researcher.getOtherDetail();
