@@ -208,7 +208,14 @@ public class PublicationCollectionService
 
 			// enrich the publication information by extract information
 			// from html or pdf source
-			this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
+			try
+			{
+				this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
+			}
+			catch ( Exception e )
+			{
+				// just skip the enrichment process if error occured
+			}
 
 			// process log
 			applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
