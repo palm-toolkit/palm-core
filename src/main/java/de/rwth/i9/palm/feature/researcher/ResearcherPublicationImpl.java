@@ -80,8 +80,9 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 
 		responseMap.put( "status", "ok" );
 
-		if ( !year.equals( "all" ) )
-			responseMap.put( "year", year );
+		if ( query != null && !query.equals( "" ) )
+			responseMap.put( "query", query );
+		responseMap.put( "year", year );
 
 		if ( maxresult != null )
 			responseMap.put( "maxresult", maxresult );
@@ -163,6 +164,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 
 			publicationList.add( publicationMap );
 		}
+		responseMap.put( "count", publicationList.size() );
 		responseMap.put( "publications", publicationList );
 
 		return responseMap;
