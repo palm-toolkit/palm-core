@@ -35,7 +35,7 @@ public class TreeHelper
 	private String title;
 	private String key;
 	private String type;
-	private String link;
+	private String href = "";
 	private boolean isFolder = false;
 	private boolean expand;
 	private List<TreeHelper> children = null;
@@ -132,14 +132,14 @@ public class TreeHelper
 		this.type = type;
 	}
 
-	public String getLink()
+	public String getHref()
 	{
-		return link;
+		return href;
 	}
 
-	public void setLink( String link )
+	public void setHref( String href )
 	{
-		this.link = link;
+		this.href = href;
 	}
 
 	public boolean isFolder()
