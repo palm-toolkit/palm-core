@@ -80,7 +80,7 @@ public class ManageResearcherController
 	}
 
 	/**
-	 * Save changes from Add publication detail, via Spring binding
+	 * Save changes from Add researcher detail, via Spring binding
 	 * 
 	 * @param extractionServiceListWrapper
 	 * @param response
@@ -91,7 +91,7 @@ public class ManageResearcherController
 	@RequestMapping( value = "/add", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveNewAuthor( 
 			@ModelAttribute( "author" ) Author author, 
- HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest request, HttpServletResponse response)
 	{
 
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -170,7 +170,7 @@ public class ManageResearcherController
 
 	
 	/**
-	 * Load the add publication form together with publication object
+	 * Load researcher edit form together with researcher/author object
 	 * 
 	 * @param sessionId
 	 * @param response
@@ -180,7 +180,7 @@ public class ManageResearcherController
 	@Transactional
 	@RequestMapping( value = "/edit", method = RequestMethod.GET )
 	public ModelAndView editAuthor( 
-			@RequestParam( value = "id") final String authorId,
+			@RequestParam( value = "id") final String id,
 			final HttpServletResponse response) throws InterruptedException
 	{
 		ModelAndView model = null;
@@ -192,10 +192,28 @@ public class ManageResearcherController
 		}
 
 		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.PUBLICATION, "edit" );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.RESEARCHER, "edit" );
 
 		// create blank Author
-		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+		Author author = null;
+		if ( id != null )
+			author = persistenceStrategy.getAuthorDAO().getById( id );
+
+		if ( author == null )
+		{
+			model = TemplateHelper.createViewWithLink( "404", "error" );
+			return model;
+		}
+
+		// get institution, currently author always belong to 1 institution
+		if ( author.getInstitutions() != null && !author.getInstitutions().isEmpty() )
+		{
+			for ( Institution institution : author.getInstitutions() )
+			{
+				author.setAffiliation( institution.getName() );
+				break;
+			}
+		}
 
 		// assign the model
 		model.addObject( "widgets", widgets );
@@ -203,4 +221,78 @@ public class ManageResearcherController
 
 		return model;
 	}
+	
+	/**
+	 * Save changes update researcher information via Spring binding
+	 * 
+	 * @param extractionServiceListWrapper
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/edit", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> updateAuthor( 
+			@ModelAttribute( "author" ) Author author, 
+ HttpServletRequest request, HttpServletResponse response)
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "failed to save, expired session" );
+			return responseMap;
+		}
+		// current institution
+		String onDbInstitution = "";
+		// get institution, currently author always belong to 1 institution
+		if ( author.getInstitutions() != null && !author.getInstitutions().isEmpty() )
+		{
+			for ( Institution institution : author.getInstitutions() )
+			{
+				onDbInstitution = institution.getName();
+				break;
+			}
+		}
+
+		if ( author.getAffiliation() != null )
+		{
+			if ( !author.getAffiliation().isEmpty() )
+			{
+				if ( !author.getAffiliation().equals( onDbInstitution ) )
+				{
+					// change affiliation, save if not on database
+					Institution institution = null;
+					List<Institution> institutions = persistenceStrategy.getInstitutionDAO().getWithFullTextSearch( author.getAffiliation() );
+					if ( !institutions.isEmpty() )
+						institution = institutions.get( 0 );
+					else
+					{
+						institution = new Institution();
+						institution.setName( author.getAffiliation() );
+					}
+					author.addInstitution( institution );
+				}
+			}
+			else
+			{
+				author.setInstitutions( null );
+			}
+		}
+
+		persistenceStrategy.getAuthorDAO().persist( author );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "author saved" );
+
+		Map<String, String> authorMap = new LinkedHashMap<String, String>();
+		authorMap.put( "id", author.getId() );
+		authorMap.put( "name", author.getName() );
+		authorMap.put( "position", author.getAcademicStatus() );
+		responseMap.put( "author", authorMap );
+
+		return responseMap;
+	}
+
 }
