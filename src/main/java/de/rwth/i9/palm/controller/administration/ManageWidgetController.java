@@ -109,6 +109,7 @@ public class ManageWidgetController
 	@RequestMapping( value = "/add", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveNewWidget( 
 			@RequestParam( value="widgetTitle" ) String widgetTitle,
+			@RequestParam( value="widgetUniqueName" ) String widgetUniqueName,
 			@RequestParam( value="widgetType" ) String widgetType,
 			@RequestParam( value="widgetGroup" ) String widgetGroup,
 			@RequestParam( value="widgetSource" ) String widgetSource,
@@ -127,6 +128,7 @@ public class ManageWidgetController
 		// create new widget object and set its attributes
 		Widget widget = new Widget();
 		widget.setTitle( widgetTitle );
+		widget.setUniqueName( widgetUniqueName );
 		widget.setWidgetType( WidgetType.valueOf( widgetType ) );
 		widget.setWidgetGroup( widgetGroup );
 		widget.setWidgetSource( WidgetSource.valueOf( widgetSource ) );
