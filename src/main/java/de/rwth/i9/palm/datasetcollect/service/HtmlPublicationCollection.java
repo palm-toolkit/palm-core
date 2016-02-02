@@ -29,7 +29,10 @@ public class HtmlPublicationCollection
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
 
 		if ( url.contains( "dl.acm.org/" ) )
+		{
+			url = url.replace( "citation.cfm?do", "tab_abstract.cfm?" );
 			url = url.replace( "citation.cfm", "tab_abstract.cfm" );
+		}
 
 		// Using jsoup java html parser library
 		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 10000 );
@@ -59,7 +62,8 @@ public class HtmlPublicationCollection
 		}
 		else if ( document.baseUri().contains( "dl.acm.org/" ) )
 		{
-			publicationDetailMaps.put( "abstract", document.text() );
+			if ( !document.text().startsWith( "Site Error" ) )
+				publicationDetailMaps.put( "abstract", document.text() );
 		}
 
 		// General case
