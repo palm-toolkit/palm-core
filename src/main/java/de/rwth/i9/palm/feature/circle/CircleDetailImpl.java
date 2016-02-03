@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -110,14 +109,8 @@ public class CircleDetailImpl implements CircleDetail
 				Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 				authorMap.put( "id", author.getId() );
 				authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
-				if ( author.getInstitutions() != null )
-					for ( Institution institution : author.getInstitutions() )
-					{
-						if ( authorMap.get( "aff" ) != null )
-							authorMap.put( "aff", authorMap.get( "aff" ) + ", " + institution.getName() );
-						else
-							authorMap.put( "aff", institution.getName() );
-					}
+				if ( author.getInstitution() != null )
+					authorMap.put( "aff", author.getInstitution().getName() );
 				if ( author.getPhotoUrl() != null )
 					authorMap.put( "photo", author.getPhotoUrl() );
 
@@ -182,14 +175,9 @@ public class CircleDetailImpl implements CircleDetail
 				researcherMap.put( "photo", researcher.getPhotoUrl() );
 			if ( researcher.getAcademicStatus() != null )
 				researcherMap.put( "status", researcher.getAcademicStatus() );
-			if ( researcher.getInstitutions() != null )
-				for ( Institution institution : researcher.getInstitutions() )
-				{
-					if ( researcherMap.get( "aff" ) != null )
-						researcherMap.put( "aff", researcherMap.get( "aff" ) + ", " + institution.getName() );
-					else
-						researcherMap.put( "aff", institution.getName() );
-				}
+			if ( researcher.getInstitution() != null )
+				researcherMap.put( "aff", researcher.getInstitution().getName() );
+
 			// unnecessary information
 			/*
 			if ( researcher.getCitedBy() > 0 )

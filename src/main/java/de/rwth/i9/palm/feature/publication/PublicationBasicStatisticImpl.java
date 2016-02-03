@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
@@ -52,14 +51,8 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 			Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 			authorMap.put( "id", author.getId() );
 			authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
-			if ( author.getInstitutions() != null )
-				for ( Institution institution : author.getInstitutions() )
-				{
-					if ( authorMap.get( "aff" ) != null )
-						authorMap.put( "aff", authorMap.get( "aff" ) + ", " + institution.getName() );
-					else
-						authorMap.put( "aff", institution.getName() );
-				}
+			if ( author.getInstitution() != null )
+				authorMap.put( "aff", author.getInstitution().getName() );
 			if ( author.getPhotoUrl() != null )
 				authorMap.put( "photo", author.getPhotoUrl() );
 

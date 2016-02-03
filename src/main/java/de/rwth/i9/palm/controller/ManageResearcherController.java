@@ -141,10 +141,10 @@ public class ManageResearcherController
 			newAuthor.setPhotoUrl( author.getPhotoUrl() );
 		newAuthor.setAdded( true );
 
-		if ( ( author.getInstitutions() == null || author.getInstitutions().isEmpty() ) && !author.getAffiliation().equals( "" ) )
+		if ( author.getInstitution() == null && !author.getAffiliation().equals( "" ) )
 		{
 			Institution institution = null;
-			List<Institution> institutions = persistenceStrategy.getInstitutionDAO().getWithFullTextSearch( author.getAffiliation() );
+			List<Institution> institutions = persistenceStrategy.getInstitutionDAO().getByName( author.getAffiliation() );
 			if ( !institutions.isEmpty() )
 				institution = institutions.get( 0 );
 			else
@@ -152,7 +152,7 @@ public class ManageResearcherController
 				institution = new Institution();
 				institution.setName( author.getAffiliation() );
 			}
-			newAuthor.addInstitution( institution );
+			newAuthor.setInstitution( institution );
 		}
 		persistenceStrategy.getAuthorDAO().persist( newAuthor );
 
@@ -206,14 +206,8 @@ public class ManageResearcherController
 		}
 
 		// get institution, currently author always belong to 1 institution
-		if ( author.getInstitutions() != null && !author.getInstitutions().isEmpty() )
-		{
-			for ( Institution institution : author.getInstitutions() )
-			{
-				author.setAffiliation( institution.getName() );
-				break;
-			}
-		}
+		if ( author.getInstitution() != null )
+			author.setAffiliation( author.getInstitution().getName() );
 
 		// assign the model
 		model.addObject( "widgets", widgets );
@@ -247,14 +241,8 @@ public class ManageResearcherController
 		// current institution
 		String onDbInstitution = "";
 		// get institution, currently author always belong to 1 institution
-		if ( author.getInstitutions() != null && !author.getInstitutions().isEmpty() )
-		{
-			for ( Institution institution : author.getInstitutions() )
-			{
-				onDbInstitution = institution.getName();
-				break;
-			}
-		}
+		if ( author.getInstitution() != null )
+			onDbInstitution = author.getInstitution().getName();
 
 		if ( author.getAffiliation() != null )
 		{
@@ -264,7 +252,7 @@ public class ManageResearcherController
 				{
 					// change affiliation, save if not on database
 					Institution institution = null;
-					List<Institution> institutions = persistenceStrategy.getInstitutionDAO().getWithFullTextSearch( author.getAffiliation() );
+					List<Institution> institutions = persistenceStrategy.getInstitutionDAO().getByName( author.getAffiliation() );
 					if ( !institutions.isEmpty() )
 						institution = institutions.get( 0 );
 					else
@@ -272,14 +260,21 @@ public class ManageResearcherController
 						institution = new Institution();
 						institution.setName( author.getAffiliation() );
 					}
-					author.addInstitution( institution );
+					author.setInstitution( institution );
 				}
 			}
 			else
 			{
-				author.setInstitutions( null );
+				author.setInstitution( null );
 			}
 		}
+		// check for photo
+		if ( author.getAcademicStatus().isEmpty() )
+			author.setAcademicStatus( null );
+
+		// check for photo
+		if ( author.getPhotoUrl().isEmpty() )
+			author.setPhotoUrl( null );
 
 		persistenceStrategy.getAuthorDAO().persist( author );
 

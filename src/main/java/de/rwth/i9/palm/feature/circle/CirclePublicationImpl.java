@@ -12,7 +12,6 @@ import org.apache.commons.lang3.text.WordUtils;
 
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 
 public class CirclePublicationImpl implements CirclePublication
@@ -60,14 +59,8 @@ public class CirclePublicationImpl implements CirclePublication
 				Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 				authorMap.put( "id", author.getId() );
 				authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
-				if ( author.getInstitutions() != null )
-					for ( Institution institution : author.getInstitutions() )
-					{
-						if ( authorMap.get( "aff" ) != null )
-							authorMap.put( "aff", authorMap.get( "aff" ) + ", " + institution.getName() );
-						else
-							authorMap.put( "aff", institution.getName() );
-					}
+				if ( author.getInstitution() != null )
+					authorMap.put( "aff", author.getInstitution().getName() );
 				// if ( author.getPhotoUrl() != null )
 				// authorMap.put( "photo", author.getPhotoUrl() );
 

@@ -231,7 +231,7 @@ public class ResearcherCollectionService
 				}
 
 				// set academic status and affliation
-				if ( !institution.equals( "" ) && ( author.getInstitutions() == null || author.getInstitutions().isEmpty() ) )
+				if ( !institution.equals( "" ) && ( author.getInstitution() == null ) )
 				{
 					String institutionName = institution.toLowerCase().replace( "university", "" ).replace( "college", "" ).replace( "state", "" ).replace( "institute", "" ).replace( "school", "" ).replace( "academy", "" );
 					Institution institutionObject = null;
@@ -249,7 +249,7 @@ public class ResearcherCollectionService
 						institutionObject.setURI( institution.replace( " ", "-" ) );
 					}
 
-					author.addInstitution( institutionObject );
+					author.setInstitution( institutionObject );
 				}
 
 				if ( !academicStatus.equals( "" ) && author.getAcademicStatus() == null )
