@@ -27,7 +27,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
-@SessionAttributes( "user" )
+@SessionAttributes( { "user", "author" } )
 @RequestMapping( value = "/user/profile" )
 public class UserProfileController
 {
