@@ -44,6 +44,8 @@ public class PublicationDetailImpl implements PublicationDetail
 		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
 		publicationMap.put( "id", publication.getId() );
 		publicationMap.put( "title", publication.getTitle() );
+		if ( publication.getPublicationType() != null )
+			publicationMap.put( "type", publication.getPublicationType() );
 		if ( publication.getAbstractText() != null )
 			publicationMap.put( "abstract", publication.getAbstractText() );
 		if ( publication.getKeywordText() != null )
