@@ -171,16 +171,20 @@ public class EventPublicationCollectionService
 		// process log
 		applicationService.putProcessLog( pid, "Done merging " + publicationDetailMapList.size() + " publications<br><br>", "append" );
 
-		// process log
-		applicationService.putProcessLog( pid, "Enrich publication information extracting PDF and Html<br>", "append" );
+		// check if enrichment option enable
+		String enrichmentEnable = applicationService.getConfigValue( "conference", "flow", "htmlpdf" );
+		if ( enrichmentEnable != null && enrichmentEnable.equals( "yes" ) )
+		{
+			// process log
+			applicationService.putProcessLog( pid, "Enrich publication information extracting PDF and Html<br>", "append" );
 
-		// enrich the publication information by extracting information
-		// from HTML or PDF source
-		this.enrichPublicationByExtractOriginalSources( eventPublications, false );
+			// enrich the publication information by extracting information
+			// from HTML or PDF source
+			this.enrichPublicationByExtractOriginalSources( eventPublications, false );
 
-		// process log
-		applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
-
+			// process log
+			applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
+		}
 		// at the end save everything
 		for ( Publication publication : eventPublications )
 		{

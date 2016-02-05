@@ -203,22 +203,28 @@ public class PublicationCollectionService
 				persistenceStrategy.getAuthorDAO().persist( author );
 			}
 
-			// process log
-			applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html...<br>", "append" );
-
-			// enrich the publication information by extract information
-			// from html or pdf source
-			try
+			// check if enrichment option enable
+			String enrichmentEnable = applicationService.getConfigValue( "publication", "flow", "htmlpdf" );
+			if ( enrichmentEnable != null && enrichmentEnable.equals( "yes" ) )
 			{
-				this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
-			}
-			catch ( Exception e )
-			{
-				// just skip the enrichment process if error occured
-			}
 
-			// process log
-			applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
+				// process log
+				applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html...<br>", "append" );
+
+				// enrich the publication information by extract information
+				// from html or pdf source
+				try
+				{
+					this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
+				}
+				catch ( Exception e )
+				{
+					// just skip the enrichment process if error occured
+				}
+
+				// process log
+				applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
+			}
 
 			// at the end save everything
 			for ( Publication publication : selectedPublications )
