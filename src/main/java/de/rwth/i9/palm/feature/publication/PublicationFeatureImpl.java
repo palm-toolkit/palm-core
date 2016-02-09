@@ -22,6 +22,9 @@ public class PublicationFeatureImpl implements PublicationFeature
 	@Autowired( required = false )
 	private PublicationSearch publicationSearch;
 
+	@Autowired( required = false )
+	private PublicationSimilar publicationSimilar;
+
 	@Override
 	public PublicationApi getPublicationApi()
 	{
@@ -76,4 +79,12 @@ public class PublicationFeatureImpl implements PublicationFeature
 		return this.publicationSearch;
 	}
 
+	@Override
+	public PublicationSimilar getPublicationSimilar()
+	{
+		if ( this.publicationSimilar == null )
+			this.publicationSimilar = new PublicationSimilarImpl();
+
+		return this.publicationSimilar;
+	}
 }

@@ -43,6 +43,7 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 		// put publication detail
 		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
 
+		publicationMap.put( "id", publication.getId() );
 		publicationMap.put( "title", publication.getTitle() );
 
 		List<Map<String, Object>> coathorList = new ArrayList<Map<String, Object>>();

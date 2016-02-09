@@ -140,7 +140,7 @@ public class PublicationController
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		responseMap.put( "query", query );
-		if ( !publicationType.equals( "name" ) )
+		if ( !publicationType.equals( "all" ) )
 			responseMap.put( "publicationType", publicationType );
 		if ( !year.equals( "all" ) )
 			responseMap.put( "year", publicationType );
@@ -150,6 +150,39 @@ public class PublicationController
 		responseMap.put( "orderBy", orderBy );
 		
 		Map<String, Object> publicationMap = publicationFeature.getPublicationSearch().getPublicationListByQuery( query, publicationType, authorId, eventId, page, maxresult, source, fulltextSearch, year, orderBy );
+		
+		if ( (Integer) publicationMap.get( "totalCount" ) > 0 )
+		{
+			responseMap.put( "totalCount", (Integer) publicationMap.get( "totalCount" ) );
+			return publicationFeature.getPublicationSearch().printJsonOutput( responseMap, (List<Publication>) publicationMap.get( "publications" ) );
+		}
+		else
+		{
+			responseMap.put( "totalCount", 0 );
+			responseMap.put( "count", 0 );
+			return responseMap;
+		}
+	}
+	
+	/**
+	 * Get the list of similar/identical publications on PALM
+	 * @param title
+	 * @param response
+	 * @return
+	 */
+	@SuppressWarnings( "unchecked" )
+	@Transactional
+	@RequestMapping( value = "/similar", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> getSimilarPublication( 
+			@RequestParam( value = "title", required = false ) String title,
+			// list of full author names, separated with _-_
+			@RequestParam( value = "authorString", required = false ) String authorString,
+			final HttpServletResponse response )
+	{	
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		Map<String, Object> publicationMap = publicationFeature.getPublicationSimilar().getSimilarPublication( title, authorString );
 		
 		if ( (Integer) publicationMap.get( "totalCount" ) > 0 )
 		{

@@ -242,7 +242,7 @@ public class ManagePublicationController
 		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.PUBLICATION, "edit" );
 
-		// create blank Publication
+		// get publication
 		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
 		publication.setAuthors();
 

@@ -133,14 +133,14 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 		List<Object> publicationValues = new ArrayList<Object>();
 		publicationMap.put( "values", publicationValues );
 
-		Map<String, Object> citationMap = new LinkedHashMap<String, Object>();
-		citationMap.put( "key", "Citation" );
-		List<Object> citationValues = new ArrayList<Object>();
-		citationMap.put( "values", citationValues );
+		//Map<String, Object> citationMap = new LinkedHashMap<String, Object>();
+		//citationMap.put( "key", "Citation" );
+		//List<Object> citationValues = new ArrayList<Object>();
+		//citationMap.put( "values", citationValues );
 
 		// put into main list
 		visualList.add( publicationMap );
-		visualList.add( citationMap );
+		//visualList.add( citationMap );
 
 		for ( int i = minYear; i <= maxYear; i++ )
 		{
@@ -163,12 +163,12 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 				@SuppressWarnings( "unchecked" )
 				Map<String, Integer> publicationCitationMap = (Map<String, Integer>) publicationCitationYearlyMap.get( i );
 				publicationValues.add( new Object[] { unixDate, publicationCitationMap.get( "totalPublication" ), Integer.toString( i ) } );
-				citationValues.add( new Object[] { unixDate, publicationCitationMap.get( "totalCitation" ) } );
+//				citationValues.add( new Object[] { unixDate, publicationCitationMap.get( "totalCitation" ) } );
 			}
 			else
 			{
 				publicationValues.add( new Object[] { unixDate, 0 } );
-				citationValues.add( new Object[] { unixDate, 0 } );
+//				citationValues.add( new Object[] { unixDate, 0 } );
 			}
 		}
 

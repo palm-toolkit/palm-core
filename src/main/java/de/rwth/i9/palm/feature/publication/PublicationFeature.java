@@ -18,4 +18,6 @@ public interface PublicationFeature
 	public PublicationMining getPublicationMining();
 
 	public PublicationSearch getPublicationSearch();
+
+	public PublicationSimilar getPublicationSimilar();
 }
