@@ -15,15 +15,14 @@ import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
-public class ResearcherPublicationImpl implements ResearcherPublication
+public class ResearcherTopPublicationImpl implements ResearcherTopPublication
 {
-
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> getPublicationListByAuthorId( String authorId, String query, String year, Integer startPage, Integer maxresult, String orderBy )
+	public Map<String, Object> getTopPublicationListByAuthorId( String authorId, Integer startPage, Integer maxresult )
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -52,19 +51,9 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		}
 
 		List<Publication> publications = null;
-		// get publication list
-		if ( !query.equals( "" ) || !year.equals( "all" ) || startPage != null || maxresult != null )
-		{
-			Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( query, "all", targetAuthor, null, startPage, maxresult, year, orderBy );
-			publications = (List<Publication>) publicationsMap.get( "publications" );
-		}
-		else
-		{
-			publications = new ArrayList<Publication>( targetAuthor.getPublications() );
-		}
 
-		// get available year
-		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( targetAuthor ) );
+		Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( "", "all", targetAuthor, null, startPage, maxresult, "all", "citation" );
+		publications = (List<Publication>) publicationsMap.get( "publications" );
 
 		if ( publications == null || publications.isEmpty() )
 		{
@@ -74,10 +63,6 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		}
 
 		responseMap.put( "status", "ok" );
-
-		if ( query != null && !query.equals( "" ) )
-			responseMap.put( "query", query );
-		responseMap.put( "year", year );
 
 		if ( maxresult != null )
 			responseMap.put( "maxresult", maxresult );
@@ -90,8 +75,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
 			publicationMap.put( "id", publication.getId() );
 			publicationMap.put( "title", publication.getTitle() );
-			//if ( publication.getAbstractText() != null )
-				//publicationMap.put( "abstract", publication.getAbstractText() );
+			// if ( publication.getAbstractText() != null )
+			// publicationMap.put( "abstract", publication.getAbstractText() );
 			// coauthor
 			List<Map<String, Object>> coathorList = new ArrayList<Map<String, Object>>();
 			for ( Author author : publication.getCoAuthors() )

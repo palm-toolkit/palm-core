@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.helper.comparator.AuthorInterestByDateComparator;
+import de.rwth.i9.palm.helper.comparator.AuthorInterestProfileByProfileNameLengthComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
@@ -569,7 +570,11 @@ public class InterestMiningService
 	 */
 	private Map<String, Object> getInterestFromDatabase( Author author, Map<String, Object> responseMap )
 	{
-		Set<AuthorInterestProfile> authorInterestProfiles = author.getAuthorInterestProfiles();
+		List<AuthorInterestProfile> authorInterestProfiles = new ArrayList<AuthorInterestProfile>();
+		authorInterestProfiles.addAll( author.getAuthorInterestProfiles() );
+		// sort based on profile length ( currently there is no attribute to
+		// store position)
+		Collections.sort( authorInterestProfiles, new AuthorInterestProfileByProfileNameLengthComparator() );
 
 		// the whole result related to interest
 		List<Object> authorInterestResult = new ArrayList<Object>();

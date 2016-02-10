@@ -340,7 +340,7 @@ public class ResearcherController
 	}
 	
 	/**
-	 * Get PublicationMap (JSON), containing publication basic information and detail.
+	 * Get PublicationMap (JSON), containing publications basic information and detail.
 	 * @param authorId
 	 * @param startPage
 	 * @param maxresult
@@ -363,6 +363,27 @@ public class ResearcherController
 		if ( orderBy == null )			orderBy = "date";
 		
 		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId, query, year, startPage, maxresult, orderBy );
+	}
+	
+	/**
+	 * Get PublicationMap (JSON), containing top publications (highly cited publications) information and detail.
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/publicationTopList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopList( 
+			@RequestParam( value = "id", required = false ) final String authorId,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			final HttpServletResponse response)
+	{	
+		if( startPage == null ) startPage = 0;
+		if( maxresult == null ) maxresult = 10;
+		return researcherFeature.getResearcherTopPublication().getTopPublicationListByAuthorId( authorId, startPage, maxresult );
 	}
 
 	/**
