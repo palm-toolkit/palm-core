@@ -3,11 +3,13 @@ package de.rwth.i9.palm.controller;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletResponse;
@@ -245,11 +247,132 @@ public class ManagePublicationController
 		// get publication
 		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
 		publication.setAuthors();
+		publication.getEvent();
 
 		// assign the model
 		model.addObject( "widgets", widgets );
 		model.addObject( "publication", publication );
 
 		return model;
+	}
+	
+	/**
+	 * Save changes from Add publication detail, via Spring binding
+	 * 
+	 * @param extractionServiceListWrapper
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/edit", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> saveEditedPublication( 
+			@RequestParam( value = "publication-id" ) String publicationId,
+			@RequestParam( value = "author-list-ids" , required= false ) String authorListIds,
+			@RequestParam( value = "abstractText" , required= false ) String abstractText,
+			@RequestParam( value = "keyword-list" , required= false ) String keywordList,
+			@RequestParam( value = "publication-date" , required= false ) String publicationDate,
+			@RequestParam( value = "venue-type" , required= false ) String venueType,
+			@RequestParam( value = "venue-id" , required= false ) String venueId,
+			@RequestParam( value = "issue" , required= false ) String issue,
+			@RequestParam( value = "pages" , required= false ) String pages,
+			@RequestParam( value = "publisher" , required= false ) String publisher,
+			final HttpServletResponse response) throws InterruptedException
+	{
+		
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
+		if ( publication == null || publication.getTitle() == null || publication.getTitle().isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Publication not found due to missing input or expired sission" );
+		}
+
+		/* Insert selected author into publication */
+		// get author id split by "_#_"
+		String[] authorIds = authorListIds.split( "_#_" );
+
+		// first remove all PublicationAuthor from publication
+		for ( PublicationAuthor publicationAuthor : publication.getPublicationAuthors() )
+		{
+			publicationAuthor.setPublication( null );
+			publicationAuthor.setAuthor( null );
+			persistenceStrategy.getPublicationAuthorDAO().delete( publicationAuthor );
+		}
+		publication.clearPublicationAuthors();
+
+		Set<PublicationAuthor> newAuthorPublications = new HashSet<PublicationAuthor>();
+		int authorPosition = 0;
+		for ( String authorId : authorIds )
+		{
+			Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+			if ( author == null )
+				continue;
+
+			PublicationAuthor publicationAuthor = new PublicationAuthor();
+			publicationAuthor.setAuthor( author );
+			publicationAuthor.setPublication( publication );
+			publicationAuthor.setPosition( authorPosition );
+			// publication.addPublicationAuthor( publicationAuthor );
+			newAuthorPublications.add( publicationAuthor );
+
+			authorPosition++;
+		}
+		publication.setPublicationAuthors( newAuthorPublications );
+
+		// if ( publication.getPublicationAuthors() == null ||
+		// publication.getPublicationAuthors().isEmpty() )
+		// {
+		// responseMap.put( "status", "error" );
+		// responseMap.put( "statusMessage", "Failed to save new publication,
+		// publication contain no authors" );
+		// }
+
+		/* ABstract */
+		if ( abstractText != null )
+		{
+			if ( abstractText.isEmpty() )
+				publication.setAbstractText( null );
+			else
+			{
+				publication.setAbstractText( abstractText );
+				publication.setAbstractStatus( CompletionStatus.COMPLETE );
+			}
+		}
+
+		/* Insert Keyword if any */
+		if ( keywordList != null && !keywordList.isEmpty() )
+		{
+			publication.setKeywordStatus( CompletionStatus.COMPLETE );
+			publication.setKeywordText( keywordList.replace( "_#_", "," ) );
+		}
+
+		/* Insert publication date - expect valid publication date */
+		if ( publicationDate != null && !publicationDate.isEmpty() )
+		{
+			// set date format
+			DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/d", Locale.ENGLISH );
+			try
+			{
+
+			}
+			catch ( Exception e )
+			{
+				// TODO: handle exception
+			}
+		}
+
+		// at the end persist publication
+		persistenceStrategy.getPublicationDAO().persist( publication );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "changes on publication saved" );
+
+		Map<String, String> publicationMap = new LinkedHashMap<String, String>();
+		publicationMap.put( "id", publication.getId() );
+		publicationMap.put( "title", publication.getTitle() );
+		responseMap.put( "publication", publicationMap );
+
+		return responseMap;
 	}
 }
