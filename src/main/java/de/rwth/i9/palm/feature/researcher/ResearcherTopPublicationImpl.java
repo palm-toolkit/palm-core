@@ -108,8 +108,12 @@ public class ResearcherTopPublicationImpl implements ResearcherTopPublication
 			if ( publication.getLanguage() != null )
 				publicationMap.put( "language", publication.getLanguage() );
 
-			if ( publication.getCitedBy() != 0 )
+			if ( publication.getCitedBy() > 0 )
+			{
 				publicationMap.put( "cited", publication.getCitedBy() );
+				if ( publication.getCitedByUrl() != null )
+					publicationMap.put( "citedUrl", publication.getCitedByUrl() );
+			}
 
 			if ( publication.getPublicationType() != null )
 			{
