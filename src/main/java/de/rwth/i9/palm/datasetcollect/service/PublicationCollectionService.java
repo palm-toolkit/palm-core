@@ -514,6 +514,9 @@ public class PublicationCollectionService
 				if ( publicationMap.get( "citedby" ) != null )
 					publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "citedby" ) ) );
 
+				if ( publicationMap.get( "citedbyUrl" ) != null )
+					publicationSource.setCitedByUrl( publicationMap.get( "citedbyUrl" ) );
+
 				if ( publicationMap.get( "coauthor" ) != null )
 					publicationSource.setCoAuthors( publicationMap.get( "coauthor" ) );
 
@@ -862,7 +865,11 @@ public class PublicationCollectionService
 			}
 
 			if ( pubSource.getCitedBy() > 0 && pubSource.getCitedBy() > publication.getCitedBy() )
+			{
 				publication.setCitedBy( pubSource.getCitedBy() );
+				if ( pubSource.getCitedByUrl() != null )
+					publication.setCitedByUrl( pubSource.getCitedByUrl() );
+			}
 
 			// set event for conference and journal
 			if ( pubSource.getPublicationType() != null )

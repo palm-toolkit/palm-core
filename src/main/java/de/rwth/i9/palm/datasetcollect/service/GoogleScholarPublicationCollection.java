@@ -91,7 +91,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 		if ( publicationRowList.size() == 0 )
 		{
-			log.info( "Np publication found " );
+			log.info( "No publication found " );
 			return Collections.emptyList();
 		}
 
@@ -107,8 +107,12 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			if ( !venue.equals( "" ) && venue.length() < 80 )
 				publicationDetails.put( "eventName", venue );
 			String noCitation = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_NOCITATION ).text().replaceAll( "[^\\d]", "" );
-			if( !noCitation.equals( "" ))
+			if ( !noCitation.equals( "" ) )
+			{
 				publicationDetails.put( "citedby", noCitation );
+				// get citedby url
+				publicationDetails.put( "citedbyUrl", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_NOCITATION ).select( "a" ).first().absUrl( "href" ) );
+			}
 			String date = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_DATE ).text().trim();
 			if ( date.equals( "" ) )
 				continue;
@@ -135,7 +139,7 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 		if ( publicationDetailContainer.size() == 0 )
 		{
-			log.info( "Np publication detail found " );
+			log.info( "No publication detail found " );
 			return Collections.emptyMap();
 		}
 
