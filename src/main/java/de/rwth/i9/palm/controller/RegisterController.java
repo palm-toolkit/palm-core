@@ -66,9 +66,31 @@ public class RegisterController
 		if ( user == null )
 		{
 			responseMap.put( "status", "error" );
-			responseMap.put( "statusMessage", "failed to save, expired session" );
+			responseMap.put( "statusMessage", "failed to save, expired session or invalid input" );
 			return responseMap;
 		}
+
+		if ( user.getUsername() == null || user.getUsername().isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "failed to save, invalid input, username is empty" );
+			return responseMap;
+		}
+
+		if ( user.getName() == null || user.getName().isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "failed to save, invalid input, name is empty" );
+			return responseMap;
+		}
+
+		if ( user.getPassword() == null || user.getPassword().isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "failed to save, invalid input, password is empty" );
+			return responseMap;
+		}
+
 		/* store the password encrypted */
 		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 		user.setPassword( passwordEncoder.encode( user.getPassword() ) );

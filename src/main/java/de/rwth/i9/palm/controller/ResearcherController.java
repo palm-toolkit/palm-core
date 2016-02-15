@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
@@ -41,7 +40,6 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
-@SessionAttributes( "author" )
 @RequestMapping( value = "/researcher" )
 public class ResearcherController
 {
