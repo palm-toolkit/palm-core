@@ -2,6 +2,7 @@ package de.rwth.i9.palm.feature.researcher;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -61,6 +63,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		else
 		{
 			publications = new ArrayList<Publication>( targetAuthor.getPublications() );
+			// sort by date
+			Collections.sort( publications, new PublicationByDateComparator() );
 		}
 
 		// get available year
