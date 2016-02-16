@@ -80,10 +80,33 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		// check whether it is necessary to collect information from network
 		if ( this.isFetchDatasetFromNetwork( author ) || force.equals( "true" ) )
+		{
 			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author, pid );
+			responseMap.put( "fetchPerformed", "yes" );
+		}
+		else
+			responseMap.put( "fetchPerformed", "no" );
 
+		Author targetAuthor = persistenceStrategy.getAuthorDAO().getById( id );
+		// get basic author information
+		Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
+		authorMap.put( "id", targetAuthor.getId() );
+		authorMap.put( "name", targetAuthor.getName() );
+		if ( targetAuthor.getPhotoUrl() != null )
+			authorMap.put( "photo", targetAuthor.getPhotoUrl() );
+		if ( targetAuthor.getAcademicStatus() != null )
+			authorMap.put( "status", targetAuthor.getAcademicStatus() );
+		if ( targetAuthor.getInstitution() != null )
+			authorMap.put( "aff", targetAuthor.getInstitution().getName() );
+		if ( targetAuthor.getCitedBy() > 0 )
+			authorMap.put( "citedBy", targetAuthor.getCitedBy() );
 
-		//responseMap.put( "publication-count", author.getPublicationAuthors().size() );
+		if ( targetAuthor.getPublicationAuthors() != null )
+			authorMap.put( "publicationsNumber", targetAuthor.getPublicationAuthors().size() );
+		else
+			authorMap.put( "publicationsNumber", 0 );
+
+		responseMap.put( "author", authorMap );
 
 		return responseMap;
 	}
@@ -126,8 +149,8 @@ public class ResearcherMiningImpl implements ResearcherMining
 				responseMap.put( "reason", "no author found" );
 			}
 			// add author information
-			responseMap.put( "id", author.getId() );
-			responseMap.put( "name", author.getName() );
+			// responseMap.put( "id", author.getId() );
+			// responseMap.put( "name", author.getName() );
 		}
 		return author;
 	}
@@ -143,7 +166,9 @@ public class ResearcherMiningImpl implements ResearcherMining
 		// get configuration, after how many hour collecting process of
 		// researcher publication need to be repeated again
 		String collectAfterHours = applicationService.getConfigValue( "researcher", "setting", "collect every" );
+		// by default is around 2 weeks
 		int collectAfter = 336;
+		// alter default value if any
 		if ( collectAfterHours != null )
 			try
 			{

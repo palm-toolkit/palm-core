@@ -194,7 +194,7 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 		if ( researcher.getInstitution() != null )
 			researcherMap.put( "aff", researcher.getInstitution().getName() );
 		if ( researcher.getCitedBy() > 0 )
-			researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
+			researcherMap.put( "citedBy", researcher.getCitedBy() );
 
 		if ( researcher.getPublicationAuthors() != null )
 			researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
