@@ -1,39 +1,76 @@
-package de.rwth.i9.palm.feature.circle;
+package de.rwth.i9.palm.feature.publication;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.text.WordUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
-public class CirclePublicationImpl implements CirclePublication
+@Component
+public class PublicationSimilarImpl implements PublicationSimilar
 {
+	@Autowired
+	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private PalmAnalytics palmAnalitics;
 
 	@Override
-	public Map<String, Object> getCirclePublicationMap( Circle circle )
+	public Map<String, Object> getSimilarPublication( String title, String authorString )
 	{
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		// First, find relevant candidate similar publications using Lucene full
+		// text search
+		Map<String, Object> publicationMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( title, "all", null, null, null, null, "all", "citation" );
 
-		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
+		// Second eliminate candidate using Lucene Levensthein distance
+		// check publication with the current selected list.
+		@SuppressWarnings( "unchecked" )
+		List<Publication> candidatePublicationsList = (List<Publication>) publicationMap.get( "publications" );
 
-		if ( circle.getPublications() == null || circle.getPublications().isEmpty() )
+		if ( candidatePublicationsList != null && !candidatePublicationsList.isEmpty() )
+		{
+			for ( Iterator<Publication> iterator = candidatePublicationsList.iterator(); iterator.hasNext(); )
+			{
+				Publication candidatePublication = iterator.next();
+				if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( candidatePublication.getTitle().toLowerCase(), title.toLowerCase() ) < .8f )
+				{
+					iterator.remove();
+				}
+			}
+			// reset total count
+			publicationMap.put( "totalCount", candidatePublicationsList.size() );
+		}
+
+		return publicationMap;
+	}
+
+	@Override
+	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<Publication> publications )
+	{
+		if ( publications == null || publications.isEmpty() )
 		{
 			responseMap.put( "count", 0 );
 			return responseMap;
 		}
 
+		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
+
 		// preparing data format
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
 
-		for ( Publication publication : circle.getPublications() )
+		for ( Publication publication : publications )
 		{
 			Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
 			publicationMap.put( "id", publication.getId() );
@@ -102,6 +139,7 @@ public class CirclePublicationImpl implements CirclePublication
 
 			publicationList.add( publicationMap );
 		}
+
 		responseMap.put( "count", publicationList.size() );
 		responseMap.put( "publications", publicationList );
 

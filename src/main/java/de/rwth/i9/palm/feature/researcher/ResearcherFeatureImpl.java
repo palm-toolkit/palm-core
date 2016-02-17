@@ -31,6 +31,9 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	@Autowired( required = false )
 	private ResearcherSearch researcherSearch;
 
+	@Autowired( required = false )
+	private ResearcherTopPublication researcherTopPublication;
+
 	@Override
 	public ResearcherAcademicEventTree getResearcherAcademicEventTree()
 	{
@@ -110,6 +113,15 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherSearch = new ResearcherSearchImpl();
 
 		return this.researcherSearch;
+	}
+
+	@Override
+	public ResearcherTopPublication getResearcherTopPublication()
+	{
+		if ( this.researcherTopPublication == null )
+			this.researcherTopPublication = new ResearcherTopPublicationImpl();
+
+		return this.researcherTopPublication;
 	}
 
 }

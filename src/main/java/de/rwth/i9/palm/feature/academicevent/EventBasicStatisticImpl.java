@@ -72,6 +72,7 @@ public class EventBasicStatisticImpl implements EventBasicStatistic
 	{
 		Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
 		eventGroupMap.put( "type", eventGroup.getPublicationType().toString().toLowerCase() );
+		eventGroupMap.put( "id", eventGroup.getId() );
 		eventGroupMap.put( "name", eventGroup.getName() );
 		if ( eventGroup.getNotation() != null && !eventGroup.getNotation().equals( eventGroup.getName() ) )
 			eventGroupMap.put( "abbreviation", eventGroup.getNotation() );

@@ -128,6 +128,12 @@ public class DblpEventCollection extends PublicationCollection
 						// add header detail into publication information
 						if ( headerInformation != null )
 							publicationDetails.putAll( headerInformation );
+						
+						// check if publication title, usually only contain "Editorial"
+						// there  are a lot title like this that will messed up publication result
+						// just skip title which are too short
+						if( publicationDetails.get( "title" ).length() < 15 )
+							continue;
 
 						// put into List
 						publicationList.add( publicationDetails );

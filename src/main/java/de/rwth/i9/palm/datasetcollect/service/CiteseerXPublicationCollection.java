@@ -63,8 +63,8 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 			String name = authorListNode.select( "a" ).first().text();
 			// since Citeseer result is not reliable, it's better to remove
 			// incorrect result
-			if ( !name.toLowerCase().equals( authorName.toLowerCase() ) )
-				continue;
+			// if ( !name.toLowerCase().equals( authorName.toLowerCase() ) )
+			// continue;
 			// get author name
 			eachAuthorMap.put( "name", name );
 			// set source

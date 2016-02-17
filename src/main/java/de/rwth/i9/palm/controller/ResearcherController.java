@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
@@ -41,7 +40,6 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
-@SessionAttributes( "author" )
 @RequestMapping( value = "/researcher" )
 public class ResearcherController
 {
@@ -340,7 +338,7 @@ public class ResearcherController
 	}
 	
 	/**
-	 * Get PublicationMap (JSON), containing publication basic information and detail.
+	 * Get PublicationMap (JSON), containing publications basic information and detail.
 	 * @param authorId
 	 * @param startPage
 	 * @param maxresult
@@ -363,6 +361,27 @@ public class ResearcherController
 		if ( orderBy == null )			orderBy = "date";
 		
 		return researcherFeature.getResearcherPublication().getPublicationListByAuthorId( authorId, query, year, startPage, maxresult, orderBy );
+	}
+	
+	/**
+	 * Get PublicationMap (JSON), containing top publications (highly cited publications) information and detail.
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/publicationTopList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopList( 
+			@RequestParam( value = "id", required = false ) final String authorId,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			final HttpServletResponse response)
+	{	
+		if( startPage == null ) startPage = 0;
+		if( maxresult == null ) maxresult = 10;
+		return researcherFeature.getResearcherTopPublication().getTopPublicationListByAuthorId( authorId, startPage, maxresult );
 	}
 
 	/**

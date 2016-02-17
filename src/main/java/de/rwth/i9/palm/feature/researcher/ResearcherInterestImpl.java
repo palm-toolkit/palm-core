@@ -35,12 +35,25 @@ public class ResearcherInterestImpl extends AcademicFeatureImpl implements Resea
 
 		if ( authorId == null )
 		{
-			responseMap.put( "status", "Error- no author found" );
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author id missing" );
 			return responseMap;
 		}
 
 		// get the author
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found" );
+			return responseMap;
+		}
+
+		Map<String, Object> targetAuthorMap = new LinkedHashMap<String, Object>();
+		targetAuthorMap.put( "id", author.getId() );
+		targetAuthorMap.put( "name", author.getName() );
+		responseMap.put( "author", targetAuthorMap );
 
 		// check whether publication has been extracted
 		// later add extractionServiceType checking

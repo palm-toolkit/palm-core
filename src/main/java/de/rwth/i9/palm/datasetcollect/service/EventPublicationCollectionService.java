@@ -98,13 +98,16 @@ public class EventPublicationCollectionService
 		// future list for publication list
 		// extract publication from DBLP
 		List<Future<Map<String, Object>>> eventDetailMapFutureLists = new ArrayList<Future<Map<String, Object>>>();
-		eventDetailMapFutureLists.add( asynchronousEventCollectionService.getEventDetailfromDBLP( event.getDblpUrl(), sourceMap.get( SourceType.DBLP.toString() ) ) );
+
+		if ( event.getDblpUrl() != null )
+			eventDetailMapFutureLists.add( asynchronousEventCollectionService.getEventDetailfromDBLP( event.getDblpUrl(), sourceMap.get( SourceType.DBLP.toString() ) ) );
 
 		// process log
 		applicationService.putProcessLog( pid, "Done collecting publications list from Venue<br><br>", "append" );
 
 		// merge the result
-		this.manageEventAndPublicationInformation( eventDetailMapFutureLists.get( 0 ), event, sourceMap, pid );
+		if ( !eventDetailMapFutureLists.isEmpty() )
+			this.manageEventAndPublicationInformation( eventDetailMapFutureLists.get( 0 ), event, sourceMap, pid );
 	}
 	
 	private void manageEventAndPublicationInformation( Future<Map<String, Object>> eventDetailMapFuture, Event event, Map<String, Source> sourceMap, String pid ) throws InterruptedException, ExecutionException, ParseException, IOException, TimeoutException
@@ -171,16 +174,20 @@ public class EventPublicationCollectionService
 		// process log
 		applicationService.putProcessLog( pid, "Done merging " + publicationDetailMapList.size() + " publications<br><br>", "append" );
 
-		// process log
-		applicationService.putProcessLog( pid, "Enrich publication information extracting PDF and Html<br>", "append" );
+		// check if enrichment option enable
+		String enrichmentEnable = applicationService.getConfigValue( "conference", "flow", "htmlpdf" );
+		if ( enrichmentEnable != null && enrichmentEnable.equals( "yes" ) )
+		{
+			// process log
+			applicationService.putProcessLog( pid, "Enrich publication information extracting PDF and Html<br>", "append" );
 
-		// enrich the publication information by extracting information
-		// from HTML or PDF source
-		this.enrichPublicationByExtractOriginalSources( eventPublications, false );
+			// enrich the publication information by extracting information
+			// from HTML or PDF source
+			this.enrichPublicationByExtractOriginalSources( eventPublications, false );
 
-		// process log
-		applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
-
+			// process log
+			applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
+		}
 		// at the end save everything
 		for ( Publication publication : eventPublications )
 		{

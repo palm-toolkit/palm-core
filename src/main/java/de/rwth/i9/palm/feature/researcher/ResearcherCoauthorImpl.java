@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +11,6 @@ import java.util.Set;
 
 import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationComparator;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 
 public class ResearcherCoauthorImpl implements ResearcherCoauthor
@@ -60,14 +58,8 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 			Map<String, Object> coAuthorMap = new LinkedHashMap<String, Object>();
 			coAuthorMap.put( "id", coAuthor.getId() );
 			coAuthorMap.put( "name", coAuthor.getName() );
-			if ( coAuthor.getInstitutions() != null && !coAuthor.getInstitutions().isEmpty() )
-			{
-				for ( Iterator<Institution> it = coAuthor.getInstitutions().iterator(); it.hasNext(); )
-				{
-					Institution institution = it.next();
-					coAuthorMap.put( "affiliation", institution.getName() );
-				}
-			}
+			if ( coAuthor.getInstitution() != null )
+				coAuthorMap.put( "affiliation", coAuthor.getInstitution().getName() );
 			if( coAuthor.getPhotoUrl() != null )
 				coAuthorMap.put( "photo", coAuthor.getPhotoUrl() );
 			coAuthorMap.put( "isAdded", coAuthor.isAdded() );

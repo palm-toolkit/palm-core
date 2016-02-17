@@ -62,7 +62,6 @@ public class AsynchronousPublicationDetailCollectionService
 	{
 		// to make this process more efficient
 		// prioritize the HTML extraction first over pdf
-
 		log.info( "Start enrichment process for publication " + publication.getTitle() );
 		// multithread publication source
 		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();

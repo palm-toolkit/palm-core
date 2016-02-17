@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -64,6 +63,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		else
 		{
 			publications = new ArrayList<Publication>( targetAuthor.getPublications() );
+			// sort by date
+			Collections.sort( publications, new PublicationByDateComparator() );
 		}
 
 		// get available year
@@ -75,13 +76,12 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			responseMap.put( "message", "Error - empty publication" );
 			return responseMap;
 		}
-		// sort based on period
-		Collections.sort( publications, new PublicationByDateComparator() );
 
 		responseMap.put( "status", "ok" );
 
-		if ( !year.equals( "all" ) )
-			responseMap.put( "year", year );
+		if ( query != null && !query.equals( "" ) )
+			responseMap.put( "query", query );
+		responseMap.put( "year", year );
 
 		if ( maxresult != null )
 			responseMap.put( "maxresult", maxresult );
@@ -103,14 +103,9 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 				authorMap.put( "id", author.getId() );
 				authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
-				if ( author.getInstitutions() != null )
-					for ( Institution institution : author.getInstitutions() )
-					{
-						if ( authorMap.get( "aff" ) != null )
-							authorMap.put( "aff", authorMap.get( "aff" ) + ", " + institution.getName() );
-						else
-							authorMap.put( "aff", institution.getName() );
-					}
+				if ( author.getInstitution() != null )
+					authorMap.put( "aff", author.getInstitution().getName() );
+
 				if ( author.getPhotoUrl() != null )
 					authorMap.put( "photo", author.getPhotoUrl() );
 
@@ -132,8 +127,12 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			if ( publication.getLanguage() != null )
 				publicationMap.put( "language", publication.getLanguage() );
 
-			if ( publication.getCitedBy() != 0 )
+			if ( publication.getCitedBy() > 0 )
+			{
 				publicationMap.put( "cited", publication.getCitedBy() );
+				if ( publication.getCitedByUrl() != null )
+					publicationMap.put( "citedUrl", publication.getCitedByUrl() );
+			}
 
 			if ( publication.getPublicationType() != null )
 			{
@@ -163,6 +162,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 
 			publicationList.add( publicationMap );
 		}
+		responseMap.put( "count", publicationList.size() );
 		responseMap.put( "publications", publicationList );
 
 		return responseMap;

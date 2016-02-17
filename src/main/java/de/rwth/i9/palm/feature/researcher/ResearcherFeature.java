@@ -25,4 +25,6 @@ public interface ResearcherFeature
 	public ResearcherPublication getResearcherPublication();
 
 	public ResearcherSearch getResearcherSearch();
+
+	public ResearcherTopPublication getResearcherTopPublication();
 }

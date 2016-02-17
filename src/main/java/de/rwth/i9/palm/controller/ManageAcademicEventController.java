@@ -28,7 +28,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
-@SessionAttributes( "eventGroup" )
+@SessionAttributes( { "eventGroup", "event" } )
 @RequestMapping( value = "/venue" )
 public class ManageAcademicEventController
 {
@@ -206,7 +206,7 @@ public class ManageAcademicEventController
 	}
 	
 	/**
-	 * Load the add eventGroup form together with eventGroup object
+	 * Load the add event Edit form together with eventGroup  object
 	 * 
 	 * @param sessionId
 	 * @param response
@@ -214,7 +214,7 @@ public class ManageAcademicEventController
 	 * @throws InterruptedException
 	 */
 	@Transactional
-	@RequestMapping( value = "/edit", method = RequestMethod.GET )
+	@RequestMapping( value = "/eventGroup/edit", method = RequestMethod.GET )
 	public ModelAndView editEventGroup( 
 			@RequestParam( value = "id") final String eventGroupId,
 			final HttpServletResponse response) throws InterruptedException
@@ -226,6 +226,11 @@ public class ManageAcademicEventController
 			model = TemplateHelper.createViewWithLink( "401", "error" );
 			return model;
 		}
+		
+		if( eventGroupId == null ){
+			model = TemplateHelper.createViewWithLink( "404", "error" );
+			return model;
+		}
 
 		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.CONFERENCE, "edit" );
@@ -233,9 +238,130 @@ public class ManageAcademicEventController
 		// create blank EventGroup
 		EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupId );
 
+		if( eventGroup == null ){
+			model = TemplateHelper.createViewWithLink( "404", "error" );
+			return model;
+		}
+		
 		// assign the model
 		model.addObject( "widgets", widgets );
 		model.addObject( "eventGroup", eventGroup );
+
+		return model;
+	}
+	
+	/**
+	 * Load the add event Edit form together with eventGroup object
+	 * 
+	 * @param sessionId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/eventGroup/edit", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> saveEventGroup( 
+			@ModelAttribute( "eventGroup" ) EventGroup eventGroup, 
+			final HttpServletResponse response)
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		
+		if ( eventGroup == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "failed to save, expired session" );
+			return responseMap;
+		}
+		
+		// set event type, incase changed
+		if ( eventGroup.getType() != null )
+		{
+			try
+			{
+				PublicationType pubType = PublicationType.valueOf( eventGroup.getType().toUpperCase() );
+
+				if ( !eventGroup.getPublicationType().equals( pubType ) )
+				{
+					eventGroup.setPublicationType( pubType );
+
+					for ( Event event : eventGroup.getEvents() )
+					{
+						if ( event.isAdded() )
+						{
+							// use autowire, since Publication is Lazy loaded
+							List<Publication> publications = persistenceStrategy.getPublicationDAO().getPublicationByEventWithPaging( event, null, null );
+
+							if ( publications != null && !publications.isEmpty() )
+								for ( Publication publication : publications )
+								{
+									publication.setPublicationType( pubType );
+									persistenceStrategy.getPublicationDAO().persist( publication );
+								}
+						}
+					}
+				}
+			}
+			catch ( Exception e )
+			{
+			}
+		}
+
+		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "author saved" );
+
+		Map<String, String> eventGroupMap = new LinkedHashMap<String, String>();
+		eventGroupMap.put( "id", eventGroup.getId() );
+		eventGroupMap.put( "name", eventGroup.getName() );
+		responseMap.put( "eventGroup", eventGroupMap );
+		
+		return responseMap;
+	}
+	
+	
+	/**
+	 * Load the add event Edit form together with event object
+	 * 
+	 * @param sessionId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/event/edit", method = RequestMethod.GET )
+	public ModelAndView editEvent( 
+			@RequestParam( value = "id") final String eventId,
+			final HttpServletResponse response) throws InterruptedException
+	{
+		ModelAndView model = null;
+
+		if ( securityService.getUser() == null )
+		{
+			model = TemplateHelper.createViewWithLink( "401", "error" );
+			return model;
+		}
+		
+		if ( eventId == null )
+		{
+			model = TemplateHelper.createViewWithLink( "404", "error" );
+			return model;
+		}
+
+		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.CONFERENCE, "edit" );
+
+		// create blank EventGroup
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( event == null )
+		{
+			model = TemplateHelper.createViewWithLink( "404", "error" );
+			return model;
+		}
+		// assign the model
+		model.addObject( "widgets", widgets );
+		model.addObject( "event", event );
 
 		return model;
 	}

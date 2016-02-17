@@ -2,7 +2,6 @@ package de.rwth.i9.palm.service;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 
 import javax.transaction.Transactional;
 
@@ -13,7 +12,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -91,13 +89,9 @@ public class SecurityService
 
 		// set affiliation
 		if ( user != null && user.getAuthor() != null )
-			if ( user.getAuthor().getInstitutions() != null && !user.getAuthor().getInstitutions().isEmpty() )
+			if ( user.getAuthor().getInstitution() != null )
 			{
-				for ( Iterator<Institution> it = user.getAuthor().getInstitutions().iterator(); it.hasNext(); )
-				{
-					Institution institution = it.next();
-					user.getAuthor().setAffiliation( institution.getName() );
-				}
+				user.getAuthor().setAffiliation( user.getAuthor().getInstitution().getName() );
 			}
 
 		return user;

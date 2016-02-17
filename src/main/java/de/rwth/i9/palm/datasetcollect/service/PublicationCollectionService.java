@@ -203,15 +203,28 @@ public class PublicationCollectionService
 				persistenceStrategy.getAuthorDAO().persist( author );
 			}
 
-			// process log
-			applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html...<br>", "append" );
+			// check if enrichment option enable
+			String enrichmentEnable = applicationService.getConfigValue( "publication", "flow", "htmlpdf" );
+			if ( enrichmentEnable != null && enrichmentEnable.equals( "yes" ) )
+			{
 
-			// enrich the publication information by extract information
-			// from html or pdf source
-			this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
+				// process log
+				applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html...<br>", "append" );
 
-			// process log
-			applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
+				// enrich the publication information by extract information
+				// from html or pdf source
+				try
+				{
+					this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
+				}
+				catch ( Exception e )
+				{
+					// just skip the enrichment process if error occured
+				}
+
+				// process log
+				applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
+			}
 
 			// at the end save everything
 			for ( Publication publication : selectedPublications )
@@ -500,6 +513,9 @@ public class PublicationCollectionService
 
 				if ( publicationMap.get( "citedby" ) != null )
 					publicationSource.setCitedBy( Integer.parseInt( publicationMap.get( "citedby" ) ) );
+
+				if ( publicationMap.get( "citedbyUrl" ) != null )
+					publicationSource.setCitedByUrl( publicationMap.get( "citedbyUrl" ) );
 
 				if ( publicationMap.get( "coauthor" ) != null )
 					publicationSource.setCoAuthors( publicationMap.get( "coauthor" ) );
@@ -849,7 +865,11 @@ public class PublicationCollectionService
 			}
 
 			if ( pubSource.getCitedBy() > 0 && pubSource.getCitedBy() > publication.getCitedBy() )
+			{
 				publication.setCitedBy( pubSource.getCitedBy() );
+				if ( pubSource.getCitedByUrl() != null )
+					publication.setCitedByUrl( pubSource.getCitedByUrl() );
+			}
 
 			// set event for conference and journal
 			if ( pubSource.getPublicationType() != null )

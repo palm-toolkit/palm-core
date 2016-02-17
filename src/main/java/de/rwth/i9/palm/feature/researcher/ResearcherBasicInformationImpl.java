@@ -16,7 +16,6 @@ import org.apache.commons.lang3.text.WordUtils;
 
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.SourceType;
 
@@ -134,14 +133,14 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 		List<Object> publicationValues = new ArrayList<Object>();
 		publicationMap.put( "values", publicationValues );
 
-		Map<String, Object> citationMap = new LinkedHashMap<String, Object>();
-		citationMap.put( "key", "Citation" );
-		List<Object> citationValues = new ArrayList<Object>();
-		citationMap.put( "values", citationValues );
+		//Map<String, Object> citationMap = new LinkedHashMap<String, Object>();
+		//citationMap.put( "key", "Citation" );
+		//List<Object> citationValues = new ArrayList<Object>();
+		//citationMap.put( "values", citationValues );
 
 		// put into main list
 		visualList.add( publicationMap );
-		visualList.add( citationMap );
+		//visualList.add( citationMap );
 
 		for ( int i = minYear; i <= maxYear; i++ )
 		{
@@ -164,12 +163,12 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 				@SuppressWarnings( "unchecked" )
 				Map<String, Integer> publicationCitationMap = (Map<String, Integer>) publicationCitationYearlyMap.get( i );
 				publicationValues.add( new Object[] { unixDate, publicationCitationMap.get( "totalPublication" ), Integer.toString( i ) } );
-				citationValues.add( new Object[] { unixDate, publicationCitationMap.get( "totalCitation" ) } );
+//				citationValues.add( new Object[] { unixDate, publicationCitationMap.get( "totalCitation" ) } );
 			}
 			else
 			{
 				publicationValues.add( new Object[] { unixDate, 0 } );
-				citationValues.add( new Object[] { unixDate, 0 } );
+//				citationValues.add( new Object[] { unixDate, 0 } );
 			}
 		}
 
@@ -192,21 +191,22 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 			researcherMap.put( "photo", researcher.getPhotoUrl() );
 		if ( researcher.getAcademicStatus() != null )
 			researcherMap.put( "status", researcher.getAcademicStatus() );
-		if ( researcher.getInstitutions() != null )
-			for ( Institution institution : researcher.getInstitutions() )
-			{
-				if ( researcherMap.get( "aff" ) != null )
-					researcherMap.put( "aff", researcherMap.get( "aff" ) + ", " + institution.getName() );
-				else
-					researcherMap.put( "aff", institution.getName() );
-			}
+		if ( researcher.getInstitution() != null )
+			researcherMap.put( "aff", researcher.getInstitution().getName() );
 		if ( researcher.getCitedBy() > 0 )
-			researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
+			researcherMap.put( "citedBy", researcher.getCitedBy() );
 
 		if ( researcher.getPublicationAuthors() != null )
 			researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
 		else
 			researcherMap.put( "publicationsNumber", 0 );
+
+		if ( researcher.getEmail() != null && researcher.getEmail() != "" )
+			researcherMap.put( "email", researcher.getEmail() );
+
+		if ( researcher.getHomepage() != null && researcher.getHomepage() != "" )
+			researcherMap.put( "homepage", researcher.getHomepage() );
+
 		String otherDetail = "";
 		if ( researcher.getOtherDetail() != null )
 			otherDetail += researcher.getOtherDetail();

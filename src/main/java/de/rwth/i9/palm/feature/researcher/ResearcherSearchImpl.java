@@ -21,7 +21,6 @@ import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.helper.comparator.AuthorByNoCitationComparator;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.RequestType;
 import de.rwth.i9.palm.model.UserRequest;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -119,14 +118,8 @@ public class ResearcherSearchImpl implements ResearcherSearch
 				researcherMap.put( "photo", researcher.getPhotoUrl() );
 			if ( researcher.getAcademicStatus() != null )
 				researcherMap.put( "status", researcher.getAcademicStatus() );
-			if ( researcher.getInstitutions() != null )
-				for ( Institution institution : researcher.getInstitutions() )
-				{
-					if ( researcherMap.get( "aff" ) != null )
-						researcherMap.put( "aff", researcherMap.get( "aff" ) + ", " + institution.getName() );
-					else
-						researcherMap.put( "aff", institution.getName() );
-				}
+			if ( researcher.getInstitution() != null )
+				researcherMap.put( "aff", researcher.getInstitution().getName() );
 			if ( researcher.getCitedBy() > 0 )
 				researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
 

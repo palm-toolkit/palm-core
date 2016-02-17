@@ -95,12 +95,14 @@ public class ResearcherCollectionService
 	}
 
 	/**
-	 * Merging author information from multiple resources
+	 * Merging author information from multiple resources, check whether author
+	 * is already exist on database if exist then just merge if there is missing
+	 * information, if not exist create new, merge information and persist.
 	 * 
 	 * @param authorFutureLists
 	 * @param authors2
 	 * @param stored
-	 * @param sourceMap 
+	 * @param sourceMap
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
@@ -116,6 +118,7 @@ public class ResearcherCollectionService
 					numberOfActiveSources++;
 			}
 			
+			// Merge gathered author information
 			List<Map<String, String>> mergedAuthorList = new ArrayList<Map<String, String>>();
 			Map<String, Integer> indexHelper = new HashMap<String, Integer>();
 			for ( Future<List<Map<String, String>>> authorFutureList : authorFutureLists )
@@ -231,7 +234,7 @@ public class ResearcherCollectionService
 				}
 
 				// set academic status and affliation
-				if ( !institution.equals( "" ) && ( author.getInstitutions() == null || author.getInstitutions().isEmpty() ) )
+				if ( !institution.equals( "" ) && ( author.getInstitution() == null ) )
 				{
 					String institutionName = institution.toLowerCase().replace( "university", "" ).replace( "college", "" ).replace( "state", "" ).replace( "institute", "" ).replace( "school", "" ).replace( "academy", "" );
 					Institution institutionObject = null;
@@ -249,7 +252,7 @@ public class ResearcherCollectionService
 						institutionObject.setURI( institution.replace( " ", "-" ) );
 					}
 
-					author.addInstitution( institutionObject );
+					author.setInstitution( institutionObject );
 				}
 
 				if ( !academicStatus.equals( "" ) && author.getAcademicStatus() == null )

@@ -49,6 +49,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 						nodeTitle += " (" + publication.getEvent().getEventGroup().getNotation() + ") ";
 					treeHelperLv1.setTitle( nodeTitle );
 					treeHelperLv1.setType( publication.getEvent().getEventGroup().getPublicationType().toString() );
+					treeHelperLv1.setHref( "venue?&id=" + publication.getEvent().getEventGroup().getId() + "&name=" + publication.getEvent().getEventGroup().getName() );
 					treeHelperLv1.setFolder( true );
 					
 					// add first level as child of root
@@ -67,6 +68,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					}
 					treeHelperLv2.setTitle( nodeTitle );
 					treeHelperLv2.setType( publication.getPublicationType().toString() );
+					treeHelperLv2.setHref( "venue?&id=" + publication.getEvent().getEventGroup().getId() + "&eventId=" + publication.getEvent().getId() + "&name=" + publication.getEvent().getEventGroup().getName() );
 					treeHelperLv2.setFolder( true );
 					
 					// add second level as child of first level
@@ -103,6 +105,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 						}
 						treeHelperLv2.setTitle( nodeTitle );
 						treeHelperLv2.setType( publication.getPublicationType().toString() );
+						treeHelperLv2.setHref( "venue?id=" + publication.getEvent().getEventGroup().getId() + "&eventId=" + publication.getEvent().getId() + "&name=" + publication.getEvent().getEventGroup().getName() );
 						treeHelperLv2.setFolder( true );
 
 						// add second level as child of first level
@@ -115,6 +118,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					treeHelperLv3.setKey( publication.getId() );
 					treeHelperLv3.setTitle( publication.getTitle() );
 					treeHelperLv3.setType( publication.getPublicationType().toString() );
+					treeHelperLv3.setHref( "publication?id=" + publication.getId() + "&title=" + publication.getTitle() );
 
 					// add second level as child of first level
 					treeHelperLv2.addChild( treeHelperLv3 );

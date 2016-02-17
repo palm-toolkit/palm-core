@@ -19,8 +19,17 @@ public class TreeDirectChildByChildNumberComparator implements Comparator<TreeHe
 		if ( treeHelper2 == null )
 			return 1;
 
-		int cildrenSize1 = treeHelper1.getChildren().size();
-		int cildrenSize2 = treeHelper2.getChildren().size();
+		// the tree depth is always 2
+		int cildrenSize1 = 0;
+		for ( TreeHelper child : treeHelper1.getChildren() )
+		{
+			cildrenSize1 += child.getChildren().size();
+		}
+		int cildrenSize2 = 0;
+		for ( TreeHelper child : treeHelper2.getChildren() )
+		{
+			cildrenSize2 += child.getChildren().size();
+		}
 
 		if ( cildrenSize1 < cildrenSize2 )
 			return 1;

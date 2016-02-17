@@ -1,10 +1,17 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletResponse;
@@ -25,7 +32,13 @@ import org.springframework.web.servlet.ModelAndView;
 import org.xml.sax.SAXException;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.CompletionStatus;
+import de.rwth.i9.palm.model.Event;
+import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationAuthor;
+import de.rwth.i9.palm.model.PublicationType;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.pdfextraction.service.PdfExtractionService;
@@ -58,8 +71,7 @@ public class ManagePublicationController
 	 */
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.GET )
-	public ModelAndView addNewPublication( 
-			final HttpServletResponse response) throws InterruptedException
+	public ModelAndView addNewPublication( final HttpServletResponse response ) throws InterruptedException
 	{
 		ModelAndView model = null;
 
@@ -94,10 +106,177 @@ public class ManagePublicationController
 	@RequestMapping( value = "/add", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveNewPublication( 
 			@ModelAttribute( "publication" ) Publication publication, 
+			@RequestParam( value = "author-list-ids", required = false ) String authorListIds, 
+			@RequestParam( value = "keyword-list", required = false ) String keywordList, 
+			@RequestParam( value = "publication-date", required = false ) String publicationDate, 
+			@RequestParam( value = "venue-type", required = false ) String venueType, 
+			@RequestParam( value = "venue-id", required = false ) String venueId, 
+			@RequestParam( value = "volume", required = false ) String volume, 
+			@RequestParam( value = "pages", required = false ) String pages, 
+			@RequestParam( value = "publisher", required = false ) String publisher, 
 			final HttpServletResponse response) throws InterruptedException
 	{
-
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( publication == null || publication.getTitle() == null || publication.getTitle().isEmpty() || authorListIds == null || authorListIds.isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Publication not found due to missing input or expired sission" );
+		}
+
+		/* Insert selected author into publication */
+		// get author id split by "_#_"
+		String[] authorIds = authorListIds.split( "_#_" );
+		int authorPosition = 0;
+		for ( String authorId : authorIds )
+		{
+			Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+			if ( author == null )
+				continue;
+
+			PublicationAuthor publicationAuthor = new PublicationAuthor();
+			publicationAuthor.setAuthor( author );
+			publicationAuthor.setPublication( publication );
+			publicationAuthor.setPosition( authorPosition );
+			publication.addPublicationAuthor( publicationAuthor );
+
+			authorPosition++;
+		}
+
+		if ( publication.getPublicationAuthors() == null || publication.getPublicationAuthors().isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Failed to save new publication, publication contain no authors" );
+		}
+
+		/* Abstract */
+		if ( publication.getAbstractText().isEmpty() )
+			publication.setAbstractText( null );
+		else
+		{
+			publication.setAbstractStatus( CompletionStatus.COMPLETE );
+		}
+
+		/* Insert Keyword if any */
+		if ( keywordList != null && !keywordList.isEmpty() )
+		{
+			publication.setKeywordStatus( CompletionStatus.COMPLETE );
+			publication.setKeywordText( keywordList.replace( "_#_", "," ) );
+		}
+
+		/* Insert publication date - expect valid publication date */
+		if ( publicationDate != null && !publicationDate.isEmpty() )
+		{
+			// set date format
+			DateFormat dateFormat = new SimpleDateFormat( "dd/M/yyyy", Locale.ENGLISH );
+			try
+			{
+				Date date = dateFormat.parse( publicationDate );
+				publication.setPublicationDate( date );
+				publication.setPublicationDateFormat( "yyyy/M/d" );
+			}
+			catch ( Exception e )
+			{
+			}
+		}
+
+		/* check for publication type */
+		try
+		{
+			PublicationType publicationType = PublicationType.valueOf( venueType.toUpperCase() );
+			publication.setPublicationType( publicationType );
+		}
+		catch ( Exception e )
+		{
+		}
+
+		// check for volume
+		int inputVolume = 0;
+		if ( volume != null && !volume.isEmpty() )
+		{
+			try
+			{
+				inputVolume = Integer.parseInt( volume );
+			}
+			catch ( Exception e )
+			{
+			}
+
+			if ( inputVolume > 0 )
+				publication.addOrUpdateAdditionalInformation( "volume", inputVolume );
+		}
+
+		// check for venue
+		if ( venueId != null && !venueId.isEmpty() )
+		{
+			Calendar cal = Calendar.getInstance();
+			cal.setTime( publication.getPublicationDate() );
+			String inputYear = Integer.toString( cal.get( Calendar.YEAR ) );
+
+			EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( venueId );
+
+			// set event
+			Event newEvent = null;
+			if ( eventGroup.getEvents() != null && !eventGroup.getEvents().isEmpty() )
+			{
+				for ( Event eachEvent : eventGroup.getEvents() )
+				{
+					if ( eachEvent.getYear().equals( inputYear ) )
+					{
+						newEvent = eachEvent;
+						break;
+					}
+				}
+			}
+			if ( newEvent == null )
+			{
+				newEvent = new Event();
+				newEvent.setEventGroup( eventGroup );
+				newEvent.setYear( inputYear );
+				if ( inputVolume > 0 )
+					newEvent.setVolume( Integer.toString( inputVolume ) );
+
+				newEvent.addPublication( publication );
+			}
+			publication.setEvent( newEvent );
+		}
+
+		// pages
+		try
+		{
+			if ( pages != null && !pages.isEmpty() )
+			{
+				String[] splitPages = pages.split( "-" );
+				if ( splitPages.length == 2 )
+				{
+					publication.setStartPage( Integer.parseInt( splitPages[0].trim() ) );
+					publication.setEndPage( Integer.parseInt( splitPages[1].trim() ) );
+				}
+				else if ( splitPages.length == 1 )
+				{
+					publication.setStartPage( Integer.parseInt( splitPages[0].trim() ) );
+				}
+			}
+		}
+		catch ( Exception e )
+		{
+			// TODO: handle exception
+		}
+
+		// publisher
+		if ( publisher != null && !publisher.isEmpty() )
+		{
+			publication.addOrUpdateAdditionalInformation( "publisher", publisher );
+		}
+		// at the end persist publication
+		persistenceStrategy.getPublicationDAO().persist( publication );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "changes on publication saved" );
+
+		Map<String, String> publicationMap = new LinkedHashMap<String, String>();
+		publicationMap.put( "id", publication.getId() );
+		publicationMap.put( "title", publication.getTitle() );
+		responseMap.put( "publication", publicationMap );
 
 		return responseMap;
 	}
@@ -115,14 +294,12 @@ public class ManagePublicationController
 	 * @throws SAXException
 	 */
 	@RequestMapping( value = "/upload", method = RequestMethod.POST )
-	public @ResponseBody Map<String, Object> multiUpload( 
-			MultipartHttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException
+	public @ResponseBody Map<String, Object> multiUpload( MultipartHttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException
 	{
 		return uploadAndExtractPdf( request );
 	}
 
-	private Map<String, Object> uploadAndExtractPdf( 
-			MultipartHttpServletRequest request ) throws IOException, InterruptedException, ExecutionException
+	private Map<String, Object> uploadAndExtractPdf( MultipartHttpServletRequest request ) throws IOException, InterruptedException, ExecutionException
 	{
 		// build an iterator
 		Iterator<String> itr = request.getFileNames();
@@ -141,7 +318,7 @@ public class ManagePublicationController
 		}
 		return extractedPdfMap;
 	}
-	
+
 	/**
 	 * Load the add publication form together with publication object
 	 * 
@@ -152,10 +329,7 @@ public class ManagePublicationController
 	 */
 	@Transactional
 	@RequestMapping( value = "/edit", method = RequestMethod.GET )
-	public ModelAndView editPublication( 
-			@RequestParam( value = "sessionid", required = false ) final String sessionId,
-			@RequestParam( value = "id") final String publicationId,
-			final HttpServletResponse response) throws InterruptedException
+	public ModelAndView editPublication( @RequestParam( value = "sessionid", required = false ) final String sessionId, @RequestParam( value = "id" ) final String publicationId, final HttpServletResponse response) throws InterruptedException
 	{
 		ModelAndView model = null;
 
@@ -168,14 +342,266 @@ public class ManagePublicationController
 		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.PUBLICATION, "edit" );
 
-		// create blank Publication
+		// get publication
 		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
 		publication.setAuthors();
+		publication.getEvent();
 
 		// assign the model
 		model.addObject( "widgets", widgets );
 		model.addObject( "publication", publication );
 
 		return model;
+	}
+
+	/**
+	 * Save changes from Add publication detail, via Spring binding
+	 * 
+	 * @param extractionServiceListWrapper
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/edit", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> saveEditedPublication( 
+			@RequestParam( value = "publication-id" ) String publicationId, 
+			@RequestParam( value = "author-list-ids", required = false ) String authorListIds, 
+			@RequestParam( value = "abstractText", required = false ) String abstractText, 
+			@RequestParam( value = "keyword-list", required = false ) String keywordList, 
+			@RequestParam( value = "publication-date", required = false ) String publicationDate, 
+			@RequestParam( value = "venue-type", required = false ) String venueType, 
+			@RequestParam( value = "venue-id", required = false ) String venueId, 
+			@RequestParam( value = "volume", required = false ) String volume, 
+			@RequestParam( value = "pages", required = false ) String pages, 
+			@RequestParam( value = "publisher", required = false ) String publisher, 
+			final HttpServletResponse response) throws InterruptedException
+	{
+
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
+		if ( publication == null || publication.getTitle() == null || publication.getTitle().isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Publication not found due to missing input or expired sission" );
+		}
+
+		/* Insert selected author into publication */
+		// get author id split by "_#_"
+		String[] authorIds = authorListIds.split( "_#_" );
+
+		// first remove all PublicationAuthor from publication
+		for ( PublicationAuthor publicationAuthor : publication.getPublicationAuthors() )
+		{
+			publicationAuthor.setPublication( null );
+			publicationAuthor.setAuthor( null );
+			persistenceStrategy.getPublicationAuthorDAO().delete( publicationAuthor );
+		}
+		publication.clearPublicationAuthors();
+
+		Set<PublicationAuthor> newAuthorPublications = new HashSet<PublicationAuthor>();
+		int authorPosition = 0;
+		for ( String authorId : authorIds )
+		{
+			Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+			if ( author == null )
+				continue;
+
+			PublicationAuthor publicationAuthor = new PublicationAuthor();
+			publicationAuthor.setAuthor( author );
+			publicationAuthor.setPublication( publication );
+			publicationAuthor.setPosition( authorPosition );
+			// publication.addPublicationAuthor( publicationAuthor );
+			newAuthorPublications.add( publicationAuthor );
+
+			authorPosition++;
+		}
+		publication.setPublicationAuthors( newAuthorPublications );
+
+		// if ( publication.getPublicationAuthors() == null ||
+		// publication.getPublicationAuthors().isEmpty() )
+		// {
+		// responseMap.put( "status", "error" );
+		// responseMap.put( "statusMessage", "Failed to save new publication,
+		// publication contain no authors" );
+		// }
+
+		/* ABstract */
+		if ( abstractText != null )
+		{
+			if ( abstractText.isEmpty() )
+				publication.setAbstractText( null );
+			else
+			{
+				publication.setAbstractText( abstractText );
+				publication.setAbstractStatus( CompletionStatus.COMPLETE );
+			}
+		}
+
+		/* Insert Keyword if any */
+		if ( keywordList != null && !keywordList.isEmpty() )
+		{
+			publication.setKeywordStatus( CompletionStatus.COMPLETE );
+			publication.setKeywordText( keywordList.replace( "_#_", "," ) );
+		}
+
+		/* Insert publication date - expect valid publication date */
+		if ( publicationDate != null && !publicationDate.isEmpty() )
+		{
+			// set date format
+			DateFormat dateFormat = new SimpleDateFormat( "dd/M/yyyy", Locale.ENGLISH );
+			try
+			{
+				Date date = dateFormat.parse( publicationDate );
+				publication.setPublicationDate( date );
+				publication.setPublicationDateFormat( "yyyy/M/d" );
+			}
+			catch ( Exception e )
+			{
+			}
+		}
+
+		/* check for publication type */
+		try
+		{
+			PublicationType publicationType = PublicationType.valueOf( venueType.toUpperCase() );
+			if ( !publicationType.equals( publication.getPublicationType() ) )
+				publication.setPublicationType( publicationType );
+		}
+		catch ( Exception e )
+		{
+		}
+
+		// check for volume
+		int inputVolume = 0;
+		if ( volume != null && !volume.isEmpty() )
+		{
+			try
+			{
+				inputVolume = Integer.parseInt( volume );
+			}
+			catch ( Exception e )
+			{
+			}
+
+			if ( inputVolume > 0 )
+				publication.addOrUpdateAdditionalInformation( "volume", inputVolume );
+		}
+
+		// check for venue
+		if ( venueId != null && !venueId.isEmpty() )
+		{
+			Calendar cal = Calendar.getInstance();
+			cal.setTime( publication.getPublicationDate() );
+			String inputYear = Integer.toString( cal.get( Calendar.YEAR ) );
+
+			EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( venueId );
+			if ( publication.getEvent() == null )
+			{
+				Event newEvent = null;
+				if ( eventGroup.getEvents() != null && !eventGroup.getEvents().isEmpty() )
+				{
+					for ( Event eachEvent : eventGroup.getEvents() )
+					{
+						if ( eachEvent.getYear().equals( inputYear ) )
+						{
+							newEvent = eachEvent;
+							break;
+						}
+					}
+				}
+				if ( newEvent == null )
+				{
+					newEvent = new Event();
+					newEvent.setEventGroup( eventGroup );
+					newEvent.setYear( inputYear );
+					if ( inputVolume > 0 )
+						newEvent.setVolume( Integer.toString( inputVolume ) );
+
+					newEvent.addPublication( publication );
+				}
+				publication.setEvent( newEvent );
+			}
+			// already assign to event , but somehow probably wrong
+			else
+			{
+				// first check for eventGroup
+				Event event = publication.getEvent();
+				if ( event.getEventGroup().equals( eventGroup ) )
+				{
+					// if on save event group, check with date
+
+					if ( !event.getYear().equals( inputYear ) )
+					{
+						// assign with new event, because year doesn't match
+
+						Event newEvent = null;
+						if ( eventGroup.getEvents() != null && !eventGroup.getEvents().isEmpty() )
+						{
+							for ( Event eachEvent : eventGroup.getEvents() )
+							{
+								if ( eachEvent.getYear().equals( inputYear ) )
+								{
+									newEvent = eachEvent;
+									break;
+								}
+							}
+						}
+
+						if ( newEvent == null )
+						{
+							newEvent = new Event();
+							newEvent.setEventGroup( eventGroup );
+							newEvent.setYear( inputYear );
+							if ( inputVolume > 0 )
+								newEvent.setVolume( Integer.toString( inputVolume ) );
+							newEvent.addPublication( publication );
+						}
+						publication.setEvent( newEvent );
+					}
+					else
+					{
+						// if volume added, set volume
+						if ( inputVolume > 0 )
+							event.setVolume( Integer.toString( inputVolume ) );
+					}
+				}
+
+			}
+		}
+
+		// pages
+		try
+		{
+			if ( pages != null && !pages.isEmpty() )
+			{
+				String[] splitPages = pages.split( "-" );
+				if ( splitPages.length == 2 )
+				{
+					publication.setStartPage( Integer.parseInt( splitPages[0].trim() ) );
+					publication.setEndPage( Integer.parseInt( splitPages[1].trim() ) );
+				}
+				else if ( splitPages.length == 1 )
+				{
+					publication.setStartPage( Integer.parseInt( splitPages[0].trim() ) );
+				}
+			}
+		}
+		catch ( Exception e )
+		{
+			// TODO: handle exception
+		}
+		// at the end persist publication
+		persistenceStrategy.getPublicationDAO().persist( publication );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "changes on publication saved" );
+
+		Map<String, String> publicationMap = new LinkedHashMap<String, String>();
+		publicationMap.put( "id", publication.getId() );
+		publicationMap.put( "title", publication.getTitle() );
+		responseMap.put( "publication", publicationMap );
+
+		return responseMap;
 	}
 }
