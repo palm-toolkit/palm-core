@@ -15,6 +15,9 @@ public class CircleFeatureImpl implements CircleFeature
 	private CircleDetail circleDetail;
 
 	@Autowired( required = false )
+	private CircleInterest circleInterest;
+
+	@Autowired( required = false )
 	private CircleManage circleManage;
 
 	@Autowired( required = false )
@@ -49,6 +52,15 @@ public class CircleFeatureImpl implements CircleFeature
 			this.circleDetail = new CircleDetailImpl();
 
 		return this.circleDetail;
+	}
+
+	@Override
+	public CircleInterest getCircleInterest()
+	{
+		if ( this.circleInterest == null )
+			this.circleInterest = new CircleInterestImpl();
+
+		return this.circleInterest;
 	}
 
 	@Override

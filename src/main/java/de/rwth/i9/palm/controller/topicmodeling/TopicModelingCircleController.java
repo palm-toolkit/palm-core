@@ -1,4 +1,4 @@
-package de.rwth.i9.palm.controller;
+package de.rwth.i9.palm.controller.topicmodeling;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,8 +16,8 @@ import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Controller
-@RequestMapping( value = "/topicmodeling" )
-public class ManageTopicModelingController
+@RequestMapping( value = "/circle" )
+public class TopicModelingCircleController
 {
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -26,7 +26,7 @@ public class ManageTopicModelingController
 	private PalmAnalytics palmAnalytics;
 
 	@Transactional
-	@RequestMapping( method = RequestMethod.GET )
+	@RequestMapping( value = "/dynamictopic", method = RequestMethod.GET )
 	public @ResponseBody String allReindex()
 	{
 		ParallelTopicModel ptm = palmAnalytics.getDynamicTopicModel().createModel( "C:\\Users\\nifry\\Desktop\\Years\\", "Years", 11, 10 );
