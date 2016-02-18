@@ -1,6 +1,8 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -239,5 +241,18 @@ public class CircleController
 
 		return responseMap;
 	}
+	
+	@RequestMapping( value = "/interest", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherInterest( 
+			@RequestParam( value = "id", required = false ) final String circleId, 
+			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
+			@RequestParam( value = "startDate", required = false ) final String startDate,
+			@RequestParam( value = "endDate", required = false ) final String endDate,
+			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	{
+		return circleFeature.getCircleInterest().getCircleInterestById( circleId, extractionServiceType, startDate, endDate );
+	}
+	
 
 }
