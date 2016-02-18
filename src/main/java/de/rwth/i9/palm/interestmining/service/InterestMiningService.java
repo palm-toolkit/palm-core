@@ -194,7 +194,7 @@ public class InterestMiningService
 				{
 					if ( authorInterestProfile1 == null )
 					{
-						authorInterestProfile1 = author.getSpecifitAuthorInterestProfile( partOfProfileName );
+						authorInterestProfile1 = author.getSpecificAuthorInterestProfile( partOfProfileName );
 
 						if ( authorInterestProfile1 == null )
 						{
@@ -205,7 +205,7 @@ public class InterestMiningService
 					}
 					else
 					{
-						authorInterestProfile2 = author.getSpecifitAuthorInterestProfile( partOfProfileName );
+						authorInterestProfile2 = author.getSpecificAuthorInterestProfile( partOfProfileName );
 
 						if ( authorInterestProfile2 == null )
 						{
