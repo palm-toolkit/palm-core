@@ -13,6 +13,8 @@ public interface CircleFeature
 
 	public CircleDetail getCircleDetail();
 
+	public CircleInterest getCircleInterest();
+
 	public CircleManage getCircleManage();
 
 	public CirclePublication getCirclePublication();
