@@ -134,7 +134,7 @@ public class ManageResearcherController
 		}
 
 		// set based on user input
-		newAuthor.setName( author.getName() );
+		newAuthor.setPossibleNames( author.getName() );
 		if ( !author.getAcademicStatus().equals( "" ) )
 			newAuthor.setAcademicStatus( author.getAcademicStatus() );
 		if ( author.getPhotoUrl().startsWith( "http:" ) )

@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.rwth.i9.palm.helper.NameNormalizationHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorSource;
@@ -129,7 +130,7 @@ public class ResearcherCollectionService
 					if ( authorMap.get( "name" ) == null )
 						continue;
 
-					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).replace( "-", " " ).trim();
+					String authorName = NameNormalizationHelper.normalizeName( authorMap.get( "name" ).toLowerCase().replace( ".", "" ).replace( "-", " " ).trim() );
 
 					// check if author already on array list
 					Integer authorIndex = indexHelper.get( authorName );
