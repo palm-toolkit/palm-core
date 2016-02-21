@@ -23,7 +23,7 @@ import de.rwth.i9.palm.service.ApplicationService;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
-@RequestMapping( value = "/admin/api" )
+@RequestMapping( value = "/api" )
 public class ManageApiController
 {
 	private static final String LINK_NAME = "administration";
@@ -50,12 +50,6 @@ public class ManageApiController
 	public ModelAndView getSources( @PathVariable String apiType, final HttpServletResponse response ) throws InterruptedException
 	{
 		ModelAndView model = null;
-
-		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
-		{
-			model = TemplateHelper.createViewWithLink( "401", "error" );
-			return model;
-		}
 
 		model = TemplateHelper.createViewWithLink( "widgetLayoutAjax", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.ADMINISTRATION, "api-" + apiType );
