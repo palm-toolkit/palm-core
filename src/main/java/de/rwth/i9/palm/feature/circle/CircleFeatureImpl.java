@@ -29,6 +29,9 @@ public class CircleFeatureImpl implements CircleFeature
 	@Autowired( required = false )
 	private CircleSearch circleSearch;
 
+	@Autowired( required = false )
+	private CircleTopPublication circleTopPublication;
+
 	@Override
 	public CircleApi getCircleApi()
 	{
@@ -93,6 +96,15 @@ public class CircleFeatureImpl implements CircleFeature
 			this.circleSearch = new CircleSearchImpl();
 
 		return this.circleSearch;
+	}
+
+	@Override
+	public CircleTopPublication getCircleTopPublication()
+	{
+		if ( this.circleTopPublication == null )
+			this.circleTopPublication = new CircleTopPublicationImpl();
+
+		return this.circleTopPublication;
 	}
 
 }

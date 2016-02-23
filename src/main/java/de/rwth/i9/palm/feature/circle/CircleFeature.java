@@ -22,4 +22,6 @@ public interface CircleFeature
 	public CircleResearcher getCircleResearcher();
 
 	public CircleSearch getCircleSearch();
+
+	public CircleTopPublication getCircleTopPublication();
 }
