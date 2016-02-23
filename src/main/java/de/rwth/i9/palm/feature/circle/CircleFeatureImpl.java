@@ -6,6 +6,9 @@ public class CircleFeatureImpl implements CircleFeature
 {
 
 	@Autowired( required = false )
+	private CircleAcademicEventTree circleAcademicEventTree;
+
+	@Autowired( required = false )
 	private CircleApi circleApi;
 
 	@Autowired( required = false )
@@ -31,6 +34,15 @@ public class CircleFeatureImpl implements CircleFeature
 
 	@Autowired( required = false )
 	private CircleTopPublication circleTopPublication;
+
+	@Override
+	public CircleAcademicEventTree getCircleAcademicEventTree()
+	{
+		if ( this.circleAcademicEventTree == null )
+			this.circleAcademicEventTree = new CircleAcademicEventTreeImpl();
+
+		return this.circleAcademicEventTree;
+	}
 
 	@Override
 	public CircleApi getCircleApi()

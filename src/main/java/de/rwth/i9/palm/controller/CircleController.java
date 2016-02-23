@@ -22,6 +22,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -256,7 +257,7 @@ public class CircleController
 	
 	/**
 	 * Get PublicationMap (JSON), containing top publications (highly cited publications) information and detail.
-	 * @param authorId
+	 * @param circleId
 	 * @param startPage
 	 * @param maxresult
 	 * @param response
@@ -274,4 +275,45 @@ public class CircleController
 		if( maxresult == null ) maxresult = 10;
 		return circleFeature.getCircleTopPublication().getTopPublicationListByCircleId( authorId, startPage, maxresult );
 	}
+	
+	/**
+	 * Get academic event tree of given circle
+	 * 
+	 * @param circleId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/academicEventTree", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getAcademicEventTreeMap( 
+			@RequestParam( value = "id", required = false ) final String circleId,
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( circleId == null || circleId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circleId null" );
+			return responseMap;
+		}
+
+		// get author
+		Circle circle  = persistenceStrategy.getCircleDAO().getById( circleId );
+
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( circleFeature.getCircleAcademicEventTree().getCircleAcademicEventTree( circle ) );
+
+		return responseMap;
+	}
+
 }
