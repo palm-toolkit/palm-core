@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
@@ -31,61 +32,40 @@ public class TopicExtractionService
 	@Autowired
 	private AsynchronousTopicExtractionService asynchronousTopicExtractionService;
 
-	public void extractTopicFromPublicationByAuthor( Author author ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException
+	public void extractTopicFromPublicationByAuthor( Author author ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ExecutionException
 	{
 		List<Future<PublicationTopic>> publicationTopicFutureList = new ArrayList<Future<PublicationTopic>>();
 		List<ExtractionService> extractionServices = persistenceStrategy.getExtractionServiceDAO().getAllActiveExtractionService();
-		
+
 		// get current date
 		Calendar calendar = Calendar.getInstance();
 
 		boolean topicExtractionUpdated = false;
 
-		// loop through available extraction services
-		for ( ExtractionService extractionService : extractionServices )
+		// publications on specific user
+		for ( Publication publication : author.getPublications() )
 		{
-			if ( !extractionService.isActive() )
+			if ( publication.getAbstractText() == null )
 				continue;
 
-			// check extraction service limitation (number of queries per day)
-			// TODO this is still not correct
-			if ( extractionService.getLastQueryDate() != null )
+			// at least have an abstract
+			if ( publication.isContentUpdated() )
 			{
-				if ( extractionService.getLastQueryDate().equals( calendar.getTime() ) )
+				// loop through available extraction services
+				for ( ExtractionService extractionService : extractionServices )
 				{
-					extractionService.setCountQueryThisDay( extractionService.getCountQueryThisDay() + author.getPublications().size() );
-					persistenceStrategy.getExtractionServiceDAO().persist( extractionService );
-				}
-				else
-				{
-					extractionService.setLastQueryDate( calendar.getTime() );
-					extractionService.setCountQueryThisDay( author.getPublications().size() );
-					persistenceStrategy.getExtractionServiceDAO().persist( extractionService );
-				}
-			}
-			else
-			{
-				extractionService.setLastQueryDate( calendar.getTime() );
-				extractionService.setCountQueryThisDay( author.getPublications().size() );
-				persistenceStrategy.getExtractionServiceDAO().persist( extractionService );
-			}
+					if ( !extractionService.isActive() )
+						continue;
 
-			// if beyond limitation query perday
-			if ( extractionService.getCountQueryThisDay() > extractionService.getMaxQueryPerDay() )
-				continue;
-			
-			// publications on specific user
-			for ( Publication publication : author.getPublications() )
-			{
-				if ( publication.getAbstractText() == null )
-					continue;
+					// count number of service being used
+					countExtractionServiceUsages( extractionService, author, calendar );
 
-				// at least have an abstract
-				if ( publication.isContentUpdated() )
-				{
+					// if beyond limitation query perday
+					if ( extractionService.getCountQueryThisDay() > extractionService.getMaxQueryPerDay() )
+						continue;
 					// // remove old extracted source
-					// if ( publication.getPublicationTopics() != null )
-					// publication.removeAllPublicationTopic();
+					if ( publication.getPublicationTopics() != null && !publication.getPublicationTopics().isEmpty() )
+						publication.removeAllPublicationTopic();
 
 					// create new publication topic
 					PublicationTopic publicationTopic = new PublicationTopic();
@@ -102,10 +82,25 @@ public class TopicExtractionService
 					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) )
 						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
 				}
-				else
+			}
+			else
+			{
+				// loop through available extraction services
+				for ( ExtractionService extractionService : extractionServices )
 				{
-					// if something fails on last run
+					if ( !extractionService.isActive() )
+						continue;
+
+					// count number of service being used
+					countExtractionServiceUsages( extractionService, author, calendar );
+
+					// if beyond limitation query perday
+					if ( extractionService.getCountQueryThisDay() > extractionService.getMaxQueryPerDay() )
+						continue;
+
 					PublicationTopic publicationTopic = null;
+
+					// check if ever extracted before
 					for ( PublicationTopic publicationTopicEach : publication.getPublicationTopics() )
 					{
 						if ( publicationTopicEach.getExtractionServiceType().equals( extractionService.getExtractionServiceType() ) )
@@ -132,30 +127,17 @@ public class TopicExtractionService
 						else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) )
 							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
 					}
-
 				}
-				
+
 			}
 
 		}
-		// check whether thread worker is done
-		// Wait until they are all done
-		boolean processIsDone = true;
-		do
-		{
-			processIsDone = true;
-			for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
-			{
-				if ( !futureList.isDone() )
-				{
-					processIsDone = false;
-					break;
-				}
-			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !processIsDone );
 
+		// Wait until they are all done
+		for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
+		{
+			futureList.get();
+		}
 		// save publications, set flag, prevent re-extract publication topic
 		for ( Publication publication : author.getPublications() )
 		{
@@ -329,6 +311,33 @@ public class TopicExtractionService
 //			System.out.println();
 
 			persistenceStrategy.getPublicationDAO().persist( publication );
+		}
+	}
+
+	private void countExtractionServiceUsages( ExtractionService extractionService, Author author, Calendar calendar )
+	{
+
+		// check extraction service limitation (number of queries per day)
+		// TODO this is still not correct
+		if ( extractionService.getLastQueryDate() != null )
+		{
+			if ( extractionService.getLastQueryDate().equals( calendar.getTime() ) )
+			{
+				extractionService.setCountQueryThisDay( extractionService.getCountQueryThisDay() + author.getPublications().size() );
+				persistenceStrategy.getExtractionServiceDAO().persist( extractionService );
+			}
+			else
+			{
+				extractionService.setLastQueryDate( calendar.getTime() );
+				extractionService.setCountQueryThisDay( author.getPublications().size() );
+				persistenceStrategy.getExtractionServiceDAO().persist( extractionService );
+			}
+		}
+		else
+		{
+			extractionService.setLastQueryDate( calendar.getTime() );
+			extractionService.setCountQueryThisDay( author.getPublications().size() );
+			persistenceStrategy.getExtractionServiceDAO().persist( extractionService );
 		}
 	}
 

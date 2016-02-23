@@ -267,6 +267,8 @@ public class ManagePublicationController
 		{
 			publication.addOrUpdateAdditionalInformation( "publisher", publisher );
 		}
+		// set publication updated
+		publication.setContentUpdated( true );
 		// at the end persist publication
 		persistenceStrategy.getPublicationDAO().persist( publication );
 
@@ -435,6 +437,8 @@ public class ManagePublicationController
 			{
 				publication.setAbstractText( abstractText );
 				publication.setAbstractStatus( CompletionStatus.COMPLETE );
+				// set publication updated
+				publication.setContentUpdated( true );
 			}
 		}
 
@@ -565,6 +569,33 @@ public class ManagePublicationController
 						if ( inputVolume > 0 )
 							event.setVolume( Integer.toString( inputVolume ) );
 					}
+				}
+				// change eventgroup and event
+				else
+				{
+					Event newEvent = null;
+					if ( eventGroup.getEvents() != null && !eventGroup.getEvents().isEmpty() )
+					{
+						for ( Event eachEvent : eventGroup.getEvents() )
+						{
+							if ( eachEvent.getYear().equals( inputYear ) )
+							{
+								newEvent = eachEvent;
+								break;
+							}
+						}
+					}
+
+					if ( newEvent == null )
+					{
+						newEvent = new Event();
+						newEvent.setEventGroup( eventGroup );
+						newEvent.setYear( inputYear );
+						if ( inputVolume > 0 )
+							newEvent.setVolume( Integer.toString( inputVolume ) );
+						newEvent.addPublication( publication );
+					}
+					publication.setEvent( newEvent );
 				}
 
 			}

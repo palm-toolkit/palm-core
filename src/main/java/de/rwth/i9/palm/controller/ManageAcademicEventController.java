@@ -202,6 +202,8 @@ public class ManageAcademicEventController
 			responseMap.put( "volume", volume );
 		if( year != null )
 			responseMap.put( "year", year );
+		if ( publicationId != null )
+			responseMap.put( "publicationId", publicationId );
 		return responseMap;
 	}
 	

@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ public class ResearcherInterestImpl extends AcademicFeatureImpl implements Resea
 	private InterestMiningService interestMiningService;
 
 	@Override
-	public Map<String, Object> getAuthorInterestById( String authorId, String extractionServiceType, String startDate, String endDate ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ParseException
+	public Map<String, Object> getAuthorInterestById( String authorId, String extractionServiceType, String startDate, String endDate ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ParseException, ExecutionException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();

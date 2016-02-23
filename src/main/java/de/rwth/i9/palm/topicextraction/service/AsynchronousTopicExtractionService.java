@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -48,7 +47,15 @@ public class AsynchronousTopicExtractionService
 		// free alchemy has certain text limitation in length
 		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
 
-		Map<String, Object> alchemyResultsMap = AlchemyAPITopicExtraction.getTextRankedKeywords( text );
+		Map<String, Object> alchemyResultsMap = null;
+
+		try
+		{
+			alchemyResultsMap = AlchemyAPITopicExtraction.getTextRankedKeywords( text );
+		}
+		catch ( Exception e )
+		{
+		}
 
 		if ( alchemyResultsMap != null )
 		{

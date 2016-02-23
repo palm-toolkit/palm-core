@@ -178,14 +178,15 @@ public class InterestMiningService
 
 			for ( String partOfProfileName : derivedInterestProfileName )
 			{
-				if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "∪" ) )
+				// ? sometimes problem on encoding
+				if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "?" ) || partOfProfileName.equals( "+" ) || partOfProfileName.equals( "∪" ) )
 				{
 					if ( authorInterestProfileResult != null )
 					{
 						authorInterestProfile1 = authorInterestProfileResult;
 						authorInterestProfileResult = null;
 					}
-					if ( partOfProfileName.equals( "∩" ) )
+					if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "?" ) || partOfProfileName.equals( "+" ) )
 						operationType = "INTERSECTION";
 					else
 						operationType = "UNION";

@@ -106,7 +106,7 @@ public class AcademicEventController
 		if ( eventId != null )
 			model.addObject( "targetEventId", eventId );
 		if ( name != null )
-			model.addObject( "targetName", name );
+			model.addObject( "targetName", name.replaceAll( "\"", "" ) );
 		if ( notation != null )
 			model.addObject( "targetNotation", notation );
 		if ( type != null )
