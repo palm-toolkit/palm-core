@@ -62,7 +62,18 @@ public class MicrosoftAcademicSearchPublicationCollection extends PublicationCol
 
 		// map the results into jsonMap
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode resultsNode = mapper.readTree( httpResponse.getEntity().getContent() );
+		JsonNode resultsNode = null;
+
+		try
+		{
+			resultsNode = mapper.readTree( httpResponse.getEntity().getContent() );
+		}
+		catch ( Exception e )
+		{
+		}
+
+		if ( resultsNode == null )
+			return Collections.emptyList();
 		
 		JsonNode publicationResultNode = null;
 
