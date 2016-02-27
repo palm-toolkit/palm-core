@@ -50,7 +50,7 @@ public class InterestMiningService
 	private WordFreqInterestProfile wordFreqInterestProfile;
 
 	/**
-	 * Get author interests from active author profiles
+	 * Get author interests from active interest profiles
 	 * 
 	 * @param responseMap
 	 * @param author

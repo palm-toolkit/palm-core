@@ -1,5 +1,8 @@
 package de.rwth.i9.palm.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +34,9 @@ public class ManageTopicModelingController
 //		List<String> topics = palmAnalytics.getDynamicTopicModel().getListTopics( ptm, 10 );
 //		LinkedHashMap<String, List<Double>> distribution = palmAnalytics.getDynamicTopicModel().getTopicDistributionforDocuments( ptm, 0.0, 10, ptm.numTopics );
 
+		Map<String, Object> ldaObjectResults = new HashMap<>();
+		ldaObjectResults.put( "algorithm", "lda" );
+		ldaObjectResults.put( "termvalues", "lda" );
 		return "success";
 	}
 }

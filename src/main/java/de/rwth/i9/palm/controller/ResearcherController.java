@@ -280,6 +280,21 @@ public class ResearcherController
 		return Collections.emptyMap();
 	}
 	
+	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherTopicModel( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	{
+		if ( authorId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			return researcherFeature.getResearcherTopicModeling().getLdaBasicExample( authorId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 	@RequestMapping( value = "/enrich", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherEnrich( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException, TimeoutException
