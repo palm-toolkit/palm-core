@@ -128,8 +128,6 @@ public class InterestMiningService
 			// construct the cluster
 			logger.info( "Construct publication cluster " );
 			constructPublicationClusterByLanguageAndYear( author, publicationClustersMap );
-			// may be you have to turn off the connection with team viewer and
-			// share only screens in skype No no its ok
 			// cluster is ready
 			if ( !publicationClustersMap.isEmpty() )
 			{

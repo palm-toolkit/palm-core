@@ -503,5 +503,38 @@ public class ResearcherController
 
 		return responseMap;
 	}
+	
+	/**
+	 * Get author Topics
+	 * 
+	 * @param authorId
+	 * @param name
+	 * @param extractionServiceType
+	 * @param startDate
+	 * @param endDate
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 * @throws ParseException
+	 */
+	@RequestMapping( value = "/topicmodeling", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherTopicModeling( 
+			@RequestParam( value = "id", required = false ) final String authorId, 
+			@RequestParam( value = "name", required = false ) final String name, 
+			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
+			@RequestParam( value = "startDate", required = false ) final String startDate,
+			@RequestParam( value = "endDate", required = false ) final String endDate,
+			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	{
+		if ( name != null )
+			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
+		else
+			return researcherFeature.getResearcherTopicModelingLDA().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
+		// return Collections.emptyMap();
+	}
 
 }

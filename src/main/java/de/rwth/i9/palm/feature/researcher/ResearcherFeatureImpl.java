@@ -33,6 +33,21 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 
 	@Autowired( required = false )
 	private ResearcherTopPublication researcherTopPublication;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingLDA researcherTopicModelingLDA;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingNGram researcherTopicModelingNGram;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingTOT researcherTopicModelingTOT;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingDiscreteLDA researcherTopicModelingDiscreteLDA;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingLabeledLDA researcherTopicModelingLabeledLDA;
 
 	@Override
 	public ResearcherAcademicEventTree getResearcherAcademicEventTree()
@@ -122,6 +137,46 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherTopPublication = new ResearcherTopPublicationImpl();
 
 		return this.researcherTopPublication;
+	}
+
+	@Override
+	public ResearcherTopicModelingLDA getResearcherTopicModelingLDA()
+	{
+		if ( this.researcherTopicModelingLDA == null)
+			this.researcherTopicModelingLDA = new ResearcherTopicModelingLDAImpl();
+		return this.researcherTopicModelingLDA;
+	}
+
+	@Override
+	public ResearcherTopicModelingNGram getResearcherTopicModelingNGram()
+	{
+		if ( this.researcherTopicModelingNGram == null)
+			this.researcherTopicModelingNGram = new ResearcherTopicModelingNGramImpl();
+		return this.researcherTopicModelingNGram;
+	}
+
+	@Override
+	public ResearcherTopicModelingTOT getResearcherTopicModelingTOT()
+	{
+		if ( this.researcherTopicModelingTOT == null)
+			this.researcherTopicModelingTOT = new ResearcherTopicModelingTOTImpl();
+		return this.researcherTopicModelingTOT;
+	}
+
+	@Override
+	public ResearcherTopicModelingDiscreteLDA getResearcherTopicModelingDiscreteLDA()
+	{
+		if ( this.researcherTopicModelingDiscreteLDA == null)
+			this.researcherTopicModelingDiscreteLDA = new ResearcherTopicModelingDiscreteLDAImpl();
+		return this.researcherTopicModelingDiscreteLDA;
+	}
+
+	@Override
+	public ResearcherTopicModelingLabeledLDA getResearcherTopicModelingLabeledLDA()
+	{
+		if ( this.researcherTopicModelingLabeledLDA == null)
+			this.researcherTopicModelingLabeledLDA = new ResearcherTopicModelingLabeledLDAImpl();
+		return this.researcherTopicModelingLabeledLDA;
 	}
 
 }
