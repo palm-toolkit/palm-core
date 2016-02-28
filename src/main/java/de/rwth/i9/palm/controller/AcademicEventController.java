@@ -163,8 +163,21 @@ public class AcademicEventController
 
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )
+		{
 			request.getSession().setAttribute( "eventGroups", eventGroupsMap.get( "eventGroups" ) );
-
+			// recheck if session really has been updated
+			// (there is a bug in spring session, which makes session is
+			// not updated sometimes) - a little work a round
+			boolean isSessionUpdated = false;
+			while ( !isSessionUpdated )
+			{
+				Object eventGroups = request.getSession().getAttribute( "eventGroups" );
+				if ( eventGroups.equals( eventGroupsMap.get( "eventGroups" ) ) )
+					isSessionUpdated = true;
+				else
+					request.getSession().setAttribute( "eventGroups", eventGroupsMap.get( "eventGroups" ) );
+			}
+		}
 		if ( (Integer) eventGroupsMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) eventGroupsMap.get( "totalCount" ) );
