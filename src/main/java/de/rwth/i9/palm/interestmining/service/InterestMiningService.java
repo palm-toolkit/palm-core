@@ -117,6 +117,14 @@ public class InterestMiningService
 				}
 			}
 		}
+		else
+		{
+			// clear previous results
+			if ( author.getAuthorInterestProfiles() != null && !author.getAuthorInterestProfiles().isEmpty() )
+			{
+				author.getAuthorInterestProfiles().clear();
+			}
+		}
 
 		// if defaultInterestProfile not null,
 		// means interest calculation from beginning is needed

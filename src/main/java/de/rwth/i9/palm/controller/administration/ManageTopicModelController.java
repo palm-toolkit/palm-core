@@ -1,6 +1,5 @@
 package de.rwth.i9.palm.controller.administration;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +18,6 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
-import de.rwth.i9.palm.model.InterestProfile;
-import de.rwth.i9.palm.model.InterestProfileProperty;
 import de.rwth.i9.palm.model.TopicModelingAlgorithmAuthor;
 import de.rwth.i9.palm.model.TopicModelingAlgorithmCircle;
 import de.rwth.i9.palm.model.Widget;
@@ -28,7 +25,6 @@ import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationService;
 import de.rwth.i9.palm.service.SecurityService;
-import de.rwth.i9.palm.wrapper.InterestProfileListWrapper;
 import de.rwth.i9.palm.wrapper.TopicModelingAlgorithmAuthorListWrapper;
 import de.rwth.i9.palm.wrapper.TopicModelingAlgorithmCircleListWrapper;
 
@@ -58,7 +54,9 @@ public class ManageTopicModelController
 	 */
 	@Transactional
 	@RequestMapping( value = "/{type}", method = RequestMethod.GET )
-	public ModelAndView getInterestProfile( @PathVariable String type, final HttpServletResponse response ) throws InterruptedException
+	public ModelAndView getInterestProfile( 
+			@PathVariable String type, 
+			final HttpServletResponse response ) throws InterruptedException
 	{
 		ModelAndView model = null;
 
@@ -92,7 +90,7 @@ public class ManageTopicModelController
 		}
 		// assign the model
 		model.addObject( "widgets", widgets );
-
+		model.addObject( "type", type );
 
 		return model;
 	}
@@ -106,36 +104,27 @@ public class ManageTopicModelController
 	 * @throws InterruptedException
 	 */
 	@Transactional
-	@RequestMapping( method = RequestMethod.POST )
-	public @ResponseBody Map<String, Object> saveInterestProfile( 
-			@ModelAttribute( "interestProfileListWrapper" ) InterestProfileListWrapper interestProfileListWrapper, 
+	@RequestMapping( value = "/{type}", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> saveInterestProfile( @PathVariable String type,
+			@ModelAttribute( "interestProfileListWrapper" ) Object interestProfileListWrapper, 
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// persist interestProfile from model attribute
-		for ( InterestProfile interestProfile : interestProfileListWrapper.getInterestProfiles() )
+		if ( type.equals( "author" ) )
 		{
-			if ( interestProfile.getInterestProfileProperties() != null || !interestProfile.getInterestProfileProperties().isEmpty() )
+			TopicModelingAlgorithmAuthorListWrapper topicModelAlgorithmAuthorListWrapper = (TopicModelingAlgorithmAuthorListWrapper) interestProfileListWrapper;
+			for ( TopicModelingAlgorithmAuthor topicModelingAlgorithms : topicModelAlgorithmAuthorListWrapper.getTopicModelingAlgorithms() )
 			{
-				Iterator<InterestProfileProperty> iteratorInterestProfileProperty = interestProfile.getInterestProfileProperties().iterator();
-				while ( iteratorInterestProfileProperty.hasNext() )
-				{
-					InterestProfileProperty interestProfileProperty = iteratorInterestProfileProperty.next();
-					// check for invalid interestProfileProperty object to be
-					// removed
-					if ( interestProfileProperty.getMainIdentifier().equals( "" ) || interestProfileProperty.getValue().equals( "" ) )
-					{
-						iteratorInterestProfileProperty.remove();
-						// delete interestProfileProperty on database
-						persistenceStrategy.getInterestProfilePropertyDAO().delete( interestProfileProperty );
-					}
-					else
-					{
-						interestProfileProperty.setInterestProfile( interestProfile );
-					}
-				}
-
+				persistenceStrategy.getTopicModelingAlgorithmAuthorDAO().persist( topicModelingAlgorithms );
 			}
-			persistenceStrategy.getInterestProfileDAO().persist( interestProfile );
+		}
+		else if ( type.equals( "circle" ) )
+		{
+			TopicModelingAlgorithmCircleListWrapper topicModelAlgorithmCircleListWrapper = (TopicModelingAlgorithmCircleListWrapper) interestProfileListWrapper;
+			for ( TopicModelingAlgorithmCircle topicModelingAlgorithms : topicModelAlgorithmCircleListWrapper.getTopicModelingAlgorithms() )
+			{
+				persistenceStrategy.getTopicModelingAlgorithmCircleDAO().persist( topicModelingAlgorithms );
+			}
 		}
 
 		// set response
