@@ -49,13 +49,13 @@ public class TopicModelingService
 		// and DERIVED (intersection or union between two or more DEFAULT algorithms)
 		List<TopicModelingAlgorithmAuthor> activeDefaultAlgorithms = persistenceStrategy.getTopicModelingAlgorithmAuthorDAO().getAllActiveInterestProfile( InterestProfileType.DEFAULT );
 		List<TopicModelingAlgorithmAuthor> activeDerivedAlgorithms = persistenceStrategy.getTopicModelingAlgorithmAuthorDAO().getAllActiveInterestProfile( InterestProfileType.DERIVED );
-
+		
 		// if no algorithms found or no topic modeling results found
 		if ( ( activeDefaultAlgorithms == null || activeDefaultAlgorithms.isEmpty() ) && ( activeDerivedAlgorithms == null || activeDerivedAlgorithms.isEmpty() ) && ( author.getAuthorTopicModelingProfiles() == null && author.getAuthorTopicModelingProfiles().isEmpty() ) )
 		{
 			logger.warn( "status", "error - no active topic modeling algorithms found" );
 		}
-		// Note: Actually we will only considered DefaultAngorithm first, we just skip the derived results
+		// Note: Actually we will only consider DefaultAngorithm first, we just skip the derived results
 		
 		// now check whether we need to replace existing results
 		if ( isReplaceExistingResult )
@@ -139,7 +139,7 @@ public class TopicModelingService
 			authorTopicModelingProfile.setName( authorTopicModelingProfileName );
 			authorTopicModelingProfile.setTopicModelingAlgorithmAuthor( activeDefaultAlgorithm );
 
-			// calculate dummy lda
+			// calculate dummy lda				
 			if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "basic dummy lda" ) )
 			{
 				calculateBasicDummyLDA( author, authorTopicModelingProfile );
@@ -177,7 +177,7 @@ public class TopicModelingService
 		
 		// get dummy results based on years cluster
 		List<Object> dummyClusterResults = getDummyClusterResults( author );
-
+		
 		// now put this cluster list into authorTopicModeling object
 		transformTopicModelingResultIntoAuthorTopicModeling( authorTopicModelingProfile, dummyClusterResults );
 
@@ -263,16 +263,16 @@ public class TopicModelingService
 		Random random = new Random();
 
 		// dummy start year array
-		int[] startYearArray = { 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000 };
+		int[] startYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015 };
 
-		// dummy start year array
+		// dummy end year array
 		int[] endYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015 };
 
 		// randomly pick start and end year
 		int startYear = startYearArray[random.nextInt( 11 )];
 		int endYear = endYearArray[random.nextInt( 11 )];
 
-		for ( int i = startYear; i <= endYear; i++ )
+		for ( int i = startYearArray[0]; i <= endYearArray[endYearArray.length]; i++ )
 		{
 			// store dummy information regarding cluster information
 			Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
@@ -287,18 +287,18 @@ public class TopicModelingService
 			// generate dummy terms
 			int numberOfWords = random.nextInt( 5 ) + 5;
 			int numberOfTermValues = random.nextInt( 10 ) + 10;
-			for ( int j = 0; j < numberOfTermValues; j++ )
+			for ( int j = 0; j < 11; j++ )
 			{
-				String[] dummyWords = generateRandomWords( numberOfWords );
-				StringBuilder dummyWordString = new StringBuilder();
-				for ( int k = 0; k < dummyWords.length; k++ )
-				{
-					if ( k > 0 )
-						dummyWordString.append( ", " );
-					dummyWordString.append( dummyWords[k] );
-				}
+//				String[] dummyWords = generateRandomWords( numberOfWords );
+//				StringBuilder dummyWordString = new StringBuilder();
+//				for ( int k = 0; k < dummyWords.length; k++ )
+//				{
+//					if ( k > 0 )
+//						dummyWordString.append( ", " );
+//					dummyWordString.append( dummyWords[k] );
+//				}
 				// add into termValueMap
-				termValueMap.put( dummyWordString.toString(), Math.random() );
+				termValueMap.put(palmAnalytics.getDynamicTopicModel().getListTopics( 10 ).get( j ), palmAnalytics.getDynamicTopicModel().getTopicProportion2(0.0, i, 10, 11 ).get( j ) );//dummyWordString.toString(), Math.random() );
 			}
 			dummyClusterResults.add( clusterResultMap );
 		}

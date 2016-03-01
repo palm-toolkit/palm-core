@@ -282,7 +282,7 @@ public class ResearcherController
 	
 	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> researcherTopicModel( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	public @ResponseBody Map<String, Object> researcherTopicModel( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = true ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
 		if ( authorId != null )
 		{
