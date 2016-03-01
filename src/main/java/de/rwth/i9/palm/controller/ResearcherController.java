@@ -175,7 +175,23 @@ public class ResearcherController
 		
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )
+		{
 			request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
+
+			// recheck if session really has been updated
+			// (there is a bug in spring session, which makes session is
+			// not updated sometimes) - a little work a round
+			boolean isSessionUpdated = false;
+			while ( !isSessionUpdated )
+			{
+				Object authors = request.getSession().getAttribute( "authors" );
+				if ( authors.equals( authorsMap.get( "authors" ) ) )
+					isSessionUpdated = true;
+				else
+					request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
+			}
+
+		}
 		
 		if ( (Integer) authorsMap.get( "totalCount" ) > 0 )
 		{
@@ -269,20 +285,23 @@ public class ResearcherController
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterest( 
 			@RequestParam( value = "id", required = false ) final String authorId, 
-			@RequestParam( value = "name", required = false ) final String name, 
-			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
-			@RequestParam( value = "startDate", required = false ) final String startDate,
-			@RequestParam( value = "endDate", required = false ) final String endDate,
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
-		if ( authorId != null )
-			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
+		if ( authorId != null ){
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, isReplaceExistingResult );
+		}
 		return Collections.emptyMap();
 	}
 	
 	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> researcherTopicModel( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = true ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	public @ResponseBody Map<String, Object> researcherTopicModel( 
+			@RequestParam( value = "id", required = false ) final String authorId, 
+			@RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
 		if ( authorId != null )
 		{
@@ -299,7 +318,6 @@ public class ResearcherController
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherEnrich( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException, TimeoutException
 	{
-		// id=90522536-4717-4fa3-ac43-b3f6300ad6c4
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
 		publicationCollectionService.enrichPublicationByExtractOriginalSources( new ArrayList<Publication>( author.getPublications() ), author, true );
 		return Collections.emptyMap();

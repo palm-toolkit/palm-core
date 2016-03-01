@@ -133,6 +133,15 @@ public class ManageResearcherController
 			newAuthor = new Author();
 		}
 
+		// if there is something wrong with the session
+		if ( newAuthor == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error on session - author not found on session" );
+
+			return responseMap;
+		}
+
 		// set based on user input
 		newAuthor.setPossibleNames( author.getName() );
 		if ( !author.getAcademicStatus().equals( "" ) )

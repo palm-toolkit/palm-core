@@ -482,8 +482,8 @@ public class PublicationCollectionService
 						selectedPublications.add( publication );
 					}
 					// remove old publicationSource
-					if ( publication != null )
-						publication.removeNonUserInputPublicationSource();
+					//if ( publication != null )
+						//publication.removeNonUserInputPublicationSource();
 				}
 
 				// if not exist any where create new publication

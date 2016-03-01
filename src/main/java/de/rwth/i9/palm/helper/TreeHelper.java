@@ -33,10 +33,12 @@ public class TreeHelper
 
 	/* attributes */
 	private String title;
+	private String tooltip = "";
 	private String key;
 	private String type;
 	private String href = "";
 	private boolean isFolder = false;
+	private boolean isAdded = false;
 	private boolean expand;
 	private List<TreeHelper> children = null;
 	@JsonIgnore
@@ -150,6 +152,26 @@ public class TreeHelper
 	public void setFolder( boolean isFolder )
 	{
 		this.isFolder = isFolder;
+	}
+
+	public boolean isAdded()
+	{
+		return isAdded;
+	}
+
+	public void setAdded( boolean isAdded )
+	{
+		this.isAdded = isAdded;
+	}
+
+	public String getTooltip()
+	{
+		return tooltip;
+	}
+
+	public void setTooltip( String tooltip )
+	{
+		this.tooltip = tooltip;
 	}
 
 }

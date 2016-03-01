@@ -40,7 +40,7 @@ public class AsynchronousTopicExtractionService
 	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 
-//		log.info( "AlchemyAPI extract publication " + publication.getTitle() + " starting" );
+		log.info( "AlchemyAPI extract publication " + publication.getTitle() + " starting" );
 
 		String text = getPublicationText( publication );
 
