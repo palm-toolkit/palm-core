@@ -269,10 +269,11 @@ public class TopicModelingService
 		int[] endYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015 };
 
 		// randomly pick start and end year
-		int startYear = startYearArray[random.nextInt( 11 )];
-		int endYear = endYearArray[random.nextInt( 11 )];
-
-		for ( int i = startYearArray[0]; i <= endYearArray[endYearArray.length]; i++ )
+//		int startYear = startYearArray[random.nextInt( 11 )];
+//		int endYear = endYearArray[random.nextInt( 11 )];
+// but this is dummy years  It doesnt change that much from yours. I use the same range. as 2005 to 2015 the loop is the same
+		//ok
+		for ( int i = startYearArray[0]; i < endYearArray[endYearArray.length - 1]; i++ )
 		{
 			// store dummy information regarding cluster information
 			Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
@@ -285,8 +286,8 @@ public class TopicModelingService
 			clusterResultMap.put( "termvalues", termValueMap );
 
 			// generate dummy terms
-			int numberOfWords = random.nextInt( 5 ) + 5;
-			int numberOfTermValues = random.nextInt( 10 ) + 10;
+//			int numberOfWords = random.nextInt( 5 ) + 5;
+//			int numberOfTermValues = random.nextInt( 10 ) + 10;
 			for ( int j = 0; j < 11; j++ )
 			{
 //				String[] dummyWords = generateRandomWords( numberOfWords );
@@ -298,7 +299,7 @@ public class TopicModelingService
 //					dummyWordString.append( dummyWords[k] );
 //				}
 				// add into termValueMap
-				termValueMap.put(palmAnalytics.getDynamicTopicModel().getListTopics( 10 ).get( j ), palmAnalytics.getDynamicTopicModel().getTopicProportion2(0.0, i, 10, 11 ).get( j ) );//dummyWordString.toString(), Math.random() );
+				termValueMap.put(palmAnalytics.getDynamicTopicModel().getListTopics( 10 ).get( j ), palmAnalytics.getDynamicTopicModel().getTopicProportion2(0.0, i-2005, 11, 11 ).get( j ) );//dummyWordString.toString(), Math.random() );
 			}
 			dummyClusterResults.add( clusterResultMap );
 		}
