@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +45,7 @@ import de.rwth.i9.palm.service.SecurityService;
 @RequestMapping( value = "/researcher" )
 public class ResearcherController
 {
+	private final static Logger log = LoggerFactory.getLogger( ResearcherController.class );
 
 	private static final String LINK_NAME = "researcher";
 
@@ -191,6 +194,20 @@ public class ResearcherController
 					request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
 			}
 
+			log.info( "\nRESEARCHER SESSION" );
+			@SuppressWarnings( "unchecked" )
+			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
+			// get author from session
+			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+			{
+				for ( Author sessionAuthor : sessionAuthors )
+				{
+					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+					{
+						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+					}
+				}
+			}
 		}
 		
 		if ( (Integer) authorsMap.get( "totalCount" ) > 0 )

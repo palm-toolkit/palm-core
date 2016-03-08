@@ -20,7 +20,7 @@ public class CiteseerXPublicationCollectionTest
 	@Test
 	public void getListOfAuthorsTest() throws IOException
 	{
-		List<Map<String, String>> authorList = CiteseerXPublicationCollection.getListOfAuthors( "chatti", null );
+		List<Map<String, String>> authorList = CiteseerXPublicationCollection.getListOfAuthors( "ulrik schroeder", null );
 
 		for ( Map<String, String> eachAuthor : authorList )
 		{
