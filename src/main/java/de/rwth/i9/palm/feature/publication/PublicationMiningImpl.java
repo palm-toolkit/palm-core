@@ -6,15 +6,14 @@ import java.util.InputMismatchException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.helper.MapUtil;
 import de.rwth.i9.palm.helper.comparator.PublicationTopicByExtractionServiceTypeComparator;
-import de.rwth.i9.palm.helper.comparator.ValueComparator;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -82,7 +81,7 @@ public class PublicationMiningImpl implements PublicationMining
 			publicationTopicMap.put( "extractor", publicationTopic.getExtractionServiceType().toString() );
 			// get the term value
 			// sort term value and cut until maxRetrieve
-			Map<String, Double> sortedMap = new TreeMap<String, Double>( new ValueComparator( publicationTopic.getTermValues() ) );
+			Map<String, Double> sortedMap = MapUtil.sortByValue( publicationTopic.getTermValues() );
 			sortedMap.putAll( publicationTopic.getTermValues() );
 
 			List<Object> termValueList = new ArrayList<Object>();

@@ -59,7 +59,6 @@ public class MendeleyPublicationCollection extends PublicationCollection
 	    DefaultHttpClient apacheHttpClient = ApacheHttpTransport.newDefaultHttpClient();
 	    HttpResponse httpResponse = apacheHttpClient.execute(httpGet);
 
-		// TODO: check for invalid token
 
 		// map the results into jsonMap
 		ObjectMapper mapper = new ObjectMapper();

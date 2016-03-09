@@ -86,21 +86,8 @@ public class TopicExtractionService
 					publicationTopic.setExtractionDate( calendar.getTime() );
 					publicationTopic.setPublication( publication );
 
-					if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.ALCHEMY ) )
-					{
-						publication.addPublicationTopic( publicationTopic );
-						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-					}
-					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
-					{
-						publication.addPublicationTopic( publicationTopic );
-						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-					}
-					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.FIVEFILTERS ) )
-					{
-						publication.addPublicationTopic( publicationTopic );
-						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-					}
+					// extract topics with available services
+					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
 				}
 				else
 				{
@@ -126,22 +113,8 @@ public class TopicExtractionService
 						// add to publications hashmap for persisting
 						publications.add( publication );
 
-						if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.ALCHEMY ) )
-						{
-							publication.addPublicationTopic( publicationTopic );
-							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-						}
-						else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
-						{
-							publication.addPublicationTopic( publicationTopic );
-							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-						}
-						else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.FIVEFILTERS ) )
-						{
-							publication.addPublicationTopic( publicationTopic );
-							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-
-						}
+						// extract topics with available services
+						doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
 					}
 
 				}
@@ -236,21 +209,8 @@ public class TopicExtractionService
 					publicationTopic.setExtractionDate( calendar.getTime() );
 					publicationTopic.setPublication( publication );
 
-					if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.ALCHEMY ) )
-					{
-						publication.addPublicationTopic( publicationTopic );
-						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-					}
-					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
-					{
-						publication.addPublicationTopic( publicationTopic );
-						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-					}
-					else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.FIVEFILTERS ) )
-					{
-						publication.addPublicationTopic( publicationTopic );
-						publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-					}
+					// extract topics with available services
+					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
 				}
 				else
 				{
@@ -276,22 +236,8 @@ public class TopicExtractionService
 						// add to publications hashmap for persisting
 						publications.add( publication );
 
-						if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.ALCHEMY ) )
-						{
-							publication.addPublicationTopic( publicationTopic );
-							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-						}
-						else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
-						{
-							publication.addPublicationTopic( publicationTopic );
-							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-						}
-						else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.FIVEFILTERS ) )
-						{
-							publication.addPublicationTopic( publicationTopic );
-							publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
-
-						}
+						// extract topics with available services
+						doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
 					}
 
 				}
@@ -356,6 +302,74 @@ public class TopicExtractionService
 			extractionService.setLastQueryDate( calendar.getTime() );
 			extractionService.setCountQueryThisDay( requestsCount );
 			persistenceStrategy.getExtractionServiceDAO().persist( extractionService );
+		}
+	}
+
+	/**
+	 * Extract publication with available
+	 * 
+	 * @param publication
+	 * @param extractionService
+	 * @param publicationTopic
+	 * @param publicationTopicFutureList
+	 * @throws UnsupportedEncodingException
+	 * @throws URISyntaxException
+	 */
+	private void doAsyncronousTopicExtraction( Publication publication, ExtractionService extractionService, PublicationTopic publicationTopic, List<Future<PublicationTopic>> publicationTopicFutureList ) throws UnsupportedEncodingException, URISyntaxException
+	{
+		if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.ALCHEMY ) )
+		{
+			publication.addPublicationTopic( publicationTopic );
+			publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+		}
+		else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
+		{
+			publication.addPublicationTopic( publicationTopic );
+			publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+		}
+		else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.FIVEFILTERS ) )
+		{
+			publication.addPublicationTopic( publicationTopic );
+			publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+
+		}
+		else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.OPENCALAIS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.OPENCALAIS ) )
+		{
+			// if publication language has been specified (mostly by alchemy)
+			if ( publication.getLanguage() != null && !publication.getLanguage().equals( "english" ) )
+				return;
+
+			// opencalais has limitation of 4 concurrent request every second,
+			// therefore add sleep every 4 request
+			// of course this will affect other extraction services
+			try
+			{
+//				// if ( extractionService.getCounter() % 2 == 0 )
+				Thread.sleep( 1000 );
+			}
+			catch ( InterruptedException e )
+			{
+//				e.printStackTrace();
+			}
+			publication.addPublicationTopic( publicationTopic );
+
+			// current openCalais service
+			Future<PublicationTopic> openCalaisPublicationTopicFuture = asynchronousTopicExtractionService.getTopicsByOpenCalais( publication, publicationTopic, extractionService.getMaxTextLength() );
+
+			publicationTopicFutureList.add( openCalaisPublicationTopicFuture );
+
+			// prevent asynchronous call
+			try
+			{
+				openCalaisPublicationTopicFuture.get();
+			}
+			catch ( InterruptedException | ExecutionException e )
+			{
+				e.printStackTrace();
+			}
+
+			// put into counter
+			extractionService.setCounter( extractionService.getCounter() + 1 );
 		}
 	}
 
