@@ -813,13 +813,19 @@ public class DblpEventCollection extends PublicationCollection
 			volumeMap.put( volume.trim(), eventLiChildren.get( 0 ).absUrl( "href" ) );
 
 			// put year and volume
-			dblpJournal.put( "year", eventLiTextSplit[1].trim() );
+			String year = eventLiTextSplit[1].trim();
+			if ( year.length() > 4 )
+				year = year.substring( 0, 4 );
+			dblpJournal.put( "year", year );
 			dblpJournal.put( "volume", volumeMap );
 		}
 		else
 		{
 			// put year
-			dblpJournal.put( "year", eventLiTextSplit[0].trim() );
+			String year = eventLiTextSplit[1].trim();
+			if ( year.length() > 4 )
+				year = year.substring( 0, 4 );
+			dblpJournal.put( "year", year );
 
 			// put volume
 			for ( Element volumeElement : eventLiChildren )
