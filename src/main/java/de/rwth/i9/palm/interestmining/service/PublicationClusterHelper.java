@@ -209,7 +209,7 @@ public class PublicationClusterHelper
 		// remove all number
 		// remove -_()
 		// remove s on word end
-		text = text.toLowerCase().replaceAll( "[^\\w\\s]", "" );
+		text = text.toLowerCase().replaceAll( "[^\\w\\s-]", "" );
 		if ( this.getLanguage().equals( "english" ) )
 			text = singularizeString( text );
 		return text;

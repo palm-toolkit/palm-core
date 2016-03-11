@@ -10,5 +10,5 @@ import de.rwth.i9.palm.feature.AcademicFeature;
 
 public interface CircleInterest extends AcademicFeature
 {
-	public Map<String, Object> getCircleInterestById( String circleId, String extractionServiceType, String startDate, String endDate ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ParseException, ExecutionException;
+	public Map<String, Object> getCircleInterestById( String circleId, boolean isReplaceExistingResult ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ParseException, ExecutionException;
 }

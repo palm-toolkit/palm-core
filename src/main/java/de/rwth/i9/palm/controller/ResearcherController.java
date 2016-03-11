@@ -305,13 +305,11 @@ public class ResearcherController
 			@RequestParam( value = "updateResult", required = false ) final String updateResult,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
-		if ( authorId != null ){
-			boolean isReplaceExistingResult = false;
-			if ( updateResult != null && updateResult.equals( "yes" ) )
-				isReplaceExistingResult = true;
-			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, isReplaceExistingResult );
-		}
-		return Collections.emptyMap();
+		boolean isReplaceExistingResult = false;
+		if ( updateResult != null && updateResult.equals( "yes" ) )
+			isReplaceExistingResult = true;
+		return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, isReplaceExistingResult );
+
 	}
 	
 	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
