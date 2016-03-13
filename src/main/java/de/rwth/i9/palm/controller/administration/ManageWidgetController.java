@@ -165,6 +165,7 @@ public class ManageWidgetController
 
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new HashMap<String, Object>();
+		responseMap.put( "status", "ok" );
 		responseMap.put( "format", "json" );
 		responseMap.put( "result", "success" );
 
