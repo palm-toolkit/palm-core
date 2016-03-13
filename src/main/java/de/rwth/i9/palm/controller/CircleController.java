@@ -3,6 +3,7 @@ package de.rwth.i9.palm.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
-import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -255,6 +255,21 @@ public class CircleController
 		return circleFeature.getCircleInterest().getCircleInterestById( circleId, extractionServiceType, startDate, endDate );
 	}
 	
+	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> circleTopicModel( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	{
+		if ( circleId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			return circleFeature.getCircleTopicModeling().getLdaBasicExample( circleId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 	/**
 	 * Get PublicationMap (JSON), containing top publications (highly cited publications) information and detail.
 	 * @param circleId

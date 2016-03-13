@@ -35,6 +35,9 @@ public class CircleFeatureImpl implements CircleFeature
 	@Autowired( required = false )
 	private CircleTopPublication circleTopPublication;
 
+	@Autowired( required = false )
+	private CircleTopicModeling circleTopicModeling;
+
 	@Override
 	public CircleAcademicEventTree getCircleAcademicEventTree()
 	{
@@ -117,6 +120,15 @@ public class CircleFeatureImpl implements CircleFeature
 			this.circleTopPublication = new CircleTopPublicationImpl();
 
 		return this.circleTopPublication;
+	}
+
+	@Override
+	public CircleTopicModeling getCircleTopicModeling()
+	{
+		if ( this.circleTopicModeling == null )
+			this.circleTopicModeling = new CircleTopicModelingImpl();
+
+		return this.circleTopicModeling;
 	}
 
 }

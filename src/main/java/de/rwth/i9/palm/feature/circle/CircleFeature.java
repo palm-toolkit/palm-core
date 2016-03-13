@@ -25,5 +25,7 @@ public interface CircleFeature
 
 	public CircleSearch getCircleSearch();
 
+	public CircleTopicModeling getCircleTopicModeling();
+
 	public CircleTopPublication getCircleTopPublication();
 }
