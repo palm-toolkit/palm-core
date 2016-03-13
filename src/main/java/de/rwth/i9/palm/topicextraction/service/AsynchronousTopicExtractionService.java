@@ -117,6 +117,8 @@ public class AsynchronousTopicExtractionService
 
 			publicationTopic.setValid( true );
 		}
+		else if ( opencalaisResultsMap.isEmpty() ) // no topic found
+			publicationTopic.setValid( true );
 		else
 			publicationTopic.setValid( false );
 

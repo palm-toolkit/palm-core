@@ -62,7 +62,14 @@ public class ResearcherInterestImpl extends AcademicFeatureImpl implements Resea
 		// later add extractionServiceType checking
 		topicExtractionService.extractTopicFromPublicationByAuthor( author );
 		
-		
+		// check if interest need to be recalculate
+		if ( !isReplaceExistingResult && author.isUpdateInterest() )
+		{
+			isReplaceExistingResult = true;
+
+			author.setUpdateInterest( false );
+			persistenceStrategy.getAuthorDAO().persist( author );
+		}
 		// mining the author interest
 		interestMiningService.getInterestFromAuthor( responseMap, author, isReplaceExistingResult );
 

@@ -125,35 +125,46 @@ public class TopicExtractionService
 
 		// check whether thread worker is done
 		// Wait until they are all done
-		boolean processIsDone = true;
-		do
-		{
-			processIsDone = true;
-			for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
-			{
-				if ( !futureList.isDone() )
-				{
-					processIsDone = false;
-					break;
-				}
-			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !processIsDone );
+//		boolean processIsDone = true;
+//		do
+//		{
+//			processIsDone = true;
+//			for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
+//			{
+//				if ( !futureList.isDone() )
+//				{
+//					processIsDone = false;
+//					break;
+//				}
+//			}
+//			// 10-millisecond pause between each check
+//			Thread.sleep( 10 );
+//		} while ( !processIsDone );
 
 		// Wait until they are all done
 		for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
 		{
 			futureList.get();
 		}
+
+		// change flag to reupdate interest calculation on author if
+		// publicationTopicFutureList contain something
+		if ( publicationTopicFutureList.size() > 0 )
+		{
+			author.setUpdateInterest( true );
+			persistenceStrategy.getAuthorDAO().persist( author );
+		}
+
 		// save publications, set flag, prevent re-extract publication topic
 		if ( !publications.isEmpty() )
+		{
 			log.info( "publication size " + publications.size() );
 			for ( Publication publication : publications )
 			{
 				publication.setContentUpdated( false );
 				persistenceStrategy.getPublicationDAO().persist( publication );
 			}
+		}
 	}
 	
 	/**
@@ -163,8 +174,9 @@ public class TopicExtractionService
 	 * @throws InterruptedException
 	 * @throws UnsupportedEncodingException
 	 * @throws URISyntaxException
+	 * @throws ExecutionException 
 	 */
-	public void extractTopicFromPublicationByCircle( Circle circle ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException
+	public void extractTopicFromPublicationByCircle( Circle circle ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ExecutionException
 	{
 		// container for list of publication which have abstract
 		Set<Publication> publications = new HashSet<Publication>();
@@ -246,22 +258,36 @@ public class TopicExtractionService
 
 		}
 		// check whether thread worker is done
+//		// Wait until they are all done
+//		boolean processIsDone = true;
+//		do
+//		{
+//			processIsDone = true;
+//			for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
+//			{
+//				if ( !futureList.isDone() )
+//				{
+//					processIsDone = false;
+//					break;
+//				}
+//			}
+//			// 10-millisecond pause between each check
+//			Thread.sleep( 10 );
+//		} while ( !processIsDone );
+		
 		// Wait until they are all done
-		boolean processIsDone = true;
-		do
+		for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
 		{
-			processIsDone = true;
-			for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
-			{
-				if ( !futureList.isDone() )
-				{
-					processIsDone = false;
-					break;
-				}
-			}
-			// 10-millisecond pause between each check
-			Thread.sleep( 10 );
-		} while ( !processIsDone );
+			futureList.get();
+		}
+
+		// change flag to reupdate interest calculation on author if
+		// publicationTopicFutureList contain something
+		if ( publicationTopicFutureList.size() > 0 )
+		{
+			circle.setUpdateInterest( true );
+			persistenceStrategy.getCircleDAO().persist( circle );
+		}
 
 		// save publications, set flag, prevent re-extract publication topic
 		for ( Publication publication : circle.getPublications() )

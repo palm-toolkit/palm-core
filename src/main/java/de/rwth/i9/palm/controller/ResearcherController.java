@@ -183,7 +183,7 @@ public class ResearcherController
 
 			// recheck if session really has been updated
 			// (there is a bug in spring session, which makes session is
-			// not updated sometimes) - a little work a round
+			// not updated sometimes) - a little workaround
 			boolean isSessionUpdated = false;
 			while ( !isSessionUpdated )
 			{
@@ -194,20 +194,20 @@ public class ResearcherController
 					request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
 			}
 
-			log.info( "\nRESEARCHER SESSION" );
-			@SuppressWarnings( "unchecked" )
-			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
-			// get author from session
-			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
-			{
-				for ( Author sessionAuthor : sessionAuthors )
-				{
-					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
-					{
-						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-					}
-				}
-			}
+//			log.info( "\nRESEARCHER SESSION" );
+//			@SuppressWarnings( "unchecked" )
+//			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
+//			// get author from session -> just for debug
+//			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+//			{
+//				for ( Author sessionAuthor : sessionAuthors )
+//				{
+//					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+//					{
+//						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+//					}
+//				}
+//			}
 		}
 		
 		if ( (Integer) authorsMap.get( "totalCount" ) > 0 )
@@ -305,13 +305,11 @@ public class ResearcherController
 			@RequestParam( value = "updateResult", required = false ) final String updateResult,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
-		if ( authorId != null ){
-			boolean isReplaceExistingResult = false;
-			if ( updateResult != null && updateResult.equals( "yes" ) )
-				isReplaceExistingResult = true;
-			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, isReplaceExistingResult );
-		}
-		return Collections.emptyMap();
+		boolean isReplaceExistingResult = false;
+		if ( updateResult != null && updateResult.equals( "yes" ) )
+			isReplaceExistingResult = true;
+		return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, isReplaceExistingResult );
+
 	}
 	
 	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )

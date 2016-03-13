@@ -30,6 +30,9 @@ public class AlchemyAPITopicExtraction
 		// MediaType contentType = responseEntity.getHeaders().getContentType();
 		// HttpStatus statusCode = responseEntity.getStatusCode();
 
+		// error on restTemplate due to this character
+		text = text.replaceAll( "\\{", "" );
+
 		@SuppressWarnings( "unchecked" )
 		Map<String, Object> resultsMap = restTemplate.getForObject( endpoint + "?" + apikey + "&" + outputMode + "&" + keywordExtractMode + "&text=" + text, Map.class );
 
