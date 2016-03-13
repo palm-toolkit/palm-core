@@ -24,6 +24,10 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	/**
+	 * This is the first method used to show the widget Simple LDA
+	 * implementation String authorId boolean isReplaceExistingResult
+	 */
 	@Override
 	public Map<String, Object> getLdaBasicExample( String authorId, boolean isReplaceExistingResult )
 	{
@@ -57,5 +61,81 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 		return responseMap;
 	}
 
+	/**
+	 * This is the main method that will be used to extract the topic in the
+	 * form of Ngrams The result of the method will be <String, String> Where
+	 * the second one is composed of topic -_- %
+	 */
+	@Override
+	public Map<String, Object> getTopicModelingNgrams( String authorId, boolean isReplaceExistingResult )
+	{
+		// create JSON container for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found" );
+			return responseMap;
+		}
+
+		// calculate and store the result of topic modeling
+		topicModelingService.calculateAuthorTopicModeling( author, isReplaceExistingResult );
+
+		// get JSON represent AuthorTOpicModelingProfile
+		List<Object> topicModelingResults = topicModelingService.getAuthorTopicModeliFromDatabase( author );
+
+		if ( topicModelingResults == null || topicModelingResults.isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "no topic model profile found" );
+			return responseMap;
+		}
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "topicModel", topicModelingResults );
+
+		return responseMap;
+	}
+
+	/**
+	 * This is the main method that will be used to extract the topic in the
+	 * form of Unigrams The result of the method will be <String, String> Where
+	 * the second one is composed of topic -_- %
+	 */
+	@Override
+	public Map<String, Object> getTopicModelingUnigrams( String authorId, boolean isReplaceExistingResult )
+	{
+		// create JSON container for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found" );
+			return responseMap;
+		}
+
+		// calculate and store the result of topic modeling
+		topicModelingService.calculateAuthorTopicModeling( author, isReplaceExistingResult );
+
+		// get JSON represent AuthorTOpicModelingProfile
+		List<Object> topicModelingResults = topicModelingService.getAuthorTopicModeliFromDatabase( author );
+
+		if ( topicModelingResults == null || topicModelingResults.isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "no interest profile found" );
+			return responseMap;
+		}
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "topicModel", topicModelingResults );
+
+		return responseMap;
+	}
 }

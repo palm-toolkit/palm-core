@@ -30,7 +30,6 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 @ContextConfiguration( classes = { WebAppConfigTest.class, DatabaseConfigCoreTest.class }, loader = AnnotationConfigContextLoader.class )
 @TransactionConfiguration
 @Transactional
-@Ignore
 public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringContextTests
 {
 	@Autowired
@@ -73,7 +72,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 	
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		int count = 0;
@@ -84,16 +82,23 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			for (Author author:authors)
 			{	
 				PrintWriter writer = new PrintWriter("C:/Users/Piro/Desktop/Authors/Authors/" + author.getId() +".txt", "UTF-8");
-				writer.println( "Author Name : " + author.getName());
+				writer.println( author.getName() );
 				for(Publication publication : author.getPublications()){
+					if ( publication.getAbstractText() != null )
+					{
 					writer.println( publication.getTitle());
 					writer.println(publication.getAbstractText());
 					writer.println();
-					count ++;
+						count++;
+					}
+					else
+					{
+						continue;
+					}
 				}
 				writer.println();
 				writer.println( count );
-				count =0;
+				count = 0;
 				writer.close();
 			}
 	}
@@ -123,11 +128,12 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 
 	
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabase2() throws FileNotFoundException, UnsupportedEncodingException
 	{
 
 		System.out.println( "\n========== TEST 2 - Fetch publications from database ==========" );
-		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
+		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();
 		if( !authors.isEmpty())
 			for (Author author:authors)
 			{	

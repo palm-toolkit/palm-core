@@ -326,7 +326,7 @@ public class ResearcherController
 			if ( updateResult != null && updateResult.equals( "yes" ) )
 				isReplaceExistingResult = true;
 
-			return researcherFeature.getResearcherTopicModeling().getLdaBasicExample( authorId, isReplaceExistingResult );
+			return researcherFeature.getResearcherTopicModeling().getTopicModelingNgrams( authorId, isReplaceExistingResult );
 		}
 		return Collections.emptyMap();
 	}
