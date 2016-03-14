@@ -301,7 +301,7 @@ public class ResearcherCollectionService
 					String[] sourceUrls = mergedAuthor.get( "url" ).split( " " );
 					// checking for duplication
 					Set<String> registeredSourceUlr = new HashSet<String>();
-					log.info( "\nRESEARCHER COLLECTION SERVICE" );
+					//log.info( "\nRESEARCHER COLLECTION SERVICE" );
 					for ( int i = 0; i < sources.length; i++ )
 					{
 						// prevent empty string and duplicated source
@@ -317,7 +317,7 @@ public class ResearcherCollectionService
 
 							authorSources.add( as );
 							// author sources
-							log.info( author.getId() + "-" + author.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+							//log.info( author.getId() + "-" + author.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
 
 							// add author sources
 							author.addAuthorSource( as );

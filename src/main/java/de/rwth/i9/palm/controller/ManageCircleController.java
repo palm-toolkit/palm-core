@@ -2,9 +2,11 @@ package de.rwth.i9.palm.controller;
 
 import java.sql.Timestamp;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -154,7 +156,7 @@ public class ManageCircleController
 	}
 
 	/**
-	 * Load the add circle form together with circle object
+	 * Load Circle Edit view
 	 * 
 	 * @param sessionId
 	 * @param response
@@ -178,13 +180,96 @@ public class ManageCircleController
 		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.CIRCLE, "edit" );
 
-		// create blank Circle
-		Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
-
 		// assign the model
 		model.addObject( "widgets", widgets );
-		model.addObject( "circle", circle );
+		model.addObject( "circleId", circleId );
 
 		return model;
+	}
+
+	/**
+	 * Save changes from Add circle detail, via Spring binding
+	 * 
+	 * @param extractionServiceListWrapper
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/edit", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> saveEditCircle( @RequestParam( value = "id" ) final String circleId, @RequestParam( value = "name" ) final String circleName, @RequestParam( value = "description" ) final String circleDescription, @RequestParam( value = "circleResearcher" ) final String circleResearcherIds, @RequestParam( value = "circlePublication" ) final String circlePublicationIds, final HttpServletResponse response) throws InterruptedException
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( circleId == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "errorMessage", "circleId not found" );
+			return responseMap;
+		}
+
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+
+		Set<Author> circleAuthors = new HashSet<Author>();
+		if ( !circleResearcherIds.equals( "" ) )
+		{
+			// split by underscore
+			String[] idsArray = circleResearcherIds.split( "_" );
+
+			for ( String researcherId : idsArray )
+			{
+				Author author = persistenceStrategy.getAuthorDAO().getById( researcherId );
+				if ( author != null )
+					circleAuthors.add( author );
+			}
+		}
+		circle.setAuthors( circleAuthors );
+
+		Set<Publication> circlePublications = new HashSet<Publication>();
+		if ( !circlePublicationIds.equals( "" ) )
+		{
+			// split by underscore
+			String[] idsArray = circlePublicationIds.split( "_" );
+
+			for ( String researcherId : idsArray )
+			{
+				Publication publication = persistenceStrategy.getPublicationDAO().getById( researcherId );
+				if ( publication != null )
+					circlePublications.add( publication );
+			}
+		}
+		circle.setPublications( circlePublications );
+
+		// add creator from securityService
+		User user = securityService.getUser();
+
+		if ( user == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "errorMessage", "user not found" );
+			return responseMap;
+		}
+		circle.setCreator( user );
+
+		// add date
+		// get current timestamp
+		java.util.Date date = new java.util.Date();
+		Timestamp currentTimestamp = new Timestamp( date.getTime() );
+		circle.setCreationDate( currentTimestamp );
+
+		// set flag for update topic
+		circle.setUpdateInterest( true );
+
+		persistenceStrategy.getCircleDAO().persist( circle );
+
+		responseMap.put( "status", "ok" );
+
+		// put back some of the information
+		Map<String, String> circleMap = new LinkedHashMap<String, String>();
+		circleMap.put( "id", circle.getId() );
+
+		responseMap.put( "circle", circleMap );
+
+		return responseMap;
 	}
 }
