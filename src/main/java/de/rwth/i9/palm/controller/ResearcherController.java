@@ -438,7 +438,7 @@ public class ResearcherController
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping( value = "/coAuhtorList", method = RequestMethod.GET )
+	@RequestMapping( value = "/coAuthorList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getCoAuthorList( 
 			@RequestParam( value = "id", required = false ) final String authorId, 
@@ -455,6 +455,11 @@ public class ResearcherController
 			return responseMap;
 		}
 
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 30;
+
 		// get author
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
 
@@ -466,7 +471,7 @@ public class ResearcherController
 		}
 
 		// get coauthor calculation
-		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author ) );
+		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
 
 		return responseMap;
 	}
