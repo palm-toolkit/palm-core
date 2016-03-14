@@ -242,11 +242,37 @@ public class CircleController
 		return responseMap;
 	}
 	
+	/**
+	 * Get PublicationMap (JSON), containing publications basic information and detail.
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/publication", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationList( 
+			@RequestParam( value = "id", required = false ) final String circleId,
+			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "year", required = false ) String year,
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			final HttpServletResponse response)
+	{
+		if ( year == null )				year = "all";
+		if ( query == null )			query = "";
+		if ( orderBy == null )			orderBy = "date";
+		
+		return circleFeature.getCirclePublication().getCirclePublicationByCircleId( circleId, query, year, startPage, maxresult, orderBy );
+	}
+	
 	@RequestMapping( value = "/interest", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterest( 
 			@RequestParam( value = "id", required = false ) final String circleId, 
- @RequestParam( value = "updateResult", required = false ) final String updateResult,
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
 		boolean isReplaceExistingResult = false;
