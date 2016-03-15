@@ -90,9 +90,14 @@ public class AcademicEventController
 			widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CONFERENCE, WidgetStatus.DEFAULT );
 		// assign the model
 		model.addObject( "widgets", widgets );
+
+		EventGroup eventGroup = null;
 		// assign query
 		if ( id != null )
+		{
 			model.addObject( "targetId", id );
+			eventGroup = persistenceStrategy.getEventGroupDAO().getById( id );
+		}
 		else
 		{
 			// get event group id
@@ -100,9 +105,14 @@ public class AcademicEventController
 			{
 				Event event = persistenceStrategy.getEventDAO().getById( eventId );
 				if ( event != null && event.getEventGroup() != null )
+				{
 					model.addObject( "targetId", event.getEventGroup().getId() );
+					eventGroup = event.getEventGroup();
+				}
 			}
 		}
+		// check whether event group is added or not
+
 		if ( eventId != null )
 			model.addObject( "targetEventId", eventId );
 		if ( name != null )
@@ -118,7 +128,10 @@ public class AcademicEventController
 		if ( publicationId != null )
 			model.addObject( "publicationId", publicationId );
 		if ( add != null )
-			model.addObject( "targetAdd", add );
+		{
+			if ( eventGroup == null || ( eventGroup != null && !eventGroup.isAdded() ) )
+				model.addObject( "targetAdd", add );
+		}
 		return model;
 	}
 
