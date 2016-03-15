@@ -48,8 +48,8 @@ public class CircleAcademicEventTreeImpl implements CircleAcademicEventTree
 					String nodeTooltip = publication.getEvent().getEventGroup().getName();
 					String nodeTitle = nodeTooltip;
 
-					if ( !nodeTitle.equals( publication.getEvent().getEventGroup().getNotation() ) )
-					{
+					if ( publication.getEvent().getEventGroup().getNotation() != null && !publication.getEvent().getEventGroup().getNotation().isEmpty() && 
+							!nodeTitle.equals( publication.getEvent().getEventGroup().getNotation() ) )					{
 						nodeTitle = publication.getEvent().getEventGroup().getNotation();
 						nodeTooltip += " (" + publication.getEvent().getEventGroup().getNotation() + ") ";
 					}

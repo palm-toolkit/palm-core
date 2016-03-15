@@ -197,7 +197,13 @@ public class ManageCircleController
 	 */
 	@Transactional
 	@RequestMapping( value = "/edit", method = RequestMethod.POST )
-	public @ResponseBody Map<String, Object> saveEditCircle( @RequestParam( value = "id" ) final String circleId, @RequestParam( value = "name" ) final String circleName, @RequestParam( value = "description" ) final String circleDescription, @RequestParam( value = "circleResearcher" ) final String circleResearcherIds, @RequestParam( value = "circlePublication" ) final String circlePublicationIds, final HttpServletResponse response) throws InterruptedException
+	public @ResponseBody Map<String, Object> saveEditCircle( 
+			@RequestParam( value = "id" ) final String circleId, 
+			@RequestParam( value = "name" ) final String circleName, 
+			@RequestParam( value = "description" ) final String circleDescription, 
+			@RequestParam( value = "circleResearcher" ) final String circleResearcherIds, 
+			@RequestParam( value = "circlePublication" ) final String circlePublicationIds, 
+			final HttpServletResponse response) throws InterruptedException
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
@@ -209,6 +215,9 @@ public class ManageCircleController
 		}
 
 		Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+		
+		circle.setName( circleName );
+		circle.setDescription( circleDescription );
 
 		Set<Author> circleAuthors = new HashSet<Author>();
 		if ( !circleResearcherIds.equals( "" ) )
