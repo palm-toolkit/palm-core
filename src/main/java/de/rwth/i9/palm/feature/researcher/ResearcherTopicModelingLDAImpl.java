@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.rwth.i9.palm.analytics.algorithm.dynamicLDA.ParallelTopicModel;
+//import de.rwth.i9.palm.analytics.algorithm.dynamicLDA.ParallelTopicModel;
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 
 public class ResearcherTopicModelingLDAImpl implements ResearcherTopicModelingLDA 

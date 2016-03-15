@@ -299,7 +299,7 @@ public class TopicModelingService
 //					dummyWordString.append( dummyWords[k] );
 //				}
 				// add into termValueMap
-				termValueMap.put(palmAnalytics.getDynamicTopicModel().getListTopics( 10 ).get( j ), palmAnalytics.getDynamicTopicModel().getTopicProportion2(0.0, i-2005, 11, 11 ).get( j ) );//dummyWordString.toString(), Math.random() );
+//				termValueMap.put(palmAnalytics.getDynamicTopicModel().getListTopics( 10 ).get( j ), palmAnalytics.getDynamicTopicModel().getTopicProportion2(0.0, i-2005, 11, 11 ).get( j ) );//dummyWordString.toString(), Math.random() );
 			}
 			dummyClusterResults.add( clusterResultMap );
 		}
