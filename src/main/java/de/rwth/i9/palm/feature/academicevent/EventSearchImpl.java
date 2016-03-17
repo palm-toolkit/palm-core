@@ -119,6 +119,15 @@ public class EventSearchImpl implements EventSearch
 								isExist = true;
 								break;
 							}
+							else
+							{
+								if ( ( eachEventGroup.getDblpUrl() == null || eachEventGroup.getDblpUrl().isEmpty() ) && dblpEventMap.get( "name" ).equals( eachEventGroup.getName() ) )
+								{
+									eachEventGroup.setDblpUrl( eventGroupUrl );
+									isExist = true;
+									break;
+								}
+							}
 						}
 					}
 

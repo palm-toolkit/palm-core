@@ -25,7 +25,7 @@ public class CircleDetailImpl implements CircleDetail
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public Map<String, Object> getCircleDetailById( String circleId )
+	public Map<String, Object> getCircleDetailById( String circleId, boolean isRetrieveAuthorDetail, boolean isRetrievePublicationDetail )
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -43,10 +43,16 @@ public class CircleDetailImpl implements CircleDetail
 		// preparing data format
 		DateFormat dateFormat = new SimpleDateFormat( "dd/mm/yyyy", Locale.ENGLISH );
 
+		// get all of Querse properties
+		Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+		queryMap.put( "circleId", circle.getId() );
+		queryMap.put( "isRetrieveAuthorDetail", isRetrieveAuthorDetail );
+		queryMap.put( "isRetrievePublicationDetail", isRetrievePublicationDetail );
+		responseMap.put( "query", queryMap );
+
 		// get all of Circle properties
 		Map<String, Object> circleMap = new LinkedHashMap<String, Object>();
 		circleMap.put( "id", circle.getId() );
-
 		circleMap.put( "name", circle.getName() );
 		circleMap.put( "dateCreated", dateFormat.format( circle.getCreationDate() ) );
 		circleMap.put( "description", circle.getDescription() );
@@ -62,16 +68,16 @@ public class CircleDetailImpl implements CircleDetail
 			circleMap.put( "creator", creatorMap );
 		}
 
-		if ( circle.getAuthors() != null )
+		if ( isRetrieveAuthorDetail && circle.getAuthors() != null )
 		{
 			circleMap.put( "numberAuthors", circle.getAuthors().size() );
 			if ( circle.getAuthors().size() > 0 )
 			{
-				circleMap.put( "authors", printCircleAuthors( circle.getAuthors() ) );
+				circleMap.put( "researchers", printCircleAuthors( circle.getAuthors() ) );
 			}
 		}
 
-		if ( circle.getPublications() != null )
+		if ( isRetrievePublicationDetail && circle.getPublications() != null )
 		{
 			circleMap.put( "numberPublications", circle.getPublications().size() );
 			if ( circle.getPublications().size() > 0 )
@@ -114,11 +120,11 @@ public class CircleDetailImpl implements CircleDetail
 				if ( author.getPhotoUrl() != null )
 					authorMap.put( "photo", author.getPhotoUrl() );
 
-				//authorMap.put( "isAdded", author.isAdded() );
+				authorMap.put( "isAdded", author.isAdded() );
 
 				coathorList.add( authorMap );
 			}
-			publicationMap.put( "coauthor", coathorList );
+			publicationMap.put( "authors", coathorList );
 
 			if ( publication.getKeywordText() != null )
 				publicationMap.put( "keyword", publication.getKeywordText() );
@@ -194,9 +200,9 @@ public class CircleDetailImpl implements CircleDetail
 				otherDetail += ", " + researcher.getDepartment();
 			if ( !otherDetail.equals( "" ) )
 				researcherMap.put( "detail", otherDetail );
-
-			researcherMap.put( "isAdded", researcher.isAdded() );
 			*/
+			researcherMap.put( "isAdded", researcher.isAdded() );
+			
 			researcherList.add( researcherMap );
 		}
 		

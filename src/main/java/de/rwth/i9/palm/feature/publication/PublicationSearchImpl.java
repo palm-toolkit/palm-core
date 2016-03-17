@@ -114,7 +114,9 @@ public class PublicationSearchImpl implements PublicationSearch
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
 				String eventName = publication.getEvent().getEventGroup().getName();
-				if ( !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
+				if ( publication.getEvent().getEventGroup().getNotation() != null && 
+						!publication.getEvent().getEventGroup().getNotation().isEmpty() && 
+						!publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
 					eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
 				eventMap.put( "name", eventName );
 				eventMap.put( "isAdded", publication.getEvent().isAdded() );

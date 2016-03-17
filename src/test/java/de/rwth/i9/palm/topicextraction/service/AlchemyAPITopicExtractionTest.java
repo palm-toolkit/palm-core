@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 @RunWith( SpringJUnit4ClassRunner.class )
 @ContextConfiguration( loader = AnnotationConfigContextLoader.class )
+@Ignore
 public class AlchemyAPITopicExtractionTest
 {
 	@Test
@@ -39,10 +40,11 @@ public class AlchemyAPITopicExtractionTest
 
 	@SuppressWarnings( "unchecked" )
 	@Test
-	@Ignore
 	public void getTextRankedKeywordsTest()
 	{
 		String text = "The main aim of Knowledge Management (KM) is to connect people to quality knowledge as well as people to people in order to peak performance. This is also the primary goal of Learning Management (LM). In fact, in the world of e-learning, it is more widely recognised that how learning content is used and distributed by learners might be more important than how it is designed. In the last few years, there has been an increasing focus on social software applications and services as a result of the rapid development of Web 2.0 concepts. In this paper, we argue that LM and KM can be viewed as two sides of the same coin, and explore how Web 2.0 technologies can leverage knowledge sharing and learning and enhance individual performance whereas previous models of LM and KM have failed, and present a social software driven approach to LM and KM";
+		text = "In the past several years, the World Wide Web has experienced a new era, in which user communities are greatly involved and digital content explodes via the Internet. Community information systems have been highlighted with the emerging term ``Social Software{}. In this paper, we explore the impact of social software on the community of cultural heritage management. Furthermore, mobile and ubiquitous technologies have provided capabilities for more sophisticated approach to cultural heritage management. We analyze these features of mobile information systems for cultural communities. We also present a mobile community framework with mobile Web Services to enable professionals to collect, manage and retrieve cultural heritage information in wide user communities.";
+		text = "eAIXESSOR - A MODULAR FRAMEWORK FOR AUTOMATIC ASSESSMENT OF WEEKLY ASSIGNMENTS IN HIGHER EDUCATION Eva Altenbernd-Giani, Ulrik Schroeder, Patrick W. Stalljohann Computer-Supported Learning Research Group Rheinisch-Westf¨alische Technische Hochschule Aachen Aachen, NRW, Germany {giani, schroeder}@informatik.rwth-aachen.de stalljohann@cil.rwth-aachen.de ABSTRACT Defining computer based tests which can be analyzed au- tomatically in order to generate feedback for the learner can either be";
 		Map<String, Object> resultsMap = AlchemyAPITopicExtraction.getTextRankedKeywords( text );
 
 		System.out.println( "language: " + resultsMap.get( "language" ).toString() );

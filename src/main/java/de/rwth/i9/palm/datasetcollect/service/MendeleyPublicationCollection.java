@@ -59,11 +59,22 @@ public class MendeleyPublicationCollection extends PublicationCollection
 	    DefaultHttpClient apacheHttpClient = ApacheHttpTransport.newDefaultHttpClient();
 	    HttpResponse httpResponse = apacheHttpClient.execute(httpGet);
 
-		// TODO: check for invalid token
 
 		// map the results into jsonMap
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode resultsNode = mapper.readTree( httpResponse.getEntity().getContent() );
+
+		JsonNode resultsNode = null;
+		try
+		{
+			resultsNode = mapper.readTree( httpResponse.getEntity().getContent() );
+		}
+		catch ( Exception e )
+		{
+		}
+
+		if ( resultsNode == null )
+			return Collections.emptyList();
+
 		if ( resultsNode.isArray() )
 			for ( JsonNode publicationNode : resultsNode )
 				authorList.add( extractAuthorDetail( publicationNode ) );

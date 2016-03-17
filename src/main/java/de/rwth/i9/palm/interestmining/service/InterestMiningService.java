@@ -50,7 +50,7 @@ public class InterestMiningService
 	private WordFreqInterestProfile wordFreqInterestProfile;
 
 	/**
-	 * Get author interests from active author profiles
+	 * Get author interests from active interest profiles
 	 * 
 	 * @param responseMap
 	 * @param author
@@ -117,6 +117,14 @@ public class InterestMiningService
 				}
 			}
 		}
+		else
+		{
+			// clear previous results
+			if ( author.getAuthorInterestProfiles() != null && !author.getAuthorInterestProfiles().isEmpty() )
+			{
+				author.getAuthorInterestProfiles().clear();
+			}
+		}
 
 		// if defaultInterestProfile not null,
 		// means interest calculation from beginning is needed
@@ -178,14 +186,15 @@ public class InterestMiningService
 
 			for ( String partOfProfileName : derivedInterestProfileName )
 			{
-				if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "∪" ) )
+				// ? sometimes problem on encoding
+				if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "?" ) || partOfProfileName.equals( "+" ) || partOfProfileName.equals( "∪" ) )
 				{
 					if ( authorInterestProfileResult != null )
 					{
 						authorInterestProfile1 = authorInterestProfileResult;
 						authorInterestProfileResult = null;
 					}
-					if ( partOfProfileName.equals( "∩" ) )
+					if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "?" ) || partOfProfileName.equals( "+" ) )
 						operationType = "INTERSECTION";
 					else
 						operationType = "UNION";

@@ -13,12 +13,19 @@ import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.utils.Inflector;
 
+/**
+ * Create cluster of publication based on year and language
+ * 
+ * @author sigit
+ *
+ */
 public class PublicationClusterHelper
 {
 	// cluster identifier
 	String language;
 	int year;
 
+	// list of publications on cluster
 	List<Publication> publications;
 
 	int numberOfWordsOnTitle;
@@ -202,7 +209,7 @@ public class PublicationClusterHelper
 		// remove all number
 		// remove -_()
 		// remove s on word end
-		text = text.toLowerCase().replaceAll( "\\d", "" ).replaceAll( "[_\\-()]", " " );
+		text = text.toLowerCase().replaceAll( "[^\\w\\s-]", "" );
 		if ( this.getLanguage().equals( "english" ) )
 			text = singularizeString( text );
 		return text;
@@ -212,6 +219,24 @@ public class PublicationClusterHelper
 	{
 		Inflector inflector = new Inflector();
 		return inflector.singularize( text );
+	}
+
+	private boolean isText1ContainaMoreUpercaseTahnText2( String text1, String text2 )
+	{
+		int text1UpperCaseCount = 0;
+		int text2UpperCaseCount = 0;
+		for ( int k = 0; k < text1.length(); k++ )
+			if ( Character.isUpperCase( text1.charAt( k ) ) )
+				text1UpperCaseCount++;
+
+		for ( int k = 0; k < text2.length(); k++ )
+			if ( Character.isUpperCase( text2.charAt( k ) ) )
+				text2UpperCaseCount++;
+
+		if ( text1UpperCaseCount > text2UpperCaseCount )
+			return true;
+
+		return false;
 	}
 
 	/**
@@ -228,6 +253,7 @@ public class PublicationClusterHelper
 
 		for ( Publication publication : this.publications )
 		{
+			// calculate frequencies of occurred term based on publication topic
 			if ( publication.getPublicationTopics() != null )
 			{
 				for ( PublicationTopic publicationTopic : publication.getPublicationTopics() )
@@ -254,6 +280,10 @@ public class PublicationClusterHelper
 							termDetail = termMap.get( term );
 							// update extraction service list
 							termDetail.addExtractionServiceType( extractionServiceType );
+
+							// prefer one that have uppercase letter
+							//if ( isText1ContainaMoreUpercaseTahnText2( termValuesEntry.getKey(), termDetail.getTermLabel() ) )
+							//	termDetail.setTermLabel( termValuesEntry.getKey() );
 						}
 						// term not exist on map
 						else
@@ -278,6 +308,58 @@ public class PublicationClusterHelper
 
 				}
 			}
+
+			// TODO : add this keyword configuration to administration
+			// calculate frequencies of occurred term based on publication
+			// keyword
+			if ( publication.getKeywordText() != null && !publication.getKeywordText().isEmpty() )
+			{
+				for ( String keyword : publication.getKeywordText().split( "," ) )
+				{
+
+					// get properties needed
+					ExtractionServiceType extractionServiceType = ExtractionServiceType.KEYWORDBASED;
+					
+					String term = normalizeText( keyword );
+
+					// check if termMap has already contain term
+					// if term already exist "more than one term extractor
+					// services, produced same terms"
+
+					// prepare termDetail
+					TermDetail termDetail = null;
+					if ( termMap.get( term ) != null )
+					{
+						termDetail = termMap.get( term );
+						// update extraction service list
+						termDetail.addExtractionServiceType( extractionServiceType );
+						// prefer one that have uppercase letter
+						//if ( isText1ContainaMoreUpercaseTahnText2( keyword, termDetail.getTermLabel() ) )
+						//	termDetail.setTermLabel( keyword );
+					}
+					// term not exist on map
+					else
+					{
+						// create new termDetail object
+						termDetail = new TermDetail();
+
+						// add extraction service
+						termDetail.addExtractionServiceType( extractionServiceType );
+						termDetail.setTermLabel( term );
+						termDetail.setTermLength( this.countWords( term ) );
+
+						// calculate frequencies
+						termDetail.setFrequencyOnTitle( StringUtils.countMatches( this.getConcatenatedTitle(), term ) );
+						termDetail.setFrequencyOnAbstract( StringUtils.countMatches( this.getConcatenatedAbstract(), term ) );
+						termDetail.setFrequencyOnKeyword( StringUtils.countMatches( this.getConcatenatedKeyword(), term ) );
+
+						// put into map
+						termMap.put( term, termDetail );
+					}
+				}
+
+			}
+
 		}
 
 		return termMap;

@@ -44,12 +44,12 @@ public class ManageUserWidgetController
 	private SecurityService securityService;
 
 	/**
-	 * Load the extractionService detail form
+	 * Load user widgets
 	 * 
 	 */
 	@Transactional
 	@RequestMapping( value = "/{widgetType}", method = RequestMethod.GET )
-	public ModelAndView getExtractionService( 
+	public ModelAndView getUserWidgets( 
 			@PathVariable String widgetType,
 			final HttpServletResponse response 
 			)
@@ -74,7 +74,7 @@ public class ManageUserWidgetController
 		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
 		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "widget" );
 
-		// get list of extractionService and sort
+		// get list of user widget and sort
 		List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.valueOf( widgetType.toUpperCase() ), "content", WidgetStatus.ACTIVE, WidgetStatus.NONACTIVE );
 		List<Widget> notInstalledWidgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.valueOf( widgetType.toUpperCase() ), "content", WidgetStatus.DEFAULT, WidgetStatus.ACTIVE );
 
@@ -124,7 +124,7 @@ public class ManageUserWidgetController
 	 */
 	@Transactional
 	@RequestMapping( method = RequestMethod.POST )
-	public @ResponseBody Map<String, Object> saveExtractionService( 
+	public @ResponseBody Map<String, Object> saveUserWidgets( 
 			@ModelAttribute( "userWidgetsWrapper" ) UserWidgetWrapper userWidgetsWrapper,
 			@ModelAttribute( "notInstalledWidgetsWrapper" ) WidgetWrapper notInstalledWidgetsWrapper, 
 			final HttpServletResponse response ) throws InterruptedException

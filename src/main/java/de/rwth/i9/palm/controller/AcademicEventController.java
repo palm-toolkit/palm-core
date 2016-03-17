@@ -90,9 +90,14 @@ public class AcademicEventController
 			widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CONFERENCE, WidgetStatus.DEFAULT );
 		// assign the model
 		model.addObject( "widgets", widgets );
+
+		EventGroup eventGroup = null;
 		// assign query
 		if ( id != null )
+		{
 			model.addObject( "targetId", id );
+			eventGroup = persistenceStrategy.getEventGroupDAO().getById( id );
+		}
 		else
 		{
 			// get event group id
@@ -100,13 +105,18 @@ public class AcademicEventController
 			{
 				Event event = persistenceStrategy.getEventDAO().getById( eventId );
 				if ( event != null && event.getEventGroup() != null )
+				{
 					model.addObject( "targetId", event.getEventGroup().getId() );
+					eventGroup = event.getEventGroup();
+				}
 			}
 		}
+		// check whether event group is added or not
+
 		if ( eventId != null )
 			model.addObject( "targetEventId", eventId );
 		if ( name != null )
-			model.addObject( "targetName", name );
+			model.addObject( "targetName", name.replaceAll( "\"", "" ) );
 		if ( notation != null )
 			model.addObject( "targetNotation", notation );
 		if ( type != null )
@@ -118,7 +128,10 @@ public class AcademicEventController
 		if ( publicationId != null )
 			model.addObject( "publicationId", publicationId );
 		if ( add != null )
-			model.addObject( "targetAdd", add );
+		{
+			if ( eventGroup == null || ( eventGroup != null && !eventGroup.isAdded() ) )
+				model.addObject( "targetAdd", add );
+		}
 		return model;
 	}
 
@@ -163,8 +176,21 @@ public class AcademicEventController
 
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )
+		{
 			request.getSession().setAttribute( "eventGroups", eventGroupsMap.get( "eventGroups" ) );
-
+			// recheck if session really has been updated
+			// (there is a bug in spring session, which makes session is
+			// not updated sometimes) - a little work a round
+			boolean isSessionUpdated = false;
+			while ( !isSessionUpdated )
+			{
+				Object eventGroups = request.getSession().getAttribute( "eventGroups" );
+				if ( eventGroups.equals( eventGroupsMap.get( "eventGroups" ) ) )
+					isSessionUpdated = true;
+				else
+					request.getSession().setAttribute( "eventGroups", eventGroupsMap.get( "eventGroups" ) );
+			}
+		}
 		if ( (Integer) eventGroupsMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) eventGroupsMap.get( "totalCount" ) );

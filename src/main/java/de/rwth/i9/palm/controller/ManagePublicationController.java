@@ -123,6 +123,7 @@ public class ManagePublicationController
 			responseMap.put( "statusMessage", "Publication not found due to missing input or expired sission" );
 		}
 
+
 		/* Insert selected author into publication */
 		// get author id split by "_#_"
 		String[] authorIds = authorListIds.split( "_#_" );
@@ -154,6 +155,7 @@ public class ManagePublicationController
 		else
 		{
 			publication.setAbstractStatus( CompletionStatus.COMPLETE );
+			publication.setContentUpdated( true );
 		}
 
 		/* Insert Keyword if any */
@@ -161,6 +163,7 @@ public class ManagePublicationController
 		{
 			publication.setKeywordStatus( CompletionStatus.COMPLETE );
 			publication.setKeywordText( keywordList.replace( "_#_", "," ) );
+			publication.setContentUpdated( true );
 		}
 
 		/* Insert publication date - expect valid publication date */
@@ -173,6 +176,10 @@ public class ManagePublicationController
 				Date date = dateFormat.parse( publicationDate );
 				publication.setPublicationDate( date );
 				publication.setPublicationDateFormat( "yyyy/M/d" );
+
+				Calendar cal = Calendar.getInstance();
+				cal.setTime( date );
+				publication.setYear( Integer.toString( cal.get( Calendar.YEAR ) ) );
 			}
 			catch ( Exception e )
 			{
@@ -267,6 +274,8 @@ public class ManagePublicationController
 		{
 			publication.addOrUpdateAdditionalInformation( "publisher", publisher );
 		}
+		// set publication updated
+		publication.setContentUpdated( true );
 		// at the end persist publication
 		persistenceStrategy.getPublicationDAO().persist( publication );
 
@@ -365,7 +374,8 @@ public class ManagePublicationController
 	@Transactional
 	@RequestMapping( value = "/edit", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveEditedPublication( 
-			@RequestParam( value = "publication-id" ) String publicationId, 
+			@RequestParam( value = "publication-id" ) String publicationId,
+			@RequestParam( value = "title" ) String title, 
 			@RequestParam( value = "author-list-ids", required = false ) String authorListIds, 
 			@RequestParam( value = "abstractText", required = false ) String abstractText, 
 			@RequestParam( value = "keyword-list", required = false ) String keywordList, 
@@ -380,11 +390,14 @@ public class ManagePublicationController
 
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
-		if ( publication == null || publication.getTitle() == null || publication.getTitle().isEmpty() )
+		if ( publication == null )
 		{
 			responseMap.put( "status", "error" );
 			responseMap.put( "statusMessage", "Publication not found due to missing input or expired sission" );
 		}
+		
+		if( title != null && !title.isEmpty())
+			publication.setTitle( title );
 
 		/* Insert selected author into publication */
 		// get author id split by "_#_"
@@ -435,6 +448,8 @@ public class ManagePublicationController
 			{
 				publication.setAbstractText( abstractText );
 				publication.setAbstractStatus( CompletionStatus.COMPLETE );
+				// set publication updated
+				publication.setContentUpdated( true );
 			}
 		}
 
@@ -443,6 +458,8 @@ public class ManagePublicationController
 		{
 			publication.setKeywordStatus( CompletionStatus.COMPLETE );
 			publication.setKeywordText( keywordList.replace( "_#_", "," ) );
+			// set publication updated
+			publication.setContentUpdated( true );
 		}
 
 		/* Insert publication date - expect valid publication date */
@@ -455,6 +472,10 @@ public class ManagePublicationController
 				Date date = dateFormat.parse( publicationDate );
 				publication.setPublicationDate( date );
 				publication.setPublicationDateFormat( "yyyy/M/d" );
+
+				Calendar cal = Calendar.getInstance();
+				cal.setTime( date );
+				publication.setYear( Integer.toString( cal.get( Calendar.YEAR ) ) );
 			}
 			catch ( Exception e )
 			{
@@ -565,6 +586,33 @@ public class ManagePublicationController
 						if ( inputVolume > 0 )
 							event.setVolume( Integer.toString( inputVolume ) );
 					}
+				}
+				// change eventgroup and event
+				else
+				{
+					Event newEvent = null;
+					if ( eventGroup.getEvents() != null && !eventGroup.getEvents().isEmpty() )
+					{
+						for ( Event eachEvent : eventGroup.getEvents() )
+						{
+							if ( eachEvent.getYear().equals( inputYear ) )
+							{
+								newEvent = eachEvent;
+								break;
+							}
+						}
+					}
+
+					if ( newEvent == null )
+					{
+						newEvent = new Event();
+						newEvent.setEventGroup( eventGroup );
+						newEvent.setYear( inputYear );
+						if ( inputVolume > 0 )
+							newEvent.setVolume( Integer.toString( inputVolume ) );
+						newEvent.addPublication( publication );
+					}
+					publication.setEvent( newEvent );
 				}
 
 			}

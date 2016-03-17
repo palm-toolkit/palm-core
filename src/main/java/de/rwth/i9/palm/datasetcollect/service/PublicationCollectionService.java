@@ -285,6 +285,7 @@ public class PublicationCollectionService
 					}
 
 					// removing condition
+					// if publication contain no date
 					if ( publicationSource.get( 0 ).getDate() == null )
 					{
 						iteratorPublication.remove();
@@ -292,7 +293,22 @@ public class PublicationCollectionService
 					}
 					else
 					{
-						if ( publicationSource.get( 0 ).getCitedBy() == 0 && currentYear - Integer.parseInt( publicationSource.get( 0 ).getDate() ) > 2 )
+						// try to get publication year
+						int publicationYear = 0;
+						String publicationYearString = publicationSource.get( 0 ).getDate();
+						if ( publicationYearString.length() > 4 )
+							publicationYearString = publicationYearString.substring( 0, 4 );
+
+						try
+						{
+							publicationYear = Integer.parseInt( publicationYearString );
+						}
+						catch ( Exception e )
+						{
+						}
+
+						// keep recent publication, remove old publication
+						if ( publicationSource.get( 0 ).getCitedBy() == 0 && currentYear - publicationYear > 2 )
 						{
 							iteratorPublication.remove();
 							continue;
@@ -482,8 +498,8 @@ public class PublicationCollectionService
 						selectedPublications.add( publication );
 					}
 					// remove old publicationSource
-					if ( publication != null )
-						publication.removeNonUserInputPublicationSource();
+					//if ( publication != null )
+						//publication.removeNonUserInputPublicationSource();
 				}
 
 				// if not exist any where create new publication

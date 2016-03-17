@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ public class CircleInterestImpl extends AcademicFeatureImpl implements CircleInt
 	private CircleInterestMiningService circleInterestMiningService;
 
 	@Override
-	public Map<String, Object> getCircleInterestById( String circleId, String extractionServiceType, String startDate, String endDate ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ParseException
+	public Map<String, Object> getCircleInterestById( String circleId, boolean isReplaceExistingResult ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ParseException, ExecutionException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -50,84 +51,29 @@ public class CircleInterestImpl extends AcademicFeatureImpl implements CircleInt
 			return responseMap;
 		}
 
+		// put some information
+		responseMap.put( "status", "Ok" );
+
 		Map<String, Object> targetCircleMap = new LinkedHashMap<String, Object>();
 		targetCircleMap.put( "id", circle.getId() );
 		targetCircleMap.put( "name", circle.getName() );
-		responseMap.put( "author", targetCircleMap );
+		responseMap.put( "circle", targetCircleMap );
 
 		// check whether publication has been extracted
 		// later add extractionServiceType checking
 		topicExtractionService.extractTopicFromPublicationByCircle( circle );
 		
-		
-		// mining the author interest
-		circleInterestMiningService.getInterestFromCircle( responseMap, circle, false );
+		// check if interest need to be recalculate
+		if ( !isReplaceExistingResult && circle.isUpdateInterest() )
+		{
+			isReplaceExistingResult = true;
 
-//		// put the publication into arrayLiat
-//		List<Publication> publications = new ArrayList<Publication>();
-//		publications.addAll( author.getPublications() );
-//
-//		// remove any publication that doesn't have date or abstract
-//		for ( Iterator<Publication> iterator = publications.iterator(); iterator.hasNext(); )
-//		{
-//			Publication publication = iterator.next();
-//			if ( publication.getAbstractText() == null || publication.getPublicationDate() == null || publication.getPublicationTopics() == null )
-//				iterator.remove();
-//		}
-//
-//		// sort publication based on date
-//		Collections.sort( publications, new PublicationByDateComparator() );
-//
-//		// prepare calendar to get year
-//		Calendar calendar = Calendar.getInstance();
-//
-//		// prepare the date structure
-//		Map<String, Map<String, Integer>> interestYearsMap = new LinkedHashMap<String, Map<String, Integer>>();
-//		Map<String, Integer> interestSpecificYearMap = null;
-//		// create interest based of year
-//		String previousYear = "";
-//		for ( Publication publication : publications )
-//		{
-//			// get year
-//			calendar.setTime( publication.getPublicationDate() );
-//			String currentYear = Integer.toString( calendar.get( Calendar.YEAR ) );
-//			// renew the map
-//			if ( !currentYear.equals( previousYear ) )
-//			{
-//				// put to main map
-//				if ( interestSpecificYearMap != null )
-//					interestYearsMap.put( previousYear, interestSpecificYearMap );
-//				// new initialization for next year
-//				interestSpecificYearMap = new HashMap<String, Integer>();
-//			}
-//			// get publication interest
-//			for ( PublicationTopic pubTopic : publication.getPublicationTopics() )
-//			{
-//				if ( pubTopic.getExtractionServiceType().equals( ExtractionServiceType.valueOf( extractionServiceType.toUpperCase() ) ) )
-//				{
-//					Map<String, Double> termValues = pubTopic.getTermValues();
-//
-//					if ( termValues != null )
-//					{
-//						for ( Map.Entry<String, Double> entry : termValues.entrySet() )
-//						{
-//							if ( entry.getValue() > 0.5 )
-//							{
-//								if ( interestSpecificYearMap.get( entry.getKey() ) != null )
-//									interestSpecificYearMap.put( entry.getKey(), interestSpecificYearMap.get( entry.getKey() ) + 1 );
-//								else // found for the first time
-//									interestSpecificYearMap.put( entry.getKey(), 1 );
-//							}
-//						}
-//					}
-//				}
-//			}
-//
-//			previousYear = currentYear;
-//		}
-		// put the result
-		responseMap.put( "status", "Ok" );
-//		responseMap.put( "interest", interestYearsMap );
+			circle.setUpdateInterest( false );
+			persistenceStrategy.getCircleDAO().persist( circle );
+		}
+
+		// mining the author interest
+		circleInterestMiningService.getInterestFromCircle( responseMap, circle, isReplaceExistingResult );
 
 		return responseMap;
 	}

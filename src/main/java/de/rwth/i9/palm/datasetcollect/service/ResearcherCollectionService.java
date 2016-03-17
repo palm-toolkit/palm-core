@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.rwth.i9.palm.helper.NameNormalizationHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorAlias;
 import de.rwth.i9.palm.model.AuthorSource;
@@ -129,7 +130,7 @@ public class ResearcherCollectionService
 					if ( authorMap.get( "name" ) == null )
 						continue;
 
-					String authorName = authorMap.get( "name" ).toLowerCase().replace( ".", "" ).replace( "-", " " ).trim();
+					String authorName = NameNormalizationHelper.normalizeName( authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim() );
 
 					// check if author already on array list
 					Integer authorIndex = indexHelper.get( authorName );
@@ -233,7 +234,7 @@ public class ResearcherCollectionService
 					author = authors.get( 0 );
 				}
 
-				// set academic status and affliation
+				// set academic status and affiliation
 				if ( !institution.equals( "" ) && ( author.getInstitution() == null ) )
 				{
 					String institutionName = institution.toLowerCase().replace( "university", "" ).replace( "college", "" ).replace( "state", "" ).replace( "institute", "" ).replace( "school", "" ).replace( "academy", "" );
@@ -300,13 +301,14 @@ public class ResearcherCollectionService
 					String[] sourceUrls = mergedAuthor.get( "url" ).split( " " );
 					// checking for duplication
 					Set<String> registeredSourceUlr = new HashSet<String>();
+					//log.info( "\nRESEARCHER COLLECTION SERVICE" );
 					for ( int i = 0; i < sources.length; i++ )
 					{
 						// prevent empty string and duplicated source
 						if ( !sources[i].equals( "" ) && !registeredSourceUlr.contains( sourceUrls[i] ) )
 						{
 							AuthorSource as = new AuthorSource();
-							as.setName( name );
+							as.setName( author.getName() );
 							as.setSourceUrl( sourceUrls[i] );
 							as.setSourceType( SourceType.valueOf( sources[i].toUpperCase() ) );
 							as.setAuthor( author );
@@ -314,12 +316,16 @@ public class ResearcherCollectionService
 							registeredSourceUlr.add( sourceUrls[i] );
 
 							authorSources.add( as );
+							// author sources
+							//log.info( author.getId() + "-" + author.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+
+							// add author sources
+							author.addAuthorSource( as );
 						}
 					}
 				}
-				author.setAuthorSources( authorSources );
 
-				// incase of duplication
+				// in case of duplication
 				if ( !authors2.contains( author ) )
 					authors2.add( author );
 

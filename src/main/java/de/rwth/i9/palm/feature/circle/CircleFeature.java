@@ -7,6 +7,8 @@ package de.rwth.i9.palm.feature.circle;
  */
 public interface CircleFeature
 {
+	public CircleAcademicEventTree getCircleAcademicEventTree();
+
 	public CircleApi getCircleApi();
 
 	public CircleBasicInformation getCircleBasicInformation();
@@ -22,4 +24,6 @@ public interface CircleFeature
 	public CircleResearcher getCircleResearcher();
 
 	public CircleSearch getCircleSearch();
+
+	public CircleTopPublication getCircleTopPublication();
 }

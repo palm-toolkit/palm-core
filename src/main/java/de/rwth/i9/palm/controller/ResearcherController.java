@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +45,7 @@ import de.rwth.i9.palm.service.SecurityService;
 @RequestMapping( value = "/researcher" )
 public class ResearcherController
 {
+	private final static Logger log = LoggerFactory.getLogger( ResearcherController.class );
 
 	private static final String LINK_NAME = "researcher";
 
@@ -175,7 +178,37 @@ public class ResearcherController
 		
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )
+		{
 			request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
+
+			// recheck if session really has been updated
+			// (there is a bug in spring session, which makes session is
+			// not updated sometimes) - a little workaround
+			boolean isSessionUpdated = false;
+			while ( !isSessionUpdated )
+			{
+				Object authors = request.getSession().getAttribute( "authors" );
+				if ( authors.equals( authorsMap.get( "authors" ) ) )
+					isSessionUpdated = true;
+				else
+					request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
+			}
+
+//			log.info( "\nRESEARCHER SESSION" );
+//			@SuppressWarnings( "unchecked" )
+//			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
+//			// get author from session -> just for debug
+//			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+//			{
+//				for ( Author sessionAuthor : sessionAuthors )
+//				{
+//					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+//					{
+//						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+//					}
+//				}
+//			}
+		}
 		
 		if ( (Integer) authorsMap.get( "totalCount" ) > 0 )
 		{
@@ -269,24 +302,37 @@ public class ResearcherController
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterest( 
 			@RequestParam( value = "id", required = false ) final String authorId, 
-			@RequestParam( value = "name", required = false ) final String name, 
-			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
-			@RequestParam( value = "startDate", required = false ) final String startDate,
-			@RequestParam( value = "endDate", required = false ) final String endDate,
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
-		if ( name != null )
-			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
-		else
-			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
-		// return Collections.emptyMap();
+		boolean isReplaceExistingResult = false;
+		if ( updateResult != null && updateResult.equals( "yes" ) )
+			isReplaceExistingResult = true;
+		return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, isReplaceExistingResult );
+
 	}
 	
+	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherTopicModel( 
+			@RequestParam( value = "id", required = false ) final String authorId, 
+			@RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	{
+		if ( authorId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			return researcherFeature.getResearcherTopicModeling().getLdaBasicExample( authorId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 	@RequestMapping( value = "/enrich", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherEnrich( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException, TimeoutException
 	{
-		// id=90522536-4717-4fa3-ac43-b3f6300ad6c4
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
 		publicationCollectionService.enrichPublicationByExtractOriginalSources( new ArrayList<Publication>( author.getPublications() ), author, true );
 		return Collections.emptyMap();
@@ -392,7 +438,7 @@ public class ResearcherController
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping( value = "/coAuhtorList", method = RequestMethod.GET )
+	@RequestMapping( value = "/coAuthorList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getCoAuthorList( 
 			@RequestParam( value = "id", required = false ) final String authorId, 
@@ -409,6 +455,11 @@ public class ResearcherController
 			return responseMap;
 		}
 
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 30;
+
 		// get author
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
 
@@ -420,7 +471,7 @@ public class ResearcherController
 		}
 
 		// get coauthor calculation
-		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author ) );
+		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
 
 		return responseMap;
 	}

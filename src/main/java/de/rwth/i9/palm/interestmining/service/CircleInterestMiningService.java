@@ -178,14 +178,15 @@ public class CircleInterestMiningService
 
 			for ( String partOfProfileName : derivedInterestProfileName )
 			{
-				if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "∪" ) )
+				// ? sometimes problem on encoding
+				if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "?" ) || partOfProfileName.equals( "+" ) || partOfProfileName.equals( "∪" ) )
 				{
 					if ( circleInterestProfileResult != null )
 					{
 						circleInterestProfile1 = circleInterestProfileResult;
 						circleInterestProfileResult = null;
 					}
-					if ( partOfProfileName.equals( "∩" ) )
+					if ( partOfProfileName.equals( "∩" ) || partOfProfileName.equals( "?" ) || partOfProfileName.equals( "+" ) )
 						operationType = "INTERSECTION";
 					else
 						operationType = "UNION";

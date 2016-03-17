@@ -4,5 +4,5 @@ import java.util.Map;
 
 public interface CircleDetail
 {
-	public Map<String, Object> getCircleDetailById( String circleId );
+	public Map<String, Object> getCircleDetailById( String circleId, boolean isRetrieveAuthorDetail, boolean isRetrievePublicationDetail );
 }

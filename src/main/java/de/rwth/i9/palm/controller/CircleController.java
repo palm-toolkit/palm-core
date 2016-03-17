@@ -52,7 +52,8 @@ public class CircleController
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
 	public ModelAndView circlePage( 
- @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "id", required = false ) final String circleId, 
+			@RequestParam( value = "name", required = false ) final String name,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// set model and view
@@ -86,10 +87,10 @@ public class CircleController
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getCircleList( 
 			@RequestParam( value = "id", required = false ) String circleId,
- @RequestParam( value = "creatorId", required = false ) String creatorId,
+			@RequestParam( value = "creatorId", required = false ) String creatorId,
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "page", required = false ) Integer page, 
- @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "orderBy", required = false ) String orderBy,
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response )
 	{
 		/* == Set Default Values== */
@@ -144,12 +145,29 @@ public class CircleController
 	@Transactional
 	public @ResponseBody Map<String, Object> getCircleDetail( 
 			@RequestParam( value = "id", required = false ) final String id, 
-			@RequestParam( value = "uri", required = false ) final String uri, 
+			@RequestParam( value = "uri", required = false ) final String uri,
+			@RequestParam( value = "retrieveAuthor", required = false ) String retrieveAuthor,
+			@RequestParam( value = "retrievePubication", required = false ) String retrievePublication, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return circleFeature.getCircleDetail().getCircleDetailById( id );
+		boolean isRetrieveAuthorDetail = false;
+		if ( retrieveAuthor != null && retrieveAuthor.equals( "yes" ) )
+			isRetrieveAuthorDetail = true;
+
+		boolean isRetrievePublicationDetail = false;
+		if ( retrievePublication != null && retrievePublication.equals( "yes" ) )
+			isRetrievePublicationDetail = true;
+
+		return circleFeature.getCircleDetail().getCircleDetailById( id, isRetrieveAuthorDetail, isRetrievePublicationDetail );
 	}
 
+	/**
+	 * Get basic information of circle
+	 * 
+	 * @param circleid
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping( value = "/basicInformation", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getBasicInformationMap( 
@@ -242,17 +260,104 @@ public class CircleController
 		return responseMap;
 	}
 	
+	/**
+	 * Get PublicationMap (JSON), containing publications basic information and detail.
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/publication", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationList( 
+			@RequestParam( value = "id", required = false ) final String circleId,
+			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "year", required = false ) String year,
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			final HttpServletResponse response)
+	{
+		if ( year == null )				year = "all";
+		if ( query == null )			query = "";
+		if ( orderBy == null )			orderBy = "date";
+		
+		return circleFeature.getCirclePublication().getCirclePublicationByCircleId( circleId, query, year, startPage, maxresult, orderBy );
+	}
+	
 	@RequestMapping( value = "/interest", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterest( 
 			@RequestParam( value = "id", required = false ) final String circleId, 
-			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
-			@RequestParam( value = "startDate", required = false ) final String startDate,
-			@RequestParam( value = "endDate", required = false ) final String endDate,
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
-		return circleFeature.getCircleInterest().getCircleInterestById( circleId, extractionServiceType, startDate, endDate );
+		boolean isReplaceExistingResult = false;
+		if ( updateResult != null && updateResult.equals( "yes" ) )
+			isReplaceExistingResult = true;
+		return circleFeature.getCircleInterest().getCircleInterestById( circleId, isReplaceExistingResult );
 	}
 	
+	/**
+	 * Get PublicationMap (JSON), containing top publications (highly cited publications) information and detail.
+	 * @param circleId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/publicationTopList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopList( 
+			@RequestParam( value = "id", required = false ) final String authorId,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			final HttpServletResponse response)
+	{	
+		if( startPage == null ) startPage = 0;
+		if( maxresult == null ) maxresult = 10;
+		return circleFeature.getCircleTopPublication().getTopPublicationListByCircleId( authorId, startPage, maxresult );
+	}
+	
+	/**
+	 * Get academic event tree of given circle
+	 * 
+	 * @param circleId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/academicEventTree", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getAcademicEventTreeMap( 
+			@RequestParam( value = "id", required = false ) final String circleId,
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( circleId == null || circleId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circleId null" );
+			return responseMap;
+		}
+
+		// get author
+		Circle circle  = persistenceStrategy.getCircleDAO().getById( circleId );
+
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( circleFeature.getCircleAcademicEventTree().getCircleAcademicEventTree( circle ) );
+
+		return responseMap;
+	}
 
 }

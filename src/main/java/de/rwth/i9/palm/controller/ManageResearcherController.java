@@ -133,8 +133,17 @@ public class ManageResearcherController
 			newAuthor = new Author();
 		}
 
+		// if there is something wrong with the session
+		if ( newAuthor == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error on session - author not found on session" );
+
+			return responseMap;
+		}
+
 		// set based on user input
-		newAuthor.setName( author.getName() );
+		newAuthor.setPossibleNames( author.getName() );
 		if ( !author.getAcademicStatus().equals( "" ) )
 			newAuthor.setAcademicStatus( author.getAcademicStatus() );
 		if ( author.getPhotoUrl().startsWith( "http:" ) )

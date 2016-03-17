@@ -115,7 +115,7 @@ public class ManageAcademicEventController
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveNewEventGroup( 
-			@ModelAttribute( "eventGroup" ) EventGroup eventGroup,
+ @ModelAttribute( "eventGroup" ) EventGroup eventGroupOnSession,
 			@RequestParam( value = "eventId" , required= false ) String eventId,
 			@RequestParam( value = "publicationId" , required= false ) final String publicationId,
 			@RequestParam( value = "type" , required= false ) final String type,
@@ -126,6 +126,29 @@ public class ManageAcademicEventController
 
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
+		// check for duplication
+		// check dblpurl or notation with existing event group on db
+		EventGroup eventGroup = null;
+		
+		eventGroup = persistenceStrategy.getEventGroupDAO().getSimilarEventGroup( eventGroupOnSession );
+
+		if ( eventGroup != null )
+		{
+			eventGroup.setDblpUrl( eventGroupOnSession.getDblpUrl() );
+			eventGroup.setName( eventGroupOnSession.getName() );
+			if ( !eventGroupOnSession.getNotation().isEmpty() )
+				eventGroup.setNotation( eventGroupOnSession.getNotation() );
+			eventGroup.setDescription( eventGroupOnSession.getDescription() );
+		}
+		else
+			eventGroup = eventGroupOnSession;
+
+		if ( eventGroup == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error event not found on session" );
+		}
+
 		// set flag added to true
 		eventGroup.setAdded( true );
 		// set event type, incase changed
@@ -140,10 +163,6 @@ public class ManageAcademicEventController
 			{
 			}
 		}
-
-		// TODO
-		// check for duplication
-		// check dblpurl or notation
 
 		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 		
@@ -202,6 +221,8 @@ public class ManageAcademicEventController
 			responseMap.put( "volume", volume );
 		if( year != null )
 			responseMap.put( "year", year );
+		if ( publicationId != null )
+			responseMap.put( "publicationId", publicationId );
 		return responseMap;
 	}
 	
