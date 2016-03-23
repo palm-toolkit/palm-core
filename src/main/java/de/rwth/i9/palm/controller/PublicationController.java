@@ -23,6 +23,7 @@ import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserPublicationBookmark;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -239,7 +240,23 @@ public class PublicationController
 			@RequestParam( value = "uri", required = false ) final String uri, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
+		Map<String, Object> responseMap = publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
+
+		// check whether publication is already bookmarker or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+			Publication publication = persistenceStrategy.getPublicationDAO().getById( id );
+			if ( publication == null )
+				return responseMap;
+
+			UserPublicationBookmark upb = persistenceStrategy.getUserPublicationBookmarkDAO().getByUserAndPublication( user, publication );
+			if ( upb != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
+		return responseMap;
 	}
 	
 	/**
