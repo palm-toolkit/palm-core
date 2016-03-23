@@ -50,7 +50,6 @@ public class UserPublicationController
 
 		// assign the model
 		model.addObject( "widgets", widgets );
-		model.addObject( "user", securityService.getUser() );
 
 		return model;
 	}
