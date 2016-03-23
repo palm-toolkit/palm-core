@@ -323,8 +323,22 @@ public class ResearcherController
 			boolean isReplaceExistingResult = false;
 			if ( updateResult != null && updateResult.equals( "yes" ) )
 				isReplaceExistingResult = true;
+			return researcherFeature.getResearcherTopicModeling().getTopicModeling( authorId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
 
-			return researcherFeature.getResearcherTopicModeling().getTopicModelingNgrams( authorId, isReplaceExistingResult );
+
+	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopic( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( authorId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return researcherFeature.getResearcherTopicModeling().getStaticTopicModelingNgrams( authorId, isReplaceExistingResult );
 		}
 		return Collections.emptyMap();
 	}

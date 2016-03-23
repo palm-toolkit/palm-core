@@ -4,10 +4,9 @@ import java.util.Map;
 
 public interface ResearcherTopicModeling
 {
-	public Map<String, Object> getLdaBasicExample( String authorId, boolean isReplaceExistingResult );
+	public Map<String, Object> getTopicModeling( String authorId, boolean isReplaceExistingResult );
 
-	public Map<String, Object> getTopicModelingNgrams( String authorId, boolean isReplaceExistingResult );
+	public Map<String, Object> getStaticTopicModelingNgrams( String authorId, boolean isReplaceExistingResult );
 
-	public Map<String, Object> getTopicModelingUnigrams( String authorId, boolean isReplaceExistingResult );
 
 }

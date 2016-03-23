@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
 import de.rwth.i9.palm.config.WebAppConfigTest;
+import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -35,10 +37,46 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	@Autowired // actually this one is for the API, so I guess you don't need to
+				// use this
+	private ResearcherFeature researcherFeature;
+
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
 	private final static Logger log = LoggerFactory.getLogger( TestGetDataAndMahout.class );
+
+	@Test
+	public void getResearcherPublication()
+	{
+		String authorId = "07397ed7-3deb-442f-a297-bdb5b476d3e6";
+
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		// now get by year, basically, you can get all of publications from this
+		// author and just filter it based on year
+		List<Publication> publications = new ArrayList<Publication>();
+
+		for ( int i = 2005; i < 2016; i++ )
+		{
+			System.out.println( i );
+			int count = 0;
+			for ( Publication publication : author.getPublications() )
+			{
+
+				if ( !publication.getYear().equals( i + "" ) )
+					continue;
+				
+				publications.add( publication );
+				System.out.println( publication.getTitle() );
+				System.out.println( publication.getAbstractText() );
+				count++;
+			}
+			System.out.println( count );
+		}
+
+
+	}
 
 	@Test
 	@Ignore
@@ -72,6 +110,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 	
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		int count = 0;

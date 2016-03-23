@@ -29,7 +29,7 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 	 * implementation String authorId boolean isReplaceExistingResult
 	 */
 	@Override
-	public Map<String, Object> getLdaBasicExample( String authorId, boolean isReplaceExistingResult )
+	public Map<String, Object> getTopicModeling( String authorId, boolean isReplaceExistingResult )
 	{
 		// create JSON container for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -43,7 +43,8 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 		}
 		
 		// calculate and store the result of topic modeling
-		topicModelingService.calculateAuthorTopicModeling( author, isReplaceExistingResult );
+		// True/False for Static or Dynamic View
+		topicModelingService.calculateAuthorTopicModeling( author, isReplaceExistingResult, false );
 
 		// get JSON represent AuthorTOpicModelingProfile
 		List<Object> topicModelingResults = topicModelingService.getAuthorTopicModeliFromDatabase( author );
@@ -67,7 +68,7 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 	 * the second one is composed of topic -_- %
 	 */
 	@Override
-	public Map<String, Object> getTopicModelingNgrams( String authorId, boolean isReplaceExistingResult )
+	public Map<String, Object> getStaticTopicModelingNgrams( String authorId, boolean isReplaceExistingResult )
 	{
 		// create JSON container for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -82,10 +83,10 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 		}
 
 		// calculate and store the result of topic modeling
-		topicModelingService.calculateAuthorTopicModeling( author, isReplaceExistingResult );
+		topicModelingService.calculateAuthorTopicModeling( author, isReplaceExistingResult, true );
 
 		// get JSON represent AuthorTOpicModelingProfile
-		List<Object> topicModelingResults = topicModelingService.getAuthorTopicModeliFromDatabase( author );
+		List<Object> topicModelingResults = topicModelingService.getStaticAuthorTopicModelingFromDatabase( author );
 
 		if ( topicModelingResults == null || topicModelingResults.isEmpty() )
 		{
@@ -100,42 +101,60 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 		return responseMap;
 	}
 
-	/**
-	 * This is the main method that will be used to extract the topic in the
-	 * form of Unigrams The result of the method will be <String, String> Where
-	 * the second one is composed of topic -_- %
-	 */
-	@Override
-	public Map<String, Object> getTopicModelingUnigrams( String authorId, boolean isReplaceExistingResult )
-	{
-		// create JSON container for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-
-		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
-
-		if ( author == null )
-		{
-			responseMap.put( "status", "error" );
-			responseMap.put( "statusMessage", "author not found" );
-			return responseMap;
-		}
-
-		// calculate and store the result of topic modeling
-		topicModelingService.calculateAuthorTopicModeling( author, isReplaceExistingResult );
-
-		// get JSON represent AuthorTOpicModelingProfile
-		List<Object> topicModelingResults = topicModelingService.getAuthorTopicModeliFromDatabase( author );
-
-		if ( topicModelingResults == null || topicModelingResults.isEmpty() )
-		{
-			responseMap.put( "status", "error" );
-			responseMap.put( "statusMessage", "no interest profile found" );
-			return responseMap;
-		}
-
-		responseMap.put( "status", "ok" );
-		responseMap.put( "topicModel", topicModelingResults );
-
-		return responseMap;
-	}
+	// /**
+	// *
+	// * @param authord
+	// * @param maxRetrieve
+	// * @return
+	// */
+	// public Map<String, Object> getResearcherExtractedTopicsById( String
+	// authorId, String maxRetrieve, boolean isReplaceExistingResult )
+	// {
+	// // create JSON mapper for response
+	// Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+	//
+	// // default term retrieved
+	// int maxTermRetrieve = 20;
+	//
+	// if ( maxRetrieve != null )
+	// {
+	// try
+	// {
+	// maxTermRetrieve = Integer.parseInt( maxRetrieve );
+	// }
+	// catch ( InputMismatchException exception )
+	// {
+	// logger.error( "Invalid input" );
+	// maxTermRetrieve = 20;
+	// }
+	// }
+	//
+	// // get author
+	// Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+	// if ( author == null )
+	// {
+	// responseMap.put( "status", "Error - author not found" );
+	// return responseMap;
+	// }
+	//
+	// // calculate and store the result of topic modeling
+	// topicModelingService.calculateAuthorTopicModelingResults( author,
+	// maxRetrieve, isReplaceExistingResult );
+	//
+	// // get JSON represent AuthorTOpicModelingProfile
+	// List<Object> topicModelingResults =
+	// topicModelingService.getAuthorTopicModeliFromDatabase( author );
+	//
+	// if ( topicModelingResults == null || topicModelingResults.isEmpty() )
+	// {
+	// responseMap.put( "status", "error" );
+	// responseMap.put( "statusMessage", "no interest profile found" );
+	// return responseMap;
+	// }
+	//
+	// responseMap.put( "status", "ok" );
+	// responseMap.put( "topicModel", topicModelingResults );
+	//
+	// return responseMap;
+	// }
 }
