@@ -34,6 +34,7 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserAuthorBookmark;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -509,8 +510,19 @@ public class ResearcherController
 			return responseMap;
 		}
 
-		// get coauthor calculation
+		// get basic information
 		responseMap.putAll( researcherFeature.getResearcherBasicInformation().getResearcherBasicInformationMap( author ) );
+
+		// check whether publication is already followed or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+			UserAuthorBookmark uab = persistenceStrategy.getUserAuthorBookmarkDAO().getByUserAndAuthor( user, author );
+			if ( uab != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
 
 		return responseMap;
 	}

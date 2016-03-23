@@ -242,7 +242,7 @@ public class PublicationController
 	{
 		Map<String, Object> responseMap = publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
 
-		// check whether publication is already bookmarker or not
+		// check whether publication is already booked or not
 		User user = securityService.getUser();
 		if ( user != null )
 		{
