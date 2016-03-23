@@ -1,5 +1,7 @@
 package de.rwth.i9.palm.controller.user;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -16,7 +18,11 @@ import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.feature.user.UserFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.Widget;
+import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @RequestMapping( value = "/user" )
@@ -31,6 +37,9 @@ public class UserController
 	@Autowired
 	private UserFeature userFeature;
 
+	@Autowired
+	private SecurityService securityService;
+
 	@RequestMapping( method = RequestMethod.GET )
 	public ModelAndView userPage( 
 			@RequestParam( value = "page", required = false ) final String page,
@@ -44,6 +53,68 @@ public class UserController
 			model.addObject( "activeMenu", "profile" );
 
 		return model;
+	}
+
+	/**
+	 * Get user's bookmark for researcher, publication, conference or circle
+	 * 
+	 * @param bookmarkType
+	 * @param userId
+	 * @param bookId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/book/{bookmarkType}", method = RequestMethod.GET )
+	public ModelAndView getBookmarkPage( 
+			@PathVariable String bookmarkType, 
+			final HttpServletResponse response )
+	{
+		// set model and view
+		ModelAndView model = TemplateHelper.createViewWithLink( "widgetLayoutAjax", LINK_NAME );
+		List<Widget> widgets = null;
+
+		if ( bookmarkType.equals( "author" ) )
+			widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-bookmark-author" );
+		else if ( bookmarkType.equals( "publication" ) )
+			widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-bookmark-publication" );
+		else if ( bookmarkType.equals( "conference" ) )
+			widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-bookmark-eventGroup" );
+		else if ( bookmarkType.equals( "circle" ) )
+			widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-bookmark-circle" );
+		// assign the model
+		model.addObject( "widgets", widgets );
+
+		return model;
+	}
+
+	/**
+	 * Get user's bookmark for researcher, publication, conference or circle
+	 * 
+	 * @param bookmarkType
+	 * @param userId
+	 * @param bookId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/bookmark/{bookmarkType}", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> getBookmark( 
+			@PathVariable String bookmarkType, 
+			final HttpServletResponse response)
+	{
+		User user = securityService.getUser();
+		if ( user == null )
+		{
+			Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "not logged" );
+			return responseMap;
+		}
+
+		return userFeature.getUserBookmark().getUserBookmark( bookmarkType, user );
 	}
 
 	/**

@@ -1,14 +1,19 @@
 package de.rwth.i9.palm.feature.user;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.helper.comparator.UserAuthorBookmarkByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.EventGroup;
@@ -27,6 +32,124 @@ public class UserBookmarkImpl implements UserBookmark
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Map<String, Object> getUserBookmark( String bookmarkType, User user )
+	{
+		// set response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// get researcher bookmark
+		if ( bookmarkType.equals( "author" ) )
+		{
+			if ( user.getUserAuthorBookmarks() != null && !user.getUserAuthorBookmarks().isEmpty() )
+			{
+				List<Object> responseListAuthor = new ArrayList<Object>();
+
+				List<UserAuthorBookmark> userAuthorBookmarks = new ArrayList<UserAuthorBookmark>();
+				userAuthorBookmarks.addAll( user.getUserAuthorBookmarks() );
+				Collections.sort( userAuthorBookmarks, new UserAuthorBookmarkByDateComparator() );
+
+				for ( UserAuthorBookmark userAuthorBookmark : userAuthorBookmarks )
+				{
+					printJSONAuthorBookmark( responseListAuthor, userAuthorBookmark.getAuthor() );
+				}
+				responseMap.put( "researchers", responseListAuthor );
+				responseMap.put( "count", responseListAuthor.size() );
+			}
+		}
+
+		// get publication bookmark
+		else if ( bookmarkType.equals( "publication" ) )
+		{
+			if ( user.getUserPublicationBookmarks() != null && !user.getUserPublicationBookmarks().isEmpty() )
+			{
+				for ( UserPublicationBookmark userPublicationBookmark : user.getUserPublicationBookmarks() )
+				{
+					printJSONPublicationBookmark( responseMap, userPublicationBookmark.getPublication() );
+				}
+			}
+		}
+
+		// get circle bookmark
+		else if ( bookmarkType.equals( "circle" ) )
+		{
+			if ( user.getUserCircleBookmarks() != null && !user.getUserCircleBookmarks().isEmpty() )
+			{
+				for ( UserCircleBookmark userCircleBookmark : user.getUserCircleBookmarks() )
+				{
+					printJSONCircleBookmark( responseMap, userCircleBookmark.getCircle() );
+				}
+			}
+		}
+
+		// get eventGroup bookmark
+		else if ( bookmarkType.equals( "eventGroup" ) )
+		{
+			if ( user.getUserEventGroupBookmarks() != null && !user.getUserEventGroupBookmarks().isEmpty() )
+			{
+				for ( UserEventGroupBookmark userEventGroupBookmark : user.getUserEventGroupBookmarks() )
+				{
+					printJSONEventGroupBookmark( responseMap, userEventGroupBookmark.getEventGroup() );
+				}
+			}
+		}
+
+		responseMap.put( "status", "ok" );
+		return responseMap;
+	}
+
+	private void printJSONAuthorBookmark( List<Object> responseListAuthor, Author researcher )
+	{
+		Map<String, Object> researcherMap = new LinkedHashMap<String, Object>();
+		researcherMap.put( "id", researcher.getId() );
+		researcherMap.put( "name", WordUtils.capitalize( researcher.getName() ) );
+		if ( researcher.getPhotoUrl() != null )
+			researcherMap.put( "photo", researcher.getPhotoUrl() );
+		if ( researcher.getAcademicStatus() != null )
+			researcherMap.put( "status", researcher.getAcademicStatus() );
+		if ( researcher.getInstitution() != null )
+			researcherMap.put( "aff", researcher.getInstitution().getName() );
+		if ( researcher.getCitedBy() > 0 )
+			researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
+
+		if ( researcher.getPublicationAuthors() != null )
+			researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
+		else
+			researcherMap.put( "publicationsNumber", 0 );
+		String otherDetail = "";
+		if ( researcher.getOtherDetail() != null )
+			otherDetail += researcher.getOtherDetail();
+		if ( researcher.getDepartment() != null )
+			otherDetail += ", " + researcher.getDepartment();
+		if ( !otherDetail.equals( "" ) )
+			researcherMap.put( "detail", otherDetail );
+
+		researcherMap.put( "isAdded", researcher.isAdded() );
+
+		responseListAuthor.add( researcherMap );
+	}
+
+	private void printJSONPublicationBookmark( Map<String, Object> responseMap, Publication publication )
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	private void printJSONCircleBookmark( Map<String, Object> responseMap, Circle circle )
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	private void printJSONEventGroupBookmark( Map<String, Object> responseMap, EventGroup eventGroup )
+	{
+		// TODO Auto-generated method stub
+
+	}
 
 	/**
 	 * {@inheritDoc}
