@@ -32,6 +32,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 @ContextConfiguration( classes = { WebAppConfigTest.class, DatabaseConfigCoreTest.class }, loader = AnnotationConfigContextLoader.class )
 @TransactionConfiguration
 @Transactional
+@Ignore
 public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringContextTests
 {
 	@Autowired
