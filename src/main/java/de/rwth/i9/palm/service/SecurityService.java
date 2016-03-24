@@ -20,6 +20,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
  * authentification itself is managed by Spring.
  * 
  * @author matthaeus @gesis.org
+ * <br>Modified for PALM project 
  */
 @Service
 public class SecurityService

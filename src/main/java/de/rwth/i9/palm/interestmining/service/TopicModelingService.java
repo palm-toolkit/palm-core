@@ -682,8 +682,8 @@ public class TopicModelingService
 			for ( int j = 0; j < 11; j++ )
 			{
 				termValueMap.put( palmAnalytics.getDynamicTopicModel().getListTopics( 10 ).get( j ), palmAnalytics.getDynamicTopicModel().getTopicProportion2( 0.0, i - 2005, 11, 11 ).get( j ) ); // );
+				dummyClusterResults.add( clusterResultMap );
 			}
-			dummyClusterResults.add( clusterResultMap );
 		}
 		// return dummy results
 		return dummyClusterResults;

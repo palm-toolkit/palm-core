@@ -788,6 +788,14 @@ public class DblpEventCollection extends PublicationCollection
 		Map<String, Object> dblpJournal = new LinkedHashMap<String, Object>();
 
 		String eventLiText = eventLiElement.text();
+
+		// find type of format
+		// Type 1: Volume 8: 2015 or Volume 8, 2015
+		// Type 2: 2011: Volume 175
+		int type = 1;
+		if ( !eventLiText.toLowerCase().startsWith( "volume" ) )
+			type = 2;
+
 		Elements eventLiChildren = eventLiElement.select( "a" );
 
 		if ( eventLiChildren == null )
@@ -798,10 +806,18 @@ public class DblpEventCollection extends PublicationCollection
 
 		String[] eventLiTextSplit = eventLiText.split( ":" );
 
+		// it turns out dblp has many format e.g.Volume 1, 1998
 		if ( eventLiTextSplit.length != 2 )
-			return Collections.emptyMap();
+		{
+			// try to split with comma
+			eventLiTextSplit = eventLiText.split( "," );
+			if ( eventLiTextSplit.length != 2 )
+			{
+				return Collections.emptyMap();
+			}
+		}
 
-		if ( eventLiChildren.size() == 1 )
+		if ( type == 1 )
 		{
 			String volume = "0";
 			if ( eventLiTextSplit[0].length() > 6 )
@@ -819,10 +835,10 @@ public class DblpEventCollection extends PublicationCollection
 			dblpJournal.put( "year", year );
 			dblpJournal.put( "volume", volumeMap );
 		}
-		else
+		else if ( type == 2 )
 		{
 			// put year
-			String year = eventLiTextSplit[1].trim();
+			String year = eventLiTextSplit[0].trim();
 			if ( year.length() > 4 )
 				year = year.substring( 0, 4 );
 			dblpJournal.put( "year", year );

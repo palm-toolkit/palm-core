@@ -34,6 +34,7 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserAuthorBookmark;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -452,7 +453,7 @@ public class ResearcherController
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping( value = "/coAuhtorList", method = RequestMethod.GET )
+	@RequestMapping( value = "/coAuthorList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getCoAuthorList( 
 			@RequestParam( value = "id", required = false ) final String authorId, 
@@ -469,6 +470,11 @@ public class ResearcherController
 			return responseMap;
 		}
 
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 30;
+
 		// get author
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
 
@@ -480,7 +486,7 @@ public class ResearcherController
 		}
 
 		// get coauthor calculation
-		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author ) );
+		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
 
 		return responseMap;
 	}
@@ -518,8 +524,19 @@ public class ResearcherController
 			return responseMap;
 		}
 
-		// get coauthor calculation
+		// get basic information
 		responseMap.putAll( researcherFeature.getResearcherBasicInformation().getResearcherBasicInformationMap( author ) );
+
+		// check whether publication is already followed or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+			UserAuthorBookmark uab = persistenceStrategy.getUserAuthorBookmarkDAO().getByUserAndAuthor( user, author );
+			if ( uab != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
 
 		return responseMap;
 	}

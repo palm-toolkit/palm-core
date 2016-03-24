@@ -57,7 +57,7 @@ public class CircleInterestImpl extends AcademicFeatureImpl implements CircleInt
 		Map<String, Object> targetCircleMap = new LinkedHashMap<String, Object>();
 		targetCircleMap.put( "id", circle.getId() );
 		targetCircleMap.put( "name", circle.getName() );
-		responseMap.put( "author", targetCircleMap );
+		responseMap.put( "circle", targetCircleMap );
 
 		// check whether publication has been extracted
 		// later add extractionServiceType checking

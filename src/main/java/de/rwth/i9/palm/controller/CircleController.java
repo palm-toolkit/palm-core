@@ -24,10 +24,13 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserCircleBookmark;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @SessionAttributes( { "sessionDataSet" } )
@@ -35,6 +38,9 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 public class CircleController
 {
 	private static final String LINK_NAME = "circle";
+
+	@Autowired
+	private SecurityService securityService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -53,7 +59,8 @@ public class CircleController
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
 	public ModelAndView circlePage( 
- @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "id", required = false ) final String circleId, 
+			@RequestParam( value = "name", required = false ) final String name,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// set model and view
@@ -87,10 +94,10 @@ public class CircleController
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getCircleList( 
 			@RequestParam( value = "id", required = false ) String circleId,
- @RequestParam( value = "creatorId", required = false ) String creatorId,
+			@RequestParam( value = "creatorId", required = false ) String creatorId,
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "page", required = false ) Integer page, 
- @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "orderBy", required = false ) String orderBy,
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response )
 	{
 		/* == Set Default Values== */
@@ -145,12 +152,29 @@ public class CircleController
 	@Transactional
 	public @ResponseBody Map<String, Object> getCircleDetail( 
 			@RequestParam( value = "id", required = false ) final String id, 
-			@RequestParam( value = "uri", required = false ) final String uri, 
+			@RequestParam( value = "uri", required = false ) final String uri,
+			@RequestParam( value = "retrieveAuthor", required = false ) String retrieveAuthor,
+			@RequestParam( value = "retrievePubication", required = false ) String retrievePublication, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return circleFeature.getCircleDetail().getCircleDetailById( id );
+		boolean isRetrieveAuthorDetail = false;
+		if ( retrieveAuthor != null && retrieveAuthor.equals( "yes" ) )
+			isRetrieveAuthorDetail = true;
+
+		boolean isRetrievePublicationDetail = false;
+		if ( retrievePublication != null && retrievePublication.equals( "yes" ) )
+			isRetrievePublicationDetail = true;
+
+		return circleFeature.getCircleDetail().getCircleDetailById( id, isRetrieveAuthorDetail, isRetrievePublicationDetail );
 	}
 
+	/**
+	 * Get basic information of circle
+	 * 
+	 * @param circleid
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping( value = "/basicInformation", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getBasicInformationMap( 
@@ -177,6 +201,17 @@ public class CircleController
 
 		// get coauthor calculation
 		responseMap.put( "circle", circleFeature.getCircleBasicInformation().getCircleBasicInformationMap( circle ) );
+
+		// check whether circle is already booked or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+			UserCircleBookmark ucb = persistenceStrategy.getUserCircleBookmarkDAO().getByUserAndCircle( user, circle );
+			if ( ucb != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
 
 		return responseMap;
 	}
@@ -243,11 +278,37 @@ public class CircleController
 		return responseMap;
 	}
 	
+	/**
+	 * Get PublicationMap (JSON), containing publications basic information and detail.
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/publication", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationList( 
+			@RequestParam( value = "id", required = false ) final String circleId,
+			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "year", required = false ) String year,
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			final HttpServletResponse response)
+	{
+		if ( year == null )				year = "all";
+		if ( query == null )			query = "";
+		if ( orderBy == null )			orderBy = "date";
+		
+		return circleFeature.getCirclePublication().getCirclePublicationByCircleId( circleId, query, year, startPage, maxresult, orderBy );
+	}
+	
 	@RequestMapping( value = "/interest", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterest( 
 			@RequestParam( value = "id", required = false ) final String circleId, 
- @RequestParam( value = "updateResult", required = false ) final String updateResult,
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
 		boolean isReplaceExistingResult = false;

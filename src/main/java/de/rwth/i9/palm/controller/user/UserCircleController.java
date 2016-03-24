@@ -16,21 +16,17 @@ import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import de.rwth.i9.palm.service.ApplicationService;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @SessionAttributes( "sourceListWrapper" )
-@RequestMapping( value = "/user/event" )
-public class UserConferenceController
+@RequestMapping( value = "/user/circle" )
+public class UserCircleController
 {
 	private static final String LINK_NAME = "user";
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
-
-	@Autowired
-	private ApplicationService applicationService;
 
 	@Autowired
 	private SecurityService securityService;
@@ -45,16 +41,17 @@ public class UserConferenceController
 	 */
 	@Transactional
 	@RequestMapping( method = RequestMethod.GET )
-	public ModelAndView getUserConferencePage( final HttpServletResponse response ) throws InterruptedException
+	public ModelAndView getUserCirclePage(
+			final HttpServletResponse response) throws InterruptedException
 	{
 		// set model and view
-		ModelAndView model = TemplateHelper.createViewWithLink( "widgetLayoutAjax", LINK_NAME );
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-conference" );
+		ModelAndView model = TemplateHelper.createViewWithLink( "widgetLayoutAjax", LINK_NAME);
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-circle" );
 
 		// assign the model
 		model.addObject( "widgets", widgets );
-		model.addObject( "user", securityService.getUser() );
 
 		return model;
 	}
+
 }

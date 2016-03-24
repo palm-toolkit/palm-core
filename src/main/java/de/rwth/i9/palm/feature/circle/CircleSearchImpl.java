@@ -12,8 +12,8 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -28,9 +28,9 @@ public class CircleSearchImpl implements CircleSearch
 	{
 		Map<String, Object> circleMap;
 
-		Author creator = null;
+		User creator = null;
 		if ( creatorId != null )
-			creator = persistenceStrategy.getAuthorDAO().getById( creatorId );
+			creator = persistenceStrategy.getUserDAO().getById( creatorId );
 
 		circleMap = persistenceStrategy.getCircleDAO().getCircleFullTextSearchWithPaging( query, creator, page, maxresult, orderBy );
 

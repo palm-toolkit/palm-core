@@ -136,7 +136,8 @@ public class ManageAcademicEventController
 		{
 			eventGroup.setDblpUrl( eventGroupOnSession.getDblpUrl() );
 			eventGroup.setName( eventGroupOnSession.getName() );
-			eventGroup.setNotation( eventGroupOnSession.getNotation() );
+			if ( !eventGroupOnSession.getNotation().isEmpty() )
+				eventGroup.setNotation( eventGroupOnSession.getNotation() );
 			eventGroup.setDescription( eventGroupOnSession.getDescription() );
 		}
 		else
