@@ -304,8 +304,19 @@ public class UserBookmarkImpl implements UserBookmark
 	 */
 	private void printJSONEventGroupBookmark( List<Object> responseListEventGroup, EventGroup eventGroup )
 	{
-		// TODO Auto-generated method stub
+		Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
+		eventGroupMap.put( "id", eventGroup.getId() );
+		eventGroupMap.put( "name", WordUtils.capitalize( eventGroup.getName() ) );
+		if ( eventGroup.getNotation() != null )
+			eventGroupMap.put( "abbr", eventGroup.getNotation() );
+		eventGroupMap.put( "url", eventGroup.getDblpUrl() );
+		if ( eventGroup.getDescription() != null )
+			eventGroupMap.put( "description", eventGroup.getDescription() );
+		eventGroupMap.put( "type", eventGroup.getPublicationType().toString().toLowerCase() );
 
+		eventGroupMap.put( "isAdded", eventGroup.isAdded() );
+
+		responseListEventGroup.add( eventGroupMap );
 	}
 
 	/**
