@@ -1,10 +1,13 @@
 package de.rwth.i9.palm.feature.user;
 
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.text.WordUtils;
@@ -14,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.helper.comparator.UserAuthorBookmarkByDateComparator;
+import de.rwth.i9.palm.helper.comparator.UserCircleBookmarkByDateComparator;
+import de.rwth.i9.palm.helper.comparator.UserEventGroupBookmarkByDateComparator;
+import de.rwth.i9.palm.helper.comparator.UserPublicationBookmarkByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.EventGroup;
@@ -67,10 +73,21 @@ public class UserBookmarkImpl implements UserBookmark
 		{
 			if ( user.getUserPublicationBookmarks() != null && !user.getUserPublicationBookmarks().isEmpty() )
 			{
-				for ( UserPublicationBookmark userPublicationBookmark : user.getUserPublicationBookmarks() )
+				// preparing data format
+				DateFormat dateFormat = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
+
+				List<Object> responseListPublication = new ArrayList<Object>();
+
+				List<UserPublicationBookmark> userPublicationBookmarks = new ArrayList<UserPublicationBookmark>();
+				userPublicationBookmarks.addAll( user.getUserPublicationBookmarks() );
+				Collections.sort( userPublicationBookmarks, new UserPublicationBookmarkByDateComparator() );
+
+				for ( UserPublicationBookmark userPublicationBookmark : userPublicationBookmarks )
 				{
-					printJSONPublicationBookmark( responseMap, userPublicationBookmark.getPublication() );
+					printJSONPublicationBookmark( responseListPublication, userPublicationBookmark.getPublication(), dateFormat );
 				}
+				responseMap.put( "publications", responseListPublication );
+				responseMap.put( "count", responseListPublication.size() );
 			}
 		}
 
@@ -79,10 +96,18 @@ public class UserBookmarkImpl implements UserBookmark
 		{
 			if ( user.getUserCircleBookmarks() != null && !user.getUserCircleBookmarks().isEmpty() )
 			{
-				for ( UserCircleBookmark userCircleBookmark : user.getUserCircleBookmarks() )
+				List<Object> responseListCircle = new ArrayList<Object>();
+
+				List<UserCircleBookmark> userCircleBookmarks = new ArrayList<UserCircleBookmark>();
+				userCircleBookmarks.addAll( user.getUserCircleBookmarks() );
+				Collections.sort( userCircleBookmarks, new UserCircleBookmarkByDateComparator() );
+
+				for ( UserCircleBookmark userCircleBookmark : userCircleBookmarks )
 				{
-					printJSONCircleBookmark( responseMap, userCircleBookmark.getCircle() );
+					printJSONCircleBookmark( responseListCircle, userCircleBookmark.getCircle() );
 				}
+				responseMap.put( "circles", responseListCircle );
+				responseMap.put( "count", responseListCircle.size() );
 			}
 		}
 
@@ -91,10 +116,18 @@ public class UserBookmarkImpl implements UserBookmark
 		{
 			if ( user.getUserEventGroupBookmarks() != null && !user.getUserEventGroupBookmarks().isEmpty() )
 			{
-				for ( UserEventGroupBookmark userEventGroupBookmark : user.getUserEventGroupBookmarks() )
+				List<Object> responseListEventGroup = new ArrayList<Object>();
+
+				List<UserEventGroupBookmark> userEventGroupBookmarks = new ArrayList<UserEventGroupBookmark>();
+				userEventGroupBookmarks.addAll( user.getUserEventGroupBookmarks() );
+				Collections.sort( userEventGroupBookmarks, new UserEventGroupBookmarkByDateComparator() );
+
+				for ( UserEventGroupBookmark userEventGroupBookmark : userEventGroupBookmarks )
 				{
-					printJSONEventGroupBookmark( responseMap, userEventGroupBookmark.getEventGroup() );
+					printJSONEventGroupBookmark( responseListEventGroup, userEventGroupBookmark.getEventGroup() );
 				}
+				responseMap.put( "eventGroups", responseListEventGroup );
+				responseMap.put( "count", responseListEventGroup.size() );
 			}
 		}
 
@@ -102,6 +135,12 @@ public class UserBookmarkImpl implements UserBookmark
 		return responseMap;
 	}
 
+	/**
+	 * Generate JSON for researchers
+	 * 
+	 * @param responseListAuthor
+	 * @param researcher
+	 */
 	private void printJSONAuthorBookmark( List<Object> responseListAuthor, Author researcher )
 	{
 		Map<String, Object> researcherMap = new LinkedHashMap<String, Object>();
@@ -133,19 +172,88 @@ public class UserBookmarkImpl implements UserBookmark
 		responseListAuthor.add( researcherMap );
 	}
 
-	private void printJSONPublicationBookmark( Map<String, Object> responseMap, Publication publication )
+	/**
+	 * Generate JSON for publication
+	 * 
+	 * @param responseListAuthor
+	 * @param researcher
+	 */
+	private void printJSONPublicationBookmark( List<Object> responseListPublication, Publication publication, DateFormat dateFormat )
+	{
+		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
+		publicationMap.put( "id", publication.getId() );
+
+		if ( publication.getPublicationType() != null )
+		{
+			String publicationType = publication.getPublicationType().toString();
+			publicationType = publicationType.substring( 0, 1 ).toUpperCase() + publicationType.toLowerCase().substring( 1 );
+			publicationMap.put( "type", publicationType );
+		}
+
+		publicationMap.put( "title", publication.getTitle() );
+		if ( publication.getCitedBy() > 0 )
+			publicationMap.put( "cited", Integer.toString( publication.getCitedBy() ) );
+
+		if ( publication.getPublicationDate() != null )
+			publicationMap.put( "date published", dateFormat.format( publication.getPublicationDate() ) );
+		List<Object> authorObject = new ArrayList<Object>();
+
+		for ( Author author : publication.getCoAuthors() )
+		{
+			Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
+			authorMap.put( "id", author.getId() );
+			authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
+			if ( author.getInstitution() != null )
+				authorMap.put( "aff", author.getInstitution().getName() );
+			// if ( author.getPhotoUrl() != null )
+			// authorMap.put( "photo", author.getPhotoUrl() );
+
+			authorMap.put( "isAdded", author.isAdded() );
+
+			authorObject.add( authorMap );
+		}
+		publicationMap.put( "authors", authorObject );
+
+		if ( publication.getPublicationDate() != null )
+		{
+			SimpleDateFormat sdf = new SimpleDateFormat( publication.getPublicationDateFormat() );
+			publicationMap.put( "date", sdf.format( publication.getPublicationDate() ) );
+		}
+
+		if ( publication.getLanguage() != null )
+			publicationMap.put( "language", publication.getLanguage() );
+
+		if ( publication.getCitedBy() != 0 )
+			publicationMap.put( "cited", publication.getCitedBy() );
+
+		if ( publication.getEvent() != null )
+		{
+			Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
+			eventMap.put( "id", publication.getEvent().getId() );
+			String eventName = publication.getEvent().getEventGroup().getName();
+			if ( !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
+				eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
+			eventMap.put( "name", eventName );
+			eventMap.put( "isAdded", publication.getEvent().isAdded() );
+			publicationMap.put( "event", eventMap );
+		}
+
+		if ( publication.getAdditionalInformation() != null )
+			publicationMap.putAll( publication.getAdditionalInformationAsMap() );
+
+		if ( publication.getStartPage() > 0 )
+			publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
+
+		responseListPublication.add( publicationMap );
+	}
+
+	private void printJSONCircleBookmark( List<Object> responseListCircle, Circle circle )
 	{
 		// TODO Auto-generated method stub
 
 	}
 
-	private void printJSONCircleBookmark( Map<String, Object> responseMap, Circle circle )
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	private void printJSONEventGroupBookmark( Map<String, Object> responseMap, EventGroup eventGroup )
+	private void printJSONEventGroupBookmark( List<Object> responseListEventGroup, EventGroup eventGroup )
 	{
 		// TODO Auto-generated method stub
 
