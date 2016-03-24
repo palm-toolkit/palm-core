@@ -96,6 +96,9 @@ public class UserBookmarkImpl implements UserBookmark
 		{
 			if ( user.getUserCircleBookmarks() != null && !user.getUserCircleBookmarks().isEmpty() )
 			{
+				// preparing data format
+				DateFormat dateFormat = new SimpleDateFormat( "dd/mm/yyyy", Locale.ENGLISH );
+
 				List<Object> responseListCircle = new ArrayList<Object>();
 
 				List<UserCircleBookmark> userCircleBookmarks = new ArrayList<UserCircleBookmark>();
@@ -104,7 +107,7 @@ public class UserBookmarkImpl implements UserBookmark
 
 				for ( UserCircleBookmark userCircleBookmark : userCircleBookmarks )
 				{
-					printJSONCircleBookmark( responseListCircle, userCircleBookmark.getCircle() );
+					printJSONCircleBookmark( responseListCircle, userCircleBookmark.getCircle(), dateFormat );
 				}
 				responseMap.put( "circles", responseListCircle );
 				responseMap.put( "count", responseListCircle.size() );
@@ -175,7 +178,7 @@ public class UserBookmarkImpl implements UserBookmark
 	/**
 	 * Generate JSON for publication
 	 * 
-	 * @param responseListAuthor
+	 * @param responseListPublication
 	 * @param researcher
 	 */
 	private void printJSONPublicationBookmark( List<Object> responseListPublication, Publication publication, DateFormat dateFormat )
@@ -247,12 +250,58 @@ public class UserBookmarkImpl implements UserBookmark
 		responseListPublication.add( publicationMap );
 	}
 
-	private void printJSONCircleBookmark( List<Object> responseListCircle, Circle circle )
+	/**
+	 * Generate JSON for circle
+	 * 
+	 * @param responseListCircle
+	 * @param circle
+	 * @param dateFormat
+	 */
+	private void printJSONCircleBookmark( List<Object> responseListCircle, Circle circle, DateFormat dateFormat )
 	{
-		// TODO Auto-generated method stub
+		Map<String, Object> circleMap = new LinkedHashMap<String, Object>();
+		circleMap.put( "id", circle.getId() );
 
+		circleMap.put( "name", circle.getName() );
+		circleMap.put( "dateCreated", dateFormat.format( circle.getCreationDate() ) );
+
+		if ( circle.getCreator() != null )
+		{
+			Map<String, Object> creatorMap = new LinkedHashMap<String, Object>();
+			creatorMap.put( "id", circle.getCreator().getId() );
+			creatorMap.put( "name", WordUtils.capitalize( circle.getCreator().getName() ) );
+			if ( circle.getCreator().getAuthor() != null )
+				creatorMap.put( "authorId", circle.getCreator().getAuthor().getId() );
+
+			circleMap.put( "creator", creatorMap );
+		}
+
+		if ( circle.getAuthors() != null )
+			circleMap.put( "numberAuthors", circle.getAuthors().size() );
+		else
+			circleMap.put( "numberAuthors", 0 );
+
+		if ( circle.getPublications() != null )
+			circleMap.put( "numberPublications", circle.getPublications().size() );
+		else
+			circleMap.put( "numberPublications", 0 );
+
+		if ( circle.getDescription() != null && !circle.getDescription().equals( "" ) )
+			circleMap.put( "description", circle.getDescription() );
+
+		// check autowired with security service here
+		circleMap.put( "isLock", circle.isLock() );
+		circleMap.put( "isValid", circle.isValid() );
+
+		responseListCircle.add( circleMap );
 	}
 
+	/**
+	 * Generate JSON for EventGroup
+	 * 
+	 * @param responseListEventGroup
+	 * @param eventGroup
+	 */
 	private void printJSONEventGroupBookmark( List<Object> responseListEventGroup, EventGroup eventGroup )
 	{
 		// TODO Auto-generated method stub
