@@ -41,16 +41,15 @@ public class UserPublicationController
 	 */
 	@Transactional
 	@RequestMapping( method = RequestMethod.GET )
-	public ModelAndView getSources(
+	public ModelAndView getUserPublicationPage(
 			final HttpServletResponse response) throws InterruptedException
 	{
 		// set model and view
 		ModelAndView model = TemplateHelper.createViewWithLink( "widgetLayoutAjax", LINK_NAME);
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "publication" );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-publication" );
 
 		// assign the model
 		model.addObject( "widgets", widgets );
-		model.addObject( "user", securityService.getUser() );
 
 		return model;
 	}

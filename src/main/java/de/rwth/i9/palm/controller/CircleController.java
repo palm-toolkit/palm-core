@@ -3,6 +3,7 @@ package de.rwth.i9.palm.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +24,13 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserCircleBookmark;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @SessionAttributes( { "sessionDataSet" } )
@@ -34,6 +38,9 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 public class CircleController
 {
 	private static final String LINK_NAME = "circle";
+
+	@Autowired
+	private SecurityService securityService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -195,6 +202,17 @@ public class CircleController
 		// get coauthor calculation
 		responseMap.put( "circle", circleFeature.getCircleBasicInformation().getCircleBasicInformationMap( circle ) );
 
+		// check whether circle is already booked or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+			UserCircleBookmark ucb = persistenceStrategy.getUserCircleBookmarkDAO().getByUserAndCircle( user, circle );
+			if ( ucb != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
+
 		return responseMap;
 	}
 
@@ -299,6 +317,21 @@ public class CircleController
 		return circleFeature.getCircleInterest().getCircleInterestById( circleId, isReplaceExistingResult );
 	}
 	
+	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> circleTopicModel( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	{
+		if ( circleId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			return circleFeature.getCircleTopicModeling().getLdaBasicExample( circleId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 	/**
 	 * Get PublicationMap (JSON), containing top publications (highly cited publications) information and detail.
 	 * @param circleId

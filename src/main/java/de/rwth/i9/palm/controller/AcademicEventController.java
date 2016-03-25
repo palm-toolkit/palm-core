@@ -29,6 +29,7 @@ import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserEventGroupBookmark;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -216,7 +217,9 @@ public class AcademicEventController
 		@SuppressWarnings( "unchecked" )
 		List<EventGroup> sessionEventGroups = null;// (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
 
-		return academicEventFeature.getEventMining().fetchEventGroupData( id, pid, sessionEventGroups );
+		Map<String, Object> responseMap = academicEventFeature.getEventMining().fetchEventGroupData( id, pid, sessionEventGroups );
+
+		return responseMap;
 	}
 
 	@RequestMapping( value = "/fetch", method = RequestMethod.GET )
@@ -272,7 +275,24 @@ public class AcademicEventController
 		if ( type.equals( "event" ) )
 			return academicEventFeature.getEventBasicStatistic().getEventBasicStatisticById( id );
 		else
-			return academicEventFeature.getEventBasicStatistic().getEventGroupBasicStatisticById( id );
+		{
+			Map<String, Object> responseMap = academicEventFeature.getEventBasicStatistic().getEventGroupBasicStatisticById( id );
+			// check whether eventGroup is already booked or not
+			User user = securityService.getUser();
+			if ( user != null )
+			{
+				EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( id );
+				if ( eventGroup == null )
+					return responseMap;
+
+				UserEventGroupBookmark upb = persistenceStrategy.getUserEventGroupBookmarkDAO().getByUserAndEventGroup( user, eventGroup );
+				if ( upb != null )
+					responseMap.put( "booked", true );
+				else
+					responseMap.put( "booked", false );
+			}
+			return responseMap;
+		}
 	}
 
 }
