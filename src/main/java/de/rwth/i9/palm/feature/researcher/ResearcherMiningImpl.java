@@ -17,8 +17,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
+import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.AuthorSource;
+import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceMethod;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationService;
 import de.rwth.i9.palm.util.IdentifierFactory;
@@ -36,6 +40,9 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 	@Autowired
 	private ApplicationService applicationService;
+
+	@Autowired
+	private ResearcherCollectionService researcherCollectionService;
 
 	@Override
 	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force, List<Author> sessionAuthors ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
@@ -78,8 +85,55 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		responseMap.put( "status", "ok" );
 
+		// -- check if author source complete for active source
+		boolean isSourceParsePageMissing = false;
+		// first get active sources
+		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
+		// loop through all source which is active
+		for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
+		{
+			Source source = sourceEntry.getValue();
+			// only check for active source and parse page method
+			if ( source.isActive() && source.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+			{
+				if ( !author.isContainSource( source ) )
+				{
+					isSourceParsePageMissing = true;
+					break;
+				}
+			}
+		}
+
+		// try to get missing source
+		if ( isSourceParsePageMissing )
+		{
+			List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( author.getName(), false );
+
+			if ( researcherList != null && !researcherList.isEmpty() )
+			{
+				// try to add author source
+				for ( Author researcher : researcherList )
+				{
+					if ( researcher.getName().equals( author.getName() ) )
+					{
+
+						if ( researcher.getAuthorSources() == null || researcher.getAuthorSources().isEmpty() )
+							continue;
+
+						for ( AuthorSource as : researcher.getAuthorSources() )
+						{
+							if ( sourceMap.get( as.getSourceType().toString() ).getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+							{
+								author.addAuthorSource( as );
+							}
+						}
+					}
+				}
+			}
+		}
+
 		// check whether it is necessary to collect information from network
-		if ( this.isFetchDatasetFromNetwork( author ) || force.equals( "true" ) )
+		if ( this.isFetchDatasetFromNetwork( author ) || isSourceParsePageMissing || force.equals( "true" ) )
 		{
 			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author, pid );
 			responseMap.put( "fetchPerformed", "yes" );
