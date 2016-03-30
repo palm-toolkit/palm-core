@@ -294,7 +294,7 @@ public class PublicationController
 	}
 
 	/**
-	 * Get list of PuiblicationTopic
+	 * Get list of PublicationTopic
 	 * 
 	 * @param id
 	 * @param response
@@ -304,9 +304,53 @@ public class PublicationController
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationTopic( 
 			@RequestParam( value = "id", required = false ) final String id, 
- @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, 
+			@RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve,
 			final HttpServletResponse response)
 	{
 		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, maxRetrieve );
+	}
+	
+	/**
+	 * Get bibtex modelview
+	 * 
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/bibtexview", method = RequestMethod.GET )
+	public ModelAndView addBibtexView( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			final HttpServletResponse response ) throws InterruptedException
+	{
+		ModelAndView model = null;
+
+		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.PUBLICATION, "publication-bibtex" );
+
+		// assign the model
+		model.addObject( "widgets", widgets );
+		model.addObject( "targetId", id );
+
+		return model;
+	}
+
+	/**
+	 * Get Bibtex
+	 * 
+	 * @param id
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/bibtex", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationBibtex( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "retrieve", required = false ) String retrieve, 
+			final HttpServletResponse response)
+	{
+		if( retrieve == null )
+			retrieve = "all";
+		return publicationFeature.getPublicationApi().getPublicationBibTex( id, retrieve );
 	}
 }

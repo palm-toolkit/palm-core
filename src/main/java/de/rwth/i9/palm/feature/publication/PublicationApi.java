@@ -9,4 +9,6 @@ public interface PublicationApi
 	public Map<String, Object> extractPfdFile( String url ) throws IOException, InterruptedException, ExecutionException;
 
 	public Map<String, String> extractHtmlFile( String url ) throws IOException;
+
+	public Map<String, Object> getPublicationBibTex( String id, String retrieve );
 }
