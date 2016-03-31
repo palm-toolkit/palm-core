@@ -17,7 +17,7 @@ public class ItextPdfExtraction
 	}
 
 	/**
-	 * Extract pdf with specific PALM extraction strategy
+	 * Extract pdf from URL/path with specific PALM extraction strategy
 	 * 
 	 * @param pdfPath
 	 * @param untilPage
@@ -37,29 +37,11 @@ public class ItextPdfExtraction
 			return Collections.emptyList();
 		}
 
-		Rectangle pdfPageSize = reader.getPageSize( 1 );
-		PalmPdfExtractionStrategy palmPdfExtractionStrategy = new PalmPdfExtractionStrategy();
-
-		// set margin and page size
-		palmPdfExtractionStrategy.setPageMargin( 50f );
-		palmPdfExtractionStrategy.setPageSize( pdfPageSize );
-
-		for ( int i = 1; i <= reader.getNumberOfPages(); i++ )
-		{
-			// update the current page size
-			palmPdfExtractionStrategy.setPageNumber( i );
-			// read perpage
-			PdfTextExtractor.getTextFromPage( reader, i, palmPdfExtractionStrategy );
-			// break when untilPage are specified
-			if ( untilPage != 0 && i >= untilPage )
-				break;
-		}
-
-		return palmPdfExtractionStrategy.getTextSections();
+		return extractPdfToSections( reader, untilPage );
 	}
 
 	/**
-	 * Extract pdf with specific PALM extraction strategy
+	 * Extract pdf from Stream with specific PALM extraction strategy
 	 * 
 	 * @param pdfPath
 	 * @param untilPage
@@ -79,6 +61,11 @@ public class ItextPdfExtraction
 			return Collections.emptyList();
 		}
 
+		return extractPdfToSections( reader, untilPage );
+	}
+
+	private static List<TextSection> extractPdfToSections( PdfReader reader, int untilPage ) throws IOException
+	{
 		Rectangle pdfPageSize = reader.getPageSize( 1 );
 		PalmPdfExtractionStrategy palmPdfExtractionStrategy = new PalmPdfExtractionStrategy();
 

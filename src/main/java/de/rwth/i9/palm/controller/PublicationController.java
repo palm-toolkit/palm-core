@@ -260,10 +260,12 @@ public class PublicationController
 	}
 	
 	/**
-	 * Extract Pdf on a specific publication
+	 * Extract scientific information from Pdf on a specific publication or given URL
 	 * 
 	 * @param id
 	 *            of publication
+	 * @param url
+	 * 			PDF Url
 	 * @param response
 	 * @return JSON Map
 	 * @throws InterruptedException
@@ -273,22 +275,36 @@ public class PublicationController
 	@RequestMapping( value = "/pdfExtract", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> doPdfExtraction( 
-			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "url", required = false ) final String url, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return publicationFeature.getPublicationManage().extractPublicationFromPdf( id );
+		if( id != null )
+			return publicationFeature.getPublicationManage().extractPublicationFromPdf( id );
+		else
+			return publicationFeature.getPublicationApi().extractPfdFile( url );
 	}
 	
-	@RequestMapping( value = "/pdfExtractTest", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> doPdfExtractionTest( @RequestParam( value = "url", required = false ) final String url, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
-	{
-		return publicationFeature.getPublicationApi().extractPfdFile( url );
-	}
 
-	@RequestMapping( value = "/htmlExtractTest", method = RequestMethod.GET )
+	/**
+	 * Extract scientific information from web page on a specific publication or given URL
+	 * 
+	 * @param id
+	 * 			of publication
+	 * @param url
+	 * 			Digital Library URL
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 */
+	@RequestMapping( value = "/htmlExtract", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, String> doHtmlExtractionTest( @RequestParam( value = "url", required = false ) final String url, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	public @ResponseBody Map<String, String> doHtmlExtractionTest(
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "url", required = false ) final String url, 
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
 		return publicationFeature.getPublicationApi().extractHtmlFile( url );
 	}
