@@ -42,7 +42,7 @@ public class HtmlPublicationCollection
 
 		// Special case
 		// usually URL is the DOI, therefore use document.baseUri() to get real URL
-		if ( document.baseUri().contains( "ieeexplore.ieee.org/" ) )
+		if ( document.baseUri().contains( "ieeexplore.ieee.org" ) )
 		{
 			Element elementOfInterest = document.select( "#articleDetails" ).select( ".article" ).first();
 			if ( elementOfInterest != null )
@@ -50,9 +50,9 @@ public class HtmlPublicationCollection
 				publicationDetailMaps.put( "abstract", elementOfInterest.text() );
 			}
 		}
-		else if ( document.baseUri().contains( "igi-global.com/" ) )
+		else if ( document.baseUri().contains( "igi-global.com" ) )
 		{
-			Element elementOfInterest = document.select( "#abstract" ).first();
+			Element elementOfInterest = document.select( "#abstract" ).parents().first();
 			if ( elementOfInterest != null )
 			{
 				for ( Node child : elementOfInterest.childNodes() )
@@ -60,10 +60,25 @@ public class HtmlPublicationCollection
 						publicationDetailMaps.put( "abstract", ( (TextNode) child ).text() );
 			}
 		}
-		else if ( document.baseUri().contains( "dl.acm.org/" ) )
+		else if ( document.baseUri().contains( "dl.acm.org" ) )
 		{
 			if ( !document.text().startsWith( "Site Error" ) )
 				publicationDetailMaps.put( "abstract", document.text() );
+		}
+
+		else if ( document.baseUri().contains( "scitepress.org" ) )
+		{
+			Element elementOfInterestAbstract = document.select( "#ContentPlaceHolder1_LinkPaperPage_LinkPaperContent_LabelAbstract" ).first();
+			if ( elementOfInterestAbstract != null )
+			{
+				publicationDetailMaps.put( "abstract", elementOfInterestAbstract.text() );
+			}
+
+			Element elementOfInterestKeyword = document.select( "#ContentPlaceHolder1_LinkPaperPage_LinkPaperContent_LabelPublicationDetailKeywords" ).first();
+			if ( elementOfInterestKeyword != null )
+			{
+				publicationDetailMaps.put( "keyword", elementOfInterestKeyword.text() );
+			}
 		}
 
 		// General case
