@@ -100,8 +100,7 @@ public class ResearcherController
 		}
 		else
 			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.RESEARCHER, WidgetStatus.DEFAULT ) );
-		// assign the model
-		model.addObject( "widgets", widgets );
+
 		// assign the model
 		model.addObject( "widgets", widgets );
 		// assign query

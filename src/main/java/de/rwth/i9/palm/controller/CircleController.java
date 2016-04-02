@@ -3,6 +3,7 @@ package de.rwth.i9.palm.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,6 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.CircleWidget;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserCircleBookmark;
 import de.rwth.i9.palm.model.Widget;
@@ -66,7 +68,60 @@ public class CircleController
 		// set model and view
 		ModelAndView model = TemplateHelper.createViewWithLink( "circle", LINK_NAME );
 
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CIRCLE, WidgetStatus.DEFAULT );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CIRCLE, "sidebar" );
+		// assign the model
+		model.addObject( "widgets", widgets );
+
+		if ( circleId != null )
+			model.addObject( "targetId", circleId );
+
+		if ( name != null )
+			model.addObject( "targetName", name );
+
+		return model;
+	}
+	
+	/**
+	 * Get the circle page
+	 * 
+	 * @param sessionId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@RequestMapping( value = "/widgetContent", method = RequestMethod.GET )
+	@Transactional
+	public ModelAndView circleContentWidget( 
+			@RequestParam( value = "id", required = false ) final String circleId, 
+			@RequestParam( value = "name", required = false ) final String name,
+			final HttpServletResponse response ) throws InterruptedException
+	{
+		// set model and view
+		ModelAndView model = TemplateHelper.createViewWithLink( "widgetLayoutMainContent", LINK_NAME );
+
+		List<Widget> widgets = new ArrayList<Widget>();
+
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+
+		if ( circle == null )
+		{
+			model = TemplateHelper.createViewWithLink( "404", "error" );
+			model.addObject( "erorMessage", "Circle with id " + circleId + " not found" );
+			return model;
+		}
+
+		List<CircleWidget> circleWidgets = persistenceStrategy.getCircleWidgetDAO().getWidget( circle, WidgetType.CIRCLE, WidgetStatus.ACTIVE );
+		for ( CircleWidget circleWidget : circleWidgets )
+		{
+			Widget widget = circleWidget.getWidget();
+			widget.setColor( circleWidget.getWidgetColor() );
+			widget.setWidgetHeight( circleWidget.getWidgetHeight() );
+			widget.setWidgetWidth( circleWidget.getWidgetWidth() );
+			widget.setPosition( circleWidget.getPosition() );
+
+			widgets.add( widget );
+		}
+
 		// assign the model
 		model.addObject( "widgets", widgets );
 
