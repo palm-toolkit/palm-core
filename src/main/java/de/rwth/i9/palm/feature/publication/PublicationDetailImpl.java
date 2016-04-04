@@ -10,6 +10,7 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.helper.comparator.PublicationFileBySourceNameNaturalOrderComparator;
 import de.rwth.i9.palm.helper.comparator.PublicationSourceBySourceTypeComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
@@ -125,7 +126,11 @@ public class PublicationDetailImpl implements PublicationDetail
 		List<Object> publicationFileList = new ArrayList<Object>();
 		if ( publication.getPublicationFiles() != null )
 		{
-			for ( PublicationFile pubFile : publication.getPublicationFiles() )
+			List<PublicationFile> pubFiles = new ArrayList<PublicationFile>();
+			pubFiles.addAll( publication.getPublicationFiles() );
+			// sort
+			Collections.sort( pubFiles, new PublicationFileBySourceNameNaturalOrderComparator() );
+			for ( PublicationFile pubFile : pubFiles )
 			{
 				Map<String, Object> publicationFileMap = new LinkedHashMap<String, Object>();
 				publicationFileMap.put( "type", pubFile.getFileType().toString() );
