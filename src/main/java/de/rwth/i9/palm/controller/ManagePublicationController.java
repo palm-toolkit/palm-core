@@ -399,38 +399,40 @@ public class ManagePublicationController
 		if( title != null && !title.isEmpty())
 			publication.setTitle( title );
 
-		/* Insert selected author into publication */
-		// get author id split by "_#_"
-		String[] authorIds = authorListIds.split( "_#_" );
-
-		// first remove all PublicationAuthor from publication
-		for ( PublicationAuthor publicationAuthor : publication.getPublicationAuthors() )
+		if ( authorListIds != null && !authorListIds.isEmpty() )
 		{
-			publicationAuthor.setPublication( null );
-			publicationAuthor.setAuthor( null );
-			persistenceStrategy.getPublicationAuthorDAO().delete( publicationAuthor );
+			/* Insert selected author into publication */
+			// get author id split by "_#_"
+			String[] authorIds = authorListIds.split( "_#_" );
+
+			// first remove all PublicationAuthor from publication
+			for ( PublicationAuthor publicationAuthor : publication.getPublicationAuthors() )
+			{
+				publicationAuthor.setPublication( null );
+				publicationAuthor.setAuthor( null );
+				persistenceStrategy.getPublicationAuthorDAO().delete( publicationAuthor );
+			}
+			publication.clearPublicationAuthors();
+
+			Set<PublicationAuthor> newAuthorPublications = new HashSet<PublicationAuthor>();
+			int authorPosition = 0;
+			for ( String authorId : authorIds )
+			{
+				Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+				if ( author == null )
+					continue;
+
+				PublicationAuthor publicationAuthor = new PublicationAuthor();
+				publicationAuthor.setAuthor( author );
+				publicationAuthor.setPublication( publication );
+				publicationAuthor.setPosition( authorPosition );
+				// publication.addPublicationAuthor( publicationAuthor );
+				newAuthorPublications.add( publicationAuthor );
+
+				authorPosition++;
+			}
+			publication.setPublicationAuthors( newAuthorPublications );
 		}
-		publication.clearPublicationAuthors();
-
-		Set<PublicationAuthor> newAuthorPublications = new HashSet<PublicationAuthor>();
-		int authorPosition = 0;
-		for ( String authorId : authorIds )
-		{
-			Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
-			if ( author == null )
-				continue;
-
-			PublicationAuthor publicationAuthor = new PublicationAuthor();
-			publicationAuthor.setAuthor( author );
-			publicationAuthor.setPublication( publication );
-			publicationAuthor.setPosition( authorPosition );
-			// publication.addPublicationAuthor( publicationAuthor );
-			newAuthorPublications.add( publicationAuthor );
-
-			authorPosition++;
-		}
-		publication.setPublicationAuthors( newAuthorPublications );
-
 		// if ( publication.getPublicationAuthors() == null ||
 		// publication.getPublicationAuthors().isEmpty() )
 		// {
@@ -483,14 +485,17 @@ public class ManagePublicationController
 		}
 
 		/* check for publication type */
-		try
+		if ( venueType != null && !venueType.isEmpty() )
 		{
-			PublicationType publicationType = PublicationType.valueOf( venueType.toUpperCase() );
-			if ( !publicationType.equals( publication.getPublicationType() ) )
-				publication.setPublicationType( publicationType );
-		}
-		catch ( Exception e )
-		{
+			try
+			{
+				PublicationType publicationType = PublicationType.valueOf( venueType.toUpperCase() );
+				if ( !publicationType.equals( publication.getPublicationType() ) )
+					publication.setPublicationType( publicationType );
+			}
+			catch ( Exception e )
+			{
+			}
 		}
 
 		// check for volume
@@ -637,7 +642,6 @@ public class ManagePublicationController
 		}
 		catch ( Exception e )
 		{
-			// TODO: handle exception
 		}
 		// at the end persist publication
 		persistenceStrategy.getPublicationDAO().persist( publication );
