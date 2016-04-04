@@ -242,6 +242,11 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 										isSectionComplete = true;
 									}
 								}
+								else if ( !currentFontType.equals( this.lastFontType ) )
+								{
+									if ( this.lastFontType.contains( "Bold" ) && !currentFontType.contains( "Bold" ) )
+										isSectionComplete = true;
+								}
 								else
 								{
 									isLastLineComplete = true;
@@ -376,13 +381,17 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 							else
 							{
 								if ( this.textSections.get( this.textSections.size() - 1 ).getFontType().contains( "Bold" ) )
+								{
 									this.textSections.get( this.textSections.size() - 1 ).setName( "content-header" );
+								}
 							}
 						}
 						else
 						{
 							if ( this.textSections.get( this.textSections.size() - 1 ).getFontHeight() >= this.contentHeaderFontHeight && this.textSections.get( this.textSections.size() - 1 ).getContent().length() > 6 )
+							{
 								this.textSections.get( this.textSections.size() - 1 ).setName( "content-header" );
+							}
 						}
 					}
 
@@ -447,10 +456,18 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 					{
 						this.textSection.setName( "author" );
 						// found large text section
-						if ( this.lastContentSection.length() > 250 )
+						if ( this.lastContentSection.length() > 280 )
 						{
 							// set last section label
 							this.textSections.get( this.textSections.size() - 1 ).setName( "abstract" );
+							// set prev text section to author
+//							for ( int i = 1; i < this.textSections.size() - 2; i++ )
+//							{
+//								if ( !this.textSections.get( i ).getName().equals( "title" ) )
+//								{
+//									this.textSections.get( i ).setName( "author" );
+//								}
+//							}
 							// set initial content fontHeight
 							this.contentFontHeight = this.textSections.get( this.textSections.size() - 1 ).getFontHeight();
 
@@ -468,7 +485,7 @@ public class PalmPdfExtractionStrategy implements TextExtractionStrategy
 									//currentHeader = this.textSections.get( this.textSections.size() - 2 ).getContent();
 								}
 								// detect another reading phase
-								if ( this.textSection.getFontHeight() >= this.contentFontHeight )
+								if ( this.textSection.getFontHeight() >= this.contentFontHeight || this.textSection.getFontType().contains( "Bold" ) )
 								{
 									this.textSection.setName( "keyword-header" );
 									this.contentHeaderFontHeight = this.textSection.getFontHeight();

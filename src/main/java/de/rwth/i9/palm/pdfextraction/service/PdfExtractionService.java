@@ -344,7 +344,13 @@ public class PdfExtractionService
 		extractedPdfMap.put( "abstract", Jsoup.parse( publicationAbstract.toString() ).text() );
 		if ( publicationKeyword.length() > 0 )
 			extractedPdfMap.put( "keyword", publicationKeyword.toString() );
-		extractedPdfMap.put( "content", Jsoup.parse( publicationContent.toString() ).text() );
+		try
+		{
+			extractedPdfMap.put( "content", publicationContent.toString() );
+		}
+		catch ( Exception e )
+		{
+		}
 		extractedPdfMap.put( "reference", Jsoup.parse( contentSection.toString() ).text() );
 
 		return extractedPdfMap;
