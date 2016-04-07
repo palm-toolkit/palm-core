@@ -4,5 +4,7 @@ import java.util.Map;
 
 public interface CircleTopicModeling
 {
-	public Map<String, Object> getLdaBasicExample( String circleId, boolean isReplaceExistingResult );
+	public Map<String, Object> getTopicModeling( String circleId, boolean isReplaceExistingResult );
+
+	public Map<String, Object> getStaticTopicModelingNgrams( String circleId, boolean isReplaceExistingResult );
 }
