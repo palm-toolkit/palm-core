@@ -52,6 +52,7 @@ public class ResearcherMiningImpl implements ResearcherMining
 		// check author on session
 		Author author = null;
 
+		boolean isAuthorFromSession = false;
 		// get author from session
 		if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
 		{
@@ -62,6 +63,7 @@ public class ResearcherMiningImpl implements ResearcherMining
 					if ( sessionAuthor.getId().equals( id ) )
 					{
 						author = sessionAuthor;
+						isAuthorFromSession = true;
 						break;
 					}
 				}
@@ -89,24 +91,33 @@ public class ResearcherMiningImpl implements ResearcherMining
 		boolean isSourceParsePageMissing = false;
 		// first get active sources
 		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
+
+		// author from session means that the author just added
 		// loop through all source which is active
-		for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
+		if ( !isAuthorFromSession )
 		{
-			Source source = sourceEntry.getValue();
-			// only check for active source and parse page method
-			if ( source.isActive() && source.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+			for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
 			{
-				if ( !author.isContainSource( source ) )
+				Source source = sourceEntry.getValue();
+				// only check for active source and parse page method
+				if ( source.isActive() && source.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
 				{
-					isSourceParsePageMissing = true;
-					break;
+					if ( !author.isContainSource( source ) )
+					{
+						isSourceParsePageMissing = true;
+						break;
+					}
 				}
 			}
 		}
 
+
 		// try to get missing source
 		if ( isSourceParsePageMissing )
 		{
+			// set to false, with assumption that source not missing, but in
+			// reality is not exist
+			isSourceParsePageMissing = false;
 			List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( author.getName(), false );
 
 			if ( researcherList != null && !researcherList.isEmpty() )
@@ -125,6 +136,7 @@ public class ResearcherMiningImpl implements ResearcherMining
 							if ( sourceMap.get( as.getSourceType().toString() ).getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
 							{
 								author.addAuthorSource( as );
+								isSourceParsePageMissing = true;
 							}
 						}
 					}
