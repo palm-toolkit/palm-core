@@ -135,8 +135,23 @@ public class PdfExtractionService
 	@SuppressWarnings( "unchecked" )
 	public Map<String, Object> extractPdfFromSpecificUrl( String url ) throws IOException, InterruptedException, ExecutionException
 	{
+		return extractPdfFromSpecificUrl( url, 0 );
+	}
+
+	/**
+	 * Extract pdf from specific url limited to pages
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	@SuppressWarnings( "unchecked" )
+	public Map<String, Object> extractPdfFromSpecificUrl( String url, int untilPage ) throws IOException, InterruptedException, ExecutionException
+	{
 		List<Future<List<TextSection>>> extractedPfdFutureList = new ArrayList<Future<List<TextSection>>>();
-		extractedPfdFutureList.add( this.asynchronousPdfExtractionService.extractPublicationPdfIntoTextSections( url ) );
+		extractedPfdFutureList.add( this.asynchronousPdfExtractionService.extractPublicationPdfIntoTextSections( url, untilPage ) );
 
 		// wait till complete
 		for ( Future<List<TextSection>> futureMap : extractedPfdFutureList )

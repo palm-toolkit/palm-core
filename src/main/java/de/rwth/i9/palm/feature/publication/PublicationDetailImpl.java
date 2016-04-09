@@ -68,11 +68,17 @@ public class PublicationDetailImpl implements PublicationDetail
 
 		if ( section.equals( "all" ) || sectionMap.get( "abstract" ) != null )
 			if ( publication.getAbstractText() != null )
+			{
 				publicationMap.put( "abstract", publication.getAbstractText() );
+				publicationMap.put( "abstractStatus", publication.getAbstractStatus().getValue() );
+			}
 
 		if ( section.equals( "all" ) || sectionMap.get( "keyword" ) != null )
 			if ( publication.getKeywordText() != null )
+			{
 				publicationMap.put( "keyword", publication.getKeywordText().replace( ",", ", " ) );
+				publicationMap.put( "keywordStatus", publication.getKeywordStatus().getValue() );
+			}
 
 		if ( section.equals( "all" ) || sectionMap.get( "coauthor" ) != null )
 		{

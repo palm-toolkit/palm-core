@@ -262,6 +262,16 @@ public class PublicationController
 		return responseMap;
 	}
 	
+	@RequestMapping( value = "/pdfHtmlExtract", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> doPdfHtmlExtraction( 
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "pid", required = false ) final String pid,
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return publicationFeature.getPublicationApi().extractPublicationFromPdfHtml( id, pid );
+	}
+	
 	/**
 	 * Extract scientific information from Pdf on a specific publication or given URL
 	 * 

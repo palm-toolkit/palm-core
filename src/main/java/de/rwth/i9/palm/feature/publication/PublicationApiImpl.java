@@ -1,8 +1,11 @@
 package de.rwth.i9.palm.feature.publication;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -11,11 +14,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.datasetcollect.service.HtmlPublicationCollection;
+import de.rwth.i9.palm.helper.comparator.PublicationFileBySourceNameNaturalOrderComparator;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.FileType;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationType;
 import de.rwth.i9.palm.pdfextraction.service.PdfExtractionService;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.ApplicationService;
 
 @Component
 public class PublicationApiImpl implements PublicationApi
@@ -25,6 +32,9 @@ public class PublicationApiImpl implements PublicationApi
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private ApplicationService applicationService;
 
 	@Override
 	public Map<String, Object> extractPfdFile( String url ) throws IOException, InterruptedException, ExecutionException
@@ -36,6 +46,73 @@ public class PublicationApiImpl implements PublicationApi
 	public Map<String, String> extractHtmlFile( String url ) throws IOException
 	{
 		return HtmlPublicationCollection.getPublicationInformationFromHtmlPage( url );
+	}
+
+	@Override
+	public Map<String, Object> extractPublicationFromPdfHtml( String id, String pid ) throws IOException, InterruptedException, ExecutionException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( id == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "id missing" );
+			return responseMap;
+		}
+
+		// get publication
+		Publication publication = persistenceStrategy.getPublicationDAO().getById( id );
+		if ( publication == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "publication not found" );
+			return responseMap;
+		}
+		if ( publication.getPublicationFiles() == null || publication.getPublicationFiles().isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "publication contains no source files" );
+			return responseMap;
+		}
+
+		List<Object> publicationFileList = new ArrayList<Object>();
+		List<PublicationFile> pubFiles = new ArrayList<PublicationFile>();
+		pubFiles.addAll( publication.getPublicationFiles() );
+		// sort
+		Collections.sort( pubFiles, new PublicationFileBySourceNameNaturalOrderComparator() );
+
+		for ( PublicationFile pubFile : pubFiles )
+		{
+			Map<String, Object> publicationFileMap = new LinkedHashMap<String, Object>();
+			publicationFileMap.put( "type", pubFile.getFileType().toString() );
+			publicationFileMap.put( "source", pubFile.getSourceType().toString().toLowerCase() );
+			publicationFileMap.put( "label", pubFile.getSource() );
+			publicationFileMap.put( "url", pubFile.getUrl() );
+
+			if ( pubFile.getFileType().equals( FileType.HTML ) )
+			{
+				// process log
+				applicationService.putProcessLog( pid, "Scraping Web Page " + pubFile.getUrl() + " <br>", "append" );
+				publicationFileMap.put( "result", HtmlPublicationCollection.getPublicationInformationFromHtmlPage( pubFile.getUrl() ) );
+				// process log
+				applicationService.putProcessLog( pid, "Done Scraping Web Page " + pubFile.getUrl() + " <br>", "append" );
+			}
+			if ( pubFile.getFileType().equals( FileType.PDF ) )
+			{
+				// process log
+				applicationService.putProcessLog( pid, "Extract PDF " + pubFile.getUrl() + " <br>", "append" );
+				// extract first page
+				publicationFileMap.put( "result", pdfExtractionService.extractPdfFromSpecificUrl( pubFile.getUrl(), 1 ) );
+				// process log
+				applicationService.putProcessLog( pid, "Done extract PDF " + pubFile.getUrl() + " <br>", "append" );
+			}
+			publicationFileList.add( publicationFileMap );
+		}
+		responseMap.put( "status", "ok" );
+		responseMap.put( "files", publicationFileList );
+
+		return responseMap;
 	}
 
 	@Override
@@ -244,4 +321,5 @@ public class PublicationApiImpl implements PublicationApi
 		citeMap.put( "apa", citeApa.toString() );
 		citeMap.put( "chicago", citeChicago.toString() );
 	}
+
 }

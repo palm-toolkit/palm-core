@@ -11,4 +11,5 @@ public interface PublicationManage
 	public Map<String, Object> extractPublicationFromPdf( String publicationId ) throws IOException, InterruptedException, ExecutionException;
 
 	public Map<String, Object> editPublication( ObjectMapper publicationJson );
+
 }
