@@ -181,7 +181,8 @@ public class ManageAcademicEventController
 		Publication publication = null;
 		if ( publicationId != null )
 			publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
-		if( publication != null && eventGroup.getDblpUrl() == null){
+		if ( publication != null )
+		{
 			// create new event
 			Event event = new Event();
 			// event.setName( eventGroup.getName() );

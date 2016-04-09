@@ -24,9 +24,11 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.CircleWidget;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.Widget;
+import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
@@ -141,6 +143,21 @@ public class ManageCircleController
 		java.util.Date date = new java.util.Date();
 		Timestamp currentTimestamp = new Timestamp( date.getTime() );
 		circle.setCreationDate( currentTimestamp );
+
+		// assign all default widget to new circle
+		for ( Widget eachWidget : persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CIRCLE, WidgetStatus.DEFAULT ) )
+		{
+			CircleWidget circleWidget = new CircleWidget();
+			circleWidget.setWidget( eachWidget );
+			circleWidget.setWidgetStatus( WidgetStatus.ACTIVE );
+			circleWidget.setWidgetColor( eachWidget.getColor() );
+			circleWidget.setWidgetWidth( eachWidget.getWidgetWidth() );
+			circleWidget.setPosition( eachWidget.getPosition() );
+			if ( eachWidget.getWidgetHeight() != null )
+				circleWidget.setWidgetHeight( eachWidget.getWidgetHeight() );
+
+			circle.addCircleWidget( circleWidget );
+		}
 
 		persistenceStrategy.getCircleDAO().persist( circle );
 

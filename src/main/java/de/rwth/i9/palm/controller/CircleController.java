@@ -145,6 +145,7 @@ public class CircleController
 	 * @param response
 	 * @return JSON Map
 	 */
+	@SuppressWarnings( "unchecked" )
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getCircleList( 
@@ -179,16 +180,8 @@ public class CircleController
 
 		Map<String, Object> circleMap = circleFeature.getCircleSearch().getCircleListByQuery( query, creatorId, page, maxresult, fulltextSearch, orderBy );
 
-		if ( (Integer) circleMap.get( "totalCount" ) > 0 )
-		{
-			responseMap.put( "totalCount", (Integer) circleMap.get( "totalCount" ) );
-			return circleFeature.getCircleSearch().printJsonOutput( responseMap, (List<Circle>) circleMap.get( "circles" ) );
-		}
-		else
-		{
-			responseMap.put( "totalCount", 0 );
-			return responseMap;
-		}
+		return circleFeature.getCircleSearch().printJsonOutput( responseMap, (List<Circle>) circleMap.get( "circles" ) );
+
 	}
 
 	/**

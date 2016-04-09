@@ -94,7 +94,7 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		// author from session means that the author just added
 		// loop through all source which is active
-		if ( !isAuthorFromSession )
+		if ( !isAuthorFromSession && this.isFetchDatasetFromNetwork( author ) )
 		{
 			for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
 			{
@@ -133,7 +133,7 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 						for ( AuthorSource as : researcher.getAuthorSources() )
 						{
-							if ( sourceMap.get( as.getSourceType().toString() ).getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+							if ( !author.isContainAuthorSource( as ) && sourceMap.get( as.getSourceType().toString() ).getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
 							{
 								author.addAuthorSource( as );
 								isSourceParsePageMissing = true;

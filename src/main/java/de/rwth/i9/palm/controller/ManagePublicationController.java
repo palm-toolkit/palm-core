@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.tika.exception.TikaException;
@@ -33,6 +34,7 @@ import org.xml.sax.SAXException;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.CompletionStatus;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
@@ -653,6 +655,57 @@ public class ManagePublicationController
 		publicationMap.put( "id", publication.getId() );
 		publicationMap.put( "title", publication.getTitle() );
 		responseMap.put( "publication", publicationMap );
+
+		return responseMap;
+	}
+
+	@Transactional
+	@RequestMapping( value = "/delete", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> deletePublication( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error 401 - not authorized" );
+			return responseMap;
+		}
+
+		if ( id == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "publication id missing" );
+			return responseMap;
+		}
+
+		Publication publication = persistenceStrategy.getPublicationDAO().getById( id );
+
+		if ( publication == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "publication not found" );
+			return responseMap;
+		}
+		// remove publication connection
+
+		// check with circle
+		// get list of circle that contain this publication
+		// remove links
+		Set<Circle> circles = publication.getCircles();
+		
+		for ( Circle circle : circles )
+		{
+			circle.removePublication( publication );
+		}
+		publication.setCircles( null );
+
+		persistenceStrategy.getPublicationDAO().delete( publication );
+
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "Publication is deleted" );
+
 
 		return responseMap;
 	}
