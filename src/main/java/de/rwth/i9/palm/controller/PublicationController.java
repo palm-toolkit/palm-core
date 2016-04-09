@@ -214,10 +214,13 @@ public class PublicationController
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationDetail( 
 			@RequestParam( value = "id", required = false ) final String id, 
-			@RequestParam( value = "uri", required = false ) final String uri, 
+			@RequestParam( value = "uri", required = false ) final String uri,
+			@RequestParam( value = "section", required = false ) String section,
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return publicationFeature.getPublicationDetail().getPublicationDetailById( id );
+		if(section == null )
+			section = "all";
+		return publicationFeature.getPublicationDetail().getPublicationDetailById( id, section );
 	}
 	
 	/**

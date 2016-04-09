@@ -160,6 +160,10 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			if ( publication.getStartPage() > 0 )
 				publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
 
+			if ( publication.getAbstractText() != null || publication.getKeywordText() != null )
+				publicationMap.put( "contentExist", true );
+			else
+				publicationMap.put( "contentExist", false );
 			publicationList.add( publicationMap );
 		}
 		responseMap.put( "count", publicationList.size() );
