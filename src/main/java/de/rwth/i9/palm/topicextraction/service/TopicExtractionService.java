@@ -55,6 +55,7 @@ public class TopicExtractionService
 		Calendar calendar = Calendar.getInstance();
 
 		// loop through available extraction services
+		int extractionServiceNumber = 0;
 		for ( ExtractionService extractionService : extractionServices )
 		{
 			if ( !extractionService.isActive() )
@@ -76,9 +77,10 @@ public class TopicExtractionService
 				{
 					// add to publications hashmap for persisting
 					publications.add( publication );
+					// add to publications hashmap for persisting
 					// // remove old extracted source
-					// if ( publication.getPublicationTopics() != null )
-					// publication.removeAllPublicationTopic();
+					if ( publication.getPublicationTopics() != null && extractionServiceNumber == 0 )
+						publication.getPublicationTopics().clear();
 
 					// create new publication topic
 					PublicationTopic publicationTopic = new PublicationTopic();
@@ -120,26 +122,9 @@ public class TopicExtractionService
 				}
 
 			}
+			extractionServiceNumber++;
 
 		}
-
-		// check whether thread worker is done
-		// Wait until they are all done
-//		boolean processIsDone = true;
-//		do
-//		{
-//			processIsDone = true;
-//			for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
-//			{
-//				if ( !futureList.isDone() )
-//				{
-//					processIsDone = false;
-//					break;
-//				}
-//			}
-//			// 10-millisecond pause between each check
-//			Thread.sleep( 10 );
-//		} while ( !processIsDone );
 
 		// Wait until they are all done
 		for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
@@ -168,13 +153,107 @@ public class TopicExtractionService
 	}
 	
 	/**
+	 * Extract topics from specific publications
+	 * 
+	 * @param publication
+	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
+	 * @throws URISyntaxException
+	 * @throws ExecutionException
+	 */
+	public void extractTopicFromSpecificPublication( Publication publication ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ExecutionException
+	{
+		List<Future<PublicationTopic>> publicationTopicFutureList = new ArrayList<Future<PublicationTopic>>();
+		List<ExtractionService> extractionServices = persistenceStrategy.getExtractionServiceDAO().getAllActiveExtractionService();
+
+		// get current date
+		Calendar calendar = Calendar.getInstance();
+
+		// remove old extracted source
+		if ( publication.isContentUpdated() )
+			if ( publication.getPublicationTopics() != null )
+				publication.getPublicationTopics().clear();
+
+		// loop through available extraction services
+		for ( ExtractionService extractionService : extractionServices )
+		{
+			if ( !extractionService.isActive() )
+				continue;
+
+			// // this code is implementation is incorrect, since not all
+			// publication will be extracted
+			// countExtractionServiceUsages( extractionService,
+			// author.getPublications().size(), calendar );
+			// // if beyond limitation query perday
+			// if ( extractionService.getCountQueryThisDay() >
+			// extractionService.getMaxQueryPerDay() )
+			// continue;
+
+			// publications on specific user
+			if ( publication.getAbstractText() == null )
+				continue;
+
+			if ( publication.isContentUpdated() )
+			{
+
+				// create new publication topic
+				PublicationTopic publicationTopic = new PublicationTopic();
+				publicationTopic.setExtractionServiceType( extractionService.getExtractionServiceType() );
+				publicationTopic.setExtractionDate( calendar.getTime() );
+				publicationTopic.setPublication( publication );
+
+				// extract topics with available services
+				doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+			}
+			else
+			{
+				// if something fails on last run
+				PublicationTopic publicationTopic = null;
+				for ( PublicationTopic publicationTopicEach : publication.getPublicationTopics() )
+				{
+					if ( publicationTopicEach.getExtractionServiceType().equals( extractionService.getExtractionServiceType() ) )
+					{
+						publicationTopic = publicationTopicEach;
+					}
+				}
+
+				if ( publicationTopic == null )
+				{
+					publicationTopic = new PublicationTopic();
+					publicationTopic.setExtractionServiceType( extractionService.getExtractionServiceType() );
+					publicationTopic.setExtractionDate( calendar.getTime() );
+					publicationTopic.setPublication( publication );
+				}
+				if ( publicationTopic.getTermValues() == null || publicationTopic.getTermValues().isEmpty() )
+				{
+					// extract topics with available services
+					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+				}
+
+			}
+
+		}
+
+		// Wait until they are all done
+		for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
+		{
+			futureList.get();
+		}
+
+		// save publication, set flag, prevent re-extract publication topic
+		publication.setContentUpdated( false );
+		persistenceStrategy.getPublicationDAO().persist( publication );
+
+	}
+
+	/**
 	 * Extract topics from circle
 	 * 
 	 * @param circle
 	 * @throws InterruptedException
 	 * @throws UnsupportedEncodingException
 	 * @throws URISyntaxException
-	 * @throws ExecutionException 
+	 * @throws ExecutionException
 	 */
 	public void extractTopicFromPublicationByCircle( Circle circle ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ExecutionException
 	{
@@ -188,6 +267,7 @@ public class TopicExtractionService
 		Calendar calendar = Calendar.getInstance();
 
 
+		int extractionServiceNumber = 0;
 		// loop through available extraction services
 		for ( ExtractionService extractionService : extractionServices )
 		{
@@ -211,9 +291,8 @@ public class TopicExtractionService
 					// add to publications hashmap for persisting
 					publications.add( publication );
 
-					// // remove old extracted source
-					// if ( publication.getPublicationTopics() != null )
-					// publication.removeAllPublicationTopic();
+					if ( publication.getPublicationTopics() != null && extractionServiceNumber == 0 )
+						publication.getPublicationTopics().clear();
 
 					// create new publication topic
 					PublicationTopic publicationTopic = new PublicationTopic();
@@ -255,7 +334,7 @@ public class TopicExtractionService
 				}
 				
 			}
-
+			extractionServiceNumber++;
 		}
 		// check whether thread worker is done
 //		// Wait until they are all done

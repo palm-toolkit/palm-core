@@ -3,6 +3,7 @@ package de.rwth.i9.palm.pdfextraction.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -298,6 +299,9 @@ public class PdfExtractionService
 		StringBuilder contentSection = new StringBuilder();
 		StringBuilder contentSectionWithName = new StringBuilder();
 
+		if ( textSections == null || textSections.isEmpty() )
+			return Collections.emptyMap();
+
 		for ( TextSection textSection : textSections )
 		{
 			if ( textSection.getName() != null )
@@ -352,7 +356,8 @@ public class PdfExtractionService
 					contentSection.append( textSection.getContent() );
 			}
 		}
-		publicationContent.setLength( publicationContent.length() - contentSectionWithName.length() );
+		if ( publicationContent.length() - contentSectionWithName.length() > 0 )
+			publicationContent.setLength( publicationContent.length() - contentSectionWithName.length() );
 
 		extractedPdfMap.put( "title", publicationTitle.toString() );
 		extractedPdfMap.put( "author", Jsoup.parse( publicationAuthor.toString() ).text() );

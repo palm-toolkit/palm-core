@@ -109,7 +109,7 @@ public class ManagePublicationController
 	public @ResponseBody Map<String, Object> saveNewPublication( 
 			@ModelAttribute( "publication" ) Publication publication, 
 			@RequestParam( value = "author-list-ids", required = false ) String authorListIds, 
-			@RequestParam( value = "keyword-list", required = false ) String keywordList, 
+			@RequestParam( value = "keywordList", required = false ) String keywordList, 
 			@RequestParam( value = "publication-date", required = false ) String publicationDate, 
 			@RequestParam( value = "venue-type", required = false ) String venueType, 
 			@RequestParam( value = "venue-id", required = false ) String venueId, 
@@ -376,11 +376,11 @@ public class ManagePublicationController
 	@Transactional
 	@RequestMapping( value = "/edit", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveEditedPublication( 
-			@RequestParam( value = "publication-id" ) String publicationId,
-			@RequestParam( value = "title" ) String title, 
+			@RequestParam( value = "publicationId" ) String publicationId,
+			@RequestParam( value = "title", required = false ) String title, 
 			@RequestParam( value = "author-list-ids", required = false ) String authorListIds, 
 			@RequestParam( value = "abstractText", required = false ) String abstractText, 
-			@RequestParam( value = "keyword-list", required = false ) String keywordList, 
+			@RequestParam( value = "keywordList", required = false ) String keywordList, 
 			@RequestParam( value = "publication-date", required = false ) String publicationDate, 
 			@RequestParam( value = "venue-type", required = false ) String venueType, 
 			@RequestParam( value = "venue-id", required = false ) String venueId, 
@@ -464,6 +464,11 @@ public class ManagePublicationController
 			publication.setKeywordText( keywordList.replace( "_#_", "," ) );
 			// set publication updated
 			publication.setContentUpdated( true );
+		}
+		else
+		{
+			// publication does not have keywords
+			publication.setKeywordStatus( CompletionStatus.COMPLETE );
 		}
 
 		/* Insert publication date - expect valid publication date */

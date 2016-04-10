@@ -1,6 +1,8 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -328,15 +330,20 @@ public class PublicationController
 	 * @param id
 	 * @param response
 	 * @return
+	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
 	 */
 	@RequestMapping( value = "/topic", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationTopic( 
-			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "pid", required = false ) final String pid, 
 			@RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve,
-			final HttpServletResponse response)
+			final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
 	{
-		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, maxRetrieve );
+		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, pid, maxRetrieve );
 	}
 	
 	/**

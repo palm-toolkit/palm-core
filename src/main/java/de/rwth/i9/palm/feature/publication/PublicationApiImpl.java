@@ -103,7 +103,7 @@ public class PublicationApiImpl implements PublicationApi
 				// process log
 				applicationService.putProcessLog( pid, "Extract PDF " + pubFile.getUrl() + " <br>", "append" );
 				// extract first page
-				publicationFileMap.put( "result", pdfExtractionService.extractPdfFromSpecificUrl( pubFile.getUrl(), 1 ) );
+				publicationFileMap.put( "result", pdfExtractionService.extractPdfFromSpecificUrl( pubFile.getUrl(), 3 ) );
 				// process log
 				applicationService.putProcessLog( pid, "Done extract PDF " + pubFile.getUrl() + " <br>", "append" );
 			}
