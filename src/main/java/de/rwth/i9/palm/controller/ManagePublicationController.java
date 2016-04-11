@@ -746,7 +746,19 @@ public class ManagePublicationController
 		{
 			circle.removePublication( publication );
 		}
-		publication.setCircles( null );
+		publication.getCircles().clear();
+
+		// remove bookmark
+		publication.getUserPublicationBookmarks().clear();
+		// remove publication author
+		for ( PublicationAuthor pa : publication.getPublicationAuthors() )
+		{
+			Author author = pa.getAuthor();
+			author.removePublicationAuthor( pa );
+			pa.setAuthor( null );
+			pa.setPublication( null );
+		}
+		publication.getPublicationAuthors().clear();
 
 		persistenceStrategy.getPublicationDAO().delete( publication );
 

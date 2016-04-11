@@ -332,6 +332,7 @@ public class ManageCircleController
 		}
 
 		// remove circle connection
+		circle.getUserCircleBookmarks().clear();
 		circle.getAuthors().clear();
 		circle.getPublications().clear();
 		circle.setCreator( null );

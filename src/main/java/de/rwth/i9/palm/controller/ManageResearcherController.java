@@ -327,8 +327,11 @@ public class ManageResearcherController
 			responseMap.put( "statusMessage", "author id missing" );
 			return responseMap;
 		}
+		// clear bookmark
+		author.getUserAuthorBookmarks().clear();
 		// set is added false
 		author.setAdded( false );
+		author.setRequestDate( null );
 
 		persistenceStrategy.getAuthorDAO().persist( author );
 
