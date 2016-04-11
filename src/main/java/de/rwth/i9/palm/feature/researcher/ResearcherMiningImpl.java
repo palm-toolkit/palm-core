@@ -87,66 +87,66 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		responseMap.put( "status", "ok" );
 
-		// -- check if author source complete for active source
-		boolean isSourceParsePageMissing = false;
-		// first get active sources
-		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
-
-		// author from session means that the author just added
-		// loop through all source which is active
-		if ( !isAuthorFromSession && this.isFetchDatasetFromNetwork( author ) )
+		// check whether it is necessary to collect information from network
+		if ( this.isFetchDatasetFromNetwork( author ) || force.equals( "true" ) )
 		{
-			for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
+			// -- check if author source complete for active source
+			boolean isSourceParsePageMissing = false;
+			// first get active sources
+			Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
+
+			// author from session means that the author just added
+			// loop through all source which is active
+			if ( !isAuthorFromSession )
 			{
-				Source source = sourceEntry.getValue();
-				// only check for active source and parse page method
-				if ( source.isActive() && source.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+				for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
 				{
-					if ( !author.isContainSource( source ) )
+					Source source = sourceEntry.getValue();
+					// only check for active source and parse page method
+					if ( source.isActive() && source.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
 					{
-						isSourceParsePageMissing = true;
-						break;
+						if ( !author.isContainSource( source ) )
+						{
+							isSourceParsePageMissing = true;
+							break;
+						}
 					}
 				}
 			}
-		}
 
 
-		// try to get missing source
-		if ( isSourceParsePageMissing )
-		{
-			// set to false, with assumption that source not missing, but in
-			// reality is not exist
-			isSourceParsePageMissing = false;
-			List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( author.getName(), false );
-
-			if ( researcherList != null && !researcherList.isEmpty() )
+			// try to get missing source
+			if ( isSourceParsePageMissing )
 			{
-				// try to add author source
-				for ( Author researcher : researcherList )
+				// set to false, with assumption that source not missing, but in
+				// reality is not exist
+				isSourceParsePageMissing = false;
+				List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( author.getName(), false );
+
+				if ( researcherList != null && !researcherList.isEmpty() )
 				{
-					if ( researcher.getName().equals( author.getName() ) )
+					// try to add author source
+					for ( Author researcher : researcherList )
 					{
-
-						if ( researcher.getAuthorSources() == null || researcher.getAuthorSources().isEmpty() )
-							continue;
-
-						for ( AuthorSource as : researcher.getAuthorSources() )
+						if ( researcher.getName().equals( author.getName() ) )
 						{
-							if ( !author.isContainAuthorSource( as ) && sourceMap.get( as.getSourceType().toString() ).getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+
+							if ( researcher.getAuthorSources() == null || researcher.getAuthorSources().isEmpty() )
+								continue;
+
+							for ( AuthorSource as : researcher.getAuthorSources() )
 							{
-								author.addAuthorSource( as );
-								isSourceParsePageMissing = true;
+								if ( !author.isContainAuthorSource( as ) && sourceMap.get( as.getSourceType().toString() ).getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+								{
+									author.addAuthorSource( as );
+									isSourceParsePageMissing = true;
+								}
 							}
 						}
 					}
 				}
 			}
-		}
 
-		// check whether it is necessary to collect information from network
-		if ( this.isFetchDatasetFromNetwork( author ) || isSourceParsePageMissing || force.equals( "true" ) )
-		{
 			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author, pid );
 			responseMap.put( "fetchPerformed", "yes" );
 		}
