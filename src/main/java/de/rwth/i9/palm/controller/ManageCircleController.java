@@ -322,16 +322,14 @@ public class ManageCircleController
 			return responseMap;
 		}
 
-		boolean isUserCircleCreator = false;
+		User user = securityService.getUser();
 
-		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		if ( !( securityService.isAuthorizedForRole( "ADMIN" ) || circle.getCreator().equals( user ) ) )
 		{
 			responseMap.put( "status", "error" );
 			responseMap.put( "statusMessage", "error 401 - not authorized" );
 			return responseMap;
 		}
-
-		User user = securityService.getUser();
 
 		// remove circle connection
 		circle.getAuthors().clear();

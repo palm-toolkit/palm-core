@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -386,5 +387,70 @@ public class ManageAcademicEventController
 		model.addObject( "event", event );
 
 		return model;
+	}
+
+	@Transactional
+	@RequestMapping( value = "/delete", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> deletePublication( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( id == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Event Group id missing" );
+			return responseMap;
+		}
+
+		EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( id );
+
+		if ( eventGroup == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Event Group not found" );
+			return responseMap;
+		}
+
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error 401 - not authorized" );
+			return responseMap;
+		}
+
+		// remove eventgroup connection
+		eventGroup.getUserEventGroupBookmarks().clear();
+		// remove connection with publications
+		if( eventGroup.getEvents() != null ){
+			for( Event event : eventGroup.getEvents()){
+				if( event.getPublications() == null )
+					continue;
+				
+				// remove links with publicatins
+				String venue = eventGroup.getName();
+				if ( !venue.equals( eventGroup.getNotation() ) )
+				{
+					venue += " (" + eventGroup.getNotation() + ")";
+				}
+
+				for ( Publication publication : event.getPublications() )
+				{
+					publication.addOrUpdateAdditionalInformation( "venue", venue );
+					publication.setEvent( null );
+					persistenceStrategy.getPublicationDAO().persist( publication );
+				}
+				event.getPublications().clear();
+				event.setEventGroup( null );
+				persistenceStrategy.getEventDAO().delete( event );
+			}
+		}
+
+		eventGroup.getEvents().clear();
+		persistenceStrategy.getEventGroupDAO().delete( eventGroup );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "Event Group is deleted" );
+
+		return responseMap;
 	}
 }
