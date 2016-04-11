@@ -71,17 +71,37 @@ public class ResearcherCollectionService
 		// getSourceMap
 		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
 
+		// get from configuration
+		boolean isUseGoogleScholar = true;
+		boolean isUseCiteseerX = true;
+		boolean isUseDblp = true;
+		boolean isUseMendeley = true;
+
+		// alter value from configuration
+		String useGoogleScholar = applicationService.getConfigValue( "researcher", "source", "google scholar" );
+		if ( useGoogleScholar != null && useGoogleScholar.equals( "no" ) )
+			isUseGoogleScholar = false;
+		String useCiteseerX = applicationService.getConfigValue( "researcher", "source", "citeserx" );
+		if ( useCiteseerX != null && useCiteseerX.equals( "no" ) )
+			isUseCiteseerX = false;
+		String useDblp = applicationService.getConfigValue( "researcher", "source", "dblp" );
+		if ( useDblp != null && useDblp.equals( "no" ) )
+			isUseDblp = false;
+		String useMendeley = applicationService.getConfigValue( "researcher", "source", "mendeley" );
+		if ( useMendeley != null && useMendeley.equals( "no" ) )
+			isUseMendeley = false;
+
 		// loop through all source which is active
 		for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
 		{
 			Source source = sourceEntry.getValue();
-			if ( source.getSourceType().equals( SourceType.GOOGLESCHOLAR ) && source.isActive() )
+			if ( source.getSourceType().equals( SourceType.GOOGLESCHOLAR ) && source.isActive() && isUseGoogleScholar )
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsGoogleScholar( query, source ) );
-			else if ( source.getSourceType().equals( SourceType.CITESEERX ) && source.isActive() )
+			else if ( source.getSourceType().equals( SourceType.CITESEERX ) && source.isActive() && isUseCiteseerX )
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsCiteseerX( query, source ) );
-			else if ( source.getSourceType().equals( SourceType.DBLP ) && source.isActive() )
+			else if ( source.getSourceType().equals( SourceType.DBLP ) && source.isActive() && isUseDblp )
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsDblp( query, source ) );
-			else if ( source.getSourceType().equals( SourceType.MENDELEY ) && source.isActive() )
+			else if ( source.getSourceType().equals( SourceType.MENDELEY ) && source.isActive() && isUseMendeley )
 			{
 				// check for token validity
 				mendeleyOauth2Helper.checkAndUpdateMendeleyToken( source );

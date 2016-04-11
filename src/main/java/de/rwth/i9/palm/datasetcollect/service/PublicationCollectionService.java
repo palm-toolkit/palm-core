@@ -101,25 +101,49 @@ public class PublicationCollectionService
 		// extract dataset from academic network concurrently
 		// Stopwatch stopwatch = Stopwatch.createStarted();
 
+		// get from configuration
+		boolean isUseGoogleScholar = true;
+		boolean isUseCiteseerX = true;
+		boolean isUseDblp = true;
+		boolean isUseMendeley = true;
+		boolean isUseMas = true;
+
+		// alter value from configuration
+		String useGoogleScholar = applicationService.getConfigValue( "publication", "source", "google scholar" );
+		if ( useGoogleScholar != null && useGoogleScholar.equals( "no" ) )
+			isUseGoogleScholar = false;
+		String useCiteseerX = applicationService.getConfigValue( "publication", "source", "citeserx" );
+		if ( useCiteseerX != null && useCiteseerX.equals( "no" ) )
+			isUseCiteseerX = false;
+		String useDblp = applicationService.getConfigValue( "publication", "source", "dblp" );
+		if ( useDblp != null && useDblp.equals( "no" ) )
+			isUseDblp = false;
+		String useMendeley = applicationService.getConfigValue( "publication", "source", "mendeley" );
+		if ( useMendeley != null && useMendeley.equals( "no" ) )
+			isUseMendeley = false;
+		String useMas = applicationService.getConfigValue( "publication", "source", "microsoft" );
+		if ( useMas != null && useMas.equals( "no" ) )
+			isUseMas = false;
+
 		List<Future<List<Map<String, String>>>> publicationFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
 
 		for ( AuthorSource authorSource : authorSources )
 		{
-			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR && sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ).isActive() )
+			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR && sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ).isActive() && isUseGoogleScholar )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationsGoogleScholar( authorSource.getSourceUrl(), sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ) ) );
-			else if ( authorSource.getSourceType() == SourceType.CITESEERX && sourceMap.get( SourceType.CITESEERX.toString() ).isActive() )
+			else if ( authorSource.getSourceType() == SourceType.CITESEERX && sourceMap.get( SourceType.CITESEERX.toString() ).isActive() && isUseCiteseerX )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl(), sourceMap.get( SourceType.CITESEERX.toString() ) ) );
-			else if ( authorSource.getSourceType() == SourceType.DBLP && sourceMap.get( SourceType.DBLP.toString() ).isActive() )
+			else if ( authorSource.getSourceType() == SourceType.DBLP && sourceMap.get( SourceType.DBLP.toString() ).isActive() && isUseDblp )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDBLP( authorSource.getSourceUrl(), sourceMap.get( SourceType.DBLP.toString() ) ) );
 		}
-		if ( sourceMap.get( SourceType.MENDELEY.toString() ).isActive() )
+		if ( sourceMap.get( SourceType.MENDELEY.toString() ).isActive() && isUseMendeley )
 		{
 			// check for token validity
 			mendeleyOauth2Helper.checkAndUpdateMendeleyToken( sourceMap.get( SourceType.MENDELEY.toString() ) );
 			publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDetailMendeley( author, sourceMap.get( SourceType.MENDELEY.toString() ) ) );
 		}
 		// for MAS since not included on author search
-		if ( sourceMap.get( SourceType.MAS.toString() ).isActive() )
+		if ( sourceMap.get( SourceType.MAS.toString() ).isActive() && isUseMas )
 			publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDetailMicrosoftAcademicSearch( author, sourceMap.get( SourceType.MAS.toString() ) ) );
 
 		// wait till everything complete
@@ -165,15 +189,22 @@ public class PublicationCollectionService
 			// process log
 			applicationService.putProcessLog( pid, "Done merging " + selectedPublications.size() + " publications<br><br>", "append" );
 
-			// process log
-			applicationService.putProcessLog( pid, "Removing incorrect publications...<br>", "append" );
+			boolean isFirstPhaseRemoveInvalidPublicationEnable = true;
+			String firstPhaseRemoveInvalidPublicationEnable = applicationService.getConfigValue( "publication", "flow", "remove1" );
+			if ( firstPhaseRemoveInvalidPublicationEnable != null && firstPhaseRemoveInvalidPublicationEnable.equals( "no" ) )
+				isFirstPhaseRemoveInvalidPublicationEnable = false;
 
-			// second, remove incorrect publication based on investigation
-			this.removeIncorrectPublicationFromPublicationList( selectedPublications );
+			if ( isFirstPhaseRemoveInvalidPublicationEnable )
+			{
+				// process log
+				applicationService.putProcessLog( pid, "Removing incorrect publications...<br>", "append" );
 
-			// process log
-			applicationService.putProcessLog( pid, "Done removing incorrect publications<br><br>", "append" );
+				// second, remove incorrect publication based on investigation
+				this.removeIncorrectPublicationFromPublicationList( selectedPublications );
 
+				// process log
+				applicationService.putProcessLog( pid, "Done removing incorrect publications<br><br>", "append" );
+			}
 			// process log
 			applicationService.putProcessLog( pid, "Extracting publications details...<br>", "append" );
 
@@ -183,9 +214,17 @@ public class PublicationCollectionService
 			// process log
 			applicationService.putProcessLog( pid, "Done extracting publications details<br><br>", "append" );
 
-			// fourth, second checking, after the information has been merged
-			this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
+			boolean isSecondPhaseRemoveInvalidPublicationEnable = true;
+			String secondPhaseRemoveInvalidPublicationEnable = applicationService.getConfigValue( "publication", "flow", "remove2" );
+			if ( secondPhaseRemoveInvalidPublicationEnable != null && secondPhaseRemoveInvalidPublicationEnable.equals( "no" ) )
+				isSecondPhaseRemoveInvalidPublicationEnable = false;
 
+			if ( isSecondPhaseRemoveInvalidPublicationEnable )
+			{
+				// fourth, second checking, after the information has been
+				// merged
+				this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
+			}
 			// count total citation on author
 			int citation = 0;
 			SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
