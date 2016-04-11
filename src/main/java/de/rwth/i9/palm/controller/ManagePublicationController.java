@@ -41,6 +41,7 @@ import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationAuthor;
 import de.rwth.i9.palm.model.PublicationType;
+import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.pdfextraction.service.PdfExtractionService;
@@ -280,6 +281,20 @@ public class ManagePublicationController
 		publication.setContentUpdated( true );
 		// at the end persist publication
 		persistenceStrategy.getPublicationDAO().persist( publication );
+
+		// update author interest flag
+		List<Author> authors = publication.getAuthors();
+		if ( authors != null && authors.isEmpty() )
+		{
+			for ( Author author : authors )
+			{
+				if ( author.isAdded() )
+				{
+					author.setUpdateInterest( true );
+					persistenceStrategy.getAuthorDAO().persist( author );
+				}
+			}
+		}
 
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", "changes on publication saved" );
@@ -653,6 +668,20 @@ public class ManagePublicationController
 		// at the end persist publication
 		persistenceStrategy.getPublicationDAO().persist( publication );
 
+		// update author interest flag
+		List<Author> authors = publication.getAuthors();
+		if ( authors != null && authors.isEmpty() )
+		{
+			for ( Author author : authors )
+			{
+				if ( author.isAdded() )
+				{
+					author.setUpdateInterest( true );
+					persistenceStrategy.getAuthorDAO().persist( author );
+				}
+			}
+		}
+
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", "changes on publication saved" );
 
@@ -670,12 +699,8 @@ public class ManagePublicationController
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
-		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
-		{
-			responseMap.put( "status", "error" );
-			responseMap.put( "statusMessage", "error 401 - not authorized" );
-			return responseMap;
-		}
+		// Check if user is the author of publication
+		boolean userIsPublicationAuthor = false;
 
 		if ( id == null )
 		{
@@ -692,6 +717,24 @@ public class ManagePublicationController
 			responseMap.put( "statusMessage", "publication not found" );
 			return responseMap;
 		}
+		User user = securityService.getUser();
+		if ( user != null && user.getAuthor() != null )
+			for ( Author author : publication.getAuthors() )
+			{
+				if ( author.equals( user.getAuthor() ) )
+				{
+					userIsPublicationAuthor = true;
+					break;
+				}
+			}
+
+		if ( !( securityService.isAuthorizedForRole( "ADMIN" ) || userIsPublicationAuthor ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error 401 - not authorized" );
+			return responseMap;
+		}
+
 		// remove publication connection
 
 		// check with circle

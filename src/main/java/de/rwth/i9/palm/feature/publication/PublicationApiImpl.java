@@ -282,16 +282,19 @@ public class PublicationApiImpl implements PublicationApi
 			citeChicago.append( eventString + " " );
 		}
 
-		String volume = publication.getAdditionalInformationByKey( "volume" ).toString();
-		volume = volume.replace( "\"", "" );
-		if ( volume != null && !volume.isEmpty() )
+		Object volumeObj = publication.getAdditionalInformationByKey( "volume" );
+		if ( volumeObj != null )
 		{
-			citeBibtex.append( "volume = {" + volume + "},\n" );
-			citeMla.append( volume + " " );
-			citeApa.append( volume + " " );
-			citeChicago.append( volume + " " );
+			String volume = volumeObj.toString();
+			volume = volume.replace( "\"", "" );
+			if ( volume != null && !volume.isEmpty() )
+			{
+				citeBibtex.append( "volume = {" + volume + "},\n" );
+				citeMla.append( volume + " " );
+				citeApa.append( volume + " " );
+				citeChicago.append( volume + " " );
+			}
 		}
-
 		if ( eventYear != null )
 		{
 			citeBibtex.append( "year = {" + eventYear + "},\n" );

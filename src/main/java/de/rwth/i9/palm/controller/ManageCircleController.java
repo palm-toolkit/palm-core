@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -295,6 +296,52 @@ public class ManageCircleController
 		circleMap.put( "id", circle.getId() );
 
 		responseMap.put( "circle", circleMap );
+
+		return responseMap;
+	}
+
+	@Transactional
+	@RequestMapping( value = "/delete", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> deletePublication( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( id == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle id missing" );
+			return responseMap;
+		}
+
+		Circle circle = persistenceStrategy.getCircleDAO().getById( id );
+
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle not found" );
+			return responseMap;
+		}
+
+		boolean isUserCircleCreator = false;
+
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error 401 - not authorized" );
+			return responseMap;
+		}
+
+		User user = securityService.getUser();
+
+		// remove circle connection
+		circle.getAuthors().clear();
+		circle.getPublications().clear();
+		circle.setCreator( null );
+
+		persistenceStrategy.getCircleDAO().delete( circle );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "Publication is deleted" );
 
 		return responseMap;
 	}
