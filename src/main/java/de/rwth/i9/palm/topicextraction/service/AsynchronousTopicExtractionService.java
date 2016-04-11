@@ -16,6 +16,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
+import de.rwth.i9.palm.model.ExtractionService;
+
 //import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.model.Publication;
@@ -36,22 +38,22 @@ public class AsynchronousTopicExtractionService
 	 */
 	@SuppressWarnings( "unchecked" )
 	@Async
-	public Future<PublicationTopic> getTopicsByAlchemyApi( Publication publication, PublicationTopic publicationTopic, int maxTextLength )
+	public Future<PublicationTopic> getTopicsByAlchemyApi( Publication publication, PublicationTopic publicationTopic, ExtractionService extractionService )
 	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 
-		log.info( "AlchemyAPI extract publication " + publication.getTitle() + " starting" );
+		log.info( "AlchemyAPI extract publication " + publication.getTitle()/* + " starting" */);
 
 		String text = getPublicationText( publication );
 
 		// free alchemy has certain text limitation in length
-		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
+		text = TopicExtractionUtils.cutTextToLength( text, extractionService.getMaxTextLength() );
 
 		Map<String, Object> alchemyResultsMap = null;
 
 		try
 		{
-			alchemyResultsMap = AlchemyAPITopicExtraction.getTextRankedKeywords( text );
+			alchemyResultsMap = AlchemyAPITopicExtraction.getTextRankedKeywords( text, extractionService );
 		}
 		catch ( Exception e )
 		{
@@ -87,22 +89,22 @@ public class AsynchronousTopicExtractionService
 	 */
 	@SuppressWarnings( "unchecked" )
 	@Async
-	public Future<PublicationTopic> getTopicsByOpenCalais( Publication publication, PublicationTopic publicationTopic, int maxTextLength )
+	public Future<PublicationTopic> getTopicsByOpenCalais( Publication publication, PublicationTopic publicationTopic, ExtractionService extractionService )
 	{
 		// Stopwatch stopwatch = Stopwatch.createStarted();
 
-		log.info( "OpenCalais extract publication " + publication.getTitle() + " starting" );
+		log.info( "OpenCalais extract publication " + publication.getTitle()/* + " starting" */);
 
 		String text = getPublicationText( publication );
 
 		// just cut text according to configuration
-		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
+		text = TopicExtractionUtils.cutTextToLength( text, extractionService.getMaxTextLength() );
 
 		Map<String, Object> opencalaisResultsMap = null;
 
 		try
 		{
-			opencalaisResultsMap = OpenCalaisAPITopicExtraction.getTopicsFromText( text );
+			opencalaisResultsMap = OpenCalaisAPITopicExtraction.getTopicsFromText( text, extractionService );
 		}
 		catch ( Exception e )
 		{
@@ -141,17 +143,17 @@ public class AsynchronousTopicExtractionService
 	 */
 	@SuppressWarnings( "unchecked" )
 	@Async
-	public Future<PublicationTopic> getTopicsByYahooContentAnalysis( Publication publication, PublicationTopic publicationTopic, int maxTextLength ) throws UnsupportedEncodingException, URISyntaxException
+	public Future<PublicationTopic> getTopicsByYahooContentAnalysis( Publication publication, PublicationTopic publicationTopic, ExtractionService extractionService ) throws UnsupportedEncodingException, URISyntaxException
 	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 
-//		log.info( "Yahoo Content Analysis extract publication " + publication.getTitle() + " starting" );
+//		log.info( "Yahoo Content Analysis extract publication " + publication.getTitle()/* + " starting" */);
 
 		String text = getPublicationText( publication );
 
-		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
+		text = TopicExtractionUtils.cutTextToLength( text, extractionService.getMaxTextLength() );
 
-		Map<String, Object> ycaResultsMap = YahooContentAnalysisAPITopicExtraction.getTextContentAnalysis( text );
+		Map<String, Object> ycaResultsMap = YahooContentAnalysisAPITopicExtraction.getTextContentAnalysis( text, extractionService );
 
 		if ( ycaResultsMap != null )
 		{
@@ -172,17 +174,17 @@ public class AsynchronousTopicExtractionService
 
 	@SuppressWarnings( "unchecked" )
 	@Async
-	public Future<PublicationTopic> getTopicsByFiveFilters( Publication publication, PublicationTopic publicationTopic, int maxTextLength ) throws UnsupportedEncodingException, URISyntaxException
+	public Future<PublicationTopic> getTopicsByFiveFilters( Publication publication, PublicationTopic publicationTopic, ExtractionService extractionService ) throws UnsupportedEncodingException, URISyntaxException
 	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 
-//		log.info( "Five Filters extract publication " + publication.getTitle() + " starting" );
+//		log.info( "Five Filters extract publication " + publication.getTitle()/* + " starting" */);
 
 		String text = getPublicationText( publication );
 
-		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
+		text = TopicExtractionUtils.cutTextToLength( text, extractionService.getMaxTextLength() );
 
-		Map<String, Object> fiveFiltersResultsMap = FiveFiltersAPITopicExtraction.getTextTermExtract( text );
+		Map<String, Object> fiveFiltersResultsMap = FiveFiltersAPITopicExtraction.getTextTermExtract( text, extractionService );
 
 		if ( fiveFiltersResultsMap != null )
 		{

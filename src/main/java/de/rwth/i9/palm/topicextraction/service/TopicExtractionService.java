@@ -425,17 +425,17 @@ public class TopicExtractionService
 		if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.ALCHEMY ) )
 		{
 			publication.addPublicationTopic( publicationTopic );
-			publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+			publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByAlchemyApi( publication, publicationTopic, extractionService ) );
 		}
 		else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.YAHOOCONTENTANALYSIS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.YAHOOCONTENTANALYSIS ) )
 		{
 			publication.addPublicationTopic( publicationTopic );
-			publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+			publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByYahooContentAnalysis( publication, publicationTopic, extractionService ) );
 		}
 		else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.FIVEFILTERS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.FIVEFILTERS ) )
 		{
 			publication.addPublicationTopic( publicationTopic );
-			publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService.getMaxTextLength() ) );
+			publicationTopicFutureList.add( asynchronousTopicExtractionService.getTopicsByFiveFilters( publication, publicationTopic, extractionService ) );
 
 		}
 		else if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.OPENCALAIS ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.OPENCALAIS ) )
@@ -459,7 +459,7 @@ public class TopicExtractionService
 			publication.addPublicationTopic( publicationTopic );
 
 			// current openCalais service
-			Future<PublicationTopic> openCalaisPublicationTopicFuture = asynchronousTopicExtractionService.getTopicsByOpenCalais( publication, publicationTopic, extractionService.getMaxTextLength() );
+			Future<PublicationTopic> openCalaisPublicationTopicFuture = asynchronousTopicExtractionService.getTopicsByOpenCalais( publication, publicationTopic, extractionService );
 
 			publicationTopicFutureList.add( openCalaisPublicationTopicFuture );
 
