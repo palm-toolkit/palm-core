@@ -173,26 +173,30 @@ public class ManageCircleWidgetController
 			persistenceStrategy.getCircleWidgetDAO().persist( circleWidget );
 		}
 
-		for ( Widget widget : notInstalledWidgetsWrapper.getWidgets() )
-		{
-			if ( widget.getStatus().toUpperCase().equals( "ACTIVE" ) )
+		// if ( notInstalledWidgetsWrapper.getWidgets() != null &&
+		// !notInstalledWidgetsWrapper.getWidgets().isEmpty() )
+		// {
+			for ( Widget widget : notInstalledWidgetsWrapper.getWidgets() )
 			{
-				CircleWidget circleWidget = new CircleWidget();
-				circleWidget.setWidget( widget );
-				circleWidget.setWidgetStatus( WidgetStatus.ACTIVE );
-				circleWidget.setWidgetColor( widget.getColor() );
-				circleWidget.setWidgetWidth( WidgetWidth.valueOf( widget.getWidth().toUpperCase() ) );
-				circleWidget.setPosition( widget.getPos() );
-				if ( widget.getHeight() != null )
-					circleWidget.setWidgetHeight( widget.getHeight() );
+				if ( widget.getStatus().toUpperCase().equals( "ACTIVE" ) )
+				{
+					CircleWidget circleWidget = new CircleWidget();
+					circleWidget.setWidget( widget );
+					circleWidget.setWidgetStatus( WidgetStatus.ACTIVE );
+					circleWidget.setWidgetColor( widget.getColor() );
+					circleWidget.setWidgetWidth( WidgetWidth.valueOf( widget.getWidth().toUpperCase() ) );
+					circleWidget.setPosition( widget.getPos() );
+					if ( widget.getHeight() != null )
+						circleWidget.setWidgetHeight( widget.getHeight() );
 
-				circleWidget.setCircle( circle );
-				circle.addCircleWidget( circleWidget );
+					circleWidget.setCircle( circle );
+					circle.addCircleWidget( circleWidget );
+				}
 			}
-		}
 
-		// at the end persist
-		persistenceStrategy.getUserDAO().persist( user );
+			// at the end persist
+			persistenceStrategy.getCircleDAO().persist( circle );
+		// }
 
 		responseMap.put( "status", "ok" );
 
