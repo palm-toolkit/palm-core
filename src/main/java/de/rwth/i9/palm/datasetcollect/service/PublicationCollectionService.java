@@ -268,7 +268,8 @@ public class PublicationCollectionService
 			// at the end save everything
 			for ( Publication publication : selectedPublications )
 			{
-				publication.setContentUpdated( true );
+				if ( publication.getPublicationTopics() == null || publication.getPublicationTopics().isEmpty() )
+					publication.setContentUpdated( true );
 				persistenceStrategy.getPublicationDAO().persist( publication );
 			}
 		}
@@ -1106,7 +1107,8 @@ public class PublicationCollectionService
 
 			if ( persistResult )
 			{
-				publication.setContentUpdated( true );
+				if ( publication.getPublicationTopics() == null || publication.getPublicationTopics().isEmpty() )
+					publication.setContentUpdated( true );
 				persistenceStrategy.getPublicationDAO().persist( publication );
 			}
 		}

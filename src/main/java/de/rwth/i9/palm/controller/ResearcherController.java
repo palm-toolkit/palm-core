@@ -210,7 +210,7 @@ public class ResearcherController
 //			}
 		}
 		
-		if ( (Integer) authorsMap.get( "totalCount" ) > 0 )
+		if ( authorsMap != null && (Integer) authorsMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) authorsMap.get( "totalCount" ) );
 			return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, (List<Author>) authorsMap.get( "authors" ) );

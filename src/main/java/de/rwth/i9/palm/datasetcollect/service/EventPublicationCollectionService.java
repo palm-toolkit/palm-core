@@ -191,7 +191,8 @@ public class EventPublicationCollectionService
 		// at the end save everything
 		for ( Publication publication : eventPublications )
 		{
-			publication.setContentUpdated( true );
+			if ( publication.getPublicationTopics() == null || publication.getPublicationTopics().isEmpty() )
+				publication.setContentUpdated( true );
 			persistenceStrategy.getPublicationDAO().persist( publication );
 		}
 
@@ -704,7 +705,8 @@ public class EventPublicationCollectionService
 
 			if ( persistResult )
 			{
-				publication.setContentUpdated( true );
+				if ( publication.getPublicationTopics() == null || publication.getPublicationTopics().isEmpty() )
+					publication.setContentUpdated( true );
 				persistenceStrategy.getPublicationDAO().persist( publication );
 			}
 		}

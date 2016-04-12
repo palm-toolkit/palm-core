@@ -137,6 +137,7 @@ public class ManagePublicationController
 			if ( author == null )
 				continue;
 
+			author.setUpdateInterest( true );
 			PublicationAuthor publicationAuthor = new PublicationAuthor();
 			publicationAuthor.setAuthor( author );
 			publicationAuthor.setPublication( publication );
@@ -470,6 +471,8 @@ public class ManagePublicationController
 				// set publication updated
 				publication.setContentUpdated( true );
 			}
+			// set author update
+
 		}
 
 		/* Insert Keyword if any */
@@ -759,6 +762,7 @@ public class ManagePublicationController
 			pa.setPublication( null );
 		}
 		publication.getPublicationAuthors().clear();
+		publication.setEvent( null );
 
 		persistenceStrategy.getPublicationDAO().delete( publication );
 

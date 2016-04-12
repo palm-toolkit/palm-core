@@ -299,6 +299,14 @@ public class ManageResearcherController
 		return responseMap;
 	}
 
+	/**
+	 * Make the researcher invisible, API for administrator
+	 * 
+	 * @param id
+	 * @param request
+	 * @param response
+	 * @return
+	 */
 	@Transactional
 	@RequestMapping( value = "/setInvisible", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> setAuthorInvisible( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
@@ -337,6 +345,60 @@ public class ManageResearcherController
 
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", "author is now invisible" );
+
+		Map<String, String> authorMap = new LinkedHashMap<String, String>();
+		authorMap.put( "id", author.getId() );
+		authorMap.put( "name", author.getName() );
+		authorMap.put( "position", author.getAcademicStatus() );
+		responseMap.put( "author", authorMap );
+
+		return responseMap;
+	}
+
+	/**
+	 * Remove researcher request time to null, forced to recheck publication
+	 * 
+	 * @param id
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@Transactional
+	@RequestMapping( value = "/removeRequestTime", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> removeRequestTime( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error 401 - not authorized" );
+			return responseMap;
+		}
+
+		if ( id == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author id missing" );
+			return responseMap;
+		}
+
+		Author author = persistenceStrategy.getAuthorDAO().getById( id );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author id missing" );
+			return responseMap;
+		}
+		// set is added false
+		author.setRequestDate( null );
+		author.setRequestDate( null );
+
+		persistenceStrategy.getAuthorDAO().persist( author );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "unset researcher request date" );
 
 		Map<String, String> authorMap = new LinkedHashMap<String, String>();
 		authorMap.put( "id", author.getId() );

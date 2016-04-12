@@ -157,6 +157,7 @@ public class ManageCircleController
 			if ( eachWidget.getWidgetHeight() != null )
 				circleWidget.setWidgetHeight( eachWidget.getWidgetHeight() );
 
+			circleWidget.setCircle( circle );
 			circle.addCircleWidget( circleWidget );
 		}
 
