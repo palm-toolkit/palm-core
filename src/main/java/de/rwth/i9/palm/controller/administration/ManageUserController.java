@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.Role;
 import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceProperty;
 import de.rwth.i9.palm.model.User;
@@ -125,6 +126,10 @@ public class ManageUserController
 			userMap.put( "id", user.getId() );
 			userMap.put( "name", user.getName() );
 			userMap.put( "joinDate", dateFormat.format( user.getJoinDate() ) );
+			if ( user.getRole().getName().equals( "ADMIN" ) )
+				userMap.put( "isAdmin", true );
+			else
+				userMap.put( "isAdmin", false );
 			if ( user.getAuthor() != null )
 			{
 				Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
@@ -190,5 +195,53 @@ public class ManageUserController
 
 		return responseMap;
 	}
+
+	@Transactional
+	@RequestMapping( value = "/grantAdmin", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> grantAdminRigths( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( id == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "user id missing" );
+			return responseMap;
+		}
+
+		User user = persistenceStrategy.getUserDAO().getById( id );
+
+		if ( user == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "user not found" );
+			return responseMap;
+		}
+
+		if ( !( securityService.isAuthorizedForRole( "ADMIN" ) ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error 401 - not authorized" );
+			return responseMap;
+		}
+
+		// add admin rights
+		Role role = persistenceStrategy.getRoleDAO().getRoleByName( "ADMIN" );
+		if ( role != null )
+		{
+			user.setRole( role );
+			persistenceStrategy.getUserDAO().persist( user );
+
+			responseMap.put( "status", "ok" );
+			responseMap.put( "statusMessage", "User now is administrator" );
+		}
+		else
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Admin role not found" );
+		}
+		return responseMap;
+	}
+
 
 }
