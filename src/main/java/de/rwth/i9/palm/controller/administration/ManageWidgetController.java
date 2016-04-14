@@ -292,7 +292,7 @@ public class ManageWidgetController
 
 		if ( !( widgetType.equals( "researcher" ) || widgetType.equals( "publication" ) || 
 				widgetType.equals( "venue" ) || widgetType.equals( "circle" ) ||
-				widgetType.equals( "administration" ) || widgetType.equals( "user" )) )
+				widgetType.equals( "administration" ) || widgetType.equals( "user" ) || widgetType.equals( "menu" ) ) )
 		{
 			model = TemplateHelper.createViewWithLink( "404", "error" );
 			return model;
