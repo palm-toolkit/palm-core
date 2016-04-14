@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.SessionAttributes;
@@ -36,14 +37,20 @@ public class ManageMenuController
 	 * @throws InterruptedException
 	 */
 	@Transactional
-	@RequestMapping( value = "/introduction", method = RequestMethod.GET )
+	@RequestMapping( value = "/{widgetType}", method = RequestMethod.GET )
 	public ModelAndView addNewmenu(
+			@PathVariable String widgetType,
 			final HttpServletResponse response) throws InterruptedException
 	{
 		ModelAndView model = null;
+		if ( !( widgetType.equals( "introduction" ) || widgetType.equals( "api" ) || widgetType.equals( "documentation" ) ) )
+		{
+			model = TemplateHelper.createViewWithLink( "404", "error" );
+			return model;
+		}
 
 		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.MENU, "menu-introduction" );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.MENU, "menu-" + widgetType );
 
 		// assign the model
 		model.addObject( "widgets", widgets );

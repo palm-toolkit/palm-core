@@ -38,9 +38,12 @@ import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.CompletionStatus;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.FileType;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationAuthor;
+import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationType;
+import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
@@ -116,7 +119,9 @@ public class ManagePublicationController
 			@RequestParam( value = "venue-id", required = false ) String venueId, 
 			@RequestParam( value = "volume", required = false ) String volume, 
 			@RequestParam( value = "pages", required = false ) String pages, 
-			@RequestParam( value = "publisher", required = false ) String publisher, 
+			@RequestParam( value = "publisher", required = false ) String publisher,
+			@RequestParam( value = "newResourceSelect", required = false ) String newResourceSelect, 
+			@RequestParam( value = "newResourceInput", required = false ) String newResourceInput, 
 			final HttpServletResponse response) throws InterruptedException
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -402,7 +407,9 @@ public class ManagePublicationController
 			@RequestParam( value = "venue-id", required = false ) String venueId, 
 			@RequestParam( value = "volume", required = false ) String volume, 
 			@RequestParam( value = "pages", required = false ) String pages, 
-			@RequestParam( value = "publisher", required = false ) String publisher, 
+			@RequestParam( value = "publisher", required = false ) String publisher,
+			@RequestParam( value = "newResourceSelect", required = false ) String newResourceSelect, 
+			@RequestParam( value = "newResourceInput", required = false ) String newResourceInput,
 			final HttpServletResponse response) throws InterruptedException
 	{
 
@@ -668,8 +675,20 @@ public class ManagePublicationController
 		catch ( Exception e )
 		{
 		}
-		// at the end persist publication
-		persistenceStrategy.getPublicationDAO().persist( publication );
+
+		// update newResourceInput
+		if ( newResourceInput != null )
+		{
+			PublicationFile pubFile = new PublicationFile();
+			pubFile.setSourceType( SourceType.USER );
+			pubFile.setFileType( FileType.HTML );
+			if ( newResourceSelect != null && newResourceSelect.equals( "pdf" ) )
+				pubFile.setFileType( FileType.PDF );
+			pubFile.setUrl( newResourceInput );
+			pubFile.setPublication( publication );
+
+			publication.addPublicationFile( pubFile );
+		}
 
 		// update author interest flag
 		List<Author> authors = publication.getAuthors();
@@ -684,6 +703,9 @@ public class ManagePublicationController
 				}
 			}
 		}
+
+		// at the end persist publication
+		persistenceStrategy.getPublicationDAO().persist( publication );
 
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", "changes on publication saved" );

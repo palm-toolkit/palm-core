@@ -174,7 +174,8 @@ public class PublicationDetailImpl implements PublicationDetail
 					Map<String, Object> publicationFileMap = new LinkedHashMap<String, Object>();
 					publicationFileMap.put( "type", pubFile.getFileType().toString() );
 					publicationFileMap.put( "source", pubFile.getSourceType().toString().toLowerCase() );
-					publicationFileMap.put( "label", pubFile.getSource() );
+					if ( pubFile.getSource() != null )
+						publicationFileMap.put( "label", pubFile.getSource() );
 					publicationFileMap.put( "url", pubFile.getUrl() );
 					publicationFileList.add( publicationFileMap );
 				}
