@@ -17,7 +17,6 @@ import de.rwth.i9.palm.model.SourceProperty;
 
 @RunWith( SpringJUnit4ClassRunner.class )
 @ContextConfiguration( loader = AnnotationConfigContextLoader.class )
-@Ignore
 public class DblpPublicationCollectionTest
 {
 	@Test
@@ -68,7 +67,7 @@ public class DblpPublicationCollectionTest
 		source.addSourceProperty( sourceProperty1 );
 		source.addSourceProperty( sourceProperty2 );
 
-		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/j/Jarke:Matthias", source );
+		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/w/Wira=Alam:Andias", source );
 		int count = 1;
 
 		for ( Map<String, String> eachPublicationMap : publicationMapLists )

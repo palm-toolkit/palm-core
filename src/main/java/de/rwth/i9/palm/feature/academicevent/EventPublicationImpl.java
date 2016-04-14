@@ -129,6 +129,11 @@ public class EventPublicationImpl implements EventPublication
 			if ( publication.getStartPage() > 0 )
 				publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
 
+			if ( publication.getAbstractText() != null || publication.getKeywordText() != null )
+				publicationMap.put( "contentExist", true );
+			else
+				publicationMap.put( "contentExist", false );
+
 			publicationList.add( publicationMap );
 		}
 		responseMap.put( "publications", publicationList );

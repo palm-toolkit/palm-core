@@ -276,10 +276,7 @@ public class ResearcherController
 			HttpServletRequest request,
 			HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-		@SuppressWarnings( "unchecked" )
-		List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
-		
-		return researcherFeature.getResearcherMining().fetchResearcherData( id, name, uri, affiliation, pid, force, sessionAuthors );
+		return researcherFeature.getResearcherMining().fetchResearcherData( id, name, uri, affiliation, pid, force, request );
 	}
 	
 	/**

@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
@@ -45,7 +47,7 @@ public class ResearcherMiningImpl implements ResearcherMining
 	private ResearcherCollectionService researcherCollectionService;
 
 	@Override
-	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force, List<Author> sessionAuthors ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force, HttpServletRequest request ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -54,6 +56,8 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		boolean isAuthorFromSession = false;
 		// get author from session
+		@SuppressWarnings( "unchecked" )
+		List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
 		if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
 		{
 			if ( id != null )
@@ -64,6 +68,8 @@ public class ResearcherMiningImpl implements ResearcherMining
 					{
 						author = sessionAuthor;
 						isAuthorFromSession = true;
+						// remove session
+						request.getSession().removeAttribute( "authors" );
 						break;
 					}
 				}

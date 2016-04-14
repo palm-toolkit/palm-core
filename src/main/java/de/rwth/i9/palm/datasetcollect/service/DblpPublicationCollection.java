@@ -391,6 +391,84 @@ public class DblpPublicationCollection extends PublicationCollection
 					publicationMapLists.add( publicationDetails );
 				}
 			}
+			else if ( sectionHeader.attr( "id" ).equals( "informal" ) )
+			{
+				Elements publicationList = publicationSection.select( "ul.publ-list li.informal" );
+
+				for ( Element eachPublication : publicationList )
+				{
+					Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
+					publicationDetails.put( "type", PublicationType.INFORMAL.toString() );
+
+					Element sourceElementContainer = eachPublication.select( "nav.publ" ).select( "li" ).first();
+					Elements sourceElements = sourceElementContainer.select( "div.body" ).first().select( "a" );
+					if ( sourceElements != null && sourceElements.size() > 0 )
+					{
+						String docUrl = "";
+						String doc = "";
+						for ( Element sourceElement : sourceElements )
+						{
+							docUrl += sourceElement.absUrl( "href" ) + " ";
+							doc += sourceElement.text().replace( ",", "" ) + ",";
+						}
+						publicationDetails.put( "doc_url", docUrl.substring( 0, docUrl.length() - 1 ) );
+						publicationDetails.put( "doc", doc.substring( 0, doc.length() - 1 ) );
+					}
+
+					Element dataElement = eachPublication.select( "div.data" ).first();
+
+					if ( dataElement == null )
+						continue;
+
+					Elements authorElements = dataElement.select( "[itemprop=author]" );
+					String authorNames = "";
+					String authorUrl = "";
+					for ( Element authorElement : authorElements )
+					{
+						authorNames += authorElement.text().replace( ",", " " ) + ",";
+						Element authorUrlElement = authorElement.select( "a" ).first();
+						if ( authorUrlElement != null )
+							authorUrl += authorUrlElement.absUrl( "href" ) + " ";
+						else
+							authorUrl += "null ";
+					}
+					publicationDetails.put( "coauthor", authorNames.substring( 0, authorNames.length() - 1 ) );
+					publicationDetails.put( "coauthorUrl", authorUrl );
+
+					publicationDetails.put( "title", dataElement.select( "span.title" ).text() );
+					publicationDetails.put( "datePublished", dataElement.select( "[itemprop=datePublished]" ).text() );
+					publicationDetails.put( "source", SourceType.DBLP.toString() );
+
+					Element eventElement = dataElement.select( "> a" ).first();
+					if ( eventElement != null )
+					{
+						String eventUrl = eventElement.absUrl( "href" );
+						if ( eventUrl.contains( "#" ) )
+							publicationDetails.put( "eventUrl", eventUrl.split( "#" )[0] );
+						else
+							publicationDetails.put( "eventUrl", eventUrl );
+
+						String eventShort = eventElement.select( "[itemprop=name]" ).text();
+						if ( eventShort.contains( ")" ) )
+						{
+							eventShort = eventShort.replace( ")", "" );
+							String[] eventShortSplit = eventShort.split( "\\(" );
+							publicationDetails.put( "eventName", eventShortSplit[0].trim() );
+							publicationDetails.put( "eventVolume", eventShortSplit[1].trim() );
+						}
+						else
+						{
+							publicationDetails.put( "eventShortName", eventShort.trim() );
+						}
+					}
+
+					String page = dataElement.select( "[itemprop=pagination]" ).text();
+					if ( page != null )
+						publicationDetails.put( "page", page );
+
+					publicationMapLists.add( publicationDetails );
+				}
+			}
 		}
 		return publicationMapLists;
 	}

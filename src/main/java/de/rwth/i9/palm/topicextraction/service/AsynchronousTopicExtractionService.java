@@ -61,7 +61,7 @@ public class AsynchronousTopicExtractionService
 
 		if ( alchemyResultsMap != null )
 		{
-			if ( publication.getLanguage() == null )
+			if ( publication.getLanguage() == null && alchemyResultsMap.get( "language" ) != null )
 				publication.setLanguage( alchemyResultsMap.get( "language" ).toString() );
 
 			publicationTopic.setTermValues( (Map<String, Double>) alchemyResultsMap.get( "termvalue" ) );

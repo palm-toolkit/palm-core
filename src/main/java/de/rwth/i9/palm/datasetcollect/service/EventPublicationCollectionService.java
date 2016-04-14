@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
@@ -25,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
+import de.rwth.i9.palm.helper.comparator.PublicationByNoCitationComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.CompletionStatus;
@@ -50,10 +53,10 @@ public class EventPublicationCollectionService
 	private final static Logger LOGGER = LoggerFactory.getLogger( EventPublicationCollectionService.class );
 
 	@Autowired
-	private AsynchronousPublicationDetailCollectionService asynchronousPublicationDetailCollectionService;
+	private AsynchronousEventCollectionService asynchronousEventCollectionService;
 
 	@Autowired
-	private AsynchronousEventCollectionService asynchronousEventCollectionService;
+	private AsynchronousCollectionService asynchronousCollectionService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -321,6 +324,14 @@ public class EventPublicationCollectionService
 			if ( publicationMap.get( "type" ).equals( "CONFERENCE" ) )
 			{
 				publicationSource.setPublicationType( "CONFERENCE" );
+				if ( publicationMap.get( "pages" ) != null )
+					publicationSource.setPages( publicationMap.get( "pages" ) );
+				if ( publicationMap.get( "conferenceTheme" ) != null )
+					publicationSource.addOrUpdateAdditionalInformation( "conference theme", publicationMap.get( "conferenceTheme" ) );
+			}
+			else if ( publicationMap.get( "type" ).equals( "INFORMAL" ) )
+			{
+				publicationSource.setPublicationType( "INFORMAL" );
 				if ( publicationMap.get( "pages" ) != null )
 					publicationSource.setPages( publicationMap.get( "pages" ) );
 				if ( publicationMap.get( "conferenceTheme" ) != null )
@@ -677,7 +688,7 @@ public class EventPublicationCollectionService
 	public void enrichPublicationByExtractOriginalSources( List<Publication> eventPublications, boolean persistResult ) throws IOException, InterruptedException, ExecutionException, TimeoutException
 	{
 		LOGGER.info( "Start publications enrichment by extract HTML and PDF" );
-		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
+		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();
 
 		// get application setting whether enrichment with HTML or pdf is
 		// possible
@@ -691,23 +702,110 @@ public class EventPublicationCollectionService
 		if ( pdfParsingEnable != null && pdfParsingEnable.equals( "yes" ) )
 			isPdfParsingEnable = true;
 
-		for ( Publication publication : eventPublications )
+		String[] prioritizeUrls = applicationService.getConfigValue( "html", "flow", "prioritizeExtract" ).split( "," );
+
+		String[] preventUrls = applicationService.getConfigValue( "html", "flow", "preventExtract" ).split( "," );
+
+		int maximumBatchAllowed = 30;
+		try
 		{
-			// only proceed for publication with not complete abstract
-			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
-				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication, isHtmlParsingEnable, isPdfParsingEnable ) );
+			maximumBatchAllowed = Integer.parseInt( applicationService.getConfigValue( "html", "flow", "maximumExtract" ) );
+		}
+		catch ( Exception e )
+		{
 		}
 
-		// check process completion
-		for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
-		{
-			Publication publication = selectedPublicationFuture.get();
+		// sort publication based on citation
+		Collections.sort( eventPublications, new PublicationByNoCitationComparator() );
 
-			if ( persistResult )
+		int counterProcess = 0;
+		for ( Publication publication : eventPublications )
+		{
+			if ( publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
+				continue;
+
+			if ( counterProcess > maximumBatchAllowed )
+				break;
+
+			boolean isOneSourceAlreadExtracted = false;
+
+			if ( isHtmlParsingEnable )
 			{
-				if ( publication.getPublicationTopics() == null || publication.getPublicationTopics().isEmpty() )
-					publication.setContentUpdated( true );
-				persistenceStrategy.getPublicationDAO().persist( publication );
+				// get publication type webpage
+				Set<PublicationFile> htmlPublicationFiles = publication.getPublicationFilesHtml();
+				if ( !htmlPublicationFiles.isEmpty() )
+				{
+					PublicationFile htmlPublicationFileTarget = null;
+					for ( PublicationFile htmlPublicationFile : htmlPublicationFiles )
+					{
+						// remove PublicationFile if consist the prevent URLs
+						if ( !htmlPublicationFile.isPublicationFileUrlContainsUrls( preventUrls ) && !htmlPublicationFile.isChecked() )
+						{
+							LOGGER.info( "Extract WebPage for publication " + publication.getTitle() );
+							// find the prioritize pages
+							htmlPublicationFileTarget = htmlPublicationFile;
+							if ( htmlPublicationFile.isPublicationFileUrlContainsUrls( prioritizeUrls ) )
+								break;
+						}
+					}
+					if ( htmlPublicationFileTarget != null )
+					{
+						// extract information from selected PublicationFiles
+						PublicationSource publicationSource = new PublicationSource();
+						publicationSource.setSourceUrl( htmlPublicationFileTarget.getUrl() );
+						publicationSource.setSourceMethod( SourceMethod.EXTRACTPAGE );
+						publicationSource.setSourceType( SourceType.HTML );
+						publicationSource.setPublicationType( publication.getPublicationType().toString() );
+
+						htmlPublicationFileTarget.setChecked( true );
+
+						isOneSourceAlreadExtracted = true;
+
+						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInfromationFromHtml( publication, publicationSource, htmlPublicationFileTarget ) );
+						counterProcess++;
+					}
+				}
+
+				if ( isPdfParsingEnable && !isOneSourceAlreadExtracted )
+				{
+					// get publication type webpage
+					Set<PublicationFile> pdfPublicationFiles = publication.getPublicationFilesPdf();
+					if ( !pdfPublicationFiles.isEmpty() )
+					{
+						PublicationFile pdfPublicationFileTarget = null;
+						for ( PublicationFile pdfPublicationFile : pdfPublicationFiles )
+						{
+							if ( pdfPublicationFile.isChecked() )
+								continue;
+
+							PublicationSource publicationSource = new PublicationSource();
+							publicationSource.setSourceUrl( pdfPublicationFile.getUrl() );
+							publicationSource.setSourceMethod( SourceMethod.EXTRACTPAGE );
+							publicationSource.setSourceType( SourceType.PDF );
+							publicationSource.setPublicationType( publication.getPublicationType().toString() );
+
+							pdfPublicationFile.setChecked( true );
+
+							publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromPdf( publication, publicationSource, pdfPublicationFile ) );
+							counterProcess++;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+
+		// waiting until thread finished
+		for ( Future<PublicationSource> publicationSourceFuture : publicationSourceFutureList )
+		{
+			try
+			{
+				publicationSourceFuture.get( 35, TimeUnit.SECONDS );
+			}
+			catch ( TimeoutException e )
+			{
+				LOGGER.error( e.getMessage() );
 			}
 		}
 		LOGGER.info( "Done publications enrichment by extract HTML and PDF" );

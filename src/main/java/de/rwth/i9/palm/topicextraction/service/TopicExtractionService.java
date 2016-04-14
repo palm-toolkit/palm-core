@@ -449,8 +449,11 @@ public class TopicExtractionService
 			// of course this will affect other extraction services
 			try
 			{
+				int threadSleep = 100;
+
+				threadSleep = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "delayBetweenRequest" ).getValue() );
 //				// if ( extractionService.getCounter() % 2 == 0 )
-				Thread.sleep( 1000 );
+				Thread.sleep( threadSleep );
 			}
 			catch ( InterruptedException e )
 			{

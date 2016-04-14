@@ -391,8 +391,7 @@ public class ManageResearcherController
 			responseMap.put( "statusMessage", "author id missing" );
 			return responseMap;
 		}
-		// set is added false
-		author.setRequestDate( null );
+
 		author.setRequestDate( null );
 
 		persistenceStrategy.getAuthorDAO().persist( author );
