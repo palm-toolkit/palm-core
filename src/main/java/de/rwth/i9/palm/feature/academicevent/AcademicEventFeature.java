@@ -12,6 +12,8 @@ public interface AcademicEventFeature
 
 	public EventMining getEventMining();
 
+	public EventInterest getEventInterest();
+
 	public EventPublication getEventPublication();
 
 	public EventSearch getEventSearch();

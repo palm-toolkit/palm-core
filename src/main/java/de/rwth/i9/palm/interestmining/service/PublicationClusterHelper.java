@@ -90,6 +90,8 @@ public class PublicationClusterHelper
 
 	public void setLangauge( String language )
 	{
+		if ( language.length() > 20 )
+			language = language.substring( 0, 20 );
 		this.language = language;
 	}
 
