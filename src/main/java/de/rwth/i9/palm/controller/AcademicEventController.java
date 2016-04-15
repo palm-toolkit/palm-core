@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -231,6 +232,19 @@ public class AcademicEventController
 			final HttpServletResponse response ) throws ParseException, IOException, InterruptedException, ExecutionException, java.text.ParseException, TimeoutException, OAuthSystemException, OAuthProblemException 
 	{
 		return academicEventFeature.getEventMining().fetchEventData( id, pid, force );
+	}
+	
+	@RequestMapping( value = "/interest", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherInterest( 
+			@RequestParam( value = "id", required = false ) final String eventId, 
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
+			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException, java.text.ParseException
+	{
+		boolean isReplaceExistingResult = false;
+		if ( updateResult != null && updateResult.equals( "yes" ) )
+			isReplaceExistingResult = true;
+		return academicEventFeature.getEventInterest().getEventInterestById( eventId, isReplaceExistingResult );
 	}
 
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )

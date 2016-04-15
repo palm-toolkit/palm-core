@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.ExtractionServiceType;
 import de.rwth.i9.palm.model.Publication;
@@ -369,9 +370,148 @@ public class TopicExtractionService
 		}
 
 		// save publications, set flag, prevent re-extract publication topic
-		for ( Publication publication : circle.getPublications() )
+		if ( !publications.isEmpty() )
 		{
-			persistenceStrategy.getPublicationDAO().persist( publication );
+			log.info( "publication size " + publications.size() );
+			for ( Publication publication : publications )
+			{
+				publication.setContentUpdated( false );
+				persistenceStrategy.getPublicationDAO().persist( publication );
+			}
+		}
+	}
+	
+	/**
+	 * Extract topics from event
+	 * 
+	 * @param event
+	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
+	 * @throws URISyntaxException
+	 * @throws ExecutionException
+	 */
+	public void extractTopicFromPublicationByEvent( Event event ) throws InterruptedException, UnsupportedEncodingException, URISyntaxException, ExecutionException
+	{
+		// container for list of publication which have abstract
+		Set<Publication> publications = new HashSet<Publication>();
+
+		List<Future<PublicationTopic>> publicationTopicFutureList = new ArrayList<Future<PublicationTopic>>();
+		List<ExtractionService> extractionServices = persistenceStrategy.getExtractionServiceDAO().getAllActiveExtractionService();
+		
+		// get current date
+		Calendar calendar = Calendar.getInstance();
+
+
+		int extractionServiceNumber = 0;
+		// loop through available extraction services
+		for ( ExtractionService extractionService : extractionServices )
+		{
+			if ( !extractionService.isActive() )
+				continue;
+
+//			// this code is implementation is incorrect, since not all publication will be extracted
+//			countExtractionServiceUsages( extractionService, event.getPublications().size(), calendar );
+//			// if beyond limitation query perday
+//			if ( extractionService.getCountQueryThisDay() > extractionService.getMaxQueryPerDay() )
+//				continue;
+			
+			// publications on specific user
+			for ( Publication publication : event.getPublications() )
+			{
+				if ( publication.getAbstractText() == null )
+					continue;
+
+				if ( publication.isContentUpdated() )
+				{
+					// add to publications hashmap for persisting
+					publications.add( publication );
+
+					if ( publication.getPublicationTopics() != null && extractionServiceNumber == 0 )
+						publication.getPublicationTopics().clear();
+
+					// create new publication topic
+					PublicationTopic publicationTopic = new PublicationTopic();
+					publicationTopic.setExtractionServiceType( extractionService.getExtractionServiceType() );
+					publicationTopic.setExtractionDate( calendar.getTime() );
+					publicationTopic.setPublication( publication );
+
+					// extract topics with available services
+					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+				}
+				else
+				{
+					// if something fails on last run
+					PublicationTopic publicationTopic = null;
+					for ( PublicationTopic publicationTopicEach : publication.getPublicationTopics() )
+					{
+						if ( publicationTopicEach.getExtractionServiceType().equals( extractionService.getExtractionServiceType() ) )
+						{
+							publicationTopic = publicationTopicEach;
+						}
+					}
+
+					if ( publicationTopic == null )
+					{
+						publicationTopic = new PublicationTopic();
+						publicationTopic.setExtractionServiceType( extractionService.getExtractionServiceType() );
+						publicationTopic.setExtractionDate( calendar.getTime() );
+						publicationTopic.setPublication( publication );
+					}
+					if ( publicationTopic.getTermValues() == null || publicationTopic.getTermValues().isEmpty() )
+					{
+						// add to publications hashmap for persisting
+						publications.add( publication );
+
+						// extract topics with available services
+						doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+					}
+
+				}
+				
+			}
+			extractionServiceNumber++;
+		}
+		// check whether thread worker is done
+//		// Wait until they are all done
+//		boolean processIsDone = true;
+//		do
+//		{
+//			processIsDone = true;
+//			for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
+//			{
+//				if ( !futureList.isDone() )
+//				{
+//					processIsDone = false;
+//					break;
+//				}
+//			}
+//			// 10-millisecond pause between each check
+//			Thread.sleep( 10 );
+//		} while ( !processIsDone );
+		
+		// Wait until they are all done
+		for ( Future<PublicationTopic> futureList : publicationTopicFutureList )
+		{
+			futureList.get();
+		}
+
+		// change flag to reupdate interest calculation on author if
+		// publicationTopicFutureList contain something
+		if ( publicationTopicFutureList.size() > 0 )
+		{
+			event.setUpdateInterest( true );
+			persistenceStrategy.getEventDAO().persist( event );
+		}
+
+		// save publications, set flag, prevent re-extract publication topic
+		if ( !publications.isEmpty() )
+		{
+			log.info( "publication size " + publications.size() );
+			for ( Publication publication : publications )
+			{
+				publication.setContentUpdated( false );
+				persistenceStrategy.getPublicationDAO().persist( publication );
+			}
 		}
 	}
 
