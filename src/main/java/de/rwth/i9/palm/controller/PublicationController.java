@@ -131,9 +131,11 @@ public class PublicationController
 		if ( publicationType == null ) 	publicationType = "all";
 		if ( page == null )				page = 0;
 		if ( maxresult == null )		maxresult = 50;
-		if ( fulltextSearch == null )	fulltextSearch = "yes";
+		if ( fulltextSearch == null || ( fulltextSearch != null && fulltextSearch.equals( "yes" ) ) )
+			fulltextSearch = "yes";
 		else							fulltextSearch = "no";
-		if ( year == null )				year = "all";
+		if ( year == null || year.isEmpty() )
+			year = "all";
 		if ( orderBy == null )			orderBy = "citation";
 		// Currently, system only provides query on internal database
 		source = "internal";
@@ -146,7 +148,7 @@ public class PublicationController
 		if ( !publicationType.equals( "all" ) )
 			responseMap.put( "publicationType", publicationType );
 		if ( !year.equals( "all" ) )
-			responseMap.put( "year", publicationType );
+			responseMap.put( "year", year );
 		responseMap.put( "page", page );
 		responseMap.put( "maxresult", maxresult );
 		responseMap.put( "fulltextSearch", fulltextSearch );
@@ -220,7 +222,7 @@ public class PublicationController
 			@RequestParam( value = "section", required = false ) String section,
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		if(section == null )
+		if ( section == null || ( section != null && section.isEmpty() ) )
 			section = "all";
 		return publicationFeature.getPublicationDetail().getPublicationDetailById( id, section );
 	}
