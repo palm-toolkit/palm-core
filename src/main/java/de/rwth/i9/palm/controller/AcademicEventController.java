@@ -250,11 +250,12 @@ public class AcademicEventController
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationList( 
-			@RequestParam( value = "id", required = false ) final String eventId, 
+			@RequestParam( value = "id", required = false ) final String eventId,
+			@RequestParam( value = "query", required = false ) final String query,
 			@RequestParam( value = "publicationId", required = false ) final String publicationId, 
 			final HttpServletResponse response)
 	{
-		return academicEventFeature.getEventPublication().getPublicationListByEventId( eventId, publicationId );
+		return academicEventFeature.getEventPublication().getPublicationListByEventId( eventId, query, publicationId );
 	}
 
 	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )

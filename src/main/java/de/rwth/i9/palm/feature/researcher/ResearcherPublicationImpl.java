@@ -57,6 +57,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		// get publication list
 		if ( !query.equals( "" ) || !year.equals( "all" ) || startPage != null || maxresult != null )
 		{
+			if ( !query.isEmpty() )
+				responseMap.put( "query", "query" );
 			Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( query, "all", targetAuthor, null, startPage, maxresult, year, orderBy );
 			publications = (List<Publication>) publicationsMap.get( "publications" );
 		}
@@ -72,7 +74,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 
 		if ( publications == null || publications.isEmpty() )
 		{
-			responseMap.put( "status", "error" );
+			responseMap.put( "status", "ok" );
 			responseMap.put( "message", "Error - empty publication" );
 			return responseMap;
 		}
