@@ -70,7 +70,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		}
 
 		// get available year
-		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( targetAuthor ) );
+		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( targetAuthor, "DESC" ) );
 
 		if ( publications == null || publications.isEmpty() )
 		{

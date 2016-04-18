@@ -10,8 +10,11 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -91,5 +94,48 @@ public class UserProfileController
 		}
 
 		return model;
+	}
+	
+	/**
+	 * Save changes from Source detail, via Spring binding
+	 * 
+	 * @param sourceListWrapper
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> saveUserAuthor( 
+			@ModelAttribute( "user" ) User user, 
+			@RequestParam( value = "userId", required = false ) final String userId, 
+			@RequestParam( value = "authorId", required = false ) final String authorId,
+			final HttpServletResponse response ) throws InterruptedException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+				
+		// persist sources from model attribute
+		if( user == null && userId != null ){
+			user = persistenceStrategy.getUserDAO().getById( userId );
+		}
+		if( user == null){
+			responseMap.put( "status", "ok" );
+			return responseMap;
+		}
+		
+		Author author = null;
+		if ( authorId != null )
+			author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author != null )
+		{
+			user.setAuthor( author );
+			persistenceStrategy.getUserDAO().persist( user );
+		}
+		
+		responseMap.put( "status", "ok" );
+
+		return responseMap;
 	}
 }

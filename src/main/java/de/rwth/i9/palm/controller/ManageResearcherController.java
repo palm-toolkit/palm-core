@@ -339,6 +339,10 @@ public class ManageResearcherController
 		author.getUserAuthorBookmarks().clear();
 		// set is added false
 		author.setAdded( false );
+		// remove interest profile
+		author.getAuthorInterestProfiles().clear();
+		author.getAuthorTopicModelingProfiles().clear();
+
 		author.setRequestDate( null );
 
 		persistenceStrategy.getAuthorDAO().persist( author );
@@ -393,6 +397,9 @@ public class ManageResearcherController
 		}
 
 		author.setRequestDate( null );
+
+		author.getAuthorInterestProfiles().clear();
+		author.getAuthorTopicModelingProfiles().clear();
 
 		persistenceStrategy.getAuthorDAO().persist( author );
 
