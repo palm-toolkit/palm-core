@@ -11,7 +11,10 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserEventGroupBookmark;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Component
 public class EventBasicStatisticImpl implements EventBasicStatistic
@@ -19,6 +22,9 @@ public class EventBasicStatisticImpl implements EventBasicStatistic
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private SecurityService securityService;
 
 	@Override
 	public Map<String, Object> getEventGroupBasicStatisticById( String eventGroupId )
@@ -57,6 +63,17 @@ public class EventBasicStatisticImpl implements EventBasicStatistic
 		if ( event.getEventGroup() != null )
 			responseMap.put( "eventGroup", this.getEventGroupDetails( event.getEventGroup() ) );
 
+		// check whether eventGroup is already booked or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+
+			UserEventGroupBookmark upb = persistenceStrategy.getUserEventGroupBookmarkDAO().getByUserAndEventGroup( user, event.getEventGroup() );
+			if ( upb != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
 		responseMap.put( "event", this.getEventDetails( event ) );
 
 		return responseMap;
