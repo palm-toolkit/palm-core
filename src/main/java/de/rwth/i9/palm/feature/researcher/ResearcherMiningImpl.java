@@ -68,8 +68,6 @@ public class ResearcherMiningImpl implements ResearcherMining
 					{
 						author = sessionAuthor;
 						isAuthorFromSession = true;
-						// remove session
-						request.getSession().removeAttribute( "authors" );
 						break;
 					}
 				}
