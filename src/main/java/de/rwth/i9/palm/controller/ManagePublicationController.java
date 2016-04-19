@@ -253,6 +253,7 @@ public class ManagePublicationController
 
 				newEvent.addPublication( publication );
 			}
+			newEvent.setUpdateInterest( true );
 			publication.setEvent( newEvent );
 		}
 
@@ -578,6 +579,7 @@ public class ManagePublicationController
 
 					newEvent.addPublication( publication );
 				}
+				newEvent.setUpdateInterest( true );
 				publication.setEvent( newEvent );
 			}
 			// already assign to event , but somehow probably wrong
@@ -615,6 +617,7 @@ public class ManagePublicationController
 								newEvent.setVolume( Integer.toString( inputVolume ) );
 							newEvent.addPublication( publication );
 						}
+						newEvent.setUpdateInterest( true );
 						publication.setEvent( newEvent );
 					}
 					else
@@ -649,6 +652,7 @@ public class ManagePublicationController
 							newEvent.setVolume( Integer.toString( inputVolume ) );
 						newEvent.addPublication( publication );
 					}
+					newEvent.setUpdateInterest( true );
 					publication.setEvent( newEvent );
 				}
 
@@ -692,7 +696,7 @@ public class ManagePublicationController
 
 		// update author interest flag
 		List<Author> authors = publication.getAuthors();
-		if ( authors != null && authors.isEmpty() )
+		if ( authors != null && !authors.isEmpty() )
 		{
 			for ( Author author : authors )
 			{
