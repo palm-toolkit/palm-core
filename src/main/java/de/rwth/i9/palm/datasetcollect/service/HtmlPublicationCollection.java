@@ -228,7 +228,7 @@ public class HtmlPublicationCollection
 						else
 							publicationDetailMaps.put( "keyword", elementText );
 
-						if ( elementOfInterest.nextElementSibling() == null || elementText.length() > 40 )
+						if ( elementOfInterest.nextElementSibling() == null || elementText.length() > 10 )
 							keywordFound = true;
 					}
 					else
