@@ -31,7 +31,8 @@ public class HtmlPublicationCollection
 		if ( url.contains( "doi.acm.org" ) )
 		{
 			Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 10000 );
-			url = document.baseUri();
+			if ( document != null )
+				url = document.baseUri();
 		}
 		if ( url.contains( "dl.acm.org/" ) )
 		{
