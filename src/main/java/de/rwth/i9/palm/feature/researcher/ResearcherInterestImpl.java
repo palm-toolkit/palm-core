@@ -58,9 +58,6 @@ public class ResearcherInterestImpl extends AcademicFeatureImpl implements Resea
 		targetAuthorMap.put( "name", author.getName() );
 		responseMap.put( "author", targetAuthorMap );
 
-		// get available year
-		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( author, "ASC" ) );
-
 		// check whether publication has been extracted
 		// later add extractionServiceType checking
 		topicExtractionService.extractTopicFromPublicationByAuthor( author );

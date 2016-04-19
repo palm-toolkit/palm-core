@@ -579,6 +579,9 @@ public class InterestMiningService
 	 */
 	private Map<String, Object> getInterestFromDatabase( Author author, Map<String, Object> responseMap )
 	{
+		// get available year
+		List<String> years = persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( author, "ASC" );
+
 		List<AuthorInterestProfile> authorInterestProfiles = new ArrayList<AuthorInterestProfile>();
 		authorInterestProfiles.addAll( author.getAuthorInterestProfiles() );
 		// sort based on profile length ( currently there is no attribute to
@@ -644,31 +647,65 @@ public class InterestMiningService
 				List<Object> authorInterestResultYearList = new ArrayList<Object>();
 
 				// get interest year, term and value
+				int indexYear = 0;
+				boolean increaseIndex = true;
 				for ( AuthorInterest authorInterest : interestList )
 				{
+					increaseIndex = true;
 					if ( authorInterest.getTermWeights() == null || authorInterest.getTermWeights().isEmpty() )
 						continue;
 
-					// result container
-					Map<String, Object> authorInterestResultYearMap = new LinkedHashMap<String, Object>();
 
 					// get year
 					calendar.setTime( authorInterest.getYear() );
 					String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+
+					while ( !years.get( indexYear ).equals( year ) )
+					{
+
+						// empty result
+						Map<String, Object> authorInterestResultYearMap = new LinkedHashMap<String, Object>();
+
+						authorInterestResultYearMap.put( "year", years.get( indexYear ) );
+						authorInterestResultYearMap.put( "termvalue", Collections.emptyList() );
+						authorInterestResultYearList.add( authorInterestResultYearMap );
+						indexYear++;
+						increaseIndex = false;
+					}
 
 					List<Object> termValueResult = new ArrayList<Object>();
 
 					// put term and value
 					for ( Map.Entry<Interest, Double> termWeightMap : authorInterest.getTermWeights().entrySet() )
 					{
+						// just remove not significant value
+						if ( termWeightMap.getValue() < 0.4 )
+							continue;
+							
 						List<Object> termWeightObjects = new ArrayList<Object>();
 						termWeightObjects.add( termWeightMap.getKey().getId() );
 						termWeightObjects.add( termWeightMap.getKey().getTerm() );
 						termWeightObjects.add( termWeightMap.getValue() );
 						termValueResult.add( termWeightObjects );
 					}
+
+					// result container
+					Map<String, Object> authorInterestResultYearMap = new LinkedHashMap<String, Object>();
+
 					authorInterestResultYearMap.put( "year", year );
 					authorInterestResultYearMap.put( "termvalue", termValueResult );
+					authorInterestResultYearList.add( authorInterestResultYearMap );
+					if ( increaseIndex )
+						indexYear++;
+				}
+
+				// continue interest year which is missing
+				for ( int i = indexYear; i < years.size(); i++ )
+				{
+					Map<String, Object> authorInterestResultYearMap = new LinkedHashMap<String, Object>();
+
+					authorInterestResultYearMap.put( "year", years.get( i ) );
+					authorInterestResultYearMap.put( "termvalue", Collections.emptyList() );
 					authorInterestResultYearList.add( authorInterestResultYearMap );
 				}
 
