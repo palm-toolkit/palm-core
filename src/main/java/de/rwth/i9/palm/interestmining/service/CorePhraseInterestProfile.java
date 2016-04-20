@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,7 @@ public class CorePhraseInterestProfile
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	public void doCorePhraseCalculation( AuthorInterest authorInterest, PublicationClusterHelper publicationCluster, Double yearFactor, Double totalYearFactor, int numberOfExtractionService )
+	public void doCorePhraseCalculation( AuthorInterest authorInterest, Set<Interest> newInterests, PublicationClusterHelper publicationCluster, Double yearFactor, Double totalYearFactor, int numberOfExtractionService )
 	{
 		// assign authorInterest properties
 		authorInterest.setLanguage( publicationCluster.getLanguage() );
@@ -95,7 +96,7 @@ public class CorePhraseInterestProfile
 				intersectionFactor += 0.5;
 			
 			// then multiple by year factor
-			intersectionFactor = intersectionFactor * yearFactor;
+			// intersectionFactor = intersectionFactor * yearFactor;
 			
 			// Finally, put calculation into authorInterest object
 			// only if intersectionFactor > 1.0
@@ -134,8 +135,20 @@ public class CorePhraseInterestProfile
 
 			if ( interest == null )
 			{
+				for ( Interest newInterest : newInterests )
+				{
+					if ( newInterest.getTerm().equals( term ) )
+					{
+						interest = newInterest;
+						break;
+					}
+				}
+			}
+			if ( interest == null )
+			{
 				interest = new Interest();
 				interest.setTerm( term );
+				newInterests.add( interest );
 				persistenceStrategy.getInterestDAO().persist( interest );
 			}
 			authorInterest.addTermWeight( interest, normalizedWeighting );

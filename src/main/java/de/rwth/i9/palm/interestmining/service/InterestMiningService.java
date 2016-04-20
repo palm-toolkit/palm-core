@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -355,25 +356,27 @@ public class InterestMiningService
 		Set<AuthorInterest> authorInterests1 = authorInterestProfile1.getAuthorInterests();
 		Set<AuthorInterest> authorInterests2 = authorInterestProfile2.getAuthorInterests();
 
-		for ( AuthorInterest eachAuthorInterest1 : authorInterests1 )
+		if ( authorInterests1 != null && !authorInterests1.isEmpty() )
 		{
-			AuthorInterest authorInterestResult = null;
-			for ( AuthorInterest eachAuthorInterest2 : authorInterests2 )
+			for ( AuthorInterest eachAuthorInterest1 : authorInterests1 )
 			{
-				if ( eachAuthorInterest1.getLanguage().equals( eachAuthorInterest2.getLanguage() ) && eachAuthorInterest1.getYear().equals( eachAuthorInterest2.getYear() ) )
+				AuthorInterest authorInterestResult = null;
+				for ( AuthorInterest eachAuthorInterest2 : authorInterests2 )
 				{
-					authorInterestResult = calculateIntersectionOfAuthorInterest( eachAuthorInterest1, eachAuthorInterest2 );
+					if ( eachAuthorInterest1.getLanguage().equals( eachAuthorInterest2.getLanguage() ) && eachAuthorInterest1.getYear().equals( eachAuthorInterest2.getYear() ) )
+					{
+						authorInterestResult = calculateIntersectionOfAuthorInterest( eachAuthorInterest1, eachAuthorInterest2 );
+					}
+				}
+	
+				if ( authorInterestResult != null && authorInterestResult.getTermWeights() != null && !authorInterestResult.getTermWeights().isEmpty() )
+				{
+					authorInterestResult.setAuthorInterestProfile( authorInterestProfileResult );
+					authorInterestProfileResult.addAuthorInterest( authorInterestResult );
+					authorInterestProfileResult.setInterestProfile( interestProfileDerived );
 				}
 			}
-
-			if ( authorInterestResult != null && authorInterestResult.getTermWeights() != null && !authorInterestResult.getTermWeights().isEmpty() )
-			{
-				authorInterestResult.setAuthorInterestProfile( authorInterestProfileResult );
-				authorInterestProfileResult.addAuthorInterest( authorInterestResult );
-				authorInterestProfileResult.setInterestProfile( interestProfileDerived );
-			}
 		}
-
 		return authorInterestProfileResult;
 	}
 
@@ -419,13 +422,20 @@ public class InterestMiningService
 	 */
 	public void calculateInterestProfilesDefault( Author author, Map<String, PublicationClusterHelper> publicationClustersMap, List<InterestProfile> interestProfilesDefault )
 	{
+		// prepare the set of new interest, to prevent 
+		// com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException: Duplicate entry
+		Set<Interest> newInterests = new HashSet<Interest>();
+		
+		
 		// calculate frequencies of term in cluster
 		for ( Map.Entry<String, PublicationClusterHelper> publicationClusterEntry : publicationClustersMap.entrySet() )
 			publicationClusterEntry.getValue().calculateTermProperties();
 
 		// loop through all interest profiles default
 		for ( InterestProfile interestProfileDefault : interestProfilesDefault )
-			calculateEachInterestProfileDefault( author, interestProfileDefault, publicationClustersMap );
+			calculateEachInterestProfileDefault( author, newInterests, interestProfileDefault, publicationClustersMap );
+		
+
 	}
 
 	/**
@@ -435,7 +445,7 @@ public class InterestMiningService
 	 * @param interestProfileDefault
 	 * @param publicationClustersMap
 	 */
-	public void calculateEachInterestProfileDefault( Author author, InterestProfile interestProfileDefault, Map<String, PublicationClusterHelper> publicationClustersMap )
+	public void calculateEachInterestProfileDefault( Author author, Set<Interest> newInterests, InterestProfile interestProfileDefault, Map<String, PublicationClusterHelper> publicationClustersMap )
 	{
 		// get author interest profile
 		Calendar calendar = Calendar.getInstance();
@@ -456,12 +466,12 @@ public class InterestMiningService
 		Map<String, Double> totalYearsFactorMap = new HashMap<String, Double>();
 		
 		// calculate some weighting factors
-		if ( interestProfileDefault.getName().toLowerCase().equals( "corephrase" ) ||
-				interestProfileDefault.getName().toLowerCase().equals( "wordfreq" )	)
-		{
-			yearFactorMap = CorePhraseAndWordFreqHelper.calculateYearFactor( publicationClustersMap, 0.25 );
-			totalYearsFactorMap = CorePhraseAndWordFreqHelper.calculateTotalYearsFactor( publicationClustersMap );
-		}
+//		if ( interestProfileDefault.getName().toLowerCase().equals( "corephrase" ) ||
+//				interestProfileDefault.getName().toLowerCase().equals( "wordfreq" )	)
+//		{
+//			yearFactorMap = CorePhraseAndWordFreqHelper.calculateYearFactor( publicationClustersMap, 0.25 );
+//			totalYearsFactorMap = CorePhraseAndWordFreqHelper.calculateTotalYearsFactor( publicationClustersMap );
+//		}
 
 		// get the number of active extraction services
 		int numberOfExtractionService = applicationService.getExtractionServices().size();
@@ -480,19 +490,19 @@ public class InterestMiningService
 			// assign author interest method
 			if ( interestProfileDefault.getName().toLowerCase().equals( "cvalue" ) )
 			{
-				cValueInterestProfile.doCValueCalculation( authorInterest, publicationCluster, numberOfExtractionService );
+				cValueInterestProfile.doCValueCalculation( authorInterest, newInterests, publicationCluster, numberOfExtractionService );
 			}
 			else if ( interestProfileDefault.getName().toLowerCase().equals( "corephrase" ) )
 			{
 				Double yearFactor = yearFactorMap.get( publicationCluster.getLanguage() + publicationCluster.getYear() );
 				Double totalYearFactor = totalYearsFactorMap.get( publicationCluster.getLanguage() );
-				corePhraseInterestProfile.doCorePhraseCalculation( authorInterest, publicationCluster, yearFactor, totalYearFactor, numberOfExtractionService );
+				corePhraseInterestProfile.doCorePhraseCalculation( authorInterest, newInterests, publicationCluster, yearFactor, totalYearFactor, numberOfExtractionService );
 			}
 			else if ( interestProfileDefault.getName().toLowerCase().equals( "wordfreq" ) )
 			{
 				Double yearFactor = yearFactorMap.get( publicationCluster.getLanguage() + publicationCluster.getYear() );
 				Double totalYearFactor = totalYearsFactorMap.get( publicationCluster.getLanguage() );
-				wordFreqInterestProfile.doWordFreqCalculation( authorInterest, publicationCluster, yearFactor, totalYearFactor, numberOfExtractionService );
+				wordFreqInterestProfile.doWordFreqCalculation( authorInterest, newInterests, publicationCluster, yearFactor, totalYearFactor, numberOfExtractionService );
 			}
 			// Put other default interest profiles
 			else if ( interestProfileDefault.getName().toLowerCase().equals( "lda" ) )
@@ -500,14 +510,21 @@ public class InterestMiningService
 
 			}
 
+			// at the end persist new interests
+			// for ( Interest newInterest : newInterests )
+			// persistenceStrategy.getInterestDAO().persist( newInterest );
+
+
 			// check author interest calculation result
 			if ( authorInterest.getTermWeights() != null && !authorInterest.getTermWeights().isEmpty() )
 			{
 				authorInterest.setAuthorInterestProfile( authorInterestProfile );
 				authorInterestProfile.addAuthorInterest( authorInterest );
 				authorInterestProfile.setInterestProfile( interestProfileDefault );
+				//persistenceStrategy.getAuthorInterestProfileDAO().persist( authorInterestProfile );
 			}
 		}
+
 
 		// at the end persist
 		if ( authorInterestProfile.getAuthorInterests() != null && !authorInterestProfile.getAuthorInterests().isEmpty() )

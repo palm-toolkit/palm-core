@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,7 @@ public class WordFreqInterestProfile
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public void doWordFreqCalculation( AuthorInterest authorInterest, PublicationClusterHelper publicationCluster, Double yearFactor, Double totalYearFactor, int numberOfExtractionService )
+	public void doWordFreqCalculation( AuthorInterest authorInterest, Set<Interest> newInterests, PublicationClusterHelper publicationCluster, Double yearFactor, Double totalYearFactor, int numberOfExtractionService )
 	{
 		// assign authorInterest properties
 		authorInterest.setLanguage( publicationCluster.getLanguage() );
@@ -130,9 +131,20 @@ public class WordFreqInterestProfile
 
 			if ( interest == null )
 			{
+				for ( Interest newInterest : newInterests )
+				{
+					if ( newInterest.getTerm().equals( term ) )
+					{
+						interest = newInterest;
+						break;
+					}
+				}
+			}
+			if ( interest == null )
+			{
 				interest = new Interest();
 				interest.setTerm( term );
-
+				newInterests.add( interest );
 				persistenceStrategy.getInterestDAO().persist( interest );
 			}
 			authorInterest.addTermWeight( interest, normalizedWeighting );
