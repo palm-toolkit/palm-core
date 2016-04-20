@@ -694,20 +694,34 @@ public class ManagePublicationController
 			publication.addPublicationFile( pubFile );
 		}
 
-		// update author interest flag
-		List<Author> authors = publication.getAuthors();
-		if ( authors != null && !authors.isEmpty() )
+		// update interest flag
+		if ( title != null || abstractText != null || keywordList != null )
 		{
-			for ( Author author : authors )
+			// author interest flag
+			List<Author> authors = publication.getAuthors();
+			if ( authors != null && !authors.isEmpty() )
 			{
-				if ( author.isAdded() )
+				for ( Author author : authors )
 				{
-					author.setUpdateInterest( true );
-					persistenceStrategy.getAuthorDAO().persist( author );
+					if ( author.isAdded() )
+					{
+						author.setUpdateInterest( true );
+						persistenceStrategy.getAuthorDAO().persist( author );
+					}
+				}
+			}
+
+			// circle interest flag
+			Set<Circle> circles = publication.getCircles();
+			if ( circles != null && !circles.isEmpty() )
+			{
+				for ( Circle circle : circles )
+				{
+					circle.setUpdateInterest( true );
+					persistenceStrategy.getCircleDAO().persist( circle );
 				}
 			}
 		}
-
 		// at the end persist publication
 		persistenceStrategy.getPublicationDAO().persist( publication );
 
