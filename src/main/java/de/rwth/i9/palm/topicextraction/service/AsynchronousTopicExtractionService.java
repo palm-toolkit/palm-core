@@ -59,7 +59,7 @@ public class AsynchronousTopicExtractionService
 		{
 		}
 
-		if ( alchemyResultsMap != null )
+		if ( alchemyResultsMap != null && !alchemyResultsMap.isEmpty() )
 		{
 			if ( publication.getLanguage() == null && alchemyResultsMap.get( "language" ) != null )
 				publication.setLanguage( alchemyResultsMap.get( "language" ).toString() );
@@ -71,7 +71,10 @@ public class AsynchronousTopicExtractionService
 			publicationTopic.setValid( true );
 		}
 		else
+		{
+			log.info( "Error - daily limit exceed" );
 			publicationTopic.setValid( false );
+		}
 
 //		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
@@ -113,7 +116,13 @@ public class AsynchronousTopicExtractionService
 		if ( opencalaisResultsMap != null && !opencalaisResultsMap.isEmpty() )
 		{
 			if ( publication.getLanguage() == null && opencalaisResultsMap.get( "language" ) != null )
-				publication.setLanguage( opencalaisResultsMap.get( "language" ).toString() );
+			{
+				String language = opencalaisResultsMap.get( "language" ).toString();
+				if ( language.length() > 14 )
+					language = "english";
+
+				publication.setLanguage( language );
+			}
 
 			publicationTopic.setTermValues( (Map<String, Double>) opencalaisResultsMap.get( "termvalue" ) );
 
