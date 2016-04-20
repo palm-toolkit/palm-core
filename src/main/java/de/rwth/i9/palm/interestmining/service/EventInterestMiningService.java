@@ -347,22 +347,25 @@ public class EventInterestMiningService
 		Set<EventInterest> eventInterests1 = eventInterestProfile1.getEventInterests();
 		Set<EventInterest> eventInterests2 = eventInterestProfile2.getEventInterests();
 
-		for ( EventInterest eachEventInterest1 : eventInterests1 )
+		if ( eventInterests1 != null && !eventInterests1.isEmpty() )
 		{
-			EventInterest eventInterestResult = null;
-			for ( EventInterest eachEventInterest2 : eventInterests2 )
+			for ( EventInterest eachEventInterest1 : eventInterests1 )
 			{
-				if ( eachEventInterest1.getLanguage().equals( eachEventInterest2.getLanguage() ) && eachEventInterest1.getYear().equals( eachEventInterest2.getYear() ) )
+				EventInterest eventInterestResult = null;
+				for ( EventInterest eachEventInterest2 : eventInterests2 )
 				{
-					eventInterestResult = calculateIntersectionOfEventInterest( eachEventInterest1, eachEventInterest2 );
+					if ( eachEventInterest1.getLanguage().equals( eachEventInterest2.getLanguage() ) && eachEventInterest1.getYear().equals( eachEventInterest2.getYear() ) )
+					{
+						eventInterestResult = calculateIntersectionOfEventInterest( eachEventInterest1, eachEventInterest2 );
+					}
 				}
-			}
 
-			if ( eventInterestResult != null && eventInterestResult.getTermWeights() != null && !eventInterestResult.getTermWeights().isEmpty() )
-			{
-				eventInterestResult.setEventInterestProfile( eventInterestProfileResult );
-				eventInterestProfileResult.addEventInterest( eventInterestResult );
-				eventInterestProfileResult.setInterestProfileEvent( interestProfileDerived );
+				if ( eventInterestResult != null && eventInterestResult.getTermWeights() != null && !eventInterestResult.getTermWeights().isEmpty() )
+				{
+					eventInterestResult.setEventInterestProfile( eventInterestProfileResult );
+					eventInterestProfileResult.addEventInterest( eventInterestResult );
+					eventInterestProfileResult.setInterestProfileEvent( interestProfileDerived );
+				}
 			}
 		}
 
