@@ -711,7 +711,7 @@ public class DblpEventCollection extends PublicationCollection
 							conferenceOnSpecificYear.put( "abbr", headerTextSplit[0].substring( dotIndex + 1, headerTextSplit[0].length() - 4 ).trim() );
 						}
 
-						if ( headerTextSplit.length > 0 )
+						if ( headerTextSplit.length > 1 )
 						{
 							String[] conferenceLocation = headerTextSplit[1].split( "," );
 							if ( conferenceLocation.length == 3 )
