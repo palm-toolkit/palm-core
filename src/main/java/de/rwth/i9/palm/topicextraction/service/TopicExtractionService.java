@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import de.rwth.i9.palm.helper.comparator.PublicationByNoCitationComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Event;
@@ -54,6 +56,16 @@ public class TopicExtractionService
 
 		// get current date
 		Calendar calendar = Calendar.getInstance();
+		
+		int batchSleep = 0;
+		int batchCounter = 0;
+		int maxBatchCounter = 100;
+		
+		// prepare publications
+		List<Publication> authorPublications = new ArrayList<Publication>();
+		authorPublications.addAll( author.getPublications() );
+		// sort based on citation number
+		Collections.sort( authorPublications, new PublicationByNoCitationComparator() );
 
 		// loop through available extraction services
 		int extractionServiceNumber = 0;
@@ -61,6 +73,18 @@ public class TopicExtractionService
 		{
 			if ( !extractionService.isActive() )
 				continue;
+			
+			try
+			{
+				if( extractionService.getExtractionServiceType().equals( ExtractionServiceType.OPENCALAIS )){
+					batchSleep = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "delayBetweenRequest" ).getValue() );
+					maxBatchCounter = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "bacthExtractMaxPublications" ).getValue() );
+				}
+			}
+			catch ( Exception e )
+			{
+				log.debug( e.getMessage() );
+			}
 
 //			// this code is implementation is incorrect, since not all publication will be extracted
 //			countExtractionServiceUsages( extractionService, author.getPublications().size(), calendar );
@@ -69,7 +93,7 @@ public class TopicExtractionService
 //				continue;
 
 			// publications on specific user
-			for ( Publication publication : author.getPublications() )
+			for ( Publication publication : authorPublications )
 			{
 				if ( publication.getAbstractText() == null )
 					continue;
@@ -90,7 +114,7 @@ public class TopicExtractionService
 					publicationTopic.setPublication( publication );
 
 					// extract topics with available services
-					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList, batchSleep, batchCounter, maxBatchCounter );
 				}
 				else
 				{
@@ -117,7 +141,7 @@ public class TopicExtractionService
 						publications.add( publication );
 
 						// extract topics with available services
-						doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+						doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList, batchSleep, batchCounter, maxBatchCounter );
 					}
 
 				}
@@ -175,11 +199,28 @@ public class TopicExtractionService
 			if ( publication.getPublicationTopics() != null )
 				publication.getPublicationTopics().clear();
 
+		int batchSleep = 0;
+		int batchCounter = 0;
+		int maxBatchCounter = 100;
+
 		// loop through available extraction services
 		for ( ExtractionService extractionService : extractionServices )
 		{
 			if ( !extractionService.isActive() )
 				continue;
+
+			try
+			{
+				if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.OPENCALAIS ) )
+				{
+					batchSleep = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "delayBetweenRequest" ).getValue() );
+					maxBatchCounter = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "bacthExtractMaxPublications" ).getValue() );
+				}
+			}
+			catch ( Exception e )
+			{
+				log.debug( e.getMessage() );
+			}
 
 			// // this code is implementation is incorrect, since not all
 			// publication will be extracted
@@ -204,7 +245,7 @@ public class TopicExtractionService
 				publicationTopic.setPublication( publication );
 
 				// extract topics with available services
-				doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+				doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList, batchSleep, batchCounter, maxBatchCounter );
 			}
 			else
 			{
@@ -228,7 +269,7 @@ public class TopicExtractionService
 				if ( publicationTopic.getTermValues() == null || publicationTopic.getTermValues().isEmpty() )
 				{
 					// extract topics with available services
-					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList, batchSleep, batchCounter, maxBatchCounter );
 				}
 
 			}
@@ -268,12 +309,29 @@ public class TopicExtractionService
 		Calendar calendar = Calendar.getInstance();
 
 
-		int extractionServiceNumber = 0;
+		int batchSleep = 0;
+		int batchCounter = 0;
+		int maxBatchCounter = 100;
+
 		// loop through available extraction services
+		int extractionServiceNumber = 0;
 		for ( ExtractionService extractionService : extractionServices )
 		{
 			if ( !extractionService.isActive() )
 				continue;
+
+			try
+			{
+				if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.OPENCALAIS ) )
+				{
+					batchSleep = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "delayBetweenRequest" ).getValue() );
+					maxBatchCounter = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "bacthExtractMaxPublications" ).getValue() );
+				}
+			}
+			catch ( Exception e )
+			{
+				log.debug( e.getMessage() );
+			}
 
 //			// this code is implementation is incorrect, since not all publication will be extracted
 //			countExtractionServiceUsages( extractionService, circle.getPublications().size(), calendar );
@@ -302,7 +360,7 @@ public class TopicExtractionService
 					publicationTopic.setPublication( publication );
 
 					// extract topics with available services
-					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList, batchSleep, batchCounter, maxBatchCounter );
 				}
 				else
 				{
@@ -329,7 +387,7 @@ public class TopicExtractionService
 						publications.add( publication );
 
 						// extract topics with available services
-						doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+						doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList, batchSleep, batchCounter, maxBatchCounter );
 					}
 
 				}
@@ -402,12 +460,29 @@ public class TopicExtractionService
 		Calendar calendar = Calendar.getInstance();
 
 
-		int extractionServiceNumber = 0;
+		int batchSleep = 0;
+		int batchCounter = 0;
+		int maxBatchCounter = 100;
+
 		// loop through available extraction services
+		int extractionServiceNumber = 0;
 		for ( ExtractionService extractionService : extractionServices )
 		{
 			if ( !extractionService.isActive() )
 				continue;
+
+			try
+			{
+				if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.OPENCALAIS ) )
+				{
+					batchSleep = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "delayBetweenRequest" ).getValue() );
+					maxBatchCounter = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "bacthExtractMaxPublications" ).getValue() );
+				}
+			}
+			catch ( Exception e )
+			{
+				log.debug( e.getMessage() );
+			}
 
 //			// this code is implementation is incorrect, since not all publication will be extracted
 //			countExtractionServiceUsages( extractionService, event.getPublications().size(), calendar );
@@ -436,7 +511,7 @@ public class TopicExtractionService
 					publicationTopic.setPublication( publication );
 
 					// extract topics with available services
-					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+					doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList, batchSleep, batchCounter, maxBatchCounter );
 				}
 				else
 				{
@@ -463,7 +538,7 @@ public class TopicExtractionService
 						publications.add( publication );
 
 						// extract topics with available services
-						doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList );
+						doAsyncronousTopicExtraction( publication, extractionService, publicationTopic, publicationTopicFutureList, batchSleep, batchCounter, maxBatchCounter );
 					}
 
 				}
@@ -560,7 +635,7 @@ public class TopicExtractionService
 	 * @throws UnsupportedEncodingException
 	 * @throws URISyntaxException
 	 */
-	private void doAsyncronousTopicExtraction( Publication publication, ExtractionService extractionService, PublicationTopic publicationTopic, List<Future<PublicationTopic>> publicationTopicFutureList ) throws UnsupportedEncodingException, URISyntaxException
+	private void doAsyncronousTopicExtraction( Publication publication, ExtractionService extractionService, PublicationTopic publicationTopic, List<Future<PublicationTopic>> publicationTopicFutureList, int batchSleep, int batchCounter, int maxBatchCounter) throws UnsupportedEncodingException, URISyntaxException
 	{
 		if ( extractionService.getExtractionServiceType().equals( ExtractionServiceType.ALCHEMY ) && !publication.isPublicationTopicEverExtractedWith( ExtractionServiceType.ALCHEMY ) )
 		{
@@ -584,16 +659,15 @@ public class TopicExtractionService
 			if ( publication.getLanguage() != null && !publication.getLanguage().equals( "english" ) )
 				return;
 
+			if ( extractionService.getCounter() > maxBatchCounter )
+				return;
+
 			// opencalais has limitation of 4 concurrent request every second,
 			// therefore add sleep every 4 request
 			// of course this will affect other extraction services
 			try
 			{
-				int threadSleep = 100;
-
-				threadSleep = Integer.parseInt( extractionService.getExtractionServicePropertyByIdentifiers( "flow", "delayBetweenRequest" ).getValue() );
-//				// if ( extractionService.getCounter() % 2 == 0 )
-				Thread.sleep( threadSleep );
+				Thread.sleep( batchSleep );
 			}
 			catch ( InterruptedException e )
 			{
@@ -607,14 +681,16 @@ public class TopicExtractionService
 			publicationTopicFutureList.add( openCalaisPublicationTopicFuture );
 
 			// prevent asynchronous call
-			try
-			{
-				openCalaisPublicationTopicFuture.get();
-			}
-			catch ( InterruptedException | ExecutionException e )
-			{
-				e.printStackTrace();
-			}
+//			try
+//			{
+//				openCalaisPublicationTopicFuture.get();
+//			}
+//			catch ( InterruptedException | ExecutionException e )
+//			{
+//				e.printStackTrace();
+//			}
+
+			batchCounter++;
 
 			// put into counter
 			extractionService.setCounter( extractionService.getCounter() + 1 );
