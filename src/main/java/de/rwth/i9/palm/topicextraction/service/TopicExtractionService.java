@@ -681,14 +681,14 @@ public class TopicExtractionService
 			publicationTopicFutureList.add( openCalaisPublicationTopicFuture );
 
 			// prevent asynchronous call
-//			try
-//			{
-//				openCalaisPublicationTopicFuture.get();
-//			}
-//			catch ( InterruptedException | ExecutionException e )
-//			{
-//				e.printStackTrace();
-//			}
+			try
+			{
+				openCalaisPublicationTopicFuture.get();
+			}
+			catch ( InterruptedException | ExecutionException e )
+			{
+				e.printStackTrace();
+			}
 
 			batchCounter++;
 
