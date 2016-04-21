@@ -117,6 +117,14 @@ public class EventInterestMiningService
 				}
 			}
 		}
+		else
+		{
+			// clear previous results
+			if ( event.getEventInterestProfiles() != null && !event.getEventInterestProfiles().isEmpty() )
+			{
+				event.getEventInterestProfiles().clear();
+			}
+		}
 
 		// if defaultInterestProfile not null,
 		// means interest calculation from beginning is needed
