@@ -27,7 +27,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
-@SessionAttributes( { "user", "author" } )
+@SessionAttributes( { "user" } )
 @RequestMapping( value = "/user/profile" )
 public class UserProfileController
 {
@@ -90,7 +90,7 @@ public class UserProfileController
 
 			researcherMap.put( "isAdded", researcher.isAdded() );
 
-			model.addObject( "author", researcherMap );
+			model.addObject( "authorMap", researcherMap );
 		}
 
 		return model;
