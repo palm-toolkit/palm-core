@@ -1,5 +1,6 @@
 de.rwth.i9.palm.controller
 de.rwth.i9.palm.controller.administration
+de.rwth.i9.palm.controller.topicmodeling
 de.rwth.i9.palm.controller.user
 de.rwth.i9.palm.datasetcollect.service
 de.rwth.i9.palm.feature
@@ -7,6 +8,7 @@ de.rwth.i9.palm.feature.academicevent
 de.rwth.i9.palm.feature.circle
 de.rwth.i9.palm.feature.publication
 de.rwth.i9.palm.feature.researcher
+de.rwth.i9.palm.feature.user
 de.rwth.i9.palm.helper
 de.rwth.i9.palm.helper.comparator
 de.rwth.i9.palm.interestmining.service
