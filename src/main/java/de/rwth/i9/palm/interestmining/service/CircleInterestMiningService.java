@@ -117,6 +117,14 @@ public class CircleInterestMiningService
 				}
 			}
 		}
+		else
+		{
+			// clear previous results
+			if ( circle.getCircleInterestProfiles() != null && !circle.getCircleInterestProfiles().isEmpty() )
+			{
+				circle.getCircleInterestProfiles().clear();
+			}
+		}
 
 		// if defaultInterestProfile not null,
 		// means interest calculation from beginning is needed

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Component
 public class CircleSearchImpl implements CircleSearch
@@ -22,6 +23,9 @@ public class CircleSearchImpl implements CircleSearch
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private SecurityService securityService;
 
 	@Override
 	public Map<String, Object> getCircleListByQuery( String query, String creatorId, Integer page, Integer maxresult, String fulltextSearch, String orderBy )
@@ -40,6 +44,9 @@ public class CircleSearchImpl implements CircleSearch
 	@Override
 	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<Circle> circles )
 	{
+		// get logged user since only logged user can edit circle
+		User user = securityService.getUser();
+
 		if ( circles == null || circles.isEmpty() )
 		{
 			responseMap.put( "count", 0 );
@@ -86,6 +93,18 @@ public class CircleSearchImpl implements CircleSearch
 			// check autowired with security service here
 			circleMap.put( "isLock", circle.isLock() );
 			circleMap.put( "isValid", circle.isValid() );
+
+			if ( user != null )
+			{
+				if ( user.equals( circle.getCreator() ) )
+					circleMap.put( "isEditable", true );
+				else
+					circleMap.put( "isEditable", false );
+			}
+			else
+			{
+				circleMap.put( "isEditable", false );
+			}
 
 			circleList.add( circleMap );
 		}

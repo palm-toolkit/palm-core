@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,14 +15,14 @@ import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.interestmining.service.PublicationClusterHelper.TermDetail;
-import de.rwth.i9.palm.model.AuthorInterest;
+import de.rwth.i9.palm.model.EventInterest;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Service
-public class WordFreqInterestProfile
+public class WordFreqEventInterestProfile
 {
-	private final static Logger log = LoggerFactory.getLogger( WordFreqInterestProfile.class );
+	private final static Logger log = LoggerFactory.getLogger( WordFreqEventInterestProfile.class );
 	// final private String PROFILENAME = "cvalue";
 
 	@Autowired
@@ -32,15 +31,15 @@ public class WordFreqInterestProfile
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public void doWordFreqCalculation( AuthorInterest authorInterest, Set<Interest> newInterests, PublicationClusterHelper publicationCluster, Double yearFactor, Double totalYearFactor, int numberOfExtractionService )
+	public void doWordFreqCalculation( EventInterest eventInterest, PublicationClusterHelper publicationCluster, Double yearFactor, Double totalYearFactor, int numberOfExtractionService )
 	{
-		// assign authorInterest properties
-		authorInterest.setLanguage( publicationCluster.getLanguage() );
+		// assign eventInterest properties
+		eventInterest.setLanguage( publicationCluster.getLanguage() );
 
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
 		try
 		{
-			authorInterest.setYear( dateFormat.parse( Integer.toString( publicationCluster.getYear() ) ) );
+			eventInterest.setYear( dateFormat.parse( Integer.toString( publicationCluster.getYear() ) ) );
 		}
 		catch ( ParseException e )
 		{
@@ -126,28 +125,17 @@ public class WordFreqInterestProfile
 			String term = termWeightHelperEntry.getKey();
 			double normalizedWeighting = termWeightHelperEntry.getValue() / maxWeightValue;
 
-			// process term to author interest map
+			// process term to event interest map
 			Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( term );
 
 			if ( interest == null )
 			{
-				for ( Interest newInterest : newInterests )
-				{
-					if ( newInterest.getTerm().equals( term ) )
-					{
-						interest = newInterest;
-						break;
-					}
-				}
-			}
-			if ( interest == null )
-			{
 				interest = new Interest();
 				interest.setTerm( term );
-				newInterests.add( interest );
+
 				persistenceStrategy.getInterestDAO().persist( interest );
 			}
-			authorInterest.addTermWeight( interest, normalizedWeighting );
+			eventInterest.addTermWeight( interest, normalizedWeighting );
 		}
 	}
 

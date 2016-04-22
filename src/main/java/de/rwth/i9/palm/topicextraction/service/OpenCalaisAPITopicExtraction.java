@@ -15,6 +15,9 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.rwth.i9.palm.model.ExtractionService;
+import de.rwth.i9.palm.model.ExtractionServiceProperty;
+
 /**
  * 
  * modified from http://www.opencalais.com/opencalais-api/
@@ -25,32 +28,82 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class OpenCalaisAPITopicExtraction
 {
 
-
+	/**
+	 * Extracts social tags with Opencalais API, given text
+	 * 
+	 * @param text
+	 * @return
+	 * @throws UnsupportedEncodingException
+	 */
 	public static Map<String, Object> getTopicsFromText( String text ) throws UnsupportedEncodingException
 	{
+		return getTopicsFromText( text, null );
+	}
+
+	/**
+	 * Extracts social tags with Opencalais API, given text and
+	 * ExtractionService
+	 * 
+	 * @param text
+	 * @return
+	 * @throws UnsupportedEncodingException
+	 */
+	public static Map<String, Object> getTopicsFromText( String text, ExtractionService extractionService ) throws UnsupportedEncodingException
+	{
+		// default values
+		String endpoint = "https://api.thomsonreuters.com/permid/calais";
+		String token = "TPolW4hYpmQqjYSZFn7YGv2ek0crk7dV";
+		String contentType = "text/raw";
+		String outputformat = "application/json";
+		String omitOutputtingOriginalText = "true";
+		String xCalaisSelectiveTags = "socialtags";
+		String xCalaisContentClass = "research";
+
+		if ( extractionService != null )
+			for ( ExtractionServiceProperty esp : extractionService.getExtractionServiceProperties() )
+			{
+				if ( esp.getMainIdentifier().equals( "api" ) )
+				{
+					if ( esp.getSecondaryIdentifier().equals( "endpoint" ) )
+						endpoint = esp.getValue();
+					else if ( esp.getSecondaryIdentifier().equals( "token" ) )
+						token = esp.getValue();
+					else if ( esp.getSecondaryIdentifier().equals( "contentType" ) )
+						contentType = esp.getValue();
+					else if ( esp.getSecondaryIdentifier().equals( "outputformat" ) )
+						outputformat = esp.getValue();
+					else if ( esp.getSecondaryIdentifier().equals( "omitOutputtingOriginalText" ) )
+						omitOutputtingOriginalText = esp.getValue();
+					else if ( esp.getSecondaryIdentifier().equals( "xCalaisSelectiveTags" ) )
+						xCalaisSelectiveTags = esp.getValue();
+					else if ( esp.getSecondaryIdentifier().equals( "xCalaisContentClass" ) )
+						xCalaisContentClass = esp.getValue();
+				}
+			}
+
 		Map<String, Object> mapResults = new LinkedHashMap<String, Object>();
 
 		HttpClient client = new HttpClient();
 		client.getParams().setParameter( "http.useragent", "Calais Rest Client" );
 
-		PostMethod method = new PostMethod( "https://api.thomsonreuters.com/permid/calais" );
+		PostMethod method = new PostMethod( endpoint );
 
 		// === Set mandatory parameters
 		// Set token
-		method.setRequestHeader( "x-ag-access-token", "TPolW4hYpmQqjYSZFn7YGv2ek0crk7dV" );
+		method.setRequestHeader( "x-ag-access-token", token );
 		// Set input content type
-		method.setRequestHeader( "Content-Type", "text/raw" );
+		method.setRequestHeader( "Content-Type", contentType );
 		// Set response/output format
-		method.setRequestHeader( "outputformat", "application/json" );
+		method.setRequestHeader( "outputformat", outputformat );
 
 		// === Set optional parameters
 		// prevent original text to be sent back
-		method.setRequestHeader( "omitOutputtingOriginalText", "true" );
+		method.setRequestHeader( "omitOutputtingOriginalText", omitOutputtingOriginalText );
 		// Only request socialtag
-		method.setRequestHeader( "x-calais-selectiveTags", "socialtags" );
+		method.setRequestHeader( "x-calais-selectiveTags", xCalaisSelectiveTags );
 		// Lets you specify the genre of the input files, to optimize
 		// extraction.
-		method.setRequestHeader( "x-calais-contentClass", "research" );
+		method.setRequestHeader( "x-calais-contentClass", xCalaisContentClass );
 
 		// Set content
 		method.setRequestEntity( new StringRequestEntity( text, "text/plain", "UTF-8" ) );

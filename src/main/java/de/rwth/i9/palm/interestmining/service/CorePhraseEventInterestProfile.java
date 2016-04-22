@@ -6,7 +6,6 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,28 +13,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.interestmining.service.PublicationClusterHelper.TermDetail;
-import de.rwth.i9.palm.model.AuthorInterest;
+import de.rwth.i9.palm.model.EventInterest;
 import de.rwth.i9.palm.model.ExtractionServiceType;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Service
-public class CorePhraseInterestProfile
+public class CorePhraseEventInterestProfile
 {
-	private final static Logger log = LoggerFactory.getLogger( CorePhraseInterestProfile.class );
+	private final static Logger log = LoggerFactory.getLogger( CorePhraseEventInterestProfile.class );
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	public void doCorePhraseCalculation( AuthorInterest authorInterest, Set<Interest> newInterests, PublicationClusterHelper publicationCluster, Double yearFactor, Double totalYearFactor, int numberOfExtractionService )
+	public void doCorePhraseCalculation( EventInterest eventInterest, PublicationClusterHelper publicationCluster, Double yearFactor, Double totalYearFactor, int numberOfExtractionService )
 	{
-		// assign authorInterest properties
-		authorInterest.setLanguage( publicationCluster.getLanguage() );
+		// assign eventInterest properties
+		eventInterest.setLanguage( publicationCluster.getLanguage() );
 
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
 		try
 		{
-			authorInterest.setYear( dateFormat.parse( Integer.toString( publicationCluster.getYear() ) ) );
+			eventInterest.setYear( dateFormat.parse( Integer.toString( publicationCluster.getYear() ) ) );
 		}
 		catch ( ParseException e )
 		{
@@ -96,9 +95,9 @@ public class CorePhraseInterestProfile
 				intersectionFactor += 0.5;
 			
 			// then multiple by year factor
-			// intersectionFactor = intersectionFactor * yearFactor;
+			intersectionFactor = intersectionFactor * yearFactor;
 			
-			// Finally, put calculation into authorInterest object
+			// Finally, put calculation into eventInterest object
 			// only if intersectionFactor > 1.0
 			if ( intersectionFactor <= 1.0 )
 				continue;
@@ -135,23 +134,11 @@ public class CorePhraseInterestProfile
 
 			if ( interest == null )
 			{
-				for ( Interest newInterest : newInterests )
-				{
-					if ( newInterest.getTerm().equals( term ) )
-					{
-						interest = newInterest;
-						break;
-					}
-				}
-			}
-			if ( interest == null )
-			{
 				interest = new Interest();
 				interest.setTerm( term );
-				newInterests.add( interest );
 				persistenceStrategy.getInterestDAO().persist( interest );
 			}
-			authorInterest.addTermWeight( interest, normalizedWeighting );
+			eventInterest.addTermWeight( interest, normalizedWeighting );
 		}
 		
 	}

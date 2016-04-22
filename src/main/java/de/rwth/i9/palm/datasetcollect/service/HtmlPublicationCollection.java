@@ -28,21 +28,40 @@ public class HtmlPublicationCollection
 	{
 		Map<String, String> publicationDetailMaps = new LinkedHashMap<String, String>();
 
+		if ( url.contains( "doi.acm.org" ) )
+		{
+			Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 10000 );
+			if ( document != null )
+				url = document.baseUri();
+		}
 		if ( url.contains( "dl.acm.org/" ) )
 		{
 			url = url.replace( "citation.cfm?do", "tab_abstract.cfm?" );
 			url = url.replace( "citation.cfm", "tab_abstract.cfm" );
+
+			String[] urlSplit = url.split( "\\?id=" );
+			if ( urlSplit.length == 2 )
+			{
+				if ( urlSplit[1].contains( "." ) )
+				{
+					String[] urlId = urlSplit[1].split( "\\." );
+					if ( urlId.length == 2 && !urlId[1].trim().isEmpty() )
+					{
+						url = urlSplit[0] + "?id=" + urlId[1];
+					}
+				}
+			}
 		}
 
 		// Using jsoup java html parser library
-		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 10000 );
+		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 12000 );
 
 		if ( document == null )
 			return Collections.emptyMap();
 
 		// Special case
 		// usually URL is the DOI, therefore use document.baseUri() to get real URL
-		if ( document.baseUri().contains( "ieeexplore.ieee.org/" ) )
+		if ( document.baseUri().contains( "ieeexplore.ieee.org" ) )
 		{
 			Element elementOfInterest = document.select( "#articleDetails" ).select( ".article" ).first();
 			if ( elementOfInterest != null )
@@ -50,9 +69,9 @@ public class HtmlPublicationCollection
 				publicationDetailMaps.put( "abstract", elementOfInterest.text() );
 			}
 		}
-		else if ( document.baseUri().contains( "igi-global.com/" ) )
+		else if ( document.baseUri().contains( "igi-global.com" ) )
 		{
-			Element elementOfInterest = document.select( "#abstract" ).first();
+			Element elementOfInterest = document.select( "#abstract" ).parents().first();
 			if ( elementOfInterest != null )
 			{
 				for ( Node child : elementOfInterest.childNodes() )
@@ -60,10 +79,43 @@ public class HtmlPublicationCollection
 						publicationDetailMaps.put( "abstract", ( (TextNode) child ).text() );
 			}
 		}
-		else if ( document.baseUri().contains( "dl.acm.org/" ) )
+		else if ( document.baseUri().contains( "dl.acm.org" ) )
 		{
 			if ( !document.text().startsWith( "Site Error" ) )
 				publicationDetailMaps.put( "abstract", document.text() );
+		}
+
+		else if ( document.baseUri().contains( "scitepress.org" ) )
+		{
+			Element elementOfInterestAbstract = document.select( "#ContentPlaceHolder1_LinkPaperPage_LinkPaperContent_LabelAbstract" ).first();
+			if ( elementOfInterestAbstract != null )
+			{
+				publicationDetailMaps.put( "abstract", elementOfInterestAbstract.text() );
+			}
+
+			Element elementOfInterestKeyword = document.select( "#ContentPlaceHolder1_LinkPaperPage_LinkPaperContent_LabelPublicationDetailKeywords" ).first();
+			if ( elementOfInterestKeyword != null )
+			{
+				publicationDetailMaps.put( "keyword", elementOfInterestKeyword.text() );
+			}
+		}
+
+		else if ( document.baseUri().contains( "iassistdata.org" ) )
+		{
+			Element elementOfInterest = document.select( ".content" ).select( "p" ).first();
+			if ( elementOfInterest != null )
+			{
+				publicationDetailMaps.put( "abstract", elementOfInterest.text() );
+			}
+		}
+
+		else if ( document.baseUri().contains( "http://arxiv.org/" ) )
+		{
+			Element elementOfInterest = document.select( "blockquote" ).first();
+			if ( elementOfInterest != null )
+			{
+				publicationDetailMaps.put( "abstract", elementOfInterest.text() );
+			}
 		}
 
 		// General case
@@ -102,6 +154,7 @@ public class HtmlPublicationCollection
 			boolean keywordFound = false;
 			boolean abstractFound = false;
 
+			// check by siblings
 			for ( int i = 0; i < numberOfCheckedSiblings; i++ )
 			{
 				// get text
@@ -175,7 +228,7 @@ public class HtmlPublicationCollection
 						else
 							publicationDetailMaps.put( "keyword", elementText );
 
-						if ( elementOfInterest.nextElementSibling() == null || elementText.length() > 40 )
+						if ( elementOfInterest.nextElementSibling() == null || elementText.length() > 10 )
 							keywordFound = true;
 					}
 					else
@@ -222,6 +275,122 @@ public class HtmlPublicationCollection
 				if ( keywordFound && abstractFound )
 					break;
 
+			}
+
+			// try to find by traversing down
+			if ( publicationDetailMaps.get( "abstract" ) == null && elementOfInterest != null )
+			{
+				// check by traversing down
+				int numberOfTraversingDown = 5;
+				int maxNumberTraversingParent = 2;
+				int currentNumberTraversingParent = 0;
+				Node nodeOfInterest = elementOfInterest;
+				// only traversing sibling and parents
+				if ( elementOfInterestType.equals( "abstract" ) )
+				{
+					for ( int i = 0; i < numberOfTraversingDown; i++ )
+					{
+						String text = null;
+						if ( nodeOfInterest instanceof TextNode )
+						{
+							text = ( (TextNode) nodeOfInterest ).text();
+						}
+						else
+						{
+							text = ( (Element) nodeOfInterest ).text();
+						}
+
+						if ( text != null && text.length() > 200 )
+						{
+							publicationDetailMaps.put( "abstract", text );
+							break;
+						}
+						// check parent or sibling element
+						if ( nodeOfInterest.nextSibling() != null )
+						{
+							nodeOfInterest = nodeOfInterest.nextSibling();
+						}
+						else
+						{
+							if ( maxNumberTraversingParent < currentNumberTraversingParent )
+							{
+								if ( nodeOfInterest.parent() != null )
+								{
+									nodeOfInterest = nodeOfInterest.parent();
+									currentNumberTraversingParent++;
+								}
+								else
+									break;
+							}
+							else
+								break;
+						}
+					}
+				}
+			}
+
+			// last attempt try to find by searching last abstract
+			if ( publicationDetailMaps.get( "abstract" ) == null && elementOfInterest != null )
+			{
+				for ( Element element : elements )
+				{
+					String elementText = element.text().toLowerCase();
+					if ( elementText.length() < 10 )
+					{
+						if ( elementText.contains( "abstract" ) || elementText.contains( "summary" ) )
+						{
+							elementOfInterest = element;
+							elementOfInterestType = "abstract";
+						}
+					}
+				}
+				// check by traversing down
+				int numberOfTraversingDown = 5;
+				int maxNumberTraversingParent = 2;
+				int currentNumberTraversingParent = 0;
+				Node nodeOfInterest = elementOfInterest;
+				// only traversing sibling and parents
+				if ( elementOfInterestType.equals( "abstract" ) )
+				{
+					for ( int i = 0; i < numberOfTraversingDown; i++ )
+					{
+						String text = null;
+						if ( nodeOfInterest instanceof TextNode )
+						{
+							text = ( (TextNode) nodeOfInterest ).text();
+						}
+						else
+						{
+							text = ( (Element) nodeOfInterest ).text();
+						}
+
+						if ( text != null && text.length() > 200 )
+						{
+							publicationDetailMaps.put( "abstract", text );
+							break;
+						}
+						// check parent or sibling element
+						if ( nodeOfInterest.nextSibling() != null )
+						{
+							nodeOfInterest = nodeOfInterest.nextSibling();
+						}
+						else
+						{
+							if ( maxNumberTraversingParent < currentNumberTraversingParent )
+							{
+								if ( nodeOfInterest.parent() != null )
+								{
+									nodeOfInterest = nodeOfInterest.parent();
+									currentNumberTraversingParent++;
+								}
+								else
+									break;
+							}
+							else
+								break;
+						}
+					}
+				}
 			}
 		}
 

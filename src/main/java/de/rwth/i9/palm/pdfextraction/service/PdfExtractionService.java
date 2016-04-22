@@ -3,6 +3,7 @@ package de.rwth.i9.palm.pdfextraction.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -135,8 +136,23 @@ public class PdfExtractionService
 	@SuppressWarnings( "unchecked" )
 	public Map<String, Object> extractPdfFromSpecificUrl( String url ) throws IOException, InterruptedException, ExecutionException
 	{
+		return extractPdfFromSpecificUrl( url, 0 );
+	}
+
+	/**
+	 * Extract pdf from specific url limited to pages
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	@SuppressWarnings( "unchecked" )
+	public Map<String, Object> extractPdfFromSpecificUrl( String url, int untilPage ) throws IOException, InterruptedException, ExecutionException
+	{
 		List<Future<List<TextSection>>> extractedPfdFutureList = new ArrayList<Future<List<TextSection>>>();
-		extractedPfdFutureList.add( this.asynchronousPdfExtractionService.extractPublicationPdfIntoTextSections( url ) );
+		extractedPfdFutureList.add( this.asynchronousPdfExtractionService.extractPublicationPdfIntoTextSections( url, untilPage ) );
 
 		// wait till complete
 		for ( Future<List<TextSection>> futureMap : extractedPfdFutureList )
@@ -283,6 +299,9 @@ public class PdfExtractionService
 		StringBuilder contentSection = new StringBuilder();
 		StringBuilder contentSectionWithName = new StringBuilder();
 
+		if ( textSections == null || textSections.isEmpty() )
+			return Collections.emptyMap();
+
 		for ( TextSection textSection : textSections )
 		{
 			if ( textSection.getName() != null )
@@ -337,14 +356,21 @@ public class PdfExtractionService
 					contentSection.append( textSection.getContent() );
 			}
 		}
-		publicationContent.setLength( publicationContent.length() - contentSectionWithName.length() );
+		if ( publicationContent.length() - contentSectionWithName.length() > 0 )
+			publicationContent.setLength( publicationContent.length() - contentSectionWithName.length() );
 
 		extractedPdfMap.put( "title", publicationTitle.toString() );
 		extractedPdfMap.put( "author", Jsoup.parse( publicationAuthor.toString() ).text() );
 		extractedPdfMap.put( "abstract", Jsoup.parse( publicationAbstract.toString() ).text() );
 		if ( publicationKeyword.length() > 0 )
 			extractedPdfMap.put( "keyword", publicationKeyword.toString() );
-		extractedPdfMap.put( "content", Jsoup.parse( publicationContent.toString() ).text() );
+		try
+		{
+			extractedPdfMap.put( "content", publicationContent.toString() );
+		}
+		catch ( Exception e )
+		{
+		}
 		extractedPdfMap.put( "reference", Jsoup.parse( contentSection.toString() ).text() );
 
 		return extractedPdfMap;

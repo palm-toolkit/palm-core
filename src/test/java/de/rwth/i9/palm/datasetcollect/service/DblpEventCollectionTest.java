@@ -18,12 +18,12 @@ public class DblpEventCollectionTest
 {
 	@SuppressWarnings( "unchecked" )
 	@Test
-	@Ignore
 	public void getPublicationListByVenueUrlTest() throws IOException
 	{
 		String url = "http://dblp.uni-trier.de/db/journals/jkm/jkm16.html#Chatti12";
 		url = "http://dblp.uni-trier.de/db/journals/tlt/tlt5.html#ChattiSJ12";
 		url = "http://dblp.uni-trier.de/db/conf/mlearn/mlearn2014.html#GrevenCTS14";
+		url = "http://dblp.uni-trier.de/db/conf/iassist/iassist2013.html";
 		Map<String, Object> venueDetailMap = DblpEventCollection.getEventDetailByVenueUrl( url, null );
 
 		// List<Map<String,String>> publicationMapList = (List<Map<String,
@@ -68,6 +68,7 @@ public class DblpEventCollectionTest
 	
 	@SuppressWarnings( "unchecked" )
 	@Test
+	@Ignore
 	public void getEventMainPageTest() throws IOException
 	{
 		String url = "http://dblp.uni-trier.de/db/conf/accv/";

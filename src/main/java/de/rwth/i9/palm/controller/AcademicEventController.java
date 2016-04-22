@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -232,15 +233,29 @@ public class AcademicEventController
 	{
 		return academicEventFeature.getEventMining().fetchEventData( id, pid, force );
 	}
+	
+	@RequestMapping( value = "/interest", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherInterest( 
+			@RequestParam( value = "id", required = false ) final String eventId, 
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
+			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException, java.text.ParseException
+	{
+		boolean isReplaceExistingResult = false;
+		if ( updateResult != null && updateResult.equals( "yes" ) )
+			isReplaceExistingResult = true;
+		return academicEventFeature.getEventInterest().getEventInterestById( eventId, isReplaceExistingResult );
+	}
 
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationList( 
-			@RequestParam( value = "id", required = false ) final String eventId, 
+			@RequestParam( value = "id", required = false ) final String eventId,
+			@RequestParam( value = "query", required = false ) final String query,
 			@RequestParam( value = "publicationId", required = false ) final String publicationId, 
 			final HttpServletResponse response)
 	{
-		return academicEventFeature.getEventPublication().getPublicationListByEventId( eventId, publicationId );
+		return academicEventFeature.getEventPublication().getPublicationListByEventId( eventId, query, publicationId );
 	}
 
 	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )

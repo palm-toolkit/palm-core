@@ -24,8 +24,9 @@ public class EventPublicationImpl implements EventPublication
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> getPublicationListByEventId( String eventId, String publicationId )
+	public Map<String, Object> getPublicationListByEventId( String eventId, String query, String publicationId )
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -54,18 +55,40 @@ public class EventPublicationImpl implements EventPublication
 
 		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
 
-
-		// get publication list
-		List<Publication> publications = new ArrayList<Publication>( event.getPublications() );
-
 		// get data name
 		String title = event.getEventGroup().getName();
 		if ( event.getEventGroup().getNotation() != null && !title.equals( event.getEventGroup().getNotation() ) )
 			title = event.getEventGroup().getNotation();
 
-		responseMap.put( "title", title );
+
+
+		Map<String, Object> eventMapQuery = new LinkedHashMap<String, Object>();
+		eventMapQuery.put( "id", event.getId() );
+		eventMapQuery.put( "title", title );
+
+		responseMap.put( "event", eventMapQuery );
+
+		List<Publication> publications = null;
+		// get publication list
+		if ( query != null && !query.equals( "" ) )
+		{
+			responseMap.put( "query", query );
+			Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( query, "all", null, event, null, null, "all", null );
+			publications = (List<Publication>) publicationsMap.get( "publications" );
+			if ( publications != null )
+				responseMap.put( "count", publications.size() );
+			else
+				responseMap.put( "count", 0 );
+		}
+		else
+		{
+			publications = new ArrayList<Publication>( event.getPublications() );
+		}
 
 		// sort based on period
+		if ( publications == null )
+			return responseMap;
+
 		Collections.sort( publications, new PublicationByPageComparator() );
 
 		for ( Publication publication : publications )
@@ -128,6 +151,11 @@ public class EventPublicationImpl implements EventPublication
 
 			if ( publication.getStartPage() > 0 )
 				publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
+
+			if ( publication.getAbstractText() != null || publication.getKeywordText() != null )
+				publicationMap.put( "contentExist", true );
+			else
+				publicationMap.put( "contentExist", false );
 
 			publicationList.add( publicationMap );
 		}

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +25,11 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.CircleWidget;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.Widget;
+import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
@@ -141,6 +144,22 @@ public class ManageCircleController
 		java.util.Date date = new java.util.Date();
 		Timestamp currentTimestamp = new Timestamp( date.getTime() );
 		circle.setCreationDate( currentTimestamp );
+
+		// assign all default widget to new circle
+		for ( Widget eachWidget : persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CIRCLE, WidgetStatus.DEFAULT ) )
+		{
+			CircleWidget circleWidget = new CircleWidget();
+			circleWidget.setWidget( eachWidget );
+			circleWidget.setWidgetStatus( WidgetStatus.ACTIVE );
+			circleWidget.setWidgetColor( eachWidget.getColor() );
+			circleWidget.setWidgetWidth( eachWidget.getWidgetWidth() );
+			circleWidget.setPosition( eachWidget.getPosition() );
+			if ( eachWidget.getWidgetHeight() != null )
+				circleWidget.setWidgetHeight( eachWidget.getWidgetHeight() );
+
+			circleWidget.setCircle( circle );
+			circle.addCircleWidget( circleWidget );
+		}
 
 		persistenceStrategy.getCircleDAO().persist( circle );
 
@@ -278,6 +297,51 @@ public class ManageCircleController
 		circleMap.put( "id", circle.getId() );
 
 		responseMap.put( "circle", circleMap );
+
+		return responseMap;
+	}
+
+	@Transactional
+	@RequestMapping( value = "/delete", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> deletePublication( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( id == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle id missing" );
+			return responseMap;
+		}
+
+		Circle circle = persistenceStrategy.getCircleDAO().getById( id );
+
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle not found" );
+			return responseMap;
+		}
+
+		User user = securityService.getUser();
+
+		if ( !( securityService.isAuthorizedForRole( "ADMIN" ) || circle.getCreator().equals( user ) ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error 401 - not authorized" );
+			return responseMap;
+		}
+
+		// remove circle connection
+		circle.getUserCircleBookmarks().clear();
+		circle.getAuthors().clear();
+		circle.getPublications().clear();
+		circle.setCreator( null );
+
+		persistenceStrategy.getCircleDAO().delete( circle );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "Publication is deleted" );
 
 		return responseMap;
 	}

@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,14 +18,14 @@ import de.rwth.i9.palm.analytics.algorithm.cvalue.CValue;
 import de.rwth.i9.palm.analytics.algorithm.cvalue.TermCandidate;
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.interestmining.service.PublicationClusterHelper.TermDetail;
-import de.rwth.i9.palm.model.AuthorInterest;
+import de.rwth.i9.palm.model.EventInterest;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Service
-public class CValueInterestProfile
+public class CValueEventInterestProfile
 {
-	private final static Logger log = LoggerFactory.getLogger( CValueInterestProfile.class );
+	private final static Logger log = LoggerFactory.getLogger( CValueEventInterestProfile.class );
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -34,15 +33,15 @@ public class CValueInterestProfile
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public void doCValueCalculation( AuthorInterest authorInterest, Set<Interest> newInterests, PublicationClusterHelper publicationCluster, int numberOfExtractionService )
+	public void doCValueCalculation( EventInterest eventInterest, PublicationClusterHelper publicationCluster, int numberOfExtractionService )
 	{
-		// assign authorInterest properties
-		authorInterest.setLanguage( publicationCluster.getLanguage() );
+		// assign eventInterest properties
+		eventInterest.setLanguage( publicationCluster.getLanguage() );
 
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
 		try
 		{
-			authorInterest.setYear( dateFormat.parse( Integer.toString( publicationCluster.getYear() ) ) );
+			eventInterest.setYear( dateFormat.parse( Integer.toString( publicationCluster.getYear() ) ) );
 		}
 		catch ( ParseException e )
 		{
@@ -121,23 +120,11 @@ public class CValueInterestProfile
 
 			if ( interest == null )
 			{
-				for ( Interest newInterest : newInterests )
-				{
-					if ( newInterest.getTerm().equals( term ) )
-					{
-						interest = newInterest;
-						break;
-					}
-				}
-			}
-			if ( interest == null )
-			{
 				interest = new Interest();
 				interest.setTerm( term );
-				newInterests.add( interest );
 				persistenceStrategy.getInterestDAO().persist( interest );
 			}
-			authorInterest.addTermWeight( interest, normalizedWeighting );
+			eventInterest.addTermWeight( interest, normalizedWeighting );
 		}
 		
 	}

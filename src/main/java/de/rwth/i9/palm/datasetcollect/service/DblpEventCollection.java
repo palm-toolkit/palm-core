@@ -117,6 +117,8 @@ public class DblpEventCollection extends PublicationCollection
 							// get publication list from conference
 							if ( publicationElement.attr( "class" ).contains( "inproceedings" ) )
 								publicationDetails = getDblpConferencePublication( publicationElement );
+							else if ( publicationElement.attr( "class" ).contains( "informal" ) )
+								publicationDetails = getDblpInformalPublication( publicationElement );
 							else if ( publicationElement.attr( "class" ).contains( "editor" ) ){
 								publicationDetails = getDblpEditorshipPublication( publicationElement );
 								//TODO: get conference theme and date from editorship title
@@ -343,6 +345,30 @@ public class DblpEventCollection extends PublicationCollection
 		// second, extract specific information which is only available for
 		// conference.
 		publicationDetails.put( "type", PublicationType.CONFERENCE.toString() );
+		// get container, where all of information resides
+		Element dataElement = publicationElement.select( "div.data" ).first();
+		publicationDetails.put( "pages", dataElement.select( "[itemprop=pagination]" ).text() );
+
+		return publicationDetails;
+	}
+
+	/**
+	 * Part of code that extract Publication with type Informal
+	 * 
+	 * @param publicationElement
+	 * @return
+	 * @throws IOException
+	 */
+	private static Map<String, String> getDblpInformalPublication( Element publicationElement ) throws IOException
+	{
+		Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
+
+		// first, extract general information on DBLP publication
+		getDblpPublicationInformationInGeneral( publicationElement, publicationDetails );
+
+		// second, extract specific information which is only available for
+		// conference.
+		publicationDetails.put( "type", PublicationType.INFORMAL.toString() );
 		// get container, where all of information resides
 		Element dataElement = publicationElement.select( "div.data" ).first();
 		publicationDetails.put( "pages", dataElement.select( "[itemprop=pagination]" ).text() );
@@ -685,7 +711,7 @@ public class DblpEventCollection extends PublicationCollection
 							conferenceOnSpecificYear.put( "abbr", headerTextSplit[0].substring( dotIndex + 1, headerTextSplit[0].length() - 4 ).trim() );
 						}
 
-						if ( headerTextSplit.length > 0 )
+						if ( headerTextSplit.length > 1 )
 						{
 							String[] conferenceLocation = headerTextSplit[1].split( "," );
 							if ( conferenceLocation.length == 3 )

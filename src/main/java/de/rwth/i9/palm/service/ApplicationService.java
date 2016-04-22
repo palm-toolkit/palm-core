@@ -243,6 +243,9 @@ public class ApplicationService
 	/* user log map */
 	public void putProcessLog( String processKey, String logMessage, String mode )
 	{
+		if ( processKey == null )
+			return;
+
 		if ( this.processLogMap == null )
 		{
 			ProcessLogHelper processLogHelper = new ProcessLogHelper();

@@ -1,11 +1,14 @@
 package de.rwth.i9.palm.feature.publication;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.InputMismatchException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +20,8 @@ import de.rwth.i9.palm.helper.comparator.PublicationTopicByExtractionServiceType
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.ApplicationService;
+import de.rwth.i9.palm.topicextraction.service.TopicExtractionService;
 
 @Component
 public class PublicationMiningImpl implements PublicationMining
@@ -26,8 +31,14 @@ public class PublicationMiningImpl implements PublicationMining
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	@Autowired
+	private TopicExtractionService topicExtractionService;
+
+	@Autowired
+	private ApplicationService applicationService;
+
 	@Override
-	public Map<String, Object> getPublicationExtractedTopicsById( String publicationId, String maxRetrieve )
+	public Map<String, Object> getPublicationExtractedTopicsById( String publicationId, String pid, String maxRetrieve ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -56,6 +67,15 @@ public class PublicationMiningImpl implements PublicationMining
 			return responseMap;
 		}
 
+		// check if publication is updated
+		if ( publication.getAbstractText() != null )
+		{
+			applicationService.putProcessLog( pid, "Check if topics are up to date <br>", "append" );
+			if ( publication.isContentUpdated() )
+				applicationService.putProcessLog( pid, "Updating topics <br>", "append" );
+			topicExtractionService.extractTopicFromSpecificPublication( publication );
+		}
+
 		responseMap.put( "status", "ok" );
 
 		// put publication topic
@@ -81,6 +101,9 @@ public class PublicationMiningImpl implements PublicationMining
 			publicationTopicMap.put( "extractor", publicationTopic.getExtractionServiceType().toString() );
 			// get the term value
 			// sort term value and cut until maxRetrieve
+			if ( publicationTopic.getTermValues() == null )
+				continue;
+
 			Map<String, Double> sortedMap = MapUtil.sortByValue( publicationTopic.getTermValues() );
 			sortedMap.putAll( publicationTopic.getTermValues() );
 

@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserPublicationBookmark;
+import de.rwth.i9.palm.model.Widget;
+import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 /**
@@ -26,7 +28,7 @@ public class TemplateService
 	private PersistenceStrategy persistenceStrategy;
 
 	@Transactional
-	boolean isPublicationBooked( String userId, String publicationId )
+	public boolean isPublicationBooked( String userId, String publicationId )
 	{
 		User user = persistenceStrategy.getUserDAO().getById( userId );
 		if ( user == null )
@@ -41,5 +43,24 @@ public class TemplateService
 			return true;
 
 		return false;
+	}
+
+	@Transactional
+	public boolean isWidgetActive( String uniqueWidgetName )
+	{
+
+		Widget widget = persistenceStrategy.getWidgetDAO().getByUniqueName( uniqueWidgetName );
+		if ( widget == null )
+			return false;
+
+		if ( widget.getWidgetStatus().equals( WidgetStatus.NONACTIVE ) )
+			return false;
+
+		return true;
+	}
+
+	public String test()
+	{
+		return "test";
 	}
 }
