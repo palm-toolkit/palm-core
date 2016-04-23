@@ -204,6 +204,7 @@ public class ManagePublicationController
 		{
 			PublicationType publicationType = PublicationType.valueOf( venueType.toUpperCase() );
 			publication.setPublicationType( publicationType );
+			publication.setPublicationTypeStatus( CompletionStatus.COMPLETE );
 		}
 		catch ( Exception e )
 		{
@@ -528,7 +529,10 @@ public class ManagePublicationController
 			{
 				PublicationType publicationType = PublicationType.valueOf( venueType.toUpperCase() );
 				if ( !publicationType.equals( publication.getPublicationType() ) )
+				{
 					publication.setPublicationType( publicationType );
+					publication.setPublicationTypeStatus( CompletionStatus.COMPLETE );
+				}
 			}
 			catch ( Exception e )
 			{

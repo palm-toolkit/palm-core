@@ -955,7 +955,19 @@ public class PublicationCollectionService
 			if ( pubSource.getPublicationType() != null )
 			{
 				publicationType = PublicationType.valueOf( pubSource.getPublicationType() );
-				publication.setPublicationType( publicationType );
+				if ( publication.getPublicationTypeStatus() == null || !publication.getPublicationTypeStatus().equals( CompletionStatus.COMPLETE ) )
+				{
+					if ( pubSource.getSourceType().equals( SourceType.DBLP ) )
+					{
+						publication.setPublicationType( publicationType );
+						publication.setPublicationTypeStatus( CompletionStatus.COMPLETE );
+					}
+					else
+					{
+						publication.setPublicationType( publicationType );
+						publication.setPublicationTypeStatus( CompletionStatus.PARTIALLY_COMPLETE );
+					}
+				}
 
 
 				if ( publicationType.equals( PublicationType.CONFERENCE ) || publicationType.equals( PublicationType.WORKSHOP ) || publicationType.equals( PublicationType.JOURNAL ) || publicationType.equals( PublicationType.INFORMAL ) )
