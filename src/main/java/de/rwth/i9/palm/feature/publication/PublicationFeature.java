@@ -13,6 +13,8 @@ public interface PublicationFeature
 
 	public PublicationDetail getPublicationDetail();
 
+	public PublicationDelete doDeletePublication();
+
 	public PublicationManage getPublicationManage();
 
 	public PublicationMining getPublicationMining();

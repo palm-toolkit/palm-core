@@ -14,6 +14,9 @@ public class PublicationFeatureImpl implements PublicationFeature
 	private PublicationDetail publicationDetail;
 
 	@Autowired( required = false )
+	private PublicationDelete publicationDelete;
+
+	@Autowired( required = false )
 	private PublicationManage publicationManage;
 
 	@Autowired( required = false )
@@ -50,6 +53,15 @@ public class PublicationFeatureImpl implements PublicationFeature
 			this.publicationDetail = new PublicationDetailImpl();
 
 		return this.publicationDetail;
+	}
+
+	@Override
+	public PublicationDelete doDeletePublication()
+	{
+		if ( this.publicationDelete == null )
+			this.publicationDelete = new PublicationDeleteImpl();
+
+		return this.publicationDelete;
 	}
 
 	@Override
