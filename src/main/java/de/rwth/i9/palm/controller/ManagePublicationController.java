@@ -729,6 +729,14 @@ public class ManagePublicationController
 					persistenceStrategy.getCircleDAO().persist( circle );
 				}
 			}
+
+			// event interest flag
+			if ( publication.getEvent() != null )
+			{
+				Event event = publication.getEvent();
+				event.setUpdateInterest( true );
+				persistenceStrategy.getEventDAO().persist( event );
+			}
 		}
 		// at the end persist publication
 		persistenceStrategy.getPublicationDAO().persist( publication );
