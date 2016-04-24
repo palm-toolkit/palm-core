@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.CompletionStatus;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
@@ -122,7 +123,8 @@ public class ManageAcademicEventController
 			@RequestParam( value = "type" , required= false ) final String type,
 			@RequestParam( value = "volume" , required= false ) final String volume,
 			@RequestParam( value = "year" , required= false ) final String year,
-			final HttpServletResponse response) throws InterruptedException
+			final HttpServletResponse response,
+			final HttpServletRequest request )
 	{
 
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -268,7 +270,12 @@ public class ManageAcademicEventController
 		
 		// assign the model
 		model.addObject( "widgets", widgets );
-		model.addObject( "eventGroup", eventGroup );
+		model.addObject( "eventId", eventGroup.getId() );
+		if ( eventGroup.getPublicationType() != null )
+			model.addObject( "pubType", eventGroup.getPublicationType().toString() );
+		model.addObject( "name", eventGroup.getName() );
+		if ( eventGroup.getNotation() != null )
+			model.addObject( "notation", eventGroup.getNotation() );
 
 		return model;
 	}
@@ -284,50 +291,45 @@ public class ManageAcademicEventController
 	@Transactional
 	@RequestMapping( value = "/eventGroup/edit", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveEventGroup( 
-			@ModelAttribute( "eventGroup" ) EventGroup eventGroup, 
+			@RequestParam( value = "eventId" ) String eventId, 
+			@RequestParam( value = "type", required = false ) final String type, 
+			@RequestParam( value = "name", required = false ) final String name, 
+			@RequestParam( value = "notation", required = false ) final String notation,
 			final HttpServletResponse response)
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
+		EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( eventId );
+
 		if ( eventGroup == null )
 		{
 			responseMap.put( "status", "error" );
 			responseMap.put( "statusMessage", "failed to save, expired session" );
 			return responseMap;
 		}
+		// set properties
+		eventGroup.setPublicationType( PublicationType.valueOf( type.toUpperCase() ) );
+		eventGroup.setName( name );
+		if ( notation != null && !notation.isEmpty() )
+			eventGroup.setNotation( notation );
 		
-		// set event type, incase changed
-		if ( eventGroup.getType() != null )
+		for ( Event event : eventGroup.getEvents() )
 		{
-			try
+			if ( event.isAdded() )
 			{
-				PublicationType pubType = PublicationType.valueOf( eventGroup.getType().toUpperCase() );
+				// use autowire, since Publication is Lazy loaded
+				List<Publication> publications = persistenceStrategy.getPublicationDAO().getPublicationByEventWithPaging( event, null, null );
 
-				if ( !eventGroup.getPublicationType().equals( pubType ) )
-				{
-					eventGroup.setPublicationType( pubType );
-
-					for ( Event event : eventGroup.getEvents() )
+				if ( publications != null && !publications.isEmpty() )
+					for ( Publication publication : publications )
 					{
-						if ( event.isAdded() )
-						{
-							// use autowire, since Publication is Lazy loaded
-							List<Publication> publications = persistenceStrategy.getPublicationDAO().getPublicationByEventWithPaging( event, null, null );
-
-							if ( publications != null && !publications.isEmpty() )
-								for ( Publication publication : publications )
-								{
-									publication.setPublicationType( pubType );
-									persistenceStrategy.getPublicationDAO().persist( publication );
-								}
-						}
+						publication.setPublicationType( eventGroup.getPublicationType() );
+						publication.setPublicationTypeStatus( CompletionStatus.COMPLETE );
+						persistenceStrategy.getPublicationDAO().persist( publication );
 					}
-				}
-			}
-			catch ( Exception e )
-			{
 			}
 		}
+
 
 		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 
