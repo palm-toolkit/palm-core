@@ -12,6 +12,8 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +42,8 @@ import de.rwth.i9.palm.service.SecurityService;
 @RequestMapping( value = "/researcher" )
 public class ManageResearcherController
 {
+	private final static Logger log = LoggerFactory.getLogger( ManageResearcherController.class );
+
 	private static final String LINK_NAME = "researcher";
 
 	@Autowired
@@ -122,10 +126,24 @@ public class ManageResearcherController
 
 		if ( author.getTempId() != null && !author.getTempId().equals( "" ) )
 		{
-			// user select author that available form autocomplete
-
+			log.info( "\nRESEARCHER SESSION SEARCH" );
 			@SuppressWarnings( "unchecked" )
-			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
+			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
+			// get author from session -> just for debug
+			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+			{
+				for ( Author sessionAuthor : sessionAuthors )
+				{
+					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+					{
+						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+					}
+				}
+			}
+
+			// user select author that available form autocomplete
+//			@SuppressWarnings( "unchecked" )
+//			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
 
 			// get author from session
 			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
