@@ -32,6 +32,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.xml.sax.SAXException;
 
+import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
@@ -63,6 +64,9 @@ public class ManagePublicationController
 
 	@Autowired
 	private PdfExtractionService pdfExtractionService;
+
+	@Autowired
+	private PublicationFeature publicationFeature;
 
 	@Autowired
 	private SecurityService securityService;
@@ -200,6 +204,7 @@ public class ManagePublicationController
 		{
 			PublicationType publicationType = PublicationType.valueOf( venueType.toUpperCase() );
 			publication.setPublicationType( publicationType );
+			publication.setPublicationTypeStatus( CompletionStatus.COMPLETE );
 		}
 		catch ( Exception e )
 		{
@@ -524,7 +529,10 @@ public class ManagePublicationController
 			{
 				PublicationType publicationType = PublicationType.valueOf( venueType.toUpperCase() );
 				if ( !publicationType.equals( publication.getPublicationType() ) )
+				{
 					publication.setPublicationType( publicationType );
+					publication.setPublicationTypeStatus( CompletionStatus.COMPLETE );
+				}
 			}
 			catch ( Exception e )
 			{
@@ -721,6 +729,14 @@ public class ManagePublicationController
 					persistenceStrategy.getCircleDAO().persist( circle );
 				}
 			}
+
+			// event interest flag
+			if ( publication.getEvent() != null )
+			{
+				Event event = publication.getEvent();
+				event.setUpdateInterest( true );
+				persistenceStrategy.getEventDAO().persist( event );
+			}
 		}
 		// at the end persist publication
 		persistenceStrategy.getPublicationDAO().persist( publication );
@@ -778,34 +794,8 @@ public class ManagePublicationController
 			return responseMap;
 		}
 
-		// remove publication connection
-
-		// check with circle
-		// get list of circle that contain this publication
-		// remove links
-		Set<Circle> circles = publication.getCircles();
-		
-		for ( Circle circle : circles )
-		{
-			circle.removePublication( publication );
-		}
-		publication.getCircles().clear();
-
-		// remove bookmark
-		publication.getUserPublicationBookmarks().clear();
-		// remove publication author
-		for ( PublicationAuthor pa : publication.getPublicationAuthors() )
-		{
-			Author author = pa.getAuthor();
-			author.removePublicationAuthor( pa );
-			pa.setAuthor( null );
-			pa.setPublication( null );
-		}
-		publication.getPublicationAuthors().clear();
-		publication.setEvent( null );
-
-		persistenceStrategy.getPublicationDAO().delete( publication );
-
+		// remove publication
+		publicationFeature.doDeletePublication().deletePublication( publication );
 
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", "Publication is deleted" );

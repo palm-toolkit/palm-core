@@ -1,12 +1,19 @@
 package de.rwth.i9.palm.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +25,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.analytics.api.PalmAnalytics;
+import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Institution;
+import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -31,6 +42,8 @@ import de.rwth.i9.palm.service.SecurityService;
 @RequestMapping( value = "/researcher" )
 public class ManageResearcherController
 {
+	private final static Logger log = LoggerFactory.getLogger( ManageResearcherController.class );
+
 	private static final String LINK_NAME = "researcher";
 
 	@Autowired
@@ -38,6 +51,12 @@ public class ManageResearcherController
 
 	@Autowired
 	private SecurityService securityService;
+
+	@Autowired
+	private PalmAnalytics palmAnalitics;
+
+	@Autowired
+	private PublicationFeature publicationFeature;
 
 	/**
 	 * Load the add publication form together with publication object
@@ -107,10 +126,24 @@ public class ManageResearcherController
 
 		if ( author.getTempId() != null && !author.getTempId().equals( "" ) )
 		{
-			// user select author that available form autocomplete
-
+			log.info( "\nRESEARCHER SESSION SEARCH" );
 			@SuppressWarnings( "unchecked" )
-			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
+			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
+			// get author from session -> just for debug
+			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+			{
+				for ( Author sessionAuthor : sessionAuthors )
+				{
+					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+					{
+						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+					}
+				}
+			}
+
+			// user select author that available form autocomplete
+//			@SuppressWarnings( "unchecked" )
+//			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
 
 			// get author from session
 			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
@@ -360,7 +393,7 @@ public class ManageResearcherController
 	}
 
 	/**
-	 * Remove researcher request time to null, forced to recheck publication
+	 * Remove researcher request time to null, forced to recollect publication
 	 * 
 	 * @param id
 	 * @param request
@@ -414,6 +447,144 @@ public class ManageResearcherController
 
 		return responseMap;
 	}
+
+	/**
+	 * Check and remove for duplicated publication and author source
+	 * 
+	 * @param id
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@Transactional
+	@RequestMapping( value = "/removeDuplicatedPublication", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> removeDuplicatedPublication( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error 401 - not authorized" );
+			return responseMap;
+		}
+
+		if ( id == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author id missing" );
+			return responseMap;
+		}
+
+		Author author = persistenceStrategy.getAuthorDAO().getById( id );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author id missing" );
+			return responseMap;
+		}
+
+		// check for duplicated publication and remove
+		Set<Publication> publications = author.getPublications();
+		if ( publications != null && !publications.isEmpty() )
+		{
+			// first cluster publication based on year
+			Map<String, List<Publication>> publicationClusterYearMap = new HashMap<String, List<Publication>>();
+
+			for ( Publication publication : publications )
+			{
+				String yearKey = "unknown";
+				if( publication.getYear() != null )
+					yearKey = publication.getYear();
+				
+				if( publicationClusterYearMap.get( yearKey ) == null )
+					publicationClusterYearMap.put( yearKey, new ArrayList<Publication>() );
+					
+				publicationClusterYearMap.get( yearKey ).add( publication );
+			}
+			
+			for(Entry<String, List<Publication>> entry : publicationClusterYearMap.entrySet()) {
+			    String key = entry.getKey();
+			    List<Publication> pubList = entry.getValue();
+
+			    // check for duplication
+			    // container for duplicated publication, later will be removed
+				Set<Publication> duplicatedPublications = new HashSet<Publication>();
+				for( Publication pub : pubList ){
+					for( Publication pubCompare : pubList ){
+						if ( pub.equals( pubCompare ) )
+							continue;
+
+						if( duplicatedPublications.contains( pub ) || duplicatedPublications.contains( pubCompare ))
+							continue;
+						
+						if( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), pubCompare.getTitle().toLowerCase() ) > .9f ){
+							duplicatedPublications.add( pubCompare );
+						}
+					}
+				}
+				// remove publication
+				if ( !duplicatedPublications.isEmpty() )
+					publicationFeature.doDeletePublication().deletePublications( duplicatedPublications );
+			}
+		}
+
+		// remove duplicated author sources
+		if ( author.getAuthorSources() != null )
+		{
+			Set<AuthorSource> duplicatedAuthorSources = new HashSet<AuthorSource>();
+			for ( AuthorSource authorSource : author.getAuthorSources() )
+			{
+				for ( AuthorSource authorSourceCompare : author.getAuthorSources() )
+				{
+					if ( authorSource.equals( authorSourceCompare ) )
+						continue;
+					if ( duplicatedAuthorSources.contains( authorSource ) || duplicatedAuthorSources.contains( authorSourceCompare ) )
+						continue;
+
+					if ( authorSource.getSourceUrl().equals( authorSourceCompare.getSourceUrl() ) )
+					{
+						duplicatedAuthorSources.add( authorSourceCompare );
+					}
+				}
+			}
+			// remove duplicated author source
+			if ( !duplicatedAuthorSources.isEmpty() )
+			{
+				for ( AuthorSource duplicatedAuthorSource : duplicatedAuthorSources )
+				{
+					author.removeAuthorSource( duplicatedAuthorSource );
+					duplicatedAuthorSource.setAuthor( null );
+					persistenceStrategy.getAuthorSourceDAO().delete( duplicatedAuthorSource );
+				}
+			}
+		}
+
+		// recalculate citation
+		int citation = 0;
+		for ( Publication publication : author.getPublications() )
+			citation += publication.getCitedBy();
+
+		author.setCitedBy( citation );
+
+		author.getAuthorInterestProfiles().clear();
+		author.getAuthorTopicModelingProfiles().clear();
+
+		persistenceStrategy.getAuthorDAO().persist( author );
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "unset researcher request date" );
+
+		Map<String, String> authorMap = new LinkedHashMap<String, String>();
+		authorMap.put( "id", author.getId() );
+		authorMap.put( "name", author.getName() );
+		authorMap.put( "position", author.getAcademicStatus() );
+		responseMap.put( "author", authorMap );
+
+		return responseMap;
+	}
+
 
 	/**
 	 * Remove researcher request time to null, forced to recheck publication

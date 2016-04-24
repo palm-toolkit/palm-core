@@ -179,7 +179,7 @@ public class ResearcherController
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )
 		{
-			request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
+			request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
 
 			// recheck if session really has been updated
 			// (there is a bug in spring session, which makes session is
@@ -187,27 +187,29 @@ public class ResearcherController
 			boolean isSessionUpdated = false;
 			while ( !isSessionUpdated )
 			{
-				Object authors = request.getSession().getAttribute( "authors" );
+				Object authors = request.getSession().getAttribute( "researchers" );
 				if ( authors.equals( authorsMap.get( "authors" ) ) )
 					isSessionUpdated = true;
 				else
-					request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
+					request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
 			}
 
-//			log.info( "\nRESEARCHER SESSION" );
-//			@SuppressWarnings( "unchecked" )
-//			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
-//			// get author from session -> just for debug
-//			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
-//			{
-//				for ( Author sessionAuthor : sessionAuthors )
-//				{
-//					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
-//					{
-//						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-//					}
-//				}
-//			}
+			log.info( "\nRESEARCHER SESSION SEARCH" );
+			@SuppressWarnings( "unchecked" )
+			 List<Author> sessionAuthors = (List<Author>)
+			 request.getSession().getAttribute( "researchers" );
+			// get author from session -> just for debug
+			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+			{
+				for ( Author sessionAuthor : sessionAuthors )
+				{
+					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+					{
+						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+					}
+				}
+			}
+
 		}
 		
 		if ( authorsMap != null && (Integer) authorsMap.get( "totalCount" ) > 0 )
@@ -232,7 +234,7 @@ public class ResearcherController
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
 		@SuppressWarnings( "unchecked" )
-		List<Author> authors = (List<Author>) request.getSession().getAttribute( "authors" );
+		List<Author> authors = (List<Author>) request.getSession().getAttribute( "researchers" );
 		
 		if ( authors != null && !authors.isEmpty() )
 		{
@@ -245,7 +247,7 @@ public class ResearcherController
 	}
 	
 	/**
-	 * Fetch author data, mining author information and publication from
+	 * Extract author information and publication from
 	 * academic network if necessary
 	 * 
 	 * @param id
@@ -279,6 +281,31 @@ public class ResearcherController
 		return researcherFeature.getResearcherMining().fetchResearcherData( id, name, uri, affiliation, pid, force, request );
 	}
 	
+	/**
+	 * 
+	 * @param id
+	 * @param pid
+	 * @param force
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 * @throws ParseException
+	 */
+	@RequestMapping( value = "/fetchPublicationDetail", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherFetchNetworkDataset( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "pid", required = false ) final String pid, 
+			@RequestParam( value = "force", required = false ) final String force, 
+			HttpServletRequest request, 
+			HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, ParseException 
+	{
+		return researcherFeature.getResearcherMining().fetchResearcherPublicationData( id, pid, force, request );
+	}
+
 	/**
 	 * Get author interest
 	 * 
