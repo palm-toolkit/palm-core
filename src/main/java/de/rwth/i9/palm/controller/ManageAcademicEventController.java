@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.CompletionStatus;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
@@ -122,7 +123,8 @@ public class ManageAcademicEventController
 			@RequestParam( value = "type" , required= false ) final String type,
 			@RequestParam( value = "volume" , required= false ) final String volume,
 			@RequestParam( value = "year" , required= false ) final String year,
-			final HttpServletResponse response) throws InterruptedException
+			final HttpServletResponse response,
+			final HttpServletRequest request )
 	{
 
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -162,47 +164,52 @@ public class ManageAcademicEventController
 			}
 			catch ( Exception e )
 			{
+				eventGroup.setPublicationType( PublicationType.CONFERENCE );
 			}
 		}
 
 		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 		
 		// if event exist
+		Event event = null;
 		if( eventId != null ){
-			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+			event = persistenceStrategy.getEventDAO().getById( eventId );
 			if( event != null ){
-				event.setName( eventGroup.getName() );
+				// event.setName( eventGroup.getName() );
 				event.setAdded( true );
 				persistenceStrategy.getEventDAO().persist( event );
 			}
 		}
-		
-		// if publicationId exist
-		// this is only for event that manually inserted without DBLP
-		Publication publication = null;
-		if ( publicationId != null )
-			publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
-		if ( publication != null )
+
+		if ( event == null )
 		{
-			// create new event
-			Event event = new Event();
-			// event.setName( eventGroup.getName() );
-			if( volume != null )
-				event.setVolume( volume );
-			if( year != null )
-				event.setYear( year );
-			event.setAdded( true );
-			event.addPublication( publication );
-			event.setEventGroup( eventGroup );
-			persistenceStrategy.getEventDAO().persist( event );
-			
-			publication.setEvent( event );
-			persistenceStrategy.getPublicationDAO().persist( publication );
-			
-			if( eventId == null )
-				eventId = event.getId(); 
-		}
 		
+			// if publicationId exist
+			// this is only for event that manually inserted without DBLP
+			Publication publication = null;
+			if ( publicationId != null )
+				publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
+			if ( publication != null )
+			{
+				// create new event
+				event = new Event();
+				// event.setName( eventGroup.getName() );
+				if ( volume != null )
+					event.setVolume( volume );
+				if ( year != null )
+					event.setYear( year );
+				event.setAdded( true );
+				event.addPublication( publication );
+				event.setEventGroup( eventGroup );
+				persistenceStrategy.getEventDAO().persist( event );
+
+				publication.setEvent( event );
+				persistenceStrategy.getPublicationDAO().persist( publication );
+
+				if ( eventId == null )
+					eventId = event.getId();
+			}
+		}
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", eventGroup.getName() + " successfully added to PALM" );
 		
@@ -268,7 +275,12 @@ public class ManageAcademicEventController
 		
 		// assign the model
 		model.addObject( "widgets", widgets );
-		model.addObject( "eventGroup", eventGroup );
+		model.addObject( "eventId", eventGroup.getId() );
+		if ( eventGroup.getPublicationType() != null )
+			model.addObject( "pubType", eventGroup.getPublicationType().toString() );
+		model.addObject( "name", eventGroup.getName() );
+		if ( eventGroup.getNotation() != null )
+			model.addObject( "notation", eventGroup.getNotation() );
 
 		return model;
 	}
@@ -284,50 +296,45 @@ public class ManageAcademicEventController
 	@Transactional
 	@RequestMapping( value = "/eventGroup/edit", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveEventGroup( 
-			@ModelAttribute( "eventGroup" ) EventGroup eventGroup, 
+			@RequestParam( value = "eventId" ) String eventId, 
+			@RequestParam( value = "type", required = false ) final String type, 
+			@RequestParam( value = "name", required = false ) final String name, 
+			@RequestParam( value = "notation", required = false ) final String notation,
 			final HttpServletResponse response)
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
+		EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( eventId );
+
 		if ( eventGroup == null )
 		{
 			responseMap.put( "status", "error" );
 			responseMap.put( "statusMessage", "failed to save, expired session" );
 			return responseMap;
 		}
+		// set properties
+		eventGroup.setPublicationType( PublicationType.valueOf( type.toUpperCase() ) );
+		eventGroup.setName( name );
+		if ( notation != null && !notation.isEmpty() )
+			eventGroup.setNotation( notation );
 		
-		// set event type, incase changed
-		if ( eventGroup.getType() != null )
+		for ( Event event : eventGroup.getEvents() )
 		{
-			try
+			if ( event.isAdded() )
 			{
-				PublicationType pubType = PublicationType.valueOf( eventGroup.getType().toUpperCase() );
+				// use autowire, since Publication is Lazy loaded
+				List<Publication> publications = persistenceStrategy.getPublicationDAO().getPublicationByEventWithPaging( event, null, null );
 
-				if ( !eventGroup.getPublicationType().equals( pubType ) )
-				{
-					eventGroup.setPublicationType( pubType );
-
-					for ( Event event : eventGroup.getEvents() )
+				if ( publications != null && !publications.isEmpty() )
+					for ( Publication publication : publications )
 					{
-						if ( event.isAdded() )
-						{
-							// use autowire, since Publication is Lazy loaded
-							List<Publication> publications = persistenceStrategy.getPublicationDAO().getPublicationByEventWithPaging( event, null, null );
-
-							if ( publications != null && !publications.isEmpty() )
-								for ( Publication publication : publications )
-								{
-									publication.setPublicationType( pubType );
-									persistenceStrategy.getPublicationDAO().persist( publication );
-								}
-						}
+						publication.setPublicationType( eventGroup.getPublicationType() );
+						publication.setPublicationTypeStatus( CompletionStatus.COMPLETE );
+						persistenceStrategy.getPublicationDAO().persist( publication );
 					}
-				}
-			}
-			catch ( Exception e )
-			{
 			}
 		}
+
 
 		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 
