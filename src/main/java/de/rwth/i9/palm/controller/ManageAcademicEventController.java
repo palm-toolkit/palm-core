@@ -164,47 +164,52 @@ public class ManageAcademicEventController
 			}
 			catch ( Exception e )
 			{
+				eventGroup.setPublicationType( PublicationType.CONFERENCE );
 			}
 		}
 
 		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 		
 		// if event exist
+		Event event = null;
 		if( eventId != null ){
-			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+			event = persistenceStrategy.getEventDAO().getById( eventId );
 			if( event != null ){
-				event.setName( eventGroup.getName() );
+				// event.setName( eventGroup.getName() );
 				event.setAdded( true );
 				persistenceStrategy.getEventDAO().persist( event );
 			}
 		}
-		
-		// if publicationId exist
-		// this is only for event that manually inserted without DBLP
-		Publication publication = null;
-		if ( publicationId != null )
-			publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
-		if ( publication != null )
+
+		if ( event == null )
 		{
-			// create new event
-			Event event = new Event();
-			// event.setName( eventGroup.getName() );
-			if( volume != null )
-				event.setVolume( volume );
-			if( year != null )
-				event.setYear( year );
-			event.setAdded( true );
-			event.addPublication( publication );
-			event.setEventGroup( eventGroup );
-			persistenceStrategy.getEventDAO().persist( event );
-			
-			publication.setEvent( event );
-			persistenceStrategy.getPublicationDAO().persist( publication );
-			
-			if( eventId == null )
-				eventId = event.getId(); 
-		}
 		
+			// if publicationId exist
+			// this is only for event that manually inserted without DBLP
+			Publication publication = null;
+			if ( publicationId != null )
+				publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
+			if ( publication != null )
+			{
+				// create new event
+				event = new Event();
+				// event.setName( eventGroup.getName() );
+				if ( volume != null )
+					event.setVolume( volume );
+				if ( year != null )
+					event.setYear( year );
+				event.setAdded( true );
+				event.addPublication( publication );
+				event.setEventGroup( eventGroup );
+				persistenceStrategy.getEventDAO().persist( event );
+
+				publication.setEvent( event );
+				persistenceStrategy.getPublicationDAO().persist( publication );
+
+				if ( eventId == null )
+					eventId = event.getId();
+			}
+		}
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", eventGroup.getName() + " successfully added to PALM" );
 		
