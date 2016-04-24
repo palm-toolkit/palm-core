@@ -27,7 +27,6 @@ import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceMethod;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationService;
-import de.rwth.i9.palm.util.IdentifierFactory;
 
 @Component
 public class ResearcherMiningImpl implements ResearcherMining
@@ -46,6 +45,9 @@ public class ResearcherMiningImpl implements ResearcherMining
 	@Autowired
 	private ResearcherCollectionService researcherCollectionService;
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force, HttpServletRequest request ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
@@ -57,7 +59,7 @@ public class ResearcherMiningImpl implements ResearcherMining
 		boolean isAuthorFromSession = false;
 		// get author from session
 		@SuppressWarnings( "unchecked" )
-		List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
+		List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
 		if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
 		{
 			if ( id != null )
@@ -68,6 +70,8 @@ public class ResearcherMiningImpl implements ResearcherMining
 					{
 						author = sessionAuthor;
 						isAuthorFromSession = true;
+						// remove session
+						request.getSession().removeAttribute( "researchers" );
 						break;
 					}
 				}
@@ -86,8 +90,8 @@ public class ResearcherMiningImpl implements ResearcherMining
 		}
 
 		// pid must exist
-		if ( pid == null )
-			pid = IdentifierFactory.getNextDefaultIdentifier();
+		// if ( pid == null )
+		// pid = IdentifierFactory.getNextDefaultIdentifier();
 
 		responseMap.put( "status", "ok" );
 
@@ -152,10 +156,10 @@ public class ResearcherMiningImpl implements ResearcherMining
 			}
 
 			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author, pid );
-			responseMap.put( "fetchPerformed", "yes" );
+			responseMap.put( "fetchPublicationPerformed", "yes" );
 		}
 		else
-			responseMap.put( "fetchPerformed", "no" );
+			responseMap.put( "fetchPublicationPerformed", "no" );
 
 		Author targetAuthor = persistenceStrategy.getAuthorDAO().getById( id );
 		// get basic author information
@@ -173,6 +177,64 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		if ( targetAuthor.getPublicationAuthors() != null )
 			authorMap.put( "publicationsNumber", targetAuthor.getPublicationAuthors().size() );
+		else
+			authorMap.put( "publicationsNumber", 0 );
+
+		responseMap.put( "author", authorMap );
+
+		return responseMap;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Map<String, Object> fetchResearcherPublicationData( String id, String pid, String force, HttpServletRequest request ) throws IOException, InterruptedException, ExecutionException, ParseException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		// check author on session
+		Author author = persistenceStrategy.getAuthorDAO().getById( id );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "error-msg", "author not found in system" );
+			return responseMap;
+		}
+
+		responseMap.put( "status", "ok" );
+
+		// check whether publication details neeed to be collected
+		if ( author.isFetchPublicationDetail() )
+		{
+			publicationCollectionService.extractPublicationDetails( author, pid );
+
+			author.setFetchPublicationDetail( false );
+			persistenceStrategy.getAuthorDAO().persist( author );
+
+			responseMap.put( "fetchPublicationDetailPerformed", "yes" );
+		}
+		else
+		{
+			responseMap.put( "fetchPublicationDetailPerformed", "no" );
+		}
+
+		// get basic author information
+		Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
+		authorMap.put( "id", author.getId() );
+		authorMap.put( "name", author.getName() );
+		if ( author.getPhotoUrl() != null )
+			authorMap.put( "photo", author.getPhotoUrl() );
+		if ( author.getAcademicStatus() != null )
+			authorMap.put( "status", author.getAcademicStatus() );
+		if ( author.getInstitution() != null )
+			authorMap.put( "aff", author.getInstitution().getName() );
+		if ( author.getCitedBy() > 0 )
+			authorMap.put( "citedBy", author.getCitedBy() );
+
+		if ( author.getPublicationAuthors() != null )
+			authorMap.put( "publicationsNumber", author.getPublicationAuthors().size() );
 		else
 			authorMap.put( "publicationsNumber", 0 );
 
@@ -272,5 +334,4 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		return false;
 	}
-
 }
