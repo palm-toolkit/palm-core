@@ -372,6 +372,9 @@ public class ManageResearcherController
 		author.getUserAuthorBookmarks().clear();
 		// set is added false
 		author.setAdded( false );
+		// set institution to null
+		author.setInstitution( null );
+		author.setAcademicStatus( null );
 		// remove interest profile
 		author.getAuthorInterestProfiles().clear();
 		author.getAuthorTopicModelingProfiles().clear();
