@@ -669,6 +669,7 @@ public class InterestMiningService
 				for ( AuthorInterest authorInterest : interestList )
 				{
 					increaseIndex = true;
+					// just skip if contain no term weights
 					if ( authorInterest.getTermWeights() == null || authorInterest.getTermWeights().isEmpty() )
 						continue;
 
@@ -685,9 +686,19 @@ public class InterestMiningService
 
 						authorInterestResultYearMap.put( "year", years.get( indexYear ) );
 						authorInterestResultYearMap.put( "termvalue", Collections.emptyList() );
-						authorInterestResultYearList.add( authorInterestResultYearMap );
 						indexYear++;
 						increaseIndex = false;
+
+						// remove duplicated year
+						if ( !authorInterestResultYearList.isEmpty() )
+						{
+							@SuppressWarnings( "unchecked" )
+							Map<String, Object> prevAuthorInterestResultYearMap = (Map<String, Object>) authorInterestResultYearList.get( authorInterestResultYearList.size() - 1 );
+							if ( prevAuthorInterestResultYearMap.get( "year" ).equals( years.get( indexYear - 1 ) ) )
+								continue;
+						}
+						authorInterestResultYearList.add( authorInterestResultYearMap );
+
 					}
 
 					List<Object> termValueResult = new ArrayList<Object>();
@@ -717,7 +728,7 @@ public class InterestMiningService
 				}
 
 				// continue interest year which is missing
-				for ( int i = indexYear; i < years.size(); i++ )
+				for ( int i = indexYear + 1; i < years.size(); i++ )
 				{
 					Map<String, Object> authorInterestResultYearMap = new LinkedHashMap<String, Object>();
 
