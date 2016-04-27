@@ -300,16 +300,16 @@ public class PublicationCollectionService
 		}
 
 		// recalculate citation number
-		this.reCalculateNumberOfCitation( author );
+		this.reCalculateNumberOfPublicationAndCitation( author );
 
 	}
 
 	/**
-	 * Recalculate citation
+	 * Recalculate publication and citation
 	 * 
 	 * @param author
 	 */
-	private void reCalculateNumberOfCitation( Author author )
+	private void reCalculateNumberOfPublicationAndCitation( Author author )
 	{
 		// count total citation on author
 		int citation = 0;
@@ -321,6 +321,11 @@ public class PublicationCollectionService
 			// set publication year
 			if ( publication.getPublicationDate() != null )
 				publication.setYear( sdf.format( publication.getPublicationDate() ) );
+		}
+		if ( author.getNoPublication() < author.getPublications().size() )
+		{
+			author.setNoPublication( author.getPublications().size() );
+			persistenceStrategy.getAuthorDAO().persist( author );
 		}
 		if ( author.getCitedBy() < citation )
 		{

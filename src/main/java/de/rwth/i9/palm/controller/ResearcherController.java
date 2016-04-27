@@ -74,7 +74,7 @@ public class ResearcherController
 	@Transactional
 	public ModelAndView researcherPage( 
 			@RequestParam( value = "id", required = false ) final String id, 
-			@RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "name", required = false ) String name,
 			@RequestParam( value = "add", required = false ) final String add,
 			final HttpServletResponse response ) throws InterruptedException
 	{
@@ -105,7 +105,15 @@ public class ResearcherController
 		model.addObject( "widgets", widgets );
 		// assign query
 		if ( id != null )
+		{
 			model.addObject( "targetId", id );
+			if ( name == null )
+			{
+				Author author = persistenceStrategy.getAuthorDAO().getById( id );
+				if ( author != null )
+					name = author.getName();
+			}
+		}
 		if ( name != null )
 			model.addObject( "targetName", name );
 		if ( add != null )
@@ -143,6 +151,7 @@ public class ResearcherController
 			HttpServletRequest request,
 			HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
+
 		/* == Set Default Values== */
 		if ( query == null ) 			query = "";
 		if ( queryType == null ) 		queryType = "name";
@@ -194,21 +203,21 @@ public class ResearcherController
 					request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
 			}
 
-			log.info( "\nRESEARCHER SESSION SEARCH" );
-			@SuppressWarnings( "unchecked" )
-			 List<Author> sessionAuthors = (List<Author>)
-			 request.getSession().getAttribute( "researchers" );
-			// get author from session -> just for debug
-			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
-			{
-				for ( Author sessionAuthor : sessionAuthors )
-				{
-					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
-					{
-						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-					}
-				}
-			}
+//			log.info( "\nRESEARCHER SESSION SEARCH" );
+//			@SuppressWarnings( "unchecked" )
+//			 List<Author> sessionAuthors = (List<Author>)
+//			 request.getSession().getAttribute( "researchers" );
+//			// get author from session -> just for debug
+//			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+//			{
+//				for ( Author sessionAuthor : sessionAuthors )
+//				{
+//					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+//					{
+//						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+//					}
+//				}
+//			}
 
 		}
 		

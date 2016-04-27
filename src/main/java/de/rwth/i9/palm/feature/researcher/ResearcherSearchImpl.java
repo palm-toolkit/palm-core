@@ -3,7 +3,6 @@ package de.rwth.i9.palm.feature.researcher;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.helper.DateTimeHelper;
-import de.rwth.i9.palm.helper.comparator.AuthorByNoCitationComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.RequestType;
 import de.rwth.i9.palm.model.UserRequest;
@@ -54,10 +52,12 @@ public class ResearcherSearchImpl implements ResearcherSearch
 		if ( source.equals( "internal" ) )
 		{
 			// the authors is querying from database
-			if( fulltextSearch.equals( "no" ))
+			if ( fulltextSearch.equals( "no" ) )
 				authorMap = persistenceStrategy.getAuthorDAO().getAuthorWithPaging( query, addedAuthor, startPage, maxresult );
 			else
+			{
 				authorMap = persistenceStrategy.getAuthorDAO().getAuthorByFullTextSearchWithPaging( query, addedAuthor, startPage, maxresult );
+			}
 		}
 		else if ( source.equals( "external" ) )
 		{
@@ -105,7 +105,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 		}
 
 		// sort based on citedby
-		Collections.sort( researchers, new AuthorByNoCitationComparator() );
+		// Collections.sort( researchers, new AuthorByNoCitationComparator() );
 
 		List<Map<String, Object>> researcherList = new ArrayList<Map<String, Object>>();
 
@@ -124,7 +124,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 				researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
 
 			if ( researcher.getPublicationAuthors() != null )
-				researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
+				researcherMap.put( "publicationsNumber", researcher.getNoPublication() );
 			else
 				researcherMap.put( "publicationsNumber", 0 );
 			String otherDetail = "";

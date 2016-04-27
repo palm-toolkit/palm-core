@@ -190,7 +190,7 @@ public class CircleDetailImpl implements CircleDetail
 				researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
 
 			if ( researcher.getPublicationAuthors() != null )
-				researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
+				researcherMap.put( "publicationsNumber", researcher.getNoPublication() );
 			else
 				researcherMap.put( "publicationsNumber", 0 );
 			String otherDetail = "";

@@ -492,7 +492,9 @@ public class ManagePublicationController
 		if ( keywordList != null && !keywordList.isEmpty() )
 		{
 			publication.setKeywordStatus( CompletionStatus.COMPLETE );
-			publication.setKeywordText( keywordList.replace( "_#_", "," ) );
+			keywordList = keywordList.replace( ";", "," );
+			keywordList = keywordList.replace( "_#_", "," );
+			publication.setKeywordText( keywordList );
 			// set publication updated
 			publication.setContentUpdated( true );
 		}
@@ -803,4 +805,5 @@ public class ManagePublicationController
 
 		return responseMap;
 	}
+
 }
