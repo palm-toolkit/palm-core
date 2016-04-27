@@ -803,4 +803,5 @@ public class ManagePublicationController
 
 		return responseMap;
 	}
+
 }

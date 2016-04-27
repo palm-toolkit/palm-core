@@ -143,6 +143,7 @@ public class ResearcherController
 			HttpServletRequest request,
 			HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
+
 		/* == Set Default Values== */
 		if ( query == null ) 			query = "";
 		if ( queryType == null ) 		queryType = "name";
