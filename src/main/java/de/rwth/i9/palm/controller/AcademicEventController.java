@@ -58,7 +58,7 @@ public class AcademicEventController
 	public ModelAndView eventPage( 
 			@RequestParam( value = "id", required = false ) final String id,
 			@RequestParam( value = "eventId", required = false ) final String eventId, 
-			@RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "name", required = false ) String name,
 			@RequestParam( value = "type", required = false ) final String type,
 			@RequestParam( value = "abbr", required = false ) String notation, 
 			@RequestParam( value = "year", required = false ) final String year,
@@ -116,7 +116,13 @@ public class AcademicEventController
 		// check whether event group is added or not
 
 		if ( eventId != null )
+		{
 			model.addObject( "targetEventId", eventId );
+			if ( name == null )
+			{
+				name = eventGroup.getName();
+			}
+		}
 		if ( name != null )
 			model.addObject( "targetName", name.replaceAll( "\"", "" ) );
 		if ( notation != null )

@@ -62,7 +62,7 @@ public class CircleController
 	@Transactional
 	public ModelAndView circlePage( 
 			@RequestParam( value = "id", required = false ) final String circleId, 
-			@RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "name", required = false ) String name,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// set model and view
@@ -73,7 +73,15 @@ public class CircleController
 		model.addObject( "widgets", widgets );
 
 		if ( circleId != null )
+		{
 			model.addObject( "targetId", circleId );
+			if ( name == null )
+			{
+				Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+				if ( circle != null )
+					name = circle.getName();
+			}
+		}
 
 		if ( name != null )
 			model.addObject( "targetName", name );

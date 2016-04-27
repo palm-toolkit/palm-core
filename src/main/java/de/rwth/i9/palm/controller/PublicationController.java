@@ -62,7 +62,7 @@ public class PublicationController
 	public ModelAndView publicationPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
 			@RequestParam( value = "id", required = false ) final String publicationId, 
-			@RequestParam( value = "title", required = false ) final String title,
+			@RequestParam( value = "title", required = false ) String title,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// set model and view
@@ -91,8 +91,15 @@ public class PublicationController
 		model.addObject( "widgets", widgets );
 
 		if ( publicationId != null )
+		{
 			model.addObject( "targetId", publicationId );
-
+			if ( title == null )
+			{
+				Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
+				if ( publication != null )
+					title = publication.getTitle();
+			}
+		}
 		if ( title != null )
 			model.addObject( "targetTitle", title );
 

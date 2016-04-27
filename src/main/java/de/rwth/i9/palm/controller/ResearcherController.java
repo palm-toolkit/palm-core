@@ -74,7 +74,7 @@ public class ResearcherController
 	@Transactional
 	public ModelAndView researcherPage( 
 			@RequestParam( value = "id", required = false ) final String id, 
-			@RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "name", required = false ) String name,
 			@RequestParam( value = "add", required = false ) final String add,
 			final HttpServletResponse response ) throws InterruptedException
 	{
@@ -105,7 +105,15 @@ public class ResearcherController
 		model.addObject( "widgets", widgets );
 		// assign query
 		if ( id != null )
+		{
 			model.addObject( "targetId", id );
+			if ( name == null )
+			{
+				Author author = persistenceStrategy.getAuthorDAO().getById( id );
+				if ( author != null )
+					name = author.getName();
+			}
+		}
 		if ( name != null )
 			model.addObject( "targetName", name );
 		if ( add != null )
