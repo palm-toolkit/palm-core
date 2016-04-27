@@ -90,7 +90,10 @@ public class EventPublicationCollectionService
 		// get author sources
 		if ( event.getDblpUrl() == null )
 		{
-			// TODO update author sources
+			// set event added
+			event.setAdded( true );
+			persistenceStrategy.getEventDAO().persist( event );
+
 			responseMap.put( "status", "error" );
 			responseMap.put( "statusMessage", "event doesn't have DBLP URL to crawl" );
 		}
