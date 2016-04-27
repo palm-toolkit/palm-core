@@ -126,20 +126,20 @@ public class ManageResearcherController
 
 		if ( author.getTempId() != null && !author.getTempId().equals( "" ) )
 		{
-			log.info( "\nRESEARCHER SESSION SEARCH" );
+//			log.info( "\nRESEARCHER SESSION SEARCH" );
 			@SuppressWarnings( "unchecked" )
 			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
 			// get author from session -> just for debug
-			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
-			{
-				for ( Author sessionAuthor : sessionAuthors )
-				{
-					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
-					{
-						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-					}
-				}
-			}
+//			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+//			{
+//				for ( Author sessionAuthor : sessionAuthors )
+//				{
+//					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+//					{
+//						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+//					}
+//				}
+//			}
 
 			// user select author that available form autocomplete
 //			@SuppressWarnings( "unchecked" )
