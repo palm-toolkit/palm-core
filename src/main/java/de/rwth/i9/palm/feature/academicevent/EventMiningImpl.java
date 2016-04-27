@@ -276,7 +276,12 @@ public class EventMiningImpl implements EventMining
 		{
 			Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 			eventMap.put( "id", event.getId() );
-			eventMap.put( "name", WordUtils.capitalize( event.getName() ) );
+			if ( event.getName() != null )
+				eventMap.put( "name", WordUtils.capitalize( event.getName() ) );
+			else
+			{
+				eventMap.put( "name", WordUtils.capitalize( eventGroup.getName() ) );
+			}
 			eventMap.put( "year", event.getYear() );
 			if ( event.getDblpUrl() != null )
 				eventMap.put( "url", event.getDblpUrl() );
