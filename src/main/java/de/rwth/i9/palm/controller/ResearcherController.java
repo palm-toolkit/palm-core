@@ -142,7 +142,7 @@ public class ResearcherController
 	public @ResponseBody Map<String, Object> getAuthorList(
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "queryType", required = false ) String queryType,
-			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "page", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "source", required = false ) String source,
 			@RequestParam( value = "addedAuthor", required = false ) String addedAuthor,

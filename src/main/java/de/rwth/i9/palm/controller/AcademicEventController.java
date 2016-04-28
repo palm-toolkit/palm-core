@@ -149,7 +149,7 @@ public class AcademicEventController
 	public @ResponseBody Map<String, Object> getConferenceList( 
 			@RequestParam( value = "query", required = false ) String query, 
 			@RequestParam( value = "abbr", required = false ) String notation, 
-			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "page", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "type", required = false ) String type,
 			@RequestParam( value = "source", required = false ) String source,
