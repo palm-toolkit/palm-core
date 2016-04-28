@@ -17,6 +17,9 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	private ResearcherCoauthor researcherCoauthor;
 
 	@Autowired( required = false )
+	private ResearcherRecommededauthor researcherRecommendedauthor;
+
+	@Autowired( required = false )
 	private ResearcherInterest researcherInterest;
 	
 	@Autowired( required = false )
@@ -71,6 +74,15 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherCoauthor = new ResearcherCoauthorImpl();
 
 		return this.researcherCoauthor;
+	}
+
+	@Override
+	public ResearcherRecommededauthor getResearcherRecommendedauthor()
+	{
+		if ( this.researcherRecommendedauthor == null )
+			this.researcherRecommendedauthor = new ResearcherRecommendedauthorImpl();
+
+		return this.researcherRecommendedauthor;
 	}
 
 	@Override
