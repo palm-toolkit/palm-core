@@ -6,7 +6,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -248,8 +247,11 @@ public class EventPublicationCollectionService
 				{
 					if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 					{
-						publication = pub;
-						break;
+						if ( palmAnalitics.getTextCompare().getNumberCharacterDistanceByLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) <= 5 )
+						{
+							publication = pub;
+							break;
+						}
 					}
 				}
 			}
@@ -262,41 +264,26 @@ public class EventPublicationCollectionService
 				// check publication from database
 				if ( !fromDbPublications.isEmpty() )
 				{
-					if ( fromDbPublications.size() > 1 )
+					for ( Publication pub : fromDbPublications )
 					{
-						// check with year
-						for ( Publication pub : fromDbPublications )
+						if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 						{
-							if ( pub.getPublicationDate() == null )
-								continue;
-
-							Calendar cal = Calendar.getInstance();
-							cal.setTime( pub.getPublicationDate() );
-							if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "datePublished" ) ) )
+							if ( palmAnalitics.getTextCompare().getNumberCharacterDistanceByLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) <= 5 )
 							{
 								publication = pub;
+
+								eventPublications.add( publication );
+								if ( publication.getEvent() == null )
+								{
+									// create publication and event relations
+									publication.setEvent( event );
+									event.addPublication( publication );
+								}
 								break;
 							}
 						}
-						// if publication still null, due to publication
-						// date is null
-						if ( publication == null )
-							publication = fromDbPublications.get( 0 );
-					}
-					else
-						publication = fromDbPublications.get( 0 );
-					// added to selected list
-					eventPublications.add( publication );
-					if ( publication.getEvent() == null )
-					{
-						// create publication and event relations
-						publication.setEvent( event );
-						event.addPublication( publication );
 					}
 				}
-				// remove old publicationSource
-				// if ( publication != null )
-				// publication.removeNonUserInputPublicationSource();
 			}
 
 			// if not exist any where create new publication
