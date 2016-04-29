@@ -109,7 +109,7 @@ public class ManageResearcherController
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveNewAuthor( 
-			@ModelAttribute( "author" ) Author author, 
+			@ModelAttribute( "author" ) Author author, @RequestParam( value = "name" ) final String name,
 			HttpServletRequest request, HttpServletResponse response)
 	{
 
@@ -148,6 +148,7 @@ public class ManageResearcherController
 			// get author from session
 			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
 			{
+				// first checking based on id
 				for ( Author sessionAuthor : sessionAuthors )
 				{
 					if ( sessionAuthor.getId().equals( author.getTempId() ) )
@@ -156,6 +157,24 @@ public class ManageResearcherController
 
 						newAuthor = persistenceStrategy.getAuthorDAO().getById( author.getTempId() );
 						break;
+					}
+				}
+
+				// second checking based on exact name
+				if ( newAuthor == null )
+				{
+					// check session with author name
+					// in case the author is already changed
+					// but correct researcher already on session
+					for ( Author sessionAuthor : sessionAuthors )
+					{
+						if ( sessionAuthor.getId().equals( name ) )
+						{
+							persistenceStrategy.getAuthorDAO().persist( sessionAuthor );
+
+							newAuthor = persistenceStrategy.getAuthorDAO().getById( author.getTempId() );
+							break;
+						}
 					}
 				}
 			}
