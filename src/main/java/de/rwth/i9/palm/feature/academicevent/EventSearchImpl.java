@@ -93,11 +93,13 @@ public class EventSearchImpl implements EventSearch
 		}
 		else if ( source.equals( "all" ) )
 		{
-			// TODO: change implementation
+			// TODO: change implementation if another source is added instead of
+			// DBLP
+
 			// get event from DBLP
 			List<Object> dblpEvents = DblpEventCollection.getEventFromDBLPSearch( query, type, null );
 
-			// combine
+			// combine with internal
 			List<EventGroup> eventGroups = persistenceStrategy.getEventGroupDAO().getEventGroupListWithPaging( query, type, startPage, maxresult );
 
 			if ( dblpEvents != null && !dblpEvents.isEmpty() )
@@ -121,9 +123,13 @@ public class EventSearchImpl implements EventSearch
 							}
 							else
 							{
-								if ( ( eachEventGroup.getDblpUrl() == null || eachEventGroup.getDblpUrl().isEmpty() ) && dblpEventMap.get( "name" ).equals( eachEventGroup.getName() ) )
+								if ( ( eachEventGroup.getDblpUrl() == null || eachEventGroup.getDblpUrl().isEmpty() ) && (
+										dblpEventMap.get( "name" ).toLowerCase().equals( eachEventGroup.getName().toLowerCase() ) || 
+										dblpEventMap.get( "abbr" ).toLowerCase().equals( eachEventGroup.getNotation().toLowerCase() )))
 								{
 									eachEventGroup.setDblpUrl( eventGroupUrl );
+									eachEventGroup.setName( dblpEventMap.get( "name" ) );
+									eachEventGroup.setNotation( dblpEventMap.get( "notation" ) );
 									isExist = true;
 									break;
 								}
