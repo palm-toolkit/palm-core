@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.controller;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -526,16 +527,57 @@ public class ManageAcademicEventController
 		else
 		{
 			eventGroup.setAdded( false );
+			int numberOfPublication = 0;
 			if ( eventGroup.getEvents() != null )
 			{
+
 				for ( Event event : eventGroup.getEvents() )
 				{
-					event.getEventInterestProfiles().clear();
-					event.setAdded( false );
-					persistenceStrategy.getEventDAO().persist( event );
+					if ( event.getPublications() != null && !event.getPublications().isEmpty() )
+						numberOfPublication = event.getPublications().size();
 				}
+
 			}
-			persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+
+			// determine to delete eventGroup entirely or kept the information
+			if ( numberOfPublication == 0 )
+			{
+				// if event still do not belong to any publication then it's
+				// save to remove it entirely
+				if ( eventGroup.getEvents() != null )
+				{
+					List<Event> events = new ArrayList<Event>();
+					events.addAll( eventGroup.getEvents() );
+					for ( Event event : events )
+					{
+						event.setLocation( null );
+						event.setEventGroup( null );
+						eventGroup.removeEvent( event );
+						persistenceStrategy.getEventDAO().delete( event );
+					}
+				}
+				eventGroup.getEvents().clear();
+				persistenceStrategy.getEventGroupDAO().delete( eventGroup );
+
+			}
+			else
+			{
+				if ( eventGroup.getEvents() != null )
+				{
+					List<Event> events = new ArrayList<Event>();
+					events.addAll( eventGroup.getEvents() );
+					for ( Event event : events )
+					{
+						event.getEventInterestProfiles().clear();
+						event.setAdded( false );
+						persistenceStrategy.getEventDAO().persist( event );
+					}
+
+				}
+				// remove flag properties but kept information
+				persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+			}
+
 		}
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", "Event Group is deleted" );
