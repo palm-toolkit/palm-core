@@ -569,7 +569,6 @@ public class PublicationCollectionService
 					// check publication from database
 					if ( !fromDbPublications.isEmpty() )
 					{
-						// check with year
 						for ( Publication pub : fromDbPublications )
 						{
 							if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
@@ -583,9 +582,7 @@ public class PublicationCollectionService
 							}
 						}
 					}
-					// remove old publicationSource
-					//if ( publication != null )
-						//publication.removeNonUserInputPublicationSource();
+
 				}
 
 				// if not exist any where create new publication
