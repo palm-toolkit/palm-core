@@ -381,7 +381,16 @@ public class ManageResearcherController
 
 		author.setRequestDate( null );
 
-		persistenceStrategy.getAuthorDAO().persist( author );
+		// check if researcher do not have publication
+		if ( author.getPublications() == null || author.getPublications().isEmpty() )
+		{
+			persistenceStrategy.getAuthorDAO().delete( author );
+		}
+		else
+		{
+			// kept author but remove all properties
+			persistenceStrategy.getAuthorDAO().persist( author );
+		}
 
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", "author is now invisible" );
