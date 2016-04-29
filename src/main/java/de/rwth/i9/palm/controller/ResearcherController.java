@@ -203,21 +203,20 @@ public class ResearcherController
 					request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
 			}
 
-//			log.info( "\nRESEARCHER SESSION SEARCH" );
-//			@SuppressWarnings( "unchecked" )
-//			 List<Author> sessionAuthors = (List<Author>)
-//			 request.getSession().getAttribute( "researchers" );
-//			// get author from session -> just for debug
-//			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
-//			{
-//				for ( Author sessionAuthor : sessionAuthors )
-//				{
-//					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
-//					{
-//						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-//					}
-//				}
-//			}
+			log.info( "\nRESEARCHER SESSION SEARCH" );
+			@SuppressWarnings( "unchecked" )
+			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
+			// get author from session -> just for debug
+			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+			{
+				for ( Author sessionAuthor : sessionAuthors )
+				{
+					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+					{
+						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+					}
+				}
+			}
 
 		}
 		
