@@ -158,49 +158,54 @@ public class ManageAcademicEventController
 		
 		if ( eventGroupIdTemp != null && !eventGroupIdTemp.equals( "" ) )
 		{
+			// try to get conference from  eventGroupIdTemp
+			newEventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupIdTemp );
+			
+			if( newEventGroup == null ){
 //			log.info( "\nCONFERENCE SESSION SEARCH" );
-			@SuppressWarnings( "unchecked" )
-			List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
-			// get author from session -> just for debug
-//			if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
-//			{
-//				for ( EventGroup sessionEventGroup : sessionEventGroups )
-//				{
-//					for ( EventGroupSource as : sessionEventGroup.getEventGroupSources() )
-//					{
-//						log.info( sessionEventGroup.getId() + "-" + sessionEventGroup.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-//					}
-//				}
-//			}
-
-			// user select author that available form autocomplete
-//			@SuppressWarnings( "unchecked" )
-//			List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
-
-			// get author from session
-			if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
-			{
-				for ( EventGroup sessionEventGroup : sessionEventGroups )
+				@SuppressWarnings( "unchecked" )
+				List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
+				// get author from session -> just for debug
+	//			if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
+	//			{
+	//				for ( EventGroup sessionEventGroup : sessionEventGroups )
+	//				{
+	//					for ( EventGroupSource as : sessionEventGroup.getEventGroupSources() )
+	//					{
+	//						log.info( sessionEventGroup.getId() + "-" + sessionEventGroup.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+	//					}
+	//				}
+	//			}
+	
+				// user select author that available form autocomplete
+	//			@SuppressWarnings( "unchecked" )
+	//			List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
+	
+				// get author from session
+				if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
 				{
-					if ( sessionEventGroup.getId().equals( eventGroupIdTemp ) )
+					for ( EventGroup sessionEventGroup : sessionEventGroups )
 					{
-						if ( newEventGroup == null )
+						if ( sessionEventGroup.getId().equals( eventGroupIdTemp ) )
 						{
-							persistenceStrategy.getEventGroupDAO().persist( sessionEventGroup );
-							newEventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupIdTemp );
+							if ( newEventGroup == null )
+							{
+								persistenceStrategy.getEventGroupDAO().persist( sessionEventGroup );
+								newEventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupIdTemp );
+							}
+							else
+							{
+								// copy attributes
+								newEventGroup.setDblpUrl( sessionEventGroup.getDblpUrl() );
+								newEventGroup.setName( sessionEventGroup.getName() );
+								if ( !sessionEventGroup.getNotation().isEmpty() )
+									newEventGroup.setNotation( sessionEventGroup.getNotation() );
+								newEventGroup.setDescription( sessionEventGroup.getDescription() );
+								persistenceStrategy.getEventGroupDAO().persist( newEventGroup );
+							}
+							request.getSession().removeAttribute( "eventGroups" );
+							break;
 						}
-						else
-						{
-							// copy attributes
-							newEventGroup.setDblpUrl( sessionEventGroup.getDblpUrl() );
-							newEventGroup.setName( sessionEventGroup.getName() );
-							if ( !sessionEventGroup.getNotation().isEmpty() )
-								newEventGroup.setNotation( sessionEventGroup.getNotation() );
-							newEventGroup.setDescription( sessionEventGroup.getDescription() );
-							persistenceStrategy.getEventGroupDAO().persist( newEventGroup );
-						}
-						request.getSession().removeAttribute( "eventGroups" );
-						break;
 					}
 				}
 			}
@@ -552,6 +557,7 @@ public class ManageAcademicEventController
 					{
 						event.setLocation( null );
 						event.setEventGroup( null );
+						event.getEventInterestProfiles().clear();
 						eventGroup.removeEvent( event );
 						persistenceStrategy.getEventDAO().delete( event );
 					}
