@@ -322,16 +322,10 @@ public class PublicationCollectionService
 			if ( publication.getPublicationDate() != null )
 				publication.setYear( sdf.format( publication.getPublicationDate() ) );
 		}
-		if ( author.getNoPublication() < author.getPublications().size() )
-		{
-			author.setNoPublication( author.getPublications().size() );
-			persistenceStrategy.getAuthorDAO().persist( author );
-		}
-		if ( author.getCitedBy() < citation )
-		{
-			author.setCitedBy( citation );
-			persistenceStrategy.getAuthorDAO().persist( author );
-		}
+
+		author.setNoPublication( author.getPublications().size() );
+		author.setCitedBy( citation );
+		persistenceStrategy.getAuthorDAO().persist( author );
 	}
 	
 
@@ -575,31 +569,19 @@ public class PublicationCollectionService
 					// check publication from database
 					if ( !fromDbPublications.isEmpty() )
 					{
-						if ( fromDbPublications.size() > 1 )
+						// check with year
+						for ( Publication pub : fromDbPublications )
 						{
-							// check with year
-							for ( Publication pub : fromDbPublications )
+							if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 							{
-								if ( pub.getPublicationDate() == null )
-									continue;
-
-								Calendar cal = Calendar.getInstance();
-								cal.setTime( pub.getPublicationDate() );
-								if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "datePublished" ) ) )
+								if ( palmAnalitics.getTextCompare().getNumberCharacterDistanceByLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) <= 5 )
 								{
 									publication = pub;
+									selectedPublications.add( publication );
 									break;
 								}
 							}
-							// if publication still null, due to publication
-							// date is null
-							if ( publication == null )
-								publication = fromDbPublications.get( 0 );
 						}
-						else
-							publication = fromDbPublications.get( 0 );
-						// added to selected list
-						selectedPublications.add( publication );
 					}
 					// remove old publicationSource
 					//if ( publication != null )
