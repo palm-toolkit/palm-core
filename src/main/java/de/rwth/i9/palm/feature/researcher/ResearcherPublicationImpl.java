@@ -148,8 +148,9 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
 				eventMap.put( "name", publication.getEvent().getEventGroup().getName() );
-				if ( !publication.getEvent().getEventGroup().getNotation().equals( publication.getEvent().getEventGroup().getName() ) )
-					eventMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
+				if ( publication.getEvent().getEventGroup().getNotation() != null )
+					if ( !publication.getEvent().getEventGroup().getNotation().equals( publication.getEvent().getEventGroup().getName() ) )
+						eventMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
 				eventMap.put( "isAdded", publication.getEvent().isAdded() );
 				if ( publication.getEvent().getEventGroup() != null )
 					eventMap.put( "isGroupAdded", publication.getEvent().getEventGroup().isAdded() );
