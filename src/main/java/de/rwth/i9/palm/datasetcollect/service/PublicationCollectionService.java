@@ -666,6 +666,9 @@ public class PublicationCollectionService
 						publicationSource.addOrUpdateAdditionalInformation( "volume", publicationMap.get( "eventVolume" ) );
 					if ( publicationMap.get( "eventNumber" ) != null )
 						publicationSource.addOrUpdateAdditionalInformation( "number", publicationMap.get( "eventNumber" ) );
+					if ( publicationMap.get( "page" ) != null )
+						publicationSource.setPages( publicationMap.get( "page" ) );
+
 				}
 
 				// assign publication authors
@@ -941,22 +944,6 @@ public class PublicationCollectionService
 					publication.setPublicationDateFormat( publicationDateFormat );
 				}
 
-				if ( pubSource.getPages() != null )
-				{
-					String[] pageSplit = pubSource.getPages().split( "-" );
-					if ( pageSplit.length == 2 )
-					{
-						try
-						{
-							publication.setStartPage( Integer.parseInt( pageSplit[0] ) );
-							publication.setEndPage( Integer.parseInt( pageSplit[1] ) );
-						}
-						catch ( Exception e )
-						{
-						}
-					}
-				}
-
 				if ( pubSource.getAdditionalInformation() != null )
 					publication.setAdditionalInformation( pubSource.getAdditionalInformation() );
 
@@ -1141,6 +1128,23 @@ public class PublicationCollectionService
 					}
 				}
 
+			}
+
+			// set publication pages
+			if ( publication.getStartPage() == 0 && pubSource.getPages() != null )
+			{
+				String[] pageSplit = pubSource.getPages().split( "-" );
+				if ( pageSplit.length == 2 )
+				{
+					try
+					{
+						publication.setStartPage( Integer.parseInt( pageSplit[0] ) );
+						publication.setEndPage( Integer.parseInt( pageSplit[1] ) );
+					}
+					catch ( Exception e )
+					{
+					}
+				}
 			}
 
 			// original sources (PDF and WebPage)
