@@ -197,10 +197,10 @@ public class ManageAcademicEventController
 							{
 								// copy attributes
 								newEventGroup.setDblpUrl( sessionEventGroup.getDblpUrl() );
-								newEventGroup.setName( sessionEventGroup.getName() );
-								if ( !sessionEventGroup.getNotation().isEmpty() )
-									newEventGroup.setNotation( sessionEventGroup.getNotation() );
-								newEventGroup.setDescription( sessionEventGroup.getDescription() );
+								newEventGroup.setName( name );
+								if ( !notation.isEmpty() )
+									newEventGroup.setNotation( notation );
+								newEventGroup.setDescription( description );
 								persistenceStrategy.getEventGroupDAO().persist( newEventGroup );
 							}
 							request.getSession().removeAttribute( "eventGroups" );
@@ -223,6 +223,11 @@ public class ManageAcademicEventController
 
 		// set flag added to true
 		newEventGroup.setAdded( true );
+		newEventGroup.setName( name );
+		if ( notation != null && !notation.isEmpty() )
+			newEventGroup.setNotation( notation );
+		if ( description != null && !description.isEmpty() )
+			newEventGroup.setDescription( description );
 		// set event type, incase changed
 		if ( type != null )
 		{

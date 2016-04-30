@@ -154,6 +154,7 @@ public class AcademicEventController
 			@RequestParam( value = "type", required = false ) String type,
 			@RequestParam( value = "source", required = false ) String source,
 			@RequestParam( value = "persist", required = false ) String persist,
+			@RequestParam( value = "eventId", required = false ) String eventId,
 			HttpServletRequest request,
 			HttpServletResponse response)
 	{
@@ -180,7 +181,7 @@ public class AcademicEventController
 			persistResult = true;
 		}
 		
-		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, notation, startPage, maxresult, source, type, persistResult );
+		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, notation, startPage, maxresult, source, type, persistResult, eventId );
 
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )
