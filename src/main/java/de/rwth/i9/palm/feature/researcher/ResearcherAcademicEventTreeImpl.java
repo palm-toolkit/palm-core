@@ -85,6 +85,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					treeHelperLv2.setTitle( nodeTitle );
 					treeHelperLv2.setType( publication.getPublicationType().toString() );
 					treeHelperLv2.setHref( "venue?&id=" + publication.getEvent().getEventGroup().getId() + "&eventId=" + publication.getEvent().getId() + "&name=" + publication.getEvent().getEventGroup().getName() );
+					treeHelperLv1.setHref( "venue?&id=" + publication.getEvent().getEventGroup().getId() + "&name=" + publication.getEvent().getEventGroup().getName() + "&eventId=" + publication.getEvent().getId() );
 					treeHelperLv2.setFolder( true );
 					treeHelperLv2.setTooltip( nodeTooltip );
 					if ( publication.getEvent().isAdded() )
@@ -134,6 +135,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 						treeHelperLv2.setTitle( nodeTitle );
 						treeHelperLv2.setType( publication.getPublicationType().toString() );
 						treeHelperLv2.setHref( "venue?id=" + publication.getEvent().getEventGroup().getId() + "&eventId=" + publication.getEvent().getId() + "&name=" + publication.getEvent().getEventGroup().getName() );
+						treeHelperLv1.setHref( "venue?&id=" + publication.getEvent().getEventGroup().getId() + "&name=" + publication.getEvent().getEventGroup().getName() + "&eventId=" + publication.getEvent().getId() );
 						treeHelperLv2.setFolder( true );
 						treeHelperLv2.setTooltip( nodeTooltip );
 						if ( publication.getEvent().isAdded() )

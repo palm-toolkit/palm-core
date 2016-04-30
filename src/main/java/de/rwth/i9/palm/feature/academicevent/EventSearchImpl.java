@@ -22,7 +22,7 @@ public class EventSearchImpl implements EventSearch
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public List<EventGroup> getEventGroupListByQuery( String query, Integer startPage, Integer maxResult, String source, String type, boolean persistResult )
+	public List<EventGroup> getEventGroupListByQuery( String query, Integer startPage, Integer maxResult, String source, String type, boolean persistResult, String addedVenue )
 	{
 		List<EventGroup> eventGroups = new ArrayList<EventGroup>();
 
@@ -30,7 +30,7 @@ public class EventSearchImpl implements EventSearch
 		if ( source.equals( "internal" ) )
 		{
 			// set lucene fulltext search by default
-			eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListFullTextSearchWithPaging( query, type, startPage, maxResult ));
+			eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListFullTextSearchWithPaging( query, type, startPage, maxResult, addedVenue ) );
 		}
 		else if ( source.equals( "all" ) )
 		{
@@ -39,7 +39,7 @@ public class EventSearchImpl implements EventSearch
 			List<Object> dblpEvents = DblpEventCollection.getEventFromDBLPSearch( query, type, null );
 
 			// combine
-			eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListWithPaging( query, type, startPage, maxResult ) );
+			eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListWithPaging( query, type, startPage, maxResult, addedVenue ) );
 
 			if ( dblpEvents != null && !dblpEvents.isEmpty() )
 			{
@@ -82,7 +82,7 @@ public class EventSearchImpl implements EventSearch
 	}
 
 	@Override
-	public Map<String, Object> getEventGroupMapByQuery( String query, String notation, Integer startPage, Integer maxresult, String source, String type, boolean persistResult, String eventId )
+	public Map<String, Object> getEventGroupMapByQuery( String query, String notation, Integer startPage, Integer maxresult, String source, String type, boolean persistResult, String eventId, String addedVenue )
 	{
 		Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
 
@@ -90,7 +90,7 @@ public class EventSearchImpl implements EventSearch
 		if ( source.equals( "internal" ) )
 		{
 			// set lucene fulltext search by default
-			eventGroupMap = persistenceStrategy.getEventGroupDAO().getEventGroupMapFullTextSearchWithPaging( query, notation, type, startPage, maxresult );
+			eventGroupMap = persistenceStrategy.getEventGroupDAO().getEventGroupMapFullTextSearchWithPaging( query, notation, type, startPage, maxresult, addedVenue );
 		}
 		else if ( source.equals( "all" ) )
 		{
@@ -121,7 +121,7 @@ public class EventSearchImpl implements EventSearch
 						{
 							eventTarget.getEventGroup().setDblpUrl( eventGroupUrl );
 							eventTarget.getEventGroup().setName( dblpEventMap.get( "name" ) );
-							eventTarget.getEventGroup().setNotation( dblpEventMap.get( "notation" ) );
+							eventTarget.getEventGroup().setNotation( dblpEventMap.get( "abbr" ) );
 							eventGroups.add( eventTarget.getEventGroup() );
 							break;
 						}
@@ -130,7 +130,7 @@ public class EventSearchImpl implements EventSearch
 			}
 			else
 			{
-				eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListWithPaging( query, type, startPage, maxresult ) );
+				eventGroups.addAll( persistenceStrategy.getEventGroupDAO().getEventGroupListWithPaging( query, type, startPage, maxresult, addedVenue ) );
 
 				// find conferences / journal candidates
 				// flag indicated that target
@@ -161,7 +161,7 @@ public class EventSearchImpl implements EventSearch
 								else
 								{
 									if ( ( dblpEventMap.get( "name" ).toLowerCase().equals( eachEventGroup.getName().toLowerCase() ) || 
-											dblpEventMap.get( "abbr" ).toLowerCase().equals( eachEventGroup.getNotation().toLowerCase() ) ) )
+											( dblpEventMap.get( "abbr" ) != null && eachEventGroup.getNotation() != null && dblpEventMap.get( "abbr" ).toLowerCase().equals( eachEventGroup.getNotation().toLowerCase() ) ) ) )
 									{
 										eachEventGroup.setDblpUrl( eventGroupUrl );
 										eachEventGroup.setName( dblpEventMap.get( "name" ) );
