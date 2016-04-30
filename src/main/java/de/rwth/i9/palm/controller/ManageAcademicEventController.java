@@ -472,7 +472,7 @@ public class ManageAcademicEventController
 
 	@Transactional
 	@RequestMapping( value = "/delete", method = RequestMethod.POST )
-	public @ResponseBody Map<String, Object> deletePublication( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	public @ResponseBody Map<String, Object> deleteEventGroup( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
@@ -544,7 +544,9 @@ public class ManageAcademicEventController
 				for ( Event event : eventGroup.getEvents() )
 				{
 					if ( event.getPublications() != null && !event.getPublications().isEmpty() )
-						numberOfPublication = event.getPublications().size();
+					{
+						numberOfPublication += event.getPublications().size();
+					}
 				}
 
 			}
@@ -595,4 +597,5 @@ public class ManageAcademicEventController
 
 		return responseMap;
 	}
+
 }
