@@ -9,7 +9,7 @@ public interface EventSearch
 {
 	public List<EventGroup> getEventGroupListByQuery( String query, Integer startPage, Integer maxresult, String source, String type, boolean persistResult );
 
-	public Map<String, Object> getEventGroupMapByQuery( String query, String notation, Integer startPage, Integer maxresult, String source, String type, boolean persistResult );
+	public Map<String, Object> getEventGroupMapByQuery( String query, String notation, Integer startPage, Integer maxresult, String source, String type, boolean persistResult, String eventId );
 
 	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<EventGroup> eventGroups );
 }

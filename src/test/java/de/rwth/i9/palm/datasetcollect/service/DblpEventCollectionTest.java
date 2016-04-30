@@ -24,6 +24,8 @@ public class DblpEventCollectionTest
 		url = "http://dblp.uni-trier.de/db/journals/tlt/tlt5.html#ChattiSJ12";
 		url = "http://dblp.uni-trier.de/db/conf/mlearn/mlearn2014.html#GrevenCTS14";
 		url = "http://dblp.uni-trier.de/db/conf/iassist/iassist2013.html";
+		url = "http://dblp.uni-trier.de/db/journals/icom/icom11.html";
+		url = "http://dblp.uni-trier.de/db/journals/corr/corr1601.html";
 		Map<String, Object> venueDetailMap = DblpEventCollection.getEventDetailByVenueUrl( url, null );
 
 		// List<Map<String,String>> publicationMapList = (List<Map<String,
