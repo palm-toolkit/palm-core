@@ -492,7 +492,94 @@ public class ResearcherController
 	}
 	
 	/**
+	 * Get Recommended authorMap of given author
+	 * 
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/recommendedAuthorList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getRecommendedAuthorList( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get recommended authors based on calculations
+		responseMap.putAll( researcherFeature.getResearcherRecommendedauthor().getResearcherRecommendedAuthorMap( author, startPage, maxresult ) );
+
+		return responseMap;
+	}
+
+	/**
+	 * Get Similar authorMap of given author
+	 * 
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/similarAuthorList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getSimilarAuthorList( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get recommended authors based on calculations
+		responseMap.putAll( researcherFeature.getResearcherSimilarauthor().getResearcherSimilarAuthorMap( author, startPage, maxresult ) );
+
+		return responseMap;
+	}
+
+	/**
 	 * Get basic information of given author
+	 * 
 	 * @param authorId
 	 * @param startPage
 	 * @param maxresult

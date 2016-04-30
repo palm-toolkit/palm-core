@@ -18,6 +18,8 @@ public interface ResearcherFeature
 
 	public ResearcherRecommededauthor getResearcherRecommendedauthor();
 
+	public ResearcherSimilarauthor getResearcherSimilarauthor();
+
 	public ResearcherInterest getResearcherInterest();
 	
 	public ResearcherInterestEvolution getResearcherInterestEvolution();
