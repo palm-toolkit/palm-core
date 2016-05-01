@@ -52,6 +52,10 @@ public class HtmlPublicationCollection
 				}
 			}
 		}
+		else if ( url.contains( "aaai.org/" ) )
+		{
+			url = url.replace( "/view/", "/viewPaper/" );
+		}
 
 		// Using jsoup java html parser library
 		Document document = PublicationCollectionHelper.getDocumentWithJsoup( url, 12000 );
@@ -121,6 +125,9 @@ public class HtmlPublicationCollection
 		// General case
 		else
 		{
+			if ( document.body() == null )
+				return Collections.emptyMap();
+
 			Elements elements = document.body().select( "*" );
 
 			// find either keyword or abstract header
