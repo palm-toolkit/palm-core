@@ -3,16 +3,18 @@ package de.rwth.i9.palm.feature.circle;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.helper.comparator.AuthorByNaturalOrderComparator;
+import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Publication;
@@ -70,19 +72,29 @@ public class CircleDetailImpl implements CircleDetail
 
 		if ( isRetrieveAuthorDetail && circle.getAuthors() != null )
 		{
-			circleMap.put( "numberAuthors", circle.getAuthors().size() );
+			List<Author> authors = new ArrayList<Author>();
+			authors.addAll( circle.getAuthors() );
+
+			Collections.sort( authors, new AuthorByNaturalOrderComparator() );
+
+			circleMap.put( "numberAuthors", authors.size() );
 			if ( circle.getAuthors().size() > 0 )
 			{
-				circleMap.put( "researchers", printCircleAuthors( circle.getAuthors() ) );
+				circleMap.put( "researchers", printCircleAuthors( authors ) );
 			}
 		}
 
 		if ( isRetrievePublicationDetail && circle.getPublications() != null )
 		{
-			circleMap.put( "numberPublications", circle.getPublications().size() );
+			List<Publication> publications = new ArrayList<Publication>();
+			publications.addAll( circle.getPublications() );
+
+			Collections.sort( publications, new PublicationByDateComparator() );
+
+			circleMap.put( "numberPublications", publications.size() );
 			if ( circle.getPublications().size() > 0 )
 			{
-				circleMap.put( "publications", printCirclePublications( circle.getPublications() ) );
+				circleMap.put( "publications", printCirclePublications( publications ) );
 			}
 		}
 
@@ -95,7 +107,7 @@ public class CircleDetailImpl implements CircleDetail
 		return responseMap;
 	}
 
-	private Object printCirclePublications( Set<Publication> publications )
+	private Object printCirclePublications( List<Publication> publications )
 	{
 		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
 
@@ -168,7 +180,7 @@ public class CircleDetailImpl implements CircleDetail
 		return publicationList;
 	}
 
-	private Object printCircleAuthors( Set<Author> authors )
+	private Object printCircleAuthors( List<Author> authors )
 	{
 		List<Map<String, Object>> researcherList = new ArrayList<Map<String, Object>>();
 
