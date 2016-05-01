@@ -128,6 +128,10 @@ public class CorePhraseInterestProfile
 		for ( Map.Entry<String, Double> termWeightHelperEntry : termWeightHelperMap.entrySet() )
 		{
 			String term = termWeightHelperEntry.getKey();
+
+			if ( maxWeightValue == 0 )
+				continue;
+
 			double normalizedWeighting = termWeightHelperEntry.getValue() / maxWeightValue;
 
 			// proceed to interest object
