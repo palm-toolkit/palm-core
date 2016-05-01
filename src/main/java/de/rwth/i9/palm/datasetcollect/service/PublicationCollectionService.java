@@ -1259,7 +1259,7 @@ public class PublicationCollectionService
 						// remove PublicationFile if consist the prevent URLs
 						if ( !htmlPublicationFile.isPublicationFileUrlContainsUrls( preventUrls ) )
 						{
-							log.info( "Extract WebPage for publication " + publication.getTitle() );
+
 							// find the prioritize pages
 							htmlPublicationFileTarget = htmlPublicationFile;
 							if ( htmlPublicationFile.isPublicationFileUrlContainsUrls( prioritizeUrls ) )
@@ -1268,6 +1268,7 @@ public class PublicationCollectionService
 					}
 					if ( htmlPublicationFileTarget != null )
 					{
+						log.info( "Extract WebPage for publication " + publication.getTitle() );
 						// extract information from selected PublicationFiles
 						PublicationSource publicationSource = new PublicationSource();
 						publicationSource.setSourceUrl( htmlPublicationFileTarget.getUrl() );
