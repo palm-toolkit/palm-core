@@ -209,15 +209,15 @@ public class ResearcherCollectionService
 					String[] authorDetails = affliliation.split( "," );
 					for ( int i = 0; i < authorDetails.length; i++ )
 					{
+						if ( authorDetails[i].contains( "rof" ) || authorDetails[i].contains( "esearch" ) || authorDetails[i].contains( "octor" ) )
+							academicStatus = authorDetails[i].trim().toLowerCase();
 						// from word U"nivers"ity, institut, collage, state, school, technology, faculdade, education, hochschule, rieure						
-						if ( authorDetails[i].contains( "nivers" ) || authorDetails[i].contains( "nstit" ) ||
+						else if ( authorDetails[i].contains( "nivers" ) || authorDetails[i].contains( "nstit" ) ||
 							 authorDetails[i].contains( "ollag" ) || authorDetails[i].contains( "tate" ) ||
 							 authorDetails[i].contains( "echn" ) || authorDetails[i].contains( "choo" ) ||
 							 authorDetails[i].contains( "acul" ) || authorDetails[i].contains( "ochs" ) ||
 							 authorDetails[i].contains( "duca" ) || authorDetails[i].contains( "ieur" ))
 							institution = authorDetails[i].trim();
-						else if ( authorDetails[i].contains( "rof" ) || authorDetails[i].contains( "esearch" ) || authorDetails[i].contains( "octor" ) )
-							academicStatus = authorDetails[i].trim().toLowerCase();
 						else
 						{
 							if ( authorDetails[i].length() > 16 )
