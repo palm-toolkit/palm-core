@@ -166,7 +166,7 @@ public class CirclePublicationImpl implements CirclePublication
 		}
 
 		// get available year
-		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByCircle( targetCircle ) );
+		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByCircle( targetCircle, "DESC" ) );
 
 		if ( publications == null || publications.isEmpty() )
 		{
