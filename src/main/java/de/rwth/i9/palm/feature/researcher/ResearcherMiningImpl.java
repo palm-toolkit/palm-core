@@ -136,23 +136,35 @@ public class ResearcherMiningImpl implements ResearcherMining
 					// try to add author source
 					for ( Author researcher : researcherList )
 					{
-						if ( researcher.getName().equals( author.getName() ) )
+						if ( researcher.getName().toLowerCase().equals( author.getName().toLowerCase() ) )
 						{
 
 							if ( researcher.getAuthorSources() == null || researcher.getAuthorSources().isEmpty() )
 								continue;
 
-							for ( AuthorSource as : researcher.getAuthorSources() )
+							if ( researcher.equals( author ) )
 							{
-								if ( !author.isContainAuthorSource( as ) && sourceMap.get( as.getSourceType().toString() ).getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+								for ( AuthorSource as : researcher.getAuthorSources() )
 								{
-									author.addAuthorSource( as );
-									isSourceParsePageMissing = true;
+									if ( !author.isContainAuthorSource( as ) && sourceMap.get( as.getSourceType().toString() ).getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+									{
+										author.addAuthorSource( as );
+										isSourceParsePageMissing = true;
+									}
 								}
 							}
+							else
+							{
+								// persistenceStrategy.getAuthorDAO().delete(
+								// author );
+								author = researcher;
+							}
+
+							break;
 						}
 					}
 				}
+				persistenceStrategy.getAuthorDAO().persist( author );
 			}
 
 			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author, pid );
