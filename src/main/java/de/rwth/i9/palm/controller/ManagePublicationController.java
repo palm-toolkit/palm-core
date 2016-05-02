@@ -303,6 +303,7 @@ public class ManagePublicationController
 				if ( author.isAdded() )
 				{
 					author.setUpdateInterest( true );
+					author.reCalculateNumberOfPublicationAndCitation();
 					persistenceStrategy.getAuthorDAO().persist( author );
 				}
 			}

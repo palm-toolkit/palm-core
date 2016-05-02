@@ -300,34 +300,9 @@ public class PublicationCollectionService
 		}
 
 		// recalculate citation number
-		this.reCalculateNumberOfPublicationAndCitation( author );
-
-	}
-
-	/**
-	 * Recalculate publication and citation
-	 * 
-	 * @param author
-	 */
-	private void reCalculateNumberOfPublicationAndCitation( Author author )
-	{
-		// count total citation on author
-		int citation = 0;
-		SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
-
-		for ( Publication publication : author.getPublications() )
-		{
-			citation += publication.getCitedBy();
-			// set publication year
-			if ( publication.getPublicationDate() != null )
-				publication.setYear( sdf.format( publication.getPublicationDate() ) );
-		}
-
-		author.setNoPublication( author.getPublications().size() );
-		author.setCitedBy( citation );
+		author.reCalculateNumberOfPublicationAndCitation();
 		persistenceStrategy.getAuthorDAO().persist( author );
 	}
-	
 
 	/**
 	 * Remove all publication that considered incorrect.
