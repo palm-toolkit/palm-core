@@ -183,12 +183,26 @@ public class ManagePublicationController
 		if ( publicationDate != null && !publicationDate.isEmpty() )
 		{
 			// set date format
-			DateFormat dateFormat = new SimpleDateFormat( "dd/M/yyyy", Locale.ENGLISH );
+			DateFormat dateFormat = new SimpleDateFormat( "dd/MM/yyyy", Locale.ENGLISH );
 			try
 			{
-				Date date = dateFormat.parse( publicationDate );
+				Date date = null;
+				if ( publicationDate.startsWith( "dd/mm/" ) )
+				{
+					date = dateFormat.parse( "01/01/" + publicationDate.substring( 6, 10 ) );
+					publication.setPublicationDateFormat( "yyyy" );
+				}
+				else if ( publicationDate.startsWith( "dd/" ) )
+				{
+					date = dateFormat.parse( "01/" + publicationDate.substring( 3, 10 ) );
+					publication.setPublicationDateFormat( "yyyy/M" );
+				}
+				else
+				{
+					date = dateFormat.parse( publicationDate );
+					publication.setPublicationDateFormat( "yyyy/M/d" );
+				}
 				publication.setPublicationDate( date );
-				publication.setPublicationDateFormat( "yyyy/M/d" );
 
 				Calendar cal = Calendar.getInstance();
 				cal.setTime( date );
@@ -296,7 +310,7 @@ public class ManagePublicationController
 
 		// update author interest flag
 		List<Author> authors = publication.getAuthors();
-		if ( authors != null && authors.isEmpty() )
+		if ( authors != null && !authors.isEmpty() )
 		{
 			for ( Author author : authors )
 			{
@@ -509,12 +523,26 @@ public class ManagePublicationController
 		if ( publicationDate != null && !publicationDate.isEmpty() )
 		{
 			// set date format
-			DateFormat dateFormat = new SimpleDateFormat( "dd/M/yyyy", Locale.ENGLISH );
+			DateFormat dateFormat = new SimpleDateFormat( "dd/MM/yyyy", Locale.ENGLISH );
 			try
 			{
-				Date date = dateFormat.parse( publicationDate );
+				Date date = null;
+				if ( publicationDate.startsWith( "dd/mm/" ) )
+				{
+					date = dateFormat.parse( "01/01/" + publicationDate.substring( 6, 10 ) );
+					publication.setPublicationDateFormat( "yyyy" );
+				}
+				else if ( publicationDate.startsWith( "dd/" ) )
+				{
+					date = dateFormat.parse( "01/" + publicationDate.substring( 3, 10 ) );
+					publication.setPublicationDateFormat( "yyyy/M" );
+				}
+				else
+				{
+					date = dateFormat.parse( publicationDate );
+					publication.setPublicationDateFormat( "yyyy/M/d" );
+				}
 				publication.setPublicationDate( date );
-				publication.setPublicationDateFormat( "yyyy/M/d" );
 
 				Calendar cal = Calendar.getInstance();
 				cal.setTime( date );
