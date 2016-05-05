@@ -29,4 +29,15 @@ public interface ResearcherFeature
 	public ResearcherTopicModeling getResearcherTopicModeling();
 
 	public ResearcherTopPublication getResearcherTopPublication();
+	
+	public ResearcherTopicModelingLDA getResearcherTopicModelingLDA();
+	
+	public ResearcherTopicModelingNGram getResearcherTopicModelingNGram();
+	
+	public ResearcherTopicModelingTOT getResearcherTopicModelingTOT();
+	
+	public ResearcherTopicModelingDiscreteLDA getResearcherTopicModelingDiscreteLDA();
+	
+	public ResearcherTopicModelingLabeledLDA getResearcherTopicModelingLabeledLDA();
+	
 }

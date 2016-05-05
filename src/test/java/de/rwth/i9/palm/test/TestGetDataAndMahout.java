@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.test;
 
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -32,7 +33,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 @ContextConfiguration( classes = { WebAppConfigTest.class, DatabaseConfigCoreTest.class }, loader = AnnotationConfigContextLoader.class )
 @TransactionConfiguration
 @Transactional
-@Ignore
+
 public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringContextTests
 {
 	@Autowired
@@ -111,7 +112,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 	
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		int count = 0;
@@ -121,19 +121,14 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 		if( !authors.isEmpty())
 			for (Author author:authors)
 			{	
-				PrintWriter writer = new PrintWriter("C:/Users/Piro/Desktop/Authors/Authors/" + author.getId() +".txt", "UTF-8");
-				writer.println( author.getName() );
+				PrintWriter writer = new PrintWriter("C:/Users/Piro/Desktop/New Data/Authors/Authors/" + author.getId() +".txt", "UTF-8");
+				writer.println( "Author Name : " + author.getName());
 				for(Publication publication : author.getPublications()){
-					if ( publication.getAbstractText() != null )
-					{
-					writer.println( publication.getTitle());
-					writer.println(publication.getAbstractText());
-					writer.println();
-						count++;
-					}
-					else
-					{
-						continue;
+					if (publication.getAbstractText() != null){
+						writer.println( publication.getTitle());
+						writer.println(publication.getAbstractText());
+						writer.println();
+						count ++;
 					}
 				}
 				writer.println();
@@ -157,11 +152,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 					System.out.println(publication.getTitle());
 					System.out.println(publication.getAbstractText());
 					System.out.println();
-//					PrintWriter writer = new PrintWriter(new BufferedWriter( new FileWriter("C:/Users/Piro/Desktop/Years/Years/" +year +".txt", true)));
-//					writer.println(publication.getTitle());
-//					writer.println(publication.getAbstractText());
-//					writer.println();
-//					writer.close();
 					}
 				}
 			}
@@ -169,22 +159,30 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	
 	@Test
 	@Ignore
-	public void testGetDatabaseFromDatabase2() throws FileNotFoundException, UnsupportedEncodingException
+	public void testGetDatabaseFromDatabase2() throws IOException
 	{
 
 		System.out.println( "\n========== TEST 2 - Fetch publications from database ==========" );
-		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();
+		int count =0;
+		//new FileWriter(log, true)
+		
+		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
 		if( !authors.isEmpty())
 			for (Author author:authors)
 			{	
 				for(Publication publication : author.getPublications()){
-					if (publication.getAbstractText()!= null){
-						PrintWriter pub = new PrintWriter( "C:\\Users\\nifry\\Desktop\\Publications\\" + publication.getId() + ".txt", "UTF-8" );
-					pub.println( publication.getTitle());
-					pub.println( publication.getAbstractText());
-					pub.println();
-					pub.close();
-					}
+	
+					if (publication.getKeywords()!= null){
+						PrintWriter pub = new PrintWriter(new FileWriter( "C:\\Users\\Piro\\Desktop\\labeledLDA\\labeledLDA\\labeledPublications.txt", true) );
+						pub.print(count + "\t");
+						pub.print( publication.getKeywordText() + "\t" );
+						pub.print(publication.getTitle() + " " + publication.getAbstractText());
+						pub.println();
+						count++;
+						System.out.println(count);
+						pub.close();
+					}	
+					
 				}
 
 			}
