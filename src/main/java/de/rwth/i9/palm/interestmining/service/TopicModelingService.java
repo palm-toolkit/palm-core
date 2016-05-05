@@ -213,13 +213,13 @@ public class TopicModelingService
 			authorTopicModelingProfile.setTopicModelingAlgorithmAuthor( activeDefaultAlgorithm );
 
 			// this is the actual implementation of NGrams N=1
-			if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "basic dummy lda" ) )
+			if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "Unigrams" ) )
 			{
 				calculateUnigramsAuthor( author, authorTopicModelingProfile, Static );
 			}
 
 			// calculate dummy ngram
-			else if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "basic dummy ngram" ) )
+			else if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "Ngrams" ) )
 			{
 				calculateNgramAuthor( author, authorTopicModelingProfile, Static );
 			}
@@ -264,13 +264,13 @@ public class TopicModelingService
 			circleTopicModelingProfile.setTopicModelingAlgorithmCircle( activeDefaultAlgorithm );
 
 			// calculate dummy lda
-			if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "basic dummy lda" ) )
+			if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "Unigrams" ) )
 			{
 				calculateBasicDummyLDACircle( circle, circleTopicModelingProfile );
 			}
 
 			// calculate dummy ngram
-			else if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "basic dummy ngram" ) )
+			else if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "Ngrams" ) )
 			{
 				calculateBasicDummyNgramCircle( circle, circleTopicModelingProfile );
 			}
