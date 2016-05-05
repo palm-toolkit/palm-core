@@ -8,6 +8,9 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 	private EventBasicStatistic eventBasicStatistic;
 
 	@Autowired( required = false )
+	private EventInterest eventInterest;
+
+	@Autowired( required = false )
 	private EventMining eventMining;
 
 	@Autowired( required = false )
@@ -23,6 +26,15 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 			this.eventBasicStatistic = new EventBasicStatisticImpl();
 
 		return this.eventBasicStatistic;
+	}
+
+	@Override
+	public EventInterest getEventInterest()
+	{
+		if ( this.eventInterest == null )
+			this.eventInterest = new EventInterestImpl();
+
+		return this.eventInterest;
 	}
 
 	@Override

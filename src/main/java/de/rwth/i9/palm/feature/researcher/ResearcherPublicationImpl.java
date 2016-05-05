@@ -57,6 +57,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		// get publication list
 		if ( !query.equals( "" ) || !year.equals( "all" ) || startPage != null || maxresult != null )
 		{
+			if ( !query.isEmpty() )
+				responseMap.put( "query", "query" );
 			Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithPaging( query, "all", targetAuthor, null, startPage, maxresult, year, orderBy );
 			publications = (List<Publication>) publicationsMap.get( "publications" );
 		}
@@ -68,11 +70,11 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		}
 
 		// get available year
-		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( targetAuthor ) );
+		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( targetAuthor, "DESC" ) );
 
 		if ( publications == null || publications.isEmpty() )
 		{
-			responseMap.put( "status", "error" );
+			responseMap.put( "status", "ok" );
 			responseMap.put( "message", "Error - empty publication" );
 			return responseMap;
 		}
@@ -146,8 +148,9 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
 				eventMap.put( "name", publication.getEvent().getEventGroup().getName() );
-				if ( !publication.getEvent().getEventGroup().getNotation().equals( publication.getEvent().getEventGroup().getName() ) )
-					eventMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
+				if ( publication.getEvent().getEventGroup().getNotation() != null )
+					if ( !publication.getEvent().getEventGroup().getNotation().equals( publication.getEvent().getEventGroup().getName() ) )
+						eventMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
 				eventMap.put( "isAdded", publication.getEvent().isAdded() );
 				if ( publication.getEvent().getEventGroup() != null )
 					eventMap.put( "isGroupAdded", publication.getEvent().getEventGroup().isAdded() );
@@ -160,6 +163,10 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			if ( publication.getStartPage() > 0 )
 				publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
 
+			if ( publication.getAbstractText() != null || publication.getKeywordText() != null )
+				publicationMap.put( "contentExist", true );
+			else
+				publicationMap.put( "contentExist", false );
 			publicationList.add( publicationMap );
 		}
 		responseMap.put( "count", publicationList.size() );

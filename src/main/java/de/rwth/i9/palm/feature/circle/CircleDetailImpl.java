@@ -3,16 +3,18 @@ package de.rwth.i9.palm.feature.circle;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.rwth.i9.palm.helper.comparator.AuthorByNaturalOrderComparator;
+import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Publication;
@@ -25,7 +27,7 @@ public class CircleDetailImpl implements CircleDetail
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public Map<String, Object> getCircleDetailById( String circleId )
+	public Map<String, Object> getCircleDetailById( String circleId, boolean isRetrieveAuthorDetail, boolean isRetrievePublicationDetail )
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -43,10 +45,16 @@ public class CircleDetailImpl implements CircleDetail
 		// preparing data format
 		DateFormat dateFormat = new SimpleDateFormat( "dd/mm/yyyy", Locale.ENGLISH );
 
+		// get all of Querse properties
+		Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+		queryMap.put( "circleId", circle.getId() );
+		queryMap.put( "isRetrieveAuthorDetail", isRetrieveAuthorDetail );
+		queryMap.put( "isRetrievePublicationDetail", isRetrievePublicationDetail );
+		responseMap.put( "query", queryMap );
+
 		// get all of Circle properties
 		Map<String, Object> circleMap = new LinkedHashMap<String, Object>();
 		circleMap.put( "id", circle.getId() );
-
 		circleMap.put( "name", circle.getName() );
 		circleMap.put( "dateCreated", dateFormat.format( circle.getCreationDate() ) );
 		circleMap.put( "description", circle.getDescription() );
@@ -62,21 +70,31 @@ public class CircleDetailImpl implements CircleDetail
 			circleMap.put( "creator", creatorMap );
 		}
 
-		if ( circle.getAuthors() != null )
+		if ( isRetrieveAuthorDetail && circle.getAuthors() != null )
 		{
-			circleMap.put( "numberAuthors", circle.getAuthors().size() );
+			List<Author> authors = new ArrayList<Author>();
+			authors.addAll( circle.getAuthors() );
+
+			Collections.sort( authors, new AuthorByNaturalOrderComparator() );
+
+			circleMap.put( "numberAuthors", authors.size() );
 			if ( circle.getAuthors().size() > 0 )
 			{
-				circleMap.put( "authors", printCircleAuthors( circle.getAuthors() ) );
+				circleMap.put( "researchers", printCircleAuthors( authors ) );
 			}
 		}
 
-		if ( circle.getPublications() != null )
+		if ( isRetrievePublicationDetail && circle.getPublications() != null )
 		{
-			circleMap.put( "numberPublications", circle.getPublications().size() );
+			List<Publication> publications = new ArrayList<Publication>();
+			publications.addAll( circle.getPublications() );
+
+			Collections.sort( publications, new PublicationByDateComparator() );
+
+			circleMap.put( "numberPublications", publications.size() );
 			if ( circle.getPublications().size() > 0 )
 			{
-				circleMap.put( "publications", printCirclePublications( circle.getPublications() ) );
+				circleMap.put( "publications", printCirclePublications( publications ) );
 			}
 		}
 
@@ -89,7 +107,7 @@ public class CircleDetailImpl implements CircleDetail
 		return responseMap;
 	}
 
-	private Object printCirclePublications( Set<Publication> publications )
+	private Object printCirclePublications( List<Publication> publications )
 	{
 		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
 
@@ -114,11 +132,11 @@ public class CircleDetailImpl implements CircleDetail
 				if ( author.getPhotoUrl() != null )
 					authorMap.put( "photo", author.getPhotoUrl() );
 
-				//authorMap.put( "isAdded", author.isAdded() );
+				authorMap.put( "isAdded", author.isAdded() );
 
 				coathorList.add( authorMap );
 			}
-			publicationMap.put( "coauthor", coathorList );
+			publicationMap.put( "authors", coathorList );
 
 			if ( publication.getKeywordText() != null )
 				publicationMap.put( "keyword", publication.getKeywordText() );
@@ -162,7 +180,7 @@ public class CircleDetailImpl implements CircleDetail
 		return publicationList;
 	}
 
-	private Object printCircleAuthors( Set<Author> authors )
+	private Object printCircleAuthors( List<Author> authors )
 	{
 		List<Map<String, Object>> researcherList = new ArrayList<Map<String, Object>>();
 
@@ -184,7 +202,7 @@ public class CircleDetailImpl implements CircleDetail
 				researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
 
 			if ( researcher.getPublicationAuthors() != null )
-				researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
+				researcherMap.put( "publicationsNumber", researcher.getNoPublication() );
 			else
 				researcherMap.put( "publicationsNumber", 0 );
 			String otherDetail = "";
@@ -194,9 +212,9 @@ public class CircleDetailImpl implements CircleDetail
 				otherDetail += ", " + researcher.getDepartment();
 			if ( !otherDetail.equals( "" ) )
 				researcherMap.put( "detail", otherDetail );
-
-			researcherMap.put( "isAdded", researcher.isAdded() );
 			*/
+			researcherMap.put( "isAdded", researcher.isAdded() );
+			
 			researcherList.add( researcherMap );
 		}
 		

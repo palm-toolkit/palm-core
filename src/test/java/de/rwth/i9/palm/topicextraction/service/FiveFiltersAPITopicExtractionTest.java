@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 @RunWith( SpringJUnit4ClassRunner.class )
 @ContextConfiguration( loader = AnnotationConfigContextLoader.class )
+@Ignore
 public class FiveFiltersAPITopicExtractionTest
 {
 

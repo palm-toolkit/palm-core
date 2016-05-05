@@ -101,7 +101,12 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			// set source
 			publicationDetails.put( "source", SourceType.GOOGLESCHOLAR.toString() );
 			publicationDetails.put( "url", eachPublicationRow.select( "a" ).first().absUrl( "href" ) );
-			publicationDetails.put( "title", eachPublicationRow.select( "a" ).first().text() );
+
+			String title = eachPublicationRow.select( "a" ).first().text();
+			if ( title.toLowerCase().contains( "special issue article" ) )
+				continue;
+
+			publicationDetails.put( "title", title );
 			publicationDetails.put( "coauthor", eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).first().text() );
 			String venue = eachPublicationRow.select( HtmlSelectorConstant.GS_PUBLICATION_COAUTHOR_AND_VENUE ).get( 1 ).text().trim();
 			if ( !venue.equals( "" ) && venue.length() < 80 )

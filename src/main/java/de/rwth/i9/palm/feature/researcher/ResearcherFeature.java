@@ -26,6 +26,8 @@ public interface ResearcherFeature
 
 	public ResearcherSearch getResearcherSearch();
 
+	public ResearcherTopicModeling getResearcherTopicModeling();
+
 	public ResearcherTopPublication getResearcherTopPublication();
 	
 	public ResearcherTopicModelingLDA getResearcherTopicModelingLDA();

@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 //import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.CompletionStatus;
+import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.Source;
@@ -289,7 +291,7 @@ public class AsynchronousCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<PublicationSource> getPublicationInfromationFromHtml( PublicationSource publicationSource, PublicationFile publicationFile ) throws IOException
+	public Future<PublicationSource> getPublicationInfromationFromHtml( Publication publication, PublicationSource publicationSource, PublicationFile publicationFile ) throws IOException
 	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 //		log.info( "start : get publication information from Htmlpage " + publicationSource.getSourceUrl() + " starting" );
@@ -301,10 +303,24 @@ public class AsynchronousCollectionService
 
 		if ( publicationInformationMap != null && !publicationInformationMap.isEmpty() )
 		{
+			if ( publicationInformationMap.get( "abstract" ) != null || publicationInformationMap.get( "keyword" ) != null )
+			{
+				publicationSource.setPublication( publication );
+				publication.addPublicationSource( publicationSource );
+			}
 			if ( publicationInformationMap.get( "abstract" ) != null )
+			{
 				publicationSource.setAbstractText( publicationInformationMap.get( "abstract" ) );
+				publication.setAbstractText( publicationSource.getAbstractText() );
+				publication.setAbstractStatus( CompletionStatus.COMPLETE );
+				publication.setContentUpdated( true );
+			}
 			if ( publicationInformationMap.get( "keyword" ) != null )
+			{
 				publicationSource.setKeyword( publicationInformationMap.get( "keyword" ) );
+				publication.setKeywordText( publicationSource.getKeyword() );
+				publication.setKeywordStatus( CompletionStatus.COMPLETE );
+			}
 
 			publicationFile.setReadable( true );
 		}
@@ -320,7 +336,7 @@ public class AsynchronousCollectionService
 	 * @throws IOException
 	 */
 	@Async
-	public Future<PublicationSource> getPublicationInformationFromPdf( PublicationSource publicationSource, PublicationFile publicationFile ) throws IOException
+	public Future<PublicationSource> getPublicationInformationFromPdf( Publication publication, PublicationSource publicationSource, PublicationFile publicationFile ) throws IOException
 	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 //		log.info( "start : get publication information from Pdf " + publicationSource.getSourceUrl() + " starting" );
@@ -403,9 +419,21 @@ public class AsynchronousCollectionService
 			if ( publicationInformationMap.get( "author" ) != null )
 				publicationSource.setCoAuthors( publicationInformationMap.get( "author" ) );
 			if ( publicationInformationMap.get( "abstract" ) != null )
+			{
 				publicationSource.setAbstractText( publicationInformationMap.get( "abstract" ) );
+				publication.setAbstractText( publicationSource.getAbstractText() );
+				publication.setAbstractStatus( CompletionStatus.PARTIALLY_COMPLETE );
+				publication.setContentUpdated( true );
+			}
 			if ( publicationInformationMap.get( "keyword" ) != null )
+			{
 				publicationSource.setKeyword( publicationInformationMap.get( "keyword" ) );
+				publication.setKeywordText( publicationSource.getKeyword() );
+				publication.setKeywordStatus( CompletionStatus.PARTIALLY_COMPLETE );
+			}
+
+			publicationSource.setPublication( publication );
+			publication.addPublicationSource( publicationSource );
 
 			publicationFile.setReadable( true );
 		}

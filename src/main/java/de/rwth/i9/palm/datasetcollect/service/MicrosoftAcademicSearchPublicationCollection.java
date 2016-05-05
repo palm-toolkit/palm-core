@@ -30,9 +30,7 @@ public class MicrosoftAcademicSearchPublicationCollection extends PublicationCol
 
 	/**
 	 * Old API url
-	 * http://academic.research.microsoft.com/json.svc/search?AppId=e028e2a5-
-	 * 972d-4ba5-a4c0-2f25860b1203&AuthorQuery=mohamed%20amine%20chatti&
-	 * ResultObjects=Publication&PublicationContent=AllInfo&StartIdx=0&EndIdx=99
+http://academic.research.microsoft.com/json.svc/search?AppId=e028e2a5-972d-4ba5-a4c0-2f25860b1203&AuthorQuery=mohamed%20amine%20chatti&ResultObjects=Publication&PublicationContent=AllInfo&StartIdx=0&EndIdx=99
 	 * 
 	 * New API == get author id
 	 * https://api.datamarket.azure.com/Data.ashx/MRC/MicrosoftAcademic/v2/

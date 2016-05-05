@@ -49,6 +49,9 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	@Autowired( required = false )
 	private ResearcherTopicModelingLabeledLDA researcherTopicModelingLabeledLDA;
 
+	@Autowired( required = false )
+	private ResearcherTopicModeling researcherTopicModeling;
+
 	@Override
 	public ResearcherAcademicEventTree getResearcherAcademicEventTree()
 	{
@@ -140,6 +143,14 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	}
 
 	@Override
+	public ResearcherTopicModeling getResearcherTopicModeling()
+	{
+		if ( this.researcherTopicModeling == null )
+			this.researcherTopicModeling = new ResearcherTopicModelingImpl();
+
+		return this.researcherTopicModeling;
+	}
+
 	public ResearcherTopicModelingLDA getResearcherTopicModelingLDA()
 	{
 		if ( this.researcherTopicModelingLDA == null)

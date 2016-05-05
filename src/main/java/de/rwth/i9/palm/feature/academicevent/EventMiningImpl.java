@@ -26,6 +26,7 @@ import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.PublicationType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.ApplicationService;
 import de.rwth.i9.palm.util.IdentifierFactory;
 
 @Component
@@ -33,6 +34,9 @@ public class EventMiningImpl implements EventMining
 {
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+
+	@Autowired
+	private ApplicationService applicationService;
 
 	@Autowired
 	private EventPublicationCollectionService eventPublicationCollectionService;
@@ -163,6 +167,7 @@ public class EventMiningImpl implements EventMining
 					{
 						for ( Entry<String, Object> eachEventYearEntry : eachEventYearMap.entrySet() )
 						{
+							// event volume
 							if ( eachEventYearEntry.getKey().equals( "volume" ) )
 							{
 								int volume = 0;
@@ -205,6 +210,7 @@ public class EventMiningImpl implements EventMining
 									eventGroup.addEvent( newEvent );
 								}
 							}
+							// event year
 							else if ( eachEventYearEntry.getKey().equals( "year" ) )
 							{
 								// reset 
@@ -270,7 +276,12 @@ public class EventMiningImpl implements EventMining
 		{
 			Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 			eventMap.put( "id", event.getId() );
-			eventMap.put( "name", WordUtils.capitalize( event.getName() ) );
+			if ( event.getName() != null )
+				eventMap.put( "name", WordUtils.capitalize( event.getName() ) );
+			else
+			{
+				eventMap.put( "name", WordUtils.capitalize( eventGroup.getName() ) );
+			}
 			eventMap.put( "year", event.getYear() );
 			if ( event.getDblpUrl() != null )
 				eventMap.put( "url", event.getDblpUrl() );
@@ -363,18 +374,33 @@ public class EventMiningImpl implements EventMining
 	/**
 	 * Check whether fetching to network is necessary
 	 * 
-	 * @param author
+	 * @param eventGroup
 	 * @return
 	 */
 	private boolean isFetchDatasetFromGroupDBLP( EventGroup eventGroup )
 	{
+		// get configuration, after how many hour collecting process of
+		// researcher publication need to be repeated again
+		String collectAfterHours = applicationService.getConfigValue( "conference", "setting", "collectEvery" );
+		// by default is around 2 weeks
+		int collectAfter = 4320;
+		// alter default value if any
+		if ( collectAfterHours != null )
+			try
+			{
+				collectAfter = Integer.parseInt( collectAfterHours );
+			}
+			catch ( Exception e )
+			{
+			}
+
 		// get current timestamp
 		java.util.Date date = new java.util.Date();
 		Timestamp currentTimestamp = new Timestamp( date.getTime() );
 		if ( eventGroup.getRequestDate() != null )
 		{
 			// check if the existing author publication is obsolete
-			if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, eventGroup.getRequestDate() ) > 24 * 7 )
+			if ( DateTimeHelper.substractTimeStampToHours( currentTimestamp, eventGroup.getRequestDate() ) > collectAfter )
 			{
 				// update current timestamp
 				eventGroup.setRequestDate( currentTimestamp );
@@ -390,7 +416,6 @@ public class EventMiningImpl implements EventMining
 			return true;
 		}
 
-		// return false;
 		return false;
 	}
 }

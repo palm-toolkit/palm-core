@@ -16,7 +16,7 @@ import de.rwth.i9.palm.model.Publication;
 public class ResearcherCoauthorImpl implements ResearcherCoauthor
 {
 	@Override
-	public Map<String, Object> getResearcherCoAuthorMap( Author author )
+	public Map<String, Object> getResearcherCoAuthorMap( Author author, int startPage, int maxresult )
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -49,7 +49,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 			}
 		}
 
-		// prepare list of object map containing coAuthor detrail
+		// prepare list of object map containing coAuthor details
 		List<Map<String, Object>> coAuthorList = new ArrayList<Map<String, Object>>();
 
 		for ( Author coAuthor : coauthorSet )
@@ -70,9 +70,25 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		}
 		
 		Collections.sort( coAuthorList, new CoAuthorByNumberOfCollaborationComparator() );
+
+		// prepare list of object map containing coAuthor details
+		List<Map<String, Object>> coAuthorListPaging = new ArrayList<Map<String, Object>>();
+
+		int position = 0;
+		for ( Map<String, Object> coAuthor : coAuthorList )
+		{
+			if ( position >= startPage && coAuthorListPaging.size() < maxresult )
+			{
+				coAuthorListPaging.add( coAuthor );
+			}
+		}
+
+		// remove unnecessary result
+
 		// put coauthor to responseMap
-		responseMap.put( "count", coAuthorList.size() );
-		responseMap.put( "coAuthors", coAuthorList );
+		responseMap.put( "countTotal", coAuthorList.size() );
+		responseMap.put( "count", coAuthorListPaging.size() );
+		responseMap.put( "coAuthors", coAuthorListPaging );
 
 		return responseMap;
 	}

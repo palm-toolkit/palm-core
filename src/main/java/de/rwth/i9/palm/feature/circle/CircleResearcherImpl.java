@@ -1,12 +1,14 @@
 package de.rwth.i9.palm.feature.circle;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.text.WordUtils;
 
+import de.rwth.i9.palm.helper.comparator.AuthorByNaturalOrderComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 
@@ -26,7 +28,12 @@ public class CircleResearcherImpl implements CircleResearcher
 			return responseMap;
 		}
 
-		for ( Author researcher : circle.getAuthors() )
+		List<Author> authors = new ArrayList<Author>();
+		authors.addAll( circle.getAuthors() );
+
+		Collections.sort( authors, new AuthorByNaturalOrderComparator() );
+
+		for ( Author researcher : authors )
 		{
 			Map<String, Object> researcherMap = new LinkedHashMap<String, Object>();
 			researcherMap.put( "id", researcher.getId() );
@@ -41,7 +48,7 @@ public class CircleResearcherImpl implements CircleResearcher
 				researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
 
 			if ( researcher.getPublicationAuthors() != null )
-				researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
+				researcherMap.put( "publicationsNumber", researcher.getNoPublication() );
 			else
 				researcherMap.put( "publicationsNumber", 0 );
 			String otherDetail = "";

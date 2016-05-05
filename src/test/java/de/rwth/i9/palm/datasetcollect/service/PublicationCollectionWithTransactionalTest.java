@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.Ignore;
@@ -39,8 +38,6 @@ public class PublicationCollectionWithTransactionalTest extends AbstractTransact
 	@Autowired
 	private PublicationCollectionService publicationCollectionService;
 
-	@Autowired
-	private AsynchronousPublicationDetailCollectionService asynchronousPublicationDetailCollectionService;
 
 	private final static Logger log = LoggerFactory.getLogger( PublicationCollectionWithTransactionalTest.class );
 
@@ -54,25 +51,18 @@ public class PublicationCollectionWithTransactionalTest extends AbstractTransact
 	}
 
 	@Test
-	@Ignore
-	public void testPublicationEnrichmentPerPublication() throws IOException, InterruptedException, ExecutionException, TimeoutException
+	public void testLuceneSlopQuery()
 	{
+		String publicationTitle = "Dynamic topic models";
+		List<Publication> fromDbPublications = persistenceStrategy.getPublicationDAO().getPublicationViaPhraseSlopQuery( publicationTitle.toLowerCase(), 2 );
 
-		Publication publication = persistenceStrategy.getPublicationDAO().getById( "8af08983-9b1e-4d6e-b771-5fc092cd444e" );
-		Future<Publication> publicationFuture = asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication, true, true );
-
-		publicationFuture.get();
-		
-//		boolean enrichmentProcessIsDone = true;
-//		do
-//		{
-//
-//			if ( publicationFuture.isDone() )
-//			{
-//				enrichmentProcessIsDone = false;
-//			}
-//			// 10-millisecond pause between each check
-//			Thread.sleep( 5000 );
-//		} while ( !enrichmentProcessIsDone );
+		if ( !fromDbPublications.isEmpty() )
+		{
+			for ( Publication publication : fromDbPublications )
+			{
+				System.out.println( publication.getTitle() );
+			}
+		}
 	}
+
 }

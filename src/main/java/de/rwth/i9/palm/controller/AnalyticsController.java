@@ -52,7 +52,7 @@ public class AnalyticsController
 	@Transactional
 	public ModelAndView landing( @RequestParam( value = "sessionid", required = false ) final String sessionId, final HttpServletResponse response ) throws InterruptedException
 	{
-		ModelAndView model = new ModelAndView( "login", "link", "analytics" );
+		ModelAndView model = new ModelAndView( "getAnalyticsView", "link", "analytics" );
 
 		if ( sessionId != null && sessionId.equals( "0" ) )
 			response.setHeader( "SESSION_INVALID", "yes" );

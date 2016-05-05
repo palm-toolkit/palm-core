@@ -53,7 +53,7 @@ public class AsynchronousPdfExtractionService
 	}
 
 	@Async
-	public Future<List<TextSection>> extractPublicationPdfIntoTextSections( String url ) throws IOException
+	public Future<List<TextSection>> extractPublicationPdfIntoTextSections( String url, int untilPage ) throws IOException
 	{
 
 //		Stopwatch stopwatch = Stopwatch.createStarted();
@@ -63,7 +63,7 @@ public class AsynchronousPdfExtractionService
 
 		try
 		{
-			textSections = ItextPdfExtraction.extractPdf( url );
+			textSections = ItextPdfExtraction.extractPdf( url, untilPage );
 		}
 		catch ( Exception e )
 		{

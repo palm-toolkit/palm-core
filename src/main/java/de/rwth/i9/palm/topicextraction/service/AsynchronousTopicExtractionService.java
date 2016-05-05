@@ -16,6 +16,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
+import de.rwth.i9.palm.model.ExtractionService;
+
 //import com.google.common.base.Stopwatch;
 
 import de.rwth.i9.palm.model.Publication;
@@ -36,30 +38,31 @@ public class AsynchronousTopicExtractionService
 	 */
 	@SuppressWarnings( "unchecked" )
 	@Async
-	public Future<PublicationTopic> getTopicsByAlchemyApi( Publication publication, PublicationTopic publicationTopic, int maxTextLength )
+	public Future<PublicationTopic> getTopicsByAlchemyApi( Publication publication, PublicationTopic publicationTopic, ExtractionService extractionService )
 	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 
-//		log.info( "AlchemyAPI extract publication " + publication.getTitle() + " starting" );
+		log.info( "AlchemyAPI extract publication " + publication.getTitle()/* + " starting" */);
 
 		String text = getPublicationText( publication );
 
 		// free alchemy has certain text limitation in length
-		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
+		text = TopicExtractionUtils.cutTextToLength( text, extractionService.getMaxTextLength() );
 
 		Map<String, Object> alchemyResultsMap = null;
 
 		try
 		{
-			alchemyResultsMap = AlchemyAPITopicExtraction.getTextRankedKeywords( text );
+			alchemyResultsMap = AlchemyAPITopicExtraction.getTextRankedKeywords( text, extractionService );
 		}
 		catch ( Exception e )
 		{
 		}
 
-		if ( alchemyResultsMap != null )
+		if ( alchemyResultsMap != null && !alchemyResultsMap.isEmpty() )
 		{
-			publication.setLanguage( alchemyResultsMap.get( "language" ).toString() );
+			if ( publication.getLanguage() == null && alchemyResultsMap.get( "language" ) != null )
+				publication.setLanguage( alchemyResultsMap.get( "language" ).toString() );
 
 			publicationTopic.setTermValues( (Map<String, Double>) alchemyResultsMap.get( "termvalue" ) );
 			// filter duplicated keys, caused by accented character
@@ -68,11 +71,72 @@ public class AsynchronousTopicExtractionService
 			publicationTopic.setValid( true );
 		}
 		else
+		{
+			log.info( "Error - daily limit exceed" );
 			publicationTopic.setValid( false );
+		}
 
 //		stopwatch.elapsed( TimeUnit.MILLISECONDS );
 
 //		log.info( "AlchemyAPI extract publication " + publication.getTitle() + " complete in " + stopwatch );
+		return new AsyncResult<PublicationTopic>( publicationTopic );
+	}
+
+	/**
+	 * Get extracted topic asynchronously via OpenCalais Api
+	 * 
+	 * @param publication
+	 * @param publicationTopic
+	 * @param maxTextLength
+	 * @return
+	 */
+	@SuppressWarnings( "unchecked" )
+	@Async
+	public Future<PublicationTopic> getTopicsByOpenCalais( Publication publication, PublicationTopic publicationTopic, ExtractionService extractionService )
+	{
+		// Stopwatch stopwatch = Stopwatch.createStarted();
+
+		log.info( "OpenCalais extract publication " + publication.getTitle()/* + " starting" */);
+
+		String text = getPublicationText( publication );
+
+		// just cut text according to configuration
+		text = TopicExtractionUtils.cutTextToLength( text, extractionService.getMaxTextLength() );
+
+		Map<String, Object> opencalaisResultsMap = null;
+
+		try
+		{
+			opencalaisResultsMap = OpenCalaisAPITopicExtraction.getTopicsFromText( text, extractionService );
+		}
+		catch ( Exception e )
+		{
+		}
+
+		if ( opencalaisResultsMap != null && !opencalaisResultsMap.isEmpty() )
+		{
+			if ( publication.getLanguage() == null && opencalaisResultsMap.get( "language" ) != null )
+			{
+				String language = opencalaisResultsMap.get( "language" ).toString();
+				if ( language.length() > 14 )
+					language = "english";
+
+				publication.setLanguage( language );
+			}
+
+			publicationTopic.setTermValues( (Map<String, Double>) opencalaisResultsMap.get( "termvalue" ) );
+
+			publicationTopic.setValid( true );
+		}
+		else if ( opencalaisResultsMap.isEmpty() ) // no topic found
+			publicationTopic.setValid( true );
+		else
+			publicationTopic.setValid( false );
+
+		// stopwatch.elapsed( TimeUnit.MILLISECONDS );
+
+		// log.info( "AlchemyAPI extract publication " + publication.getTitle()
+		// + " complete in " + stopwatch );
 		return new AsyncResult<PublicationTopic>( publicationTopic );
 	}
 
@@ -88,17 +152,17 @@ public class AsynchronousTopicExtractionService
 	 */
 	@SuppressWarnings( "unchecked" )
 	@Async
-	public Future<PublicationTopic> getTopicsByYahooContentAnalysis( Publication publication, PublicationTopic publicationTopic, int maxTextLength ) throws UnsupportedEncodingException, URISyntaxException
+	public Future<PublicationTopic> getTopicsByYahooContentAnalysis( Publication publication, PublicationTopic publicationTopic, ExtractionService extractionService ) throws UnsupportedEncodingException, URISyntaxException
 	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 
-//		log.info( "Yahoo Content Analysis extract publication " + publication.getTitle() + " starting" );
+//		log.info( "Yahoo Content Analysis extract publication " + publication.getTitle()/* + " starting" */);
 
 		String text = getPublicationText( publication );
 
-		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
+		text = TopicExtractionUtils.cutTextToLength( text, extractionService.getMaxTextLength() );
 
-		Map<String, Object> ycaResultsMap = YahooContentAnalysisAPITopicExtraction.getTextContentAnalysis( text );
+		Map<String, Object> ycaResultsMap = YahooContentAnalysisAPITopicExtraction.getTextContentAnalysis( text, extractionService );
 
 		if ( ycaResultsMap != null )
 		{
@@ -119,17 +183,17 @@ public class AsynchronousTopicExtractionService
 
 	@SuppressWarnings( "unchecked" )
 	@Async
-	public Future<PublicationTopic> getTopicsByFiveFilters( Publication publication, PublicationTopic publicationTopic, int maxTextLength ) throws UnsupportedEncodingException, URISyntaxException
+	public Future<PublicationTopic> getTopicsByFiveFilters( Publication publication, PublicationTopic publicationTopic, ExtractionService extractionService ) throws UnsupportedEncodingException, URISyntaxException
 	{
 //		Stopwatch stopwatch = Stopwatch.createStarted();
 
-//		log.info( "Five Filters extract publication " + publication.getTitle() + " starting" );
+//		log.info( "Five Filters extract publication " + publication.getTitle()/* + " starting" */);
 
 		String text = getPublicationText( publication );
 
-		text = TopicExtractionUtils.cutTextToLength( text, maxTextLength );
+		text = TopicExtractionUtils.cutTextToLength( text, extractionService.getMaxTextLength() );
 
-		Map<String, Object> fiveFiltersResultsMap = FiveFiltersAPITopicExtraction.getTextTermExtract( text );
+		Map<String, Object> fiveFiltersResultsMap = FiveFiltersAPITopicExtraction.getTextTermExtract( text, extractionService );
 
 		if ( fiveFiltersResultsMap != null )
 		{
@@ -158,24 +222,25 @@ public class AsynchronousTopicExtractionService
 	private void filterAlchemyResult( Map<String, Double> alchemyResultsMap )
 	{
 		Set<String> mapKeys = new HashSet<String>();
-
-		for ( Iterator<Map.Entry<String, Double>> it = alchemyResultsMap.entrySet().iterator(); it.hasNext(); )
+		if ( alchemyResultsMap != null && alchemyResultsMap.isEmpty() )
 		{
-			Map.Entry<String, Double> entry = it.next();
-			// filter the accented character
-			String mapKey = deAccent( entry.getKey() );
-			// if there is similar key, remove resultmap
-			if ( mapKeys.contains( mapKey ) )
-				it.remove();
-			else
-				mapKeys.add( mapKey );
+			for ( Iterator<Map.Entry<String, Double>> it = alchemyResultsMap.entrySet().iterator(); it.hasNext(); )
+			{
+				Map.Entry<String, Double> entry = it.next();
+				// filter the accented character
+				String mapKey = deAccent( entry.getKey() );
+				// if there is similar key, remove resultmap
+				if ( mapKeys.contains( mapKey ) )
+					it.remove();
+				else
+					mapKeys.add( mapKey );
+			}
 		}
-
 	}
 
 	/**
-	 * Filtering alchemyAPI result, due to accented character on terms caused
-	 * error on saving process
+	 * Filtering five filter result, due to similar term existed error on saving
+	 * process
 	 * 
 	 * @param alchemyResultsMap
 	 */
@@ -228,4 +293,5 @@ public class AsynchronousTopicExtractionService
 //			text += " " + publication.getContentText();
 		return text;
 	}
+
 }

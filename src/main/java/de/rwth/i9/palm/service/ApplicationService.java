@@ -36,6 +36,9 @@ public class ApplicationService
 	@Autowired
 	private SecurityService securityService;
 
+	@Autowired
+	private TemplateService templateService;
+
 	// caching the sources
 	private Map<String, Source> academicNetworkSourcesCache;
 
@@ -63,14 +66,23 @@ public class ApplicationService
 
 		if ( freemarkerConfiguration != null )
 		{
+			// responsible for any security affairs on templates
 			exposeFreemarkerSecurityService();
+			// responsible for any
+			exposeFreemarkerTemplateService();
 		}
 	}
 
 	private void exposeFreemarkerSecurityService() throws TemplateModelException
 	{
 		freemarkerConfiguration.getConfiguration().setSharedVariable( "securityService", securityService );
-		log.debug( "TemplateSecurityService exposed." );
+		log.debug( "SecurityService exposed." );
+	}
+
+	private void exposeFreemarkerTemplateService() throws TemplateModelException
+	{
+		freemarkerConfiguration.getConfiguration().setSharedVariable( "templateService", templateService );
+		log.debug( "TemplateService exposed." );
 	}
 
 	/* Source cache */
@@ -231,6 +243,9 @@ public class ApplicationService
 	/* user log map */
 	public void putProcessLog( String processKey, String logMessage, String mode )
 	{
+		if ( processKey == null )
+			return;
+
 		if ( this.processLogMap == null )
 		{
 			ProcessLogHelper processLogHelper = new ProcessLogHelper();

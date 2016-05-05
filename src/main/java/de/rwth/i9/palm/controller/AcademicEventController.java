@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,6 +30,7 @@ import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserEventGroupBookmark;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -56,7 +58,7 @@ public class AcademicEventController
 	public ModelAndView eventPage( 
 			@RequestParam( value = "id", required = false ) final String id,
 			@RequestParam( value = "eventId", required = false ) final String eventId, 
-			@RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "name", required = false ) String name,
 			@RequestParam( value = "type", required = false ) final String type,
 			@RequestParam( value = "abbr", required = false ) String notation, 
 			@RequestParam( value = "year", required = false ) final String year,
@@ -90,9 +92,14 @@ public class AcademicEventController
 			widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CONFERENCE, WidgetStatus.DEFAULT );
 		// assign the model
 		model.addObject( "widgets", widgets );
+
+		EventGroup eventGroup = null;
 		// assign query
 		if ( id != null )
+		{
 			model.addObject( "targetId", id );
+			eventGroup = persistenceStrategy.getEventGroupDAO().getById( id );
+		}
 		else
 		{
 			// get event group id
@@ -100,11 +107,22 @@ public class AcademicEventController
 			{
 				Event event = persistenceStrategy.getEventDAO().getById( eventId );
 				if ( event != null && event.getEventGroup() != null )
+				{
 					model.addObject( "targetId", event.getEventGroup().getId() );
+					eventGroup = event.getEventGroup();
+				}
 			}
 		}
+		// check whether event group is added or not
+
 		if ( eventId != null )
+		{
 			model.addObject( "targetEventId", eventId );
+			if ( name == null )
+			{
+				name = eventGroup.getName();
+			}
+		}
 		if ( name != null )
 			model.addObject( "targetName", name.replaceAll( "\"", "" ) );
 		if ( notation != null )
@@ -118,7 +136,10 @@ public class AcademicEventController
 		if ( publicationId != null )
 			model.addObject( "publicationId", publicationId );
 		if ( add != null )
-			model.addObject( "targetAdd", add );
+		{
+			if ( eventGroup == null || ( eventGroup != null && !eventGroup.isAdded() ) )
+				model.addObject( "targetAdd", add );
+		}
 		return model;
 	}
 
@@ -128,11 +149,13 @@ public class AcademicEventController
 	public @ResponseBody Map<String, Object> getConferenceList( 
 			@RequestParam( value = "query", required = false ) String query, 
 			@RequestParam( value = "abbr", required = false ) String notation, 
-			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "page", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "type", required = false ) String type,
 			@RequestParam( value = "source", required = false ) String source,
+			@RequestParam( value = "addedVenue", required = false ) String addedVenue,
 			@RequestParam( value = "persist", required = false ) String persist,
+			@RequestParam( value = "eventId", required = false ) String eventId,
 			HttpServletRequest request,
 			HttpServletResponse response)
 	{
@@ -142,6 +165,7 @@ public class AcademicEventController
 		if ( type == null )			type = "all";
 		if ( source == null )		source = "internal";
 		if ( persist == null )		persist = "no";
+		if ( addedVenue == null )	addedVenue = "yes";
 		
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -159,12 +183,25 @@ public class AcademicEventController
 			persistResult = true;
 		}
 		
-		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, notation, startPage, maxresult, source, type, persistResult );
+		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, notation, startPage, maxresult, source, type, persistResult, eventId, addedVenue );
 
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )
+		{
 			request.getSession().setAttribute( "eventGroups", eventGroupsMap.get( "eventGroups" ) );
-
+			// recheck if session really has been updated
+			// (there is a bug in spring session, which makes session is
+			// not updated sometimes) - a little work a round
+			boolean isSessionUpdated = false;
+			while ( !isSessionUpdated )
+			{
+				Object eventGroups = request.getSession().getAttribute( "eventGroups" );
+				if ( eventGroups.equals( eventGroupsMap.get( "eventGroups" ) ) )
+					isSessionUpdated = true;
+				else
+					request.getSession().setAttribute( "eventGroups", eventGroupsMap.get( "eventGroups" ) );
+			}
+		}
 		if ( (Integer) eventGroupsMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) eventGroupsMap.get( "totalCount" ) );
@@ -190,7 +227,9 @@ public class AcademicEventController
 		@SuppressWarnings( "unchecked" )
 		List<EventGroup> sessionEventGroups = null;// (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
 
-		return academicEventFeature.getEventMining().fetchEventGroupData( id, pid, sessionEventGroups );
+		Map<String, Object> responseMap = academicEventFeature.getEventMining().fetchEventGroupData( id, pid, sessionEventGroups );
+
+		return responseMap;
 	}
 
 	@RequestMapping( value = "/fetch", method = RequestMethod.GET )
@@ -203,15 +242,29 @@ public class AcademicEventController
 	{
 		return academicEventFeature.getEventMining().fetchEventData( id, pid, force );
 	}
+	
+	@RequestMapping( value = "/interest", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherInterest( 
+			@RequestParam( value = "id", required = false ) final String eventId, 
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
+			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException, java.text.ParseException
+	{
+		boolean isReplaceExistingResult = false;
+		if ( updateResult != null && updateResult.equals( "yes" ) )
+			isReplaceExistingResult = true;
+		return academicEventFeature.getEventInterest().getEventInterestById( eventId, isReplaceExistingResult );
+	}
 
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationList( 
-			@RequestParam( value = "id", required = false ) final String eventId, 
+			@RequestParam( value = "id", required = false ) final String eventId,
+			@RequestParam( value = "query", required = false ) final String query,
 			@RequestParam( value = "publicationId", required = false ) final String publicationId, 
 			final HttpServletResponse response)
 	{
-		return academicEventFeature.getEventPublication().getPublicationListByEventId( eventId, publicationId );
+		return academicEventFeature.getEventPublication().getPublicationListByEventId( eventId, query, publicationId );
 	}
 
 	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )
@@ -246,7 +299,24 @@ public class AcademicEventController
 		if ( type.equals( "event" ) )
 			return academicEventFeature.getEventBasicStatistic().getEventBasicStatisticById( id );
 		else
-			return academicEventFeature.getEventBasicStatistic().getEventGroupBasicStatisticById( id );
+		{
+			Map<String, Object> responseMap = academicEventFeature.getEventBasicStatistic().getEventGroupBasicStatisticById( id );
+			// check whether eventGroup is already booked or not
+			User user = securityService.getUser();
+			if ( user != null )
+			{
+				EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( id );
+				if ( eventGroup == null )
+					return responseMap;
+
+				UserEventGroupBookmark upb = persistenceStrategy.getUserEventGroupBookmarkDAO().getByUserAndEventGroup( user, eventGroup );
+				if ( upb != null )
+					responseMap.put( "booked", true );
+				else
+					responseMap.put( "booked", false );
+			}
+			return responseMap;
+		}
 	}
 
 }

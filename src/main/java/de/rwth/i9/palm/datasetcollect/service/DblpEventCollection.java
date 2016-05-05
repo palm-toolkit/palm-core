@@ -111,12 +111,16 @@ public class DblpEventCollection extends PublicationCollection
 							// get publication list from journal
 							if ( publicationElement.attr( "class" ).contains( "article" ) )
 								publicationDetails = getDblpJournalPublication( publicationElement );
+							else if ( publicationElement.attr( "class" ).contains( "informal" ) )
+								publicationDetails = getDblpInformalPublication( publicationElement, PublicationType.JOURNAL );
 						}
 						else if ( venueInformationMap.get( "type" ).equals( PublicationType.CONFERENCE ) )
 						{
 							// get publication list from conference
 							if ( publicationElement.attr( "class" ).contains( "inproceedings" ) )
 								publicationDetails = getDblpConferencePublication( publicationElement );
+							else if ( publicationElement.attr( "class" ).contains( "informal" ) )
+								publicationDetails = getDblpInformalPublication( publicationElement, PublicationType.CONFERENCE );
 							else if ( publicationElement.attr( "class" ).contains( "editor" ) ){
 								publicationDetails = getDblpEditorshipPublication( publicationElement );
 								//TODO: get conference theme and date from editorship title
@@ -343,6 +347,30 @@ public class DblpEventCollection extends PublicationCollection
 		// second, extract specific information which is only available for
 		// conference.
 		publicationDetails.put( "type", PublicationType.CONFERENCE.toString() );
+		// get container, where all of information resides
+		Element dataElement = publicationElement.select( "div.data" ).first();
+		publicationDetails.put( "pages", dataElement.select( "[itemprop=pagination]" ).text() );
+
+		return publicationDetails;
+	}
+
+	/**
+	 * Part of code that extract Publication with type Informal
+	 * 
+	 * @param publicationElement
+	 * @return
+	 * @throws IOException
+	 */
+	private static Map<String, String> getDblpInformalPublication( Element publicationElement, PublicationType publicationType ) throws IOException
+	{
+		Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
+
+		// first, extract general information on DBLP publication
+		getDblpPublicationInformationInGeneral( publicationElement, publicationDetails );
+
+		// second, extract specific information which is only available for
+		// conference.
+		publicationDetails.put( "type", publicationType.toString() );
 		// get container, where all of information resides
 		Element dataElement = publicationElement.select( "div.data" ).first();
 		publicationDetails.put( "pages", dataElement.select( "[itemprop=pagination]" ).text() );
@@ -685,7 +713,7 @@ public class DblpEventCollection extends PublicationCollection
 							conferenceOnSpecificYear.put( "abbr", headerTextSplit[0].substring( dotIndex + 1, headerTextSplit[0].length() - 4 ).trim() );
 						}
 
-						if ( headerTextSplit.length > 0 )
+						if ( headerTextSplit.length > 1 )
 						{
 							String[] conferenceLocation = headerTextSplit[1].split( "," );
 							if ( conferenceLocation.length == 3 )
@@ -788,6 +816,14 @@ public class DblpEventCollection extends PublicationCollection
 		Map<String, Object> dblpJournal = new LinkedHashMap<String, Object>();
 
 		String eventLiText = eventLiElement.text();
+
+		// find type of format
+		// Type 1: Volume 8: 2015 or Volume 8, 2015
+		// Type 2: 2011: Volume 175
+		int type = 1;
+		if ( !eventLiText.toLowerCase().startsWith( "volume" ) )
+			type = 2;
+
 		Elements eventLiChildren = eventLiElement.select( "a" );
 
 		if ( eventLiChildren == null )
@@ -798,10 +834,18 @@ public class DblpEventCollection extends PublicationCollection
 
 		String[] eventLiTextSplit = eventLiText.split( ":" );
 
+		// it turns out dblp has many format e.g.Volume 1, 1998
 		if ( eventLiTextSplit.length != 2 )
-			return Collections.emptyMap();
+		{
+			// try to split with comma
+			eventLiTextSplit = eventLiText.split( "," );
+			if ( eventLiTextSplit.length != 2 )
+			{
+				return Collections.emptyMap();
+			}
+		}
 
-		if ( eventLiChildren.size() == 1 )
+		if ( type == 1 )
 		{
 			String volume = "0";
 			if ( eventLiTextSplit[0].length() > 6 )
@@ -813,13 +857,19 @@ public class DblpEventCollection extends PublicationCollection
 			volumeMap.put( volume.trim(), eventLiChildren.get( 0 ).absUrl( "href" ) );
 
 			// put year and volume
-			dblpJournal.put( "year", eventLiTextSplit[1].trim() );
+			String year = eventLiTextSplit[1].trim();
+			if ( year.length() > 4 )
+				year = year.substring( 0, 4 );
+			dblpJournal.put( "year", year );
 			dblpJournal.put( "volume", volumeMap );
 		}
-		else
+		else if ( type == 2 )
 		{
 			// put year
-			dblpJournal.put( "year", eventLiTextSplit[0].trim() );
+			String year = eventLiTextSplit[0].trim();
+			if ( year.length() > 4 )
+				year = year.substring( 0, 4 );
+			dblpJournal.put( "year", year );
 
 			// put volume
 			for ( Element volumeElement : eventLiChildren )

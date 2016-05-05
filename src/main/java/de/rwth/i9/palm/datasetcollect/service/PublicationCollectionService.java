@@ -6,15 +6,18 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
@@ -25,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
+import de.rwth.i9.palm.helper.comparator.PublicationByNoCitationComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.CompletionStatus;
@@ -46,9 +50,6 @@ import de.rwth.i9.palm.service.ApplicationService;
 public class PublicationCollectionService
 {
 	private final static Logger log = LoggerFactory.getLogger( PublicationCollectionService.class );
-
-	@Autowired
-	private AsynchronousPublicationDetailCollectionService asynchronousPublicationDetailCollectionService;
 
 	@Autowired
 	private AsynchronousCollectionService asynchronousCollectionService;
@@ -101,25 +102,49 @@ public class PublicationCollectionService
 		// extract dataset from academic network concurrently
 		// Stopwatch stopwatch = Stopwatch.createStarted();
 
+		// get from configuration
+		boolean isUseGoogleScholar = true;
+		boolean isUseCiteseerX = true;
+		boolean isUseDblp = true;
+		boolean isUseMendeley = true;
+		boolean isUseMas = true;
+
+		// alter value from configuration
+		String useGoogleScholar = applicationService.getConfigValue( "publication", "source", "google scholar" );
+		if ( useGoogleScholar != null && useGoogleScholar.equals( "no" ) )
+			isUseGoogleScholar = false;
+		String useCiteseerX = applicationService.getConfigValue( "publication", "source", "citeserx" );
+		if ( useCiteseerX != null && useCiteseerX.equals( "no" ) )
+			isUseCiteseerX = false;
+		String useDblp = applicationService.getConfigValue( "publication", "source", "dblp" );
+		if ( useDblp != null && useDblp.equals( "no" ) )
+			isUseDblp = false;
+		String useMendeley = applicationService.getConfigValue( "publication", "source", "mendeley" );
+		if ( useMendeley != null && useMendeley.equals( "no" ) )
+			isUseMendeley = false;
+		String useMas = applicationService.getConfigValue( "publication", "source", "microsoft" );
+		if ( useMas != null && useMas.equals( "no" ) )
+			isUseMas = false;
+
 		List<Future<List<Map<String, String>>>> publicationFutureLists = new ArrayList<Future<List<Map<String, String>>>>();
 
 		for ( AuthorSource authorSource : authorSources )
 		{
-			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR && sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ).isActive() )
+			if ( authorSource.getSourceType() == SourceType.GOOGLESCHOLAR && sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ).isActive() && isUseGoogleScholar )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationsGoogleScholar( authorSource.getSourceUrl(), sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ) ) );
-			else if ( authorSource.getSourceType() == SourceType.CITESEERX && sourceMap.get( SourceType.CITESEERX.toString() ).isActive() )
+			else if ( authorSource.getSourceType() == SourceType.CITESEERX && sourceMap.get( SourceType.CITESEERX.toString() ).isActive() && isUseCiteseerX )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationCiteseerX( authorSource.getSourceUrl(), sourceMap.get( SourceType.CITESEERX.toString() ) ) );
-			else if ( authorSource.getSourceType() == SourceType.DBLP && sourceMap.get( SourceType.DBLP.toString() ).isActive() )
+			else if ( authorSource.getSourceType() == SourceType.DBLP && sourceMap.get( SourceType.DBLP.toString() ).isActive() && isUseDblp )
 				publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDBLP( authorSource.getSourceUrl(), sourceMap.get( SourceType.DBLP.toString() ) ) );
 		}
-		if ( sourceMap.get( SourceType.MENDELEY.toString() ).isActive() )
+		if ( sourceMap.get( SourceType.MENDELEY.toString() ).isActive() && isUseMendeley )
 		{
 			// check for token validity
 			mendeleyOauth2Helper.checkAndUpdateMendeleyToken( sourceMap.get( SourceType.MENDELEY.toString() ) );
 			publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDetailMendeley( author, sourceMap.get( SourceType.MENDELEY.toString() ) ) );
 		}
 		// for MAS since not included on author search
-		if ( sourceMap.get( SourceType.MAS.toString() ).isActive() )
+		if ( sourceMap.get( SourceType.MAS.toString() ).isActive() && isUseMas )
 			publicationFutureLists.add( asynchronousCollectionService.getListOfPublicationDetailMicrosoftAcademicSearch( author, sourceMap.get( SourceType.MAS.toString() ) ) );
 
 		// wait till everything complete
@@ -151,7 +176,7 @@ public class PublicationCollectionService
 	 * @throws ParseException
 	 * @throws TimeoutException
 	 */
-	public void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists, Author author, Map<String, Source> sourceMap, String pid ) throws InterruptedException, ExecutionException, IOException, ParseException, TimeoutException
+	private void mergePublicationInformation( List<Future<List<Map<String, String>>>> publicationFutureLists, Author author, Map<String, Source> sourceMap, String pid ) throws InterruptedException, ExecutionException, IOException, ParseException, TimeoutException
 	{
 		if ( publicationFutureLists.size() > 0 )
 		{
@@ -160,82 +185,125 @@ public class PublicationCollectionService
 
 			// first, construct the publication
 			// get it from database or create new if still doesn't exist
-			this.constructPublicationWithSources( selectedPublications, publicationFutureLists , author );
+			this.constructPublicationWithSources( selectedPublications, publicationFutureLists, author, sourceMap );
 			
 			// process log
 			applicationService.putProcessLog( pid, "Done merging " + selectedPublications.size() + " publications<br><br>", "append" );
 
-			// process log
-			applicationService.putProcessLog( pid, "Removing incorrect publications...<br>", "append" );
+			boolean isFirstPhaseRemoveInvalidPublicationEnable = true;
+			String firstPhaseRemoveInvalidPublicationEnable = applicationService.getConfigValue( "publication", "flow", "remove1" );
+			if ( firstPhaseRemoveInvalidPublicationEnable != null && firstPhaseRemoveInvalidPublicationEnable.equals( "no" ) )
+				isFirstPhaseRemoveInvalidPublicationEnable = false;
 
-			// second, remove incorrect publication based on investigation
-			this.removeIncorrectPublicationFromPublicationList( selectedPublications );
-
-			// process log
-			applicationService.putProcessLog( pid, "Done removing incorrect publications<br><br>", "append" );
-
-			// process log
-			applicationService.putProcessLog( pid, "Extracting publications details...<br>", "append" );
-
-			// third, extract and combine information from multiple sources
-			this.extractPublicationInformationDetailFromSources( selectedPublications, author, sourceMap );
-
-			// process log
-			applicationService.putProcessLog( pid, "Done extracting publications details<br><br>", "append" );
-
-			// fourth, second checking, after the information has been merged
-			this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
-
-			// count total citation on author
-			int citation = 0;
-			SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
-
-			for ( Publication publication : selectedPublications )
+			if ( isFirstPhaseRemoveInvalidPublicationEnable )
 			{
-				citation += publication.getCitedBy();
-				// set publication year
-				if ( publication.getPublicationDate() != null )
-					publication.setYear( sdf.format( publication.getPublicationDate() ) );
-			}
-			if ( author.getCitedBy() < citation )
-			{
-				author.setCitedBy( citation );
-				persistenceStrategy.getAuthorDAO().persist( author );
-			}
+				// process log
+				applicationService.putProcessLog( pid, "Removing incorrect publications...<br>", "append" );
 
-			// check if enrichment option enable
-			String enrichmentEnable = applicationService.getConfigValue( "publication", "flow", "htmlpdf" );
-			if ( enrichmentEnable != null && enrichmentEnable.equals( "yes" ) )
-			{
+				// second, remove incorrect publication based on investigation
+				this.removeIncorrectPublicationFromPublicationList( selectedPublications );
 
 				// process log
-				applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html...<br>", "append" );
-
-				// enrich the publication information by extract information
-				// from html or pdf source
-				try
-				{
-					this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
-				}
-				catch ( Exception e )
-				{
-					// just skip the enrichment process if error occured
-				}
-
-				// process log
-				applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
+				applicationService.putProcessLog( pid, "Done removing incorrect publications<br><br>", "append" );
 			}
 
 			// at the end save everything
 			for ( Publication publication : selectedPublications )
 			{
-				publication.setContentUpdated( true );
+				if ( publication.getPublicationTopics() == null || publication.getPublicationTopics().isEmpty() )
+					publication.setContentUpdated( true );
 				persistenceStrategy.getPublicationDAO().persist( publication );
 			}
+
+			// set flag on author to indicate that publication details
+			// extraction are needed
+			author.setFetchPublicationDetail( true );
+			persistenceStrategy.getAuthorDAO().persist( author );
 		}
-		
+
 	}
-	
+
+	/**
+	 * Extract publication details
+	 * 
+	 * @param author
+	 * @param pid
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 * @throws ParseException
+	 */
+	public void extractPublicationDetails( Author author, String pid ) throws IOException, InterruptedException, ExecutionException, ParseException
+	{
+		// getSourceMap
+		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
+
+		// list publications
+		List<Publication> selectedPublications = new ArrayList<Publication>();
+		selectedPublications.addAll( author.getPublications() );
+
+		// Author doesn't have any publications
+		if ( selectedPublications.isEmpty() )
+			return;
+
+		// process log
+		applicationService.putProcessLog( pid, "Extracting publications details...<br>", "append" );
+
+		// third, extract and combine information from multiple sources
+		this.extractPublicationInformationDetailFromSources( selectedPublications, author, sourceMap );
+
+		// process log
+		applicationService.putProcessLog( pid, "Done extracting publications details<br><br>", "append" );
+
+		boolean isSecondPhaseRemoveInvalidPublicationEnable = true;
+		String secondPhaseRemoveInvalidPublicationEnable = applicationService.getConfigValue( "publication", "flow", "remove2" );
+		if ( secondPhaseRemoveInvalidPublicationEnable != null && secondPhaseRemoveInvalidPublicationEnable.equals( "no" ) )
+			isSecondPhaseRemoveInvalidPublicationEnable = false;
+
+		if ( isSecondPhaseRemoveInvalidPublicationEnable )
+		{
+			// fourth, second checking, after the information has been
+			// merged
+			this.removeIncorrectPublicationPhase2FromPublicationList( selectedPublications );
+		}
+
+
+		// check if enrichment option enable
+		String enrichmentEnable = applicationService.getConfigValue( "publication", "flow", "htmlpdf" );
+		if ( enrichmentEnable != null && enrichmentEnable.equals( "yes" ) )
+		{
+
+			// process log
+			applicationService.putProcessLog( pid, "Extracting publication information from PDF and Html...<br>", "append" );
+
+			// enrich the publication information by extract information
+			// from html or pdf source
+			try
+			{
+				this.enrichPublicationByExtractOriginalSources( selectedPublications, author, false );
+			}
+			catch ( Exception e )
+			{
+				log.error( "Entrichment error " + e.getMessage() );
+			}
+
+			// process log
+			applicationService.putProcessLog( pid, "Done extracting publication information from PDF and Html<br><br>", "append" );
+		}
+
+		// at the end save everything
+		for ( Publication publication : selectedPublications )
+		{
+			if ( publication.getPublicationTopics() == null || publication.getPublicationTopics().isEmpty() )
+				publication.setContentUpdated( true );
+			persistenceStrategy.getPublicationDAO().persist( publication );
+		}
+
+		// recalculate citation number
+		author.reCalculateNumberOfPublicationAndCitation();
+		persistenceStrategy.getAuthorDAO().persist( author );
+	}
+
 	/**
 	 * Remove all publication that considered incorrect.
 	 * 
@@ -285,6 +353,7 @@ public class PublicationCollectionService
 					}
 
 					// removing condition
+					// if publication contain no date
 					if ( publicationSource.get( 0 ).getDate() == null )
 					{
 						iteratorPublication.remove();
@@ -292,7 +361,22 @@ public class PublicationCollectionService
 					}
 					else
 					{
-						if ( publicationSource.get( 0 ).getCitedBy() == 0 && currentYear - Integer.parseInt( publicationSource.get( 0 ).getDate() ) > 2 )
+						// try to get publication year
+						int publicationYear = 0;
+						String publicationYearString = publicationSource.get( 0 ).getDate();
+						if ( publicationYearString.length() > 4 )
+							publicationYearString = publicationYearString.substring( 0, 4 );
+
+						try
+						{
+							publicationYear = Integer.parseInt( publicationYearString );
+						}
+						catch ( Exception e )
+						{
+						}
+
+						// keep recent publication, remove old publication
+						if ( publicationSource.get( 0 ).getCitedBy() == 0 && currentYear - publicationYear > 2 )
 						{
 							iteratorPublication.remove();
 							continue;
@@ -417,10 +501,12 @@ public class PublicationCollectionService
 	 * @param selectedPublications
 	 * @param publicationFutureLists
 	 * @param author
+	 * @param sourceMap
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	public void constructPublicationWithSources( List<Publication> selectedPublications,  List<Future<List<Map<String, String>>>> publicationFutureLists , Author author ) throws InterruptedException, ExecutionException{
+	private void constructPublicationWithSources( List<Publication> selectedPublications, List<Future<List<Map<String, String>>>> publicationFutureLists, Author author, Map<String, Source> sourceMap ) throws InterruptedException, ExecutionException
+	{
 		for ( Future<List<Map<String, String>>> publicationFutureList : publicationFutureLists )
 		{
 			// here, if process has not been completed yet. It will wait,
@@ -441,8 +527,11 @@ public class PublicationCollectionService
 					{
 						if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 						{
-							publication = pub;
-							break;
+							if ( palmAnalitics.getTextCompare().getNumberCharacterDistanceByLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) <= 5 )
+							{
+								publication = pub;
+								break;
+							}
 						}
 					}
 				}
@@ -455,35 +544,20 @@ public class PublicationCollectionService
 					// check publication from database
 					if ( !fromDbPublications.isEmpty() )
 					{
-						if ( fromDbPublications.size() > 1 )
+						for ( Publication pub : fromDbPublications )
 						{
-							// check with year
-							for ( Publication pub : fromDbPublications )
+							if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 							{
-								if ( pub.getPublicationDate() == null )
-									continue;
-
-								Calendar cal = Calendar.getInstance();
-								cal.setTime( pub.getPublicationDate() );
-								if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "datePublished" ) ) )
+								if ( palmAnalitics.getTextCompare().getNumberCharacterDistanceByLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) <= 5 )
 								{
 									publication = pub;
+									selectedPublications.add( publication );
 									break;
 								}
 							}
-							// if publication still null, due to publication
-							// date is null
-							if ( publication == null )
-								publication = fromDbPublications.get( 0 );
 						}
-						else
-							publication = fromDbPublications.get( 0 );
-						// added to selected list
-						selectedPublications.add( publication );
 					}
-					// remove old publicationSource
-					if ( publication != null )
-						publication.removeNonUserInputPublicationSource();
+
 				}
 
 				// if not exist any where create new publication
@@ -567,7 +641,13 @@ public class PublicationCollectionService
 						publicationSource.addOrUpdateAdditionalInformation( "volume", publicationMap.get( "eventVolume" ) );
 					if ( publicationMap.get( "eventNumber" ) != null )
 						publicationSource.addOrUpdateAdditionalInformation( "number", publicationMap.get( "eventNumber" ) );
+					if ( publicationMap.get( "page" ) != null )
+						publicationSource.setPages( publicationMap.get( "page" ) );
+
 				}
+
+				// assign publication authors
+				this.assignAuthors( publication, publicationSource, author, sourceMap, true );
 
 				publication.addPublicationSource( publicationSource );
 
@@ -575,6 +655,164 @@ public class PublicationCollectionService
 //					for ( Entry<String, String> eachPublicationDetail : publicationMap.entrySet() )
 //						System.out.println( eachPublicationDetail.getKey() + " : " + eachPublicationDetail.getValue() );
 //					System.out.println();
+
+			}
+		}
+
+	}
+
+	/**
+	 * Assign researchers to publication
+	 * 
+	 * @param selectedPublications
+	 * @param pivotAuthor
+	 * @param sourceMap
+	 */
+	private void assignAuthors( Publication publication, PublicationSource pubSource, Author pivotAuthor, Map<String, Source> sourceMap , boolean isBeforeMerging )
+	{
+		if( isBeforeMerging ){
+			// new publication without any coauthors
+			if( publication.getPublicationAuthors() == null || publication.getPublicationAuthors().isEmpty() ){
+				// only take coauthors from DBLP
+				if ( pubSource.getSourceType().equals( SourceType.DBLP )){
+					this.assignEachAuthorFromSource( publication, pubSource, pivotAuthor, sourceMap );
+				}
+				// anything else, just assign author
+				else
+				{
+					PublicationAuthor publicationAuthor = new PublicationAuthor();
+					publicationAuthor.setPublication( publication );
+					publicationAuthor.setAuthor( pivotAuthor );
+					publicationAuthor.setPosition( 1 );
+
+					publication.addPublicationAuthor( publicationAuthor );
+				}
+			}
+		}
+		else{
+			boolean checkforCoAuthor = true;
+			// sometimes mendeley source is not reliable
+			if ( pubSource.getSourceType().equals( SourceType.MENDELEY ) && publication.getPublicationSources().size() > 1 )
+				// Author for Mendeley is unreliable
+				checkforCoAuthor = false;
+			// no need to reinsert author from Mendeley, if the authors
+			// are
+			// already exist
+			if ( pubSource.getSourceType().equals( SourceType.MENDELEY ) && publication.getPublicationAuthors() != null && !publication.getPublicationAuthors().isEmpty() )
+				checkforCoAuthor = false;
+	
+			// author
+			if ( pubSource.getCoAuthors() != null && checkforCoAuthor )
+			{
+				this.assignEachAuthorFromSource( publication, pubSource, pivotAuthor, sourceMap );
+			}
+		}
+	}
+	
+	/**
+	 * Assign each researcher to publication
+	 * 
+	 * @param selectedPublications
+	 * @param pivotAuthor
+	 * @param sourceMap
+	 */
+	private void assignEachAuthorFromSource( Publication publication, PublicationSource pubSource, Author pivotAuthor, Map<String, Source> sourceMap){
+
+		String[] authorsArray = pubSource.getCoAuthors().split( "," );
+		// for DBLP where the coauthor have a source link
+//		String[] authorsUrlArray = null;
+//		if ( pubSource.getCoAuthorsUrl() != null )
+//			authorsUrlArray = pubSource.getCoAuthorsUrl().split( " " );
+
+		if ( authorsArray.length > publication.getCoAuthors().size() )
+		{
+			for ( int i = 0; i < authorsArray.length; i++ )
+			{
+				String authorString = authorsArray[i].toLowerCase().replace( ".", "" ).trim();
+
+				if ( authorString.equals( "" ) )
+					continue;
+
+				String[] splitName = authorString.split( " " );
+				String lastName = splitName[splitName.length - 1];
+				String firstName = authorString.substring( 0, authorString.length() - lastName.length() ).trim();
+
+				Author author = null;
+				if ( pivotAuthor.getName().toLowerCase().equals( authorString.toLowerCase() ) )
+				{
+					author = pivotAuthor;
+
+					// create the relation with publication
+					PublicationAuthor publicationAuthor = new PublicationAuthor();
+					publicationAuthor.setPublication( publication );
+					publicationAuthor.setAuthor( author );
+					publicationAuthor.setPosition( i + 1 );
+
+					publication.addPublicationAuthor( publicationAuthor );
+				}
+				else
+				{
+					// first check from database by full name
+					List<Author> coAuthorsDb = persistenceStrategy.getAuthorDAO().getByName( authorString );
+					if ( !coAuthorsDb.isEmpty() )
+					{
+						// TODO: check other properties
+						// for now just get the first element
+						// later check whether there is already
+						// a connection with pivotAuthor
+						// if not check institution
+						author = coAuthorsDb.get( 0 );
+					}
+
+					// if there is no exact name, check for
+					// ambiguity,
+					// start from lastname
+					// and then check whether there is
+					// abbreviation name on first name
+					if ( author == null )
+					{
+						coAuthorsDb = persistenceStrategy.getAuthorDAO().getByLastName( lastName );
+						if ( !coAuthorsDb.isEmpty() )
+						{
+							for ( Author coAuthorDb : coAuthorsDb )
+							{
+								if ( coAuthorDb.isAliasNameFromFirstName( firstName ) )
+								{
+									// TODO: check with
+									// institution for
+									// higher accuracy
+									persistenceStrategy.getAuthorDAO().persist( coAuthorDb );
+
+									author = coAuthorDb;
+									break;
+								}
+							}
+						}
+					}
+
+					// if author null, create new one
+					if ( author == null )
+					{
+						// create new author
+						author = new Author();
+						// set for all possible name
+						author.setPossibleNames( authorString );
+
+						// save new author
+						persistenceStrategy.getAuthorDAO().persist( author );
+					}
+
+					// make a relation between author and
+					// publication
+					PublicationAuthor publicationAuthor = new PublicationAuthor();
+					publicationAuthor.setPublication( publication );
+					publicationAuthor.setAuthor( author );
+					publicationAuthor.setPosition( i + 1 );
+
+					publication.addPublicationAuthor( publicationAuthor );
+
+
+				}
 			}
 		}
 	}
@@ -589,8 +827,22 @@ public class PublicationCollectionService
 	 * @throws ExecutionException
 	 * @throws ParseException
 	 */
-	public void extractPublicationInformationDetailFromSources( List<Publication> selectedPublications, Author pivotAuthor, Map<String, Source> sourceMap ) throws IOException, InterruptedException, ExecutionException, ParseException
+	private void extractPublicationInformationDetailFromSources( List<Publication> selectedPublications, Author pivotAuthor, Map<String, Source> sourceMap ) throws IOException, InterruptedException, ExecutionException, ParseException
 	{
+		int randomDelayThreshold = 0;
+		Random rand = new Random();
+		// get randomize delay for google scholar
+		String delayString = sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ).getSourcePropertyByIdentifiers( "request", "random_delay" ).getValue();
+		if ( delayString != null )
+		{
+			try
+			{
+				randomDelayThreshold = Integer.parseInt( delayString );
+			}
+			catch ( Exception e )
+			{
+			}
+		}
 		// multithread publication source
 		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();
 		for( Publication publication : selectedPublications){
@@ -601,7 +853,13 @@ public class PublicationCollectionService
 				if ( publicationSource.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
 				{
 					if ( publicationSource.getSourceType().equals( SourceType.GOOGLESCHOLAR ) )
+					{
+						if ( randomDelayThreshold > 0 )
+						{
+							Thread.sleep( rand.nextInt( randomDelayThreshold ) );
+						}
 						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromGoogleScholar( publicationSource, sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ) ) );
+					}
 					else if ( publicationSource.getSourceType().equals( SourceType.CITESEERX ) )
 						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromCiteseerX( publicationSource, sourceMap.get( SourceType.CITESEERX.toString() ) ) );
 				}
@@ -617,20 +875,21 @@ public class PublicationCollectionService
 		for ( Publication selectedPublication : selectedPublications )
 		{
 			// combine from sources to publication
-			this.mergingPublicationInformation( selectedPublication, pivotAuthor/* , coAuthors */ );
+			this.mergingPublicationInformation( selectedPublication, pivotAuthor, sourceMap/* , coAuthors */ );
 		}
 	}
 
 	/**
 	 * 
+	 * @param sourceMap 
 	 * @param selectedPublications
 	 * @throws ParseException
 	 */
-	public void mergingPublicationInformation( Publication publication,
-			Author pivotAuthor/* , List<Author> coAuthors */ ) throws ParseException
+	private void mergingPublicationInformation( Publication publication,
+			Author pivotAuthor, Map<String, Source> sourceMap/* , List<Author> coAuthors */ ) throws ParseException
 	{
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy/M/d", Locale.ENGLISH );
-		Calendar calendar = Calendar.getInstance();
+//		Calendar calendar = Calendar.getInstance();
 		Set<String> existingMainSourceUrl = new HashSet<String>();
 
 		for ( PublicationSource pubSource : publication.getPublicationSources() )
@@ -658,22 +917,6 @@ public class PublicationCollectionService
 					publicationDate = dateFormat.parse( pubSourceDate );
 					publication.setPublicationDate( publicationDate );
 					publication.setPublicationDateFormat( publicationDateFormat );
-				}
-
-				if ( pubSource.getPages() != null )
-				{
-					String[] pageSplit = pubSource.getPages().split( "-" );
-					if ( pageSplit.length == 2 )
-					{
-						try
-						{
-							publication.setStartPage( Integer.parseInt( pageSplit[0] ) );
-							publication.setEndPage( Integer.parseInt( pageSplit[1] ) );
-						}
-						catch ( Exception e )
-						{
-						}
-					}
 				}
 
 				if ( pubSource.getAdditionalInformation() != null )
@@ -721,120 +964,8 @@ public class PublicationCollectionService
 			}
 			// for general information
 			
-			boolean checkforCoAuthor = true;
-			// sometimes mendeley source is not reliable
-			if ( pubSource.getSourceType().equals( SourceType.MENDELEY ) && publication.getPublicationSources().size() > 1 )
-				checkforCoAuthor = false; // Author for Mendeley is unreliable
-			// no need to reinsert author from Mendeley, if the authors are
-			// already exist
-			if ( pubSource.getSourceType().equals( SourceType.MENDELEY ) && publication.getPublicationAuthors() != null && !publication.getPublicationAuthors().isEmpty() )
-				checkforCoAuthor = false;
-
-			// author
-			if ( pubSource.getCoAuthors() != null && checkforCoAuthor )
-			{
-
-				String[] authorsArray = pubSource.getCoAuthors().split( "," );
-				// for DBLP where the coauthor have a source link
-				String[] authorsUrlArray = null;
-				if ( pubSource.getCoAuthorsUrl() != null )
-					authorsUrlArray = pubSource.getCoAuthorsUrl().split( " " );
-
-				if ( authorsArray.length > publication.getCoAuthors().size() )
-				{
-					for ( int i = 0; i < authorsArray.length; i++ )
-					{
-						String authorString = authorsArray[i].toLowerCase().replace( ".", "" ).trim();
-
-						if ( authorString.equals( "" ) )
-							continue;
-
-						String[] splitName = authorString.split( " " );
-						String lastName = splitName[splitName.length - 1];
-						String firstName = authorString.substring( 0, authorString.length() - lastName.length() ).trim();
-						
-						Author author = null;
-						if ( pivotAuthor.getName().toLowerCase().equals( authorString.toLowerCase() ) )
-						{
-							author = pivotAuthor;
-
-							// create the relation with publication
-							PublicationAuthor publicationAuthor = new PublicationAuthor();
-							publicationAuthor.setPublication( publication );
-							publicationAuthor.setAuthor( author );
-							publicationAuthor.setPosition( i + 1 );
-
-							publication.addPublicationAuthor( publicationAuthor );
-						}
-						else
-						{
-							// first check from database by full name
-							List<Author> coAuthorsDb = persistenceStrategy.getAuthorDAO().getByName( authorString );
-							if( !coAuthorsDb.isEmpty() ){
-								// TODO: check other properties
-								// for now just get the first element
-								// later check whether there is already a connection with pivotAuthor
-								// if not check institution
-								author = coAuthorsDb.get( 0 );
-							}
-							
-							// if there is no exact name, check for ambiguity,
-							// start from lastname
-							// and then check whether there is abbreviation name on first name
-							if( author == null ){
-								coAuthorsDb = persistenceStrategy.getAuthorDAO().getByLastName( lastName );
-								if( !coAuthorsDb.isEmpty() ){
-									for ( Author coAuthorDb : coAuthorsDb )
-									{
-										if ( coAuthorDb.isAliasNameFromFirstName( firstName ) )
-										{
-											// TODO: check with institution for
-											// higher accuracy
-											persistenceStrategy.getAuthorDAO().persist( coAuthorDb );
-
-											author = coAuthorDb;
-											break;
-										}
-									}
-								}
-							}
-
-							// if author null, create new one
-							if( author == null ){
-								// create new author
-								author = new Author();
-								// set for all possible name
-								author.setPossibleNames( authorString );
-	
-								// save new author
-								persistenceStrategy.getAuthorDAO().persist( author );
-							}
-
-							// make a relation between author and publication
-							PublicationAuthor publicationAuthor = new PublicationAuthor();
-							publicationAuthor.setPublication( publication );
-							publicationAuthor.setAuthor( author );
-							publicationAuthor.setPosition( i + 1 );
-
-							publication.addPublicationAuthor( publicationAuthor );
-
-							// assign with authorSource, if exist
-//							if ( authorsUrlArray != null && !author.equals( pivotAuthor ) )
-//							{
-//								AuthorSource authorSource = new AuthorSource();
-//								authorSource.setName( author.getName() );
-//								authorSource.setSourceUrl( authorsUrlArray[i] );
-//								authorSource.setSourceType( pubSource.getSourceType() );
-//								authorSource.setAuthor( author );
-//
-//								author.addAuthorSource( authorSource );
-//								// persist new source
-//								persistenceStrategy.getAuthorDAO().persist( author );
-//							}
-						}
-					}
-				}
-			}
+			// assign publication authors
+			this.assignAuthors( publication, pubSource, pivotAuthor, sourceMap, false );
 
 			// abstract ( searching the longest)
 			if ( !publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) && pubSource.getAbstractText() != null && pubSource.getAbstractText().length() > 250 )
@@ -875,10 +1006,22 @@ public class PublicationCollectionService
 			if ( pubSource.getPublicationType() != null )
 			{
 				publicationType = PublicationType.valueOf( pubSource.getPublicationType() );
-				publication.setPublicationType( publicationType );
+				if ( publication.getPublicationTypeStatus() == null || !publication.getPublicationTypeStatus().equals( CompletionStatus.COMPLETE ) )
+				{
+					if ( pubSource.getSourceType().equals( SourceType.DBLP ) )
+					{
+						publication.setPublicationType( publicationType );
+						publication.setPublicationTypeStatus( CompletionStatus.COMPLETE );
+					}
+					else
+					{
+						publication.setPublicationType( publicationType );
+						publication.setPublicationTypeStatus( CompletionStatus.PARTIALLY_COMPLETE );
+					}
+				}
 
 
-				if ( publicationType.equals( PublicationType.CONFERENCE ) || publicationType.equals( PublicationType.WORKSHOP ) || publicationType.equals( PublicationType.JOURNAL ) )
+				if ( publicationType.equals( PublicationType.CONFERENCE ) || publicationType.equals( PublicationType.WORKSHOP ) || publicationType.equals( PublicationType.JOURNAL ) || publicationType.equals( PublicationType.INFORMAL ) )
 				{
 					if ( pubSource.getSourceType().equals( SourceType.DBLP ) && pubSource.getVenue() != null && pubSource.getVenueUrl() != null )
 					{
@@ -962,6 +1105,23 @@ public class PublicationCollectionService
 
 			}
 
+			// set publication pages
+			if ( publication.getStartPage() == 0 && pubSource.getPages() != null )
+			{
+				String[] pageSplit = pubSource.getPages().split( "-" );
+				if ( pageSplit.length == 2 )
+				{
+					try
+					{
+						publication.setStartPage( Integer.parseInt( pageSplit[0] ) );
+						publication.setEndPage( Integer.parseInt( pageSplit[1] ) );
+					}
+					catch ( Exception e )
+					{
+					}
+				}
+			}
+
 			// original sources (PDF and WebPage)
 			if ( pubSource.getMainSourceUrl() != null )
 			{
@@ -1020,39 +1180,125 @@ public class PublicationCollectionService
 	public void enrichPublicationByExtractOriginalSources( List<Publication> selectedPublications, Author pivotAuthor, boolean persistResult ) throws IOException, InterruptedException, ExecutionException, TimeoutException
 	{
 		log.info( "Start publications enrichment for Auhtor " + pivotAuthor.getName() );
-		List<Future<Publication>> selectedPublicationFutureList = new ArrayList<Future<Publication>>();
+		List<Future<PublicationSource>> publicationSourceFutureList = new ArrayList<Future<PublicationSource>>();
 
 		// get application setting whether enrichment with HTML or pdf is
 		// possible
+		// get application setting whether enrichment with HTML or pdf is
+		// possible
 		boolean isHtmlParsingEnable = false;
-		String htmlParsingEnable = applicationService.getConfigValue( "publication", "source", "html" );
+		String htmlParsingEnable = applicationService.getConfigValue( "conference", "source", "html" );
 		if ( htmlParsingEnable != null && htmlParsingEnable.equals( "yes" ) )
 			isHtmlParsingEnable = true;
-		
+
 		boolean isPdfParsingEnable = false;
-		String pdfParsingEnable = applicationService.getConfigValue( "publication", "source", "pdf" );
+		String pdfParsingEnable = applicationService.getConfigValue( "conference", "source", "pdf" );
 		if ( pdfParsingEnable != null && pdfParsingEnable.equals( "yes" ) )
 			isPdfParsingEnable = true;
 
-		for ( Publication publication : selectedPublications )
-		{
-			// only proceed for publication with not complete abstract
+		String[] prioritizeUrls = applicationService.getConfigValue( "html", "flow", "prioritizeExtract" ).split( "," );
 
-			// if ( !publication.getAbstractStatus().equals(
-			// CompletionStatus.COMPLETE ) )
-			if ( publication.getAbstractStatus().equals( CompletionStatus.NOT_COMPLETE ) )
-				selectedPublicationFutureList.add( asynchronousPublicationDetailCollectionService.asyncEnrichPublicationInformationFromOriginalSource( publication, isHtmlParsingEnable, isPdfParsingEnable ) );
+		String[] preventUrls = applicationService.getConfigValue( "html", "flow", "preventExtract" ).split( "," );
+
+		int maximumBatchAllowed = 30;
+		try
+		{
+			maximumBatchAllowed = Integer.parseInt( applicationService.getConfigValue( "html", "flow", "maximumExtract" ) );
+		}
+		catch ( Exception e )
+		{
 		}
 
-		// check process completion
-		for ( Future<Publication> selectedPublicationFuture : selectedPublicationFutureList )
-		{
-			Publication publication = selectedPublicationFuture.get();
+		// sort publication based on citation
+		Collections.sort( selectedPublications, new PublicationByNoCitationComparator() );
 
-			if ( persistResult )
+		int counterProcess = 0;
+		for ( Publication publication : selectedPublications )
+		{
+			if ( publication.getAbstractStatus().equals( CompletionStatus.COMPLETE ) )
+				continue;
+
+			if ( counterProcess > maximumBatchAllowed )
+				break;
+
+			boolean isOneSourceAlreadExtracted = false;
+
+			if ( isHtmlParsingEnable ){
+				// get publication type webpage
+				Set<PublicationFile> htmlPublicationFiles = publication.getPublicationFilesHtml();
+				if ( !htmlPublicationFiles.isEmpty() && !publication.isPublicationContainSourceFrom( SourceType.HTML ) )
+				{
+					PublicationFile htmlPublicationFileTarget = null;
+					for ( PublicationFile htmlPublicationFile : htmlPublicationFiles )
+					{
+						// remove PublicationFile if consist the prevent URLs
+						if ( !htmlPublicationFile.isPublicationFileUrlContainsUrls( preventUrls ) )
+						{
+
+							// find the prioritize pages
+							htmlPublicationFileTarget = htmlPublicationFile;
+							if ( htmlPublicationFile.isPublicationFileUrlContainsUrls( prioritizeUrls ) )
+								break;
+						}
+					}
+					if ( htmlPublicationFileTarget != null )
+					{
+						log.info( "Extract WebPage for publication " + publication.getTitle() );
+						// extract information from selected PublicationFiles
+						PublicationSource publicationSource = new PublicationSource();
+						publicationSource.setSourceUrl( htmlPublicationFileTarget.getUrl() );
+						publicationSource.setSourceMethod( SourceMethod.EXTRACTPAGE );
+						publicationSource.setSourceType( SourceType.HTML );
+						publicationSource.setPublicationType( publication.getPublicationType().toString() );
+
+						htmlPublicationFileTarget.setChecked( true );
+
+						isOneSourceAlreadExtracted = true;
+
+						publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInfromationFromHtml( publication, publicationSource, htmlPublicationFileTarget ) );
+						counterProcess++;
+					}
+				}
+
+				if ( isPdfParsingEnable && !isOneSourceAlreadExtracted && !publication.isPublicationContainSourceFrom( SourceType.PDF ) )
+				{
+					// get publication type webpage
+					Set<PublicationFile> pdfPublicationFiles = publication.getPublicationFilesPdf();
+					if ( !pdfPublicationFiles.isEmpty() )
+					{
+						for ( PublicationFile pdfPublicationFile : pdfPublicationFiles )
+						{
+							if ( pdfPublicationFile.isChecked() )
+								continue;
+
+							PublicationSource publicationSource = new PublicationSource();
+							publicationSource.setSourceUrl( pdfPublicationFile.getUrl() );
+							publicationSource.setSourceMethod( SourceMethod.EXTRACTPAGE );
+							publicationSource.setSourceType( SourceType.PDF );
+							publicationSource.setPublicationType( publication.getPublicationType().toString() );
+
+							pdfPublicationFile.setChecked( true );
+
+							publicationSourceFutureList.add( asynchronousCollectionService.getPublicationInformationFromPdf( publication, publicationSource, pdfPublicationFile ) );
+							counterProcess++;
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+
+		// waiting until thread finished
+		for ( Future<PublicationSource> publicationSourceFuture : publicationSourceFutureList )
+		{
+			try
 			{
-				publication.setContentUpdated( true );
-				persistenceStrategy.getPublicationDAO().persist( publication );
+				publicationSourceFuture.get( 35, TimeUnit.SECONDS );
+			}
+			catch ( TimeoutException e )
+			{
+				log.error( e.getMessage() );
 			}
 		}
 		log.info( "Done publications enrichment for Auhtor " + pivotAuthor.getName() );

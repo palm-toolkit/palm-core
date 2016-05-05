@@ -44,13 +44,24 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					// create first level (conference group)
 					treeHelperLv1 = new TreeHelper();
 					treeHelperLv1.setKey( publication.getEvent().getEventGroup().getId() );
-					String nodeTitle =  publication.getEvent().getEventGroup().getName();
-					if( !nodeTitle.equals( publication.getEvent().getEventGroup().getNotation() ) )
-						nodeTitle += " (" + publication.getEvent().getEventGroup().getNotation() + ") ";
+
+					String nodeTooltip = publication.getEvent().getEventGroup().getName();
+					String nodeTitle = nodeTooltip;
+
+					if ( publication.getEvent().getEventGroup().getNotation() != null && !publication.getEvent().getEventGroup().getNotation().isEmpty() && 
+							!nodeTitle.equals( publication.getEvent().getEventGroup().getNotation() ) )
+					{
+						nodeTitle = publication.getEvent().getEventGroup().getNotation();
+						nodeTooltip += " (" + publication.getEvent().getEventGroup().getNotation() + ") ";
+					}
 					treeHelperLv1.setTitle( nodeTitle );
 					treeHelperLv1.setType( publication.getEvent().getEventGroup().getPublicationType().toString() );
 					treeHelperLv1.setHref( "venue?&id=" + publication.getEvent().getEventGroup().getId() + "&name=" + publication.getEvent().getEventGroup().getName() );
 					treeHelperLv1.setFolder( true );
+					treeHelperLv1.setPosition( 1 );
+					treeHelperLv1.setTooltip( nodeTooltip );
+					if ( publication.getEvent().getEventGroup().isAdded() )
+						treeHelperLv1.setAdded( true );
 					
 					// add first level as child of root
 					rootTreeHelper.addChild( treeHelperLv1 );
@@ -58,18 +69,28 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					// create second level ( conference year )
 					TreeHelper treeHelperLv2 = new TreeHelper();
 					treeHelperLv2.setKey( publication.getEvent().getId() );
+
+					nodeTitle = publication.getEvent().getYear();
+					if ( publication.getEvent().getVolume() != null )
+						nodeTitle += " (" + publication.getEvent().getVolume() + ")";
+
 					if( publication.getEvent().getName() != null)
-						nodeTitle = publication.getEvent().getName();
+						nodeTooltip = publication.getEvent().getName();
 					else{
 						if( publication.getEvent().getVolume() != null )
-							nodeTitle = "Volume " + publication.getEvent().getVolume() + ", " + publication.getEvent().getYear();
+							nodeTooltip = "Volume " + publication.getEvent().getVolume() + ", " + publication.getEvent().getYear();
 						else
-							nodeTitle = publication.getEvent().getYear();
+							nodeTooltip = publication.getEvent().getYear();
 					}
 					treeHelperLv2.setTitle( nodeTitle );
 					treeHelperLv2.setType( publication.getPublicationType().toString() );
 					treeHelperLv2.setHref( "venue?&id=" + publication.getEvent().getEventGroup().getId() + "&eventId=" + publication.getEvent().getId() + "&name=" + publication.getEvent().getEventGroup().getName() );
+					treeHelperLv1.setHref( "venue?&id=" + publication.getEvent().getEventGroup().getId() + "&name=" + publication.getEvent().getEventGroup().getName() + "&eventId=" + publication.getEvent().getId() );
 					treeHelperLv2.setFolder( true );
+					treeHelperLv2.setTooltip( nodeTooltip );
+					if ( publication.getEvent().isAdded() )
+						treeHelperLv2.setAdded( true );
+					treeHelperLv2.setPosition( 2 );
 					
 					// add second level as child of first level
 					treeHelperLv1.addChild( treeHelperLv2 );
@@ -80,6 +101,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					treeHelperLv3.setKey( publication.getId() );
 					treeHelperLv3.setTitle( publication.getTitle() );
 					treeHelperLv3.setType( publication.getPublicationType().toString() );
+					treeHelperLv3.setPosition( 3 );
 
 					// add second level as child of first level
 					treeHelperLv2.addChild( treeHelperLv3 );
@@ -92,21 +114,33 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					{
 						// create second level ( conference year )
 						String nodeTitle = "";
+						String nodeTooltip = "";
 						treeHelperLv2 = new TreeHelper();
 						treeHelperLv2.setKey( publication.getEvent().getId() );
+
+						nodeTitle = publication.getEvent().getYear();
+						if ( publication.getEvent().getVolume() != null )
+							nodeTitle += " (" + publication.getEvent().getVolume() + ")";
+
 						if ( publication.getEvent().getName() != null )
-							nodeTitle = publication.getEvent().getName();
+							nodeTooltip = publication.getEvent().getName();
 						else
 						{
 							if ( publication.getEvent().getVolume() != null )
-								nodeTitle = "Volume " + publication.getEvent().getVolume() + ", " + publication.getEvent().getYear();
+								nodeTooltip = "Volume " + publication.getEvent().getVolume() + ", " + publication.getEvent().getYear();
 							else
-								nodeTitle = publication.getEvent().getYear();
+								nodeTooltip = publication.getEvent().getYear();
 						}
+
 						treeHelperLv2.setTitle( nodeTitle );
 						treeHelperLv2.setType( publication.getPublicationType().toString() );
 						treeHelperLv2.setHref( "venue?id=" + publication.getEvent().getEventGroup().getId() + "&eventId=" + publication.getEvent().getId() + "&name=" + publication.getEvent().getEventGroup().getName() );
+						treeHelperLv1.setHref( "venue?&id=" + publication.getEvent().getEventGroup().getId() + "&name=" + publication.getEvent().getEventGroup().getName() + "&eventId=" + publication.getEvent().getId() );
 						treeHelperLv2.setFolder( true );
+						treeHelperLv2.setTooltip( nodeTooltip );
+						if ( publication.getEvent().isAdded() )
+							treeHelperLv2.setAdded( true );
+						treeHelperLv2.setPosition( 2 );
 
 						// add second level as child of first level
 						treeHelperLv1.addChild( treeHelperLv2 );
@@ -119,6 +153,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					treeHelperLv3.setTitle( publication.getTitle() );
 					treeHelperLv3.setType( publication.getPublicationType().toString() );
 					treeHelperLv3.setHref( "publication?id=" + publication.getId() + "&title=" + publication.getTitle() );
+					treeHelperLv3.setPosition( 3 );
 
 					// add second level as child of first level
 					treeHelperLv2.addChild( treeHelperLv3 );

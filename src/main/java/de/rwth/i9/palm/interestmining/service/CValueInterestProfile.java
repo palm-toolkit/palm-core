@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ public class CValueInterestProfile
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public void doCValueCalculation( AuthorInterest authorInterest, PublicationClusterHelper publicationCluster, int numberOfExtractionService )
+	public void doCValueCalculation( AuthorInterest authorInterest, Set<Interest> newInterests, PublicationClusterHelper publicationCluster, int numberOfExtractionService )
 	{
 		// assign authorInterest properties
 		authorInterest.setLanguage( publicationCluster.getLanguage() );
@@ -113,6 +114,10 @@ public class CValueInterestProfile
 		for ( Map.Entry<String, Double> termWeightHelperEntry : termWeightHelperMap.entrySet() )
 		{
 			String term = termWeightHelperEntry.getKey();
+
+			if ( maxWeightValue == 0 )
+				continue;
+
 			double normalizedWeighting = termWeightHelperEntry.getValue() / maxWeightValue;
 
 			// proceed to interest object
@@ -120,8 +125,20 @@ public class CValueInterestProfile
 
 			if ( interest == null )
 			{
+				for ( Interest newInterest : newInterests )
+				{
+					if ( newInterest.getTerm().equals( term ) )
+					{
+						interest = newInterest;
+						break;
+					}
+				}
+			}
+			if ( interest == null )
+			{
 				interest = new Interest();
 				interest.setTerm( term );
+				newInterests.add( interest );
 				persistenceStrategy.getInterestDAO().persist( interest );
 			}
 			authorInterest.addTermWeight( interest, normalizedWeighting );

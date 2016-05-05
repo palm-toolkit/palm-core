@@ -71,17 +71,37 @@ public class ResearcherCollectionService
 		// getSourceMap
 		Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
 
+		// get from configuration
+		boolean isUseGoogleScholar = true;
+		boolean isUseCiteseerX = true;
+		boolean isUseDblp = true;
+		boolean isUseMendeley = true;
+
+		// alter value from configuration
+		String useGoogleScholar = applicationService.getConfigValue( "researcher", "source", "google scholar" );
+		if ( useGoogleScholar != null && useGoogleScholar.equals( "no" ) )
+			isUseGoogleScholar = false;
+		String useCiteseerX = applicationService.getConfigValue( "researcher", "source", "citeserx" );
+		if ( useCiteseerX != null && useCiteseerX.equals( "no" ) )
+			isUseCiteseerX = false;
+		String useDblp = applicationService.getConfigValue( "researcher", "source", "dblp" );
+		if ( useDblp != null && useDblp.equals( "no" ) )
+			isUseDblp = false;
+		String useMendeley = applicationService.getConfigValue( "researcher", "source", "mendeley" );
+		if ( useMendeley != null && useMendeley.equals( "no" ) )
+			isUseMendeley = false;
+
 		// loop through all source which is active
 		for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
 		{
 			Source source = sourceEntry.getValue();
-			if ( source.getSourceType().equals( SourceType.GOOGLESCHOLAR ) && source.isActive() )
+			if ( source.getSourceType().equals( SourceType.GOOGLESCHOLAR ) && source.isActive() && isUseGoogleScholar )
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsGoogleScholar( query, source ) );
-			else if ( source.getSourceType().equals( SourceType.CITESEERX ) && source.isActive() )
+			else if ( source.getSourceType().equals( SourceType.CITESEERX ) && source.isActive() && isUseCiteseerX )
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsCiteseerX( query, source ) );
-			else if ( source.getSourceType().equals( SourceType.DBLP ) && source.isActive() )
+			else if ( source.getSourceType().equals( SourceType.DBLP ) && source.isActive() && isUseDblp )
 				authorFutureLists.add( asynchronousAuthorCollectionService.getListOfAuthorsDblp( query, source ) );
-			else if ( source.getSourceType().equals( SourceType.MENDELEY ) && source.isActive() )
+			else if ( source.getSourceType().equals( SourceType.MENDELEY ) && source.isActive() && isUseMendeley )
 			{
 				// check for token validity
 				mendeleyOauth2Helper.checkAndUpdateMendeleyToken( source );
@@ -130,7 +150,7 @@ public class ResearcherCollectionService
 					if ( authorMap.get( "name" ) == null )
 						continue;
 
-					String authorName = NameNormalizationHelper.normalizeName( authorMap.get( "name" ).toLowerCase().replace( ".", "" ).replace( "-", " " ).trim() );
+					String authorName = NameNormalizationHelper.normalizeName( authorMap.get( "name" ).toLowerCase().replace( ".", "" ).trim() );
 
 					// check if author already on array list
 					Integer authorIndex = indexHelper.get( authorName );
@@ -189,15 +209,15 @@ public class ResearcherCollectionService
 					String[] authorDetails = affliliation.split( "," );
 					for ( int i = 0; i < authorDetails.length; i++ )
 					{
+						if ( authorDetails[i].contains( "rof" ) || authorDetails[i].contains( "esearch" ) || authorDetails[i].contains( "octor" ) )
+							academicStatus = authorDetails[i].trim().toLowerCase();
 						// from word U"nivers"ity, institut, collage, state, school, technology, faculdade, education, hochschule, rieure						
-						if ( authorDetails[i].contains( "nivers" ) || authorDetails[i].contains( "nstit" ) ||
+						else if ( authorDetails[i].contains( "nivers" ) || authorDetails[i].contains( "nstit" ) ||
 							 authorDetails[i].contains( "ollag" ) || authorDetails[i].contains( "tate" ) ||
 							 authorDetails[i].contains( "echn" ) || authorDetails[i].contains( "choo" ) ||
 							 authorDetails[i].contains( "acul" ) || authorDetails[i].contains( "ochs" ) ||
 							 authorDetails[i].contains( "duca" ) || authorDetails[i].contains( "ieur" ))
 							institution = authorDetails[i].trim();
-						else if ( authorDetails[i].contains( "rof" ) || authorDetails[i].contains( "esearch" ) || authorDetails[i].contains( "octor" ) )
-							academicStatus = authorDetails[i].trim().toLowerCase();
 						else
 						{
 							if ( authorDetails[i].length() > 16 )
@@ -234,7 +254,7 @@ public class ResearcherCollectionService
 					author = authors.get( 0 );
 				}
 
-				// set academic status and affliation
+				// set academic status and affiliation
 				if ( !institution.equals( "" ) && ( author.getInstitution() == null ) )
 				{
 					String institutionName = institution.toLowerCase().replace( "university", "" ).replace( "college", "" ).replace( "state", "" ).replace( "institute", "" ).replace( "school", "" ).replace( "academy", "" );
@@ -301,13 +321,14 @@ public class ResearcherCollectionService
 					String[] sourceUrls = mergedAuthor.get( "url" ).split( " " );
 					// checking for duplication
 					Set<String> registeredSourceUlr = new HashSet<String>();
+					//log.info( "\nRESEARCHER COLLECTION SERVICE" );
 					for ( int i = 0; i < sources.length; i++ )
 					{
 						// prevent empty string and duplicated source
 						if ( !sources[i].equals( "" ) && !registeredSourceUlr.contains( sourceUrls[i] ) )
 						{
 							AuthorSource as = new AuthorSource();
-							as.setName( name );
+							as.setName( author.getName() );
 							as.setSourceUrl( sourceUrls[i] );
 							as.setSourceType( SourceType.valueOf( sources[i].toUpperCase() ) );
 							as.setAuthor( author );
@@ -315,12 +336,16 @@ public class ResearcherCollectionService
 							registeredSourceUlr.add( sourceUrls[i] );
 
 							authorSources.add( as );
+							// author sources
+							//log.info( author.getId() + "-" + author.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+
+							// add author sources
+							author.addAuthorSource( as );
 						}
 					}
 				}
-				author.setAuthorSources( authorSources );
 
-				// incase of duplication
+				// in case of duplication
 				if ( !authors2.contains( author ) )
 					authors2.add( author );
 

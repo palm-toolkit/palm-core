@@ -1,15 +1,16 @@
 package de.rwth.i9.palm.controller;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.helper.TemplateHelper;
+import de.rwth.i9.palm.model.CompletionStatus;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
@@ -77,16 +79,17 @@ public class ManageAcademicEventController
 			Event event = persistenceStrategy.getEventDAO().getById( eventId );
 
 			if ( event != null )
+			{
 				eventGroup = event.getEventGroup();
+				model.addObject( "targetEventGroupId", eventGroup.getId() );
+			}
 		}
 
-		if ( eventGroup == null )
-			eventGroup = new EventGroup();
 
 		// assign the model
 		model.addObject( "widgets", widgets );
-		model.addObject( "eventGroup", eventGroup );
 		
+
 		// assign query
 		if ( eventId != null )
 			model.addObject( "targetEventId", eventId );
@@ -115,84 +118,183 @@ public class ManageAcademicEventController
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveNewEventGroup( 
-			@ModelAttribute( "eventGroup" ) EventGroup eventGroup,
+			@RequestParam( value = "eventGroupIdTemp", required = false ) String eventGroupIdTemp,
+			@RequestParam( value = "eventGroupId", required = false ) String eventGroupId,
 			@RequestParam( value = "eventId" , required= false ) String eventId,
+			@RequestParam( value = "name" , required= false ) String name,
+			@RequestParam( value = "notation" , required= false ) String notation,
+			@RequestParam( value = "description" , required= false ) String description,
 			@RequestParam( value = "publicationId" , required= false ) final String publicationId,
 			@RequestParam( value = "type" , required= false ) final String type,
 			@RequestParam( value = "volume" , required= false ) final String volume,
 			@RequestParam( value = "year" , required= false ) final String year,
-			final HttpServletResponse response) throws InterruptedException
+			final HttpServletResponse response,
+			final HttpServletRequest request )
 	{
 
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
+		// check for duplication
+		// check dblpurl or notation with existing event group on db
+		EventGroup newEventGroup = null;
+		
+		//eventGroup = persistenceStrategy.getEventGroupDAO().getSimilarEventGroup( eventGroupOnSession );
+
+		if ( eventGroupId != null )
+		{
+			newEventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupId );
+		}
+
+//		if ( eventGroup != null )
+//		{
+//			eventGroup.setDblpUrl( eventGroupOnSession.getDblpUrl() );
+//			eventGroup.setName( eventGroupOnSession.getName() );
+//			if ( !eventGroupOnSession.getNotation().isEmpty() )
+//				eventGroup.setNotation( eventGroupOnSession.getNotation() );
+//			eventGroup.setDescription( eventGroupOnSession.getDescription() );
+//		}
+//		else
+//			eventGroup = eventGroupOnSession;
+		
+		if ( eventGroupIdTemp != null && !eventGroupIdTemp.equals( "" ) )
+		{
+			// try to get conference from  eventGroupIdTemp
+			newEventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupIdTemp );
+			
+			if( newEventGroup == null ){
+//			log.info( "\nCONFERENCE SESSION SEARCH" );
+				@SuppressWarnings( "unchecked" )
+				List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
+				// get author from session -> just for debug
+	//			if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
+	//			{
+	//				for ( EventGroup sessionEventGroup : sessionEventGroups )
+	//				{
+	//					for ( EventGroupSource as : sessionEventGroup.getEventGroupSources() )
+	//					{
+	//						log.info( sessionEventGroup.getId() + "-" + sessionEventGroup.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+	//					}
+	//				}
+	//			}
+	
+				// user select author that available form autocomplete
+	//			@SuppressWarnings( "unchecked" )
+	//			List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
+	
+				// get author from session
+				if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
+				{
+					for ( EventGroup sessionEventGroup : sessionEventGroups )
+					{
+						if ( sessionEventGroup.getId().equals( eventGroupIdTemp ) )
+						{
+							if ( newEventGroup == null )
+							{
+								persistenceStrategy.getEventGroupDAO().persist( sessionEventGroup );
+								newEventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupIdTemp );
+							}
+							else
+							{
+								// copy attributes
+								newEventGroup.setDblpUrl( sessionEventGroup.getDblpUrl() );
+								newEventGroup.setName( name );
+								if ( !notation.isEmpty() )
+									newEventGroup.setNotation( notation );
+								newEventGroup.setDescription( description );
+								persistenceStrategy.getEventGroupDAO().persist( newEventGroup );
+							}
+							request.getSession().removeAttribute( "eventGroups" );
+							break;
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			// user create new author not suggested by system
+			newEventGroup = new EventGroup();
+			newEventGroup.setName( name );
+			if( notation != null && !notation.isEmpty())
+				newEventGroup.setNotation( notation );
+			if( description != null && !description.isEmpty())
+				newEventGroup.setDescription( description );
+		}
+
 		// set flag added to true
-		eventGroup.setAdded( true );
+		newEventGroup.setAdded( true );
+		newEventGroup.setName( name );
+		if ( notation != null && !notation.isEmpty() )
+			newEventGroup.setNotation( notation );
+		if ( description != null && !description.isEmpty() )
+			newEventGroup.setDescription( description );
 		// set event type, incase changed
 		if ( type != null )
 		{
 			try
 			{
 				PublicationType pubType = PublicationType.valueOf( type.toUpperCase() );
-				eventGroup.setPublicationType( pubType );
+				newEventGroup.setPublicationType( pubType );
 			}
 			catch ( Exception e )
 			{
+				newEventGroup.setPublicationType( PublicationType.CONFERENCE );
 			}
 		}
 
-		// TODO
-		// check for duplication
-		// check dblpurl or notation
-
-		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+		persistenceStrategy.getEventGroupDAO().persist( newEventGroup );
 		
 		// if event exist
+		Event event = null;
 		if( eventId != null ){
-			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+			event = persistenceStrategy.getEventDAO().getById( eventId );
 			if( event != null ){
-				event.setName( eventGroup.getName() );
+				// event.setName( eventGroup.getName() );
 				event.setAdded( true );
 				persistenceStrategy.getEventDAO().persist( event );
 			}
 		}
+
+		if ( event == null )
+		{
 		
-		// if publicationId exist
-		// this is only for event that manually inserted without DBLP
-		Publication publication = null;
-		if ( publicationId != null )
-			publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
-		if( publication != null && eventGroup.getDblpUrl() == null){
-			// create new event
-			Event event = new Event();
-			// event.setName( eventGroup.getName() );
-			if( volume != null )
-				event.setVolume( volume );
-			if( year != null )
-				event.setYear( year );
-			event.setAdded( true );
-			event.addPublication( publication );
-			event.setEventGroup( eventGroup );
-			persistenceStrategy.getEventDAO().persist( event );
-			
-			publication.setEvent( event );
-			persistenceStrategy.getPublicationDAO().persist( publication );
-			
-			if( eventId == null )
-				eventId = event.getId(); 
+			// if publicationId exist
+			// this is only for event that manually inserted without DBLP
+			Publication publication = null;
+			if ( publicationId != null )
+				publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
+			if ( publication != null )
+			{
+				// create new event
+				event = new Event();
+				// event.setName( eventGroup.getName() );
+				if ( volume != null )
+					event.setVolume( volume );
+				if ( year != null )
+					event.setYear( year );
+				event.setAdded( true );
+				event.addPublication( publication );
+				event.setEventGroup( newEventGroup );
+				persistenceStrategy.getEventDAO().persist( event );
+
+				publication.setEvent( event );
+				persistenceStrategy.getPublicationDAO().persist( publication );
+
+				if ( eventId == null )
+					eventId = event.getId();
+			}
 		}
-		
 		responseMap.put( "status", "ok" );
-		responseMap.put( "statusMessage", eventGroup.getName() + " successfully added to PALM" );
+		responseMap.put( "statusMessage", newEventGroup.getName() + " successfully added to PALM" );
 		
 		// put study group detail
 		Map<String,String> eventGroupMap = new LinkedHashMap<String, String>();
-		eventGroupMap.put( "id", eventGroup.getId() );
-		eventGroupMap.put( "name", eventGroup.getName() );
-		if( eventGroup.getNotation() != null)
-			eventGroupMap.put( "notation", eventGroup.getNotation() );
-		if( eventGroup.getDblpUrl() != null)
-			eventGroupMap.put( "dblpUrl", eventGroup.getDblpUrl() );
+		eventGroupMap.put( "id", newEventGroup.getId() );
+		eventGroupMap.put( "name", newEventGroup.getName() );
+		if ( newEventGroup.getNotation() != null )
+			eventGroupMap.put( "notation", newEventGroup.getNotation() );
+		if ( newEventGroup.getDblpUrl() != null )
+			eventGroupMap.put( "dblpUrl", newEventGroup.getDblpUrl() );
 		
 		responseMap.put( "eventGroup", eventGroupMap );
 		
@@ -247,7 +349,12 @@ public class ManageAcademicEventController
 		
 		// assign the model
 		model.addObject( "widgets", widgets );
-		model.addObject( "eventGroup", eventGroup );
+		model.addObject( "eventId", eventGroup.getId() );
+		if ( eventGroup.getPublicationType() != null )
+			model.addObject( "pubType", eventGroup.getPublicationType().toString() );
+		model.addObject( "name", eventGroup.getName() );
+		if ( eventGroup.getNotation() != null )
+			model.addObject( "notation", eventGroup.getNotation() );
 
 		return model;
 	}
@@ -263,50 +370,45 @@ public class ManageAcademicEventController
 	@Transactional
 	@RequestMapping( value = "/eventGroup/edit", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveEventGroup( 
-			@ModelAttribute( "eventGroup" ) EventGroup eventGroup, 
+			@RequestParam( value = "eventId" ) String eventId, 
+			@RequestParam( value = "type", required = false ) final String type, 
+			@RequestParam( value = "name", required = false ) final String name, 
+			@RequestParam( value = "notation", required = false ) final String notation,
 			final HttpServletResponse response)
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
+		EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( eventId );
+
 		if ( eventGroup == null )
 		{
 			responseMap.put( "status", "error" );
 			responseMap.put( "statusMessage", "failed to save, expired session" );
 			return responseMap;
 		}
+		// set properties
+		eventGroup.setPublicationType( PublicationType.valueOf( type.toUpperCase() ) );
+		eventGroup.setName( name );
+		if ( notation != null && !notation.isEmpty() )
+			eventGroup.setNotation( notation );
 		
-		// set event type, incase changed
-		if ( eventGroup.getType() != null )
+		for ( Event event : eventGroup.getEvents() )
 		{
-			try
+			if ( event.isAdded() )
 			{
-				PublicationType pubType = PublicationType.valueOf( eventGroup.getType().toUpperCase() );
+				// use autowire, since Publication is Lazy loaded
+				List<Publication> publications = persistenceStrategy.getPublicationDAO().getPublicationByEventWithPaging( event, null, null );
 
-				if ( !eventGroup.getPublicationType().equals( pubType ) )
-				{
-					eventGroup.setPublicationType( pubType );
-
-					for ( Event event : eventGroup.getEvents() )
+				if ( publications != null && !publications.isEmpty() )
+					for ( Publication publication : publications )
 					{
-						if ( event.isAdded() )
-						{
-							// use autowire, since Publication is Lazy loaded
-							List<Publication> publications = persistenceStrategy.getPublicationDAO().getPublicationByEventWithPaging( event, null, null );
-
-							if ( publications != null && !publications.isEmpty() )
-								for ( Publication publication : publications )
-								{
-									publication.setPublicationType( pubType );
-									persistenceStrategy.getPublicationDAO().persist( publication );
-								}
-						}
+						publication.setPublicationType( eventGroup.getPublicationType() );
+						publication.setPublicationTypeStatus( CompletionStatus.COMPLETE );
+						persistenceStrategy.getPublicationDAO().persist( publication );
 					}
-				}
-			}
-			catch ( Exception e )
-			{
 			}
 		}
+
 
 		persistenceStrategy.getEventGroupDAO().persist( eventGroup );
 
@@ -367,4 +469,133 @@ public class ManageAcademicEventController
 
 		return model;
 	}
+
+	@Transactional
+	@RequestMapping( value = "/delete", method = RequestMethod.POST )
+	public @ResponseBody Map<String, Object> deleteEventGroup( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( id == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Event Group id missing" );
+			return responseMap;
+		}
+
+		EventGroup eventGroup = persistenceStrategy.getEventGroupDAO().getById( id );
+
+		if ( eventGroup == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Event Group not found" );
+			return responseMap;
+		}
+
+		if ( !securityService.isAuthorizedForRole( "ADMIN" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "error 401 - not authorized" );
+			return responseMap;
+		}
+
+		// remove eventgroup connection
+		eventGroup.getUserEventGroupBookmarks().clear();
+
+		if ( eventGroup.getDblpUrl() == null || eventGroup.getDblpUrl().isEmpty() )
+		{
+			// remove connection with publications
+			if ( eventGroup.getEvents() != null )
+			{
+				for ( Event event : eventGroup.getEvents() )
+				{
+					if ( event.getPublications() == null )
+						continue;
+
+					// remove links with publicatins
+					String venue = eventGroup.getName();
+					if ( !venue.equals( eventGroup.getNotation() ) )
+					{
+						venue += " (" + eventGroup.getNotation() + ")";
+					}
+
+					for ( Publication publication : event.getPublications() )
+					{
+						publication.addOrUpdateAdditionalInformation( "venue", venue );
+						publication.setEvent( null );
+						persistenceStrategy.getPublicationDAO().persist( publication );
+					}
+					event.getPublications().clear();
+					event.setEventGroup( null );
+					persistenceStrategy.getEventDAO().delete( event );
+				}
+			}
+
+			eventGroup.getEvents().clear();
+			persistenceStrategy.getEventGroupDAO().delete( eventGroup );
+		}
+		else
+		{
+			eventGroup.setAdded( false );
+			int numberOfPublication = 0;
+			if ( eventGroup.getEvents() != null )
+			{
+
+				for ( Event event : eventGroup.getEvents() )
+				{
+					if ( event.getPublications() != null && !event.getPublications().isEmpty() )
+					{
+						numberOfPublication += event.getPublications().size();
+					}
+				}
+
+			}
+
+			// determine to delete eventGroup entirely or kept the information
+			if ( numberOfPublication == 0 )
+			{
+				// if event still do not belong to any publication then it's
+				// save to remove it entirely
+				if ( eventGroup.getEvents() != null )
+				{
+					List<Event> events = new ArrayList<Event>();
+					events.addAll( eventGroup.getEvents() );
+					for ( Event event : events )
+					{
+						event.setLocation( null );
+						event.setEventGroup( null );
+						event.getEventInterestProfiles().clear();
+						eventGroup.removeEvent( event );
+						persistenceStrategy.getEventDAO().delete( event );
+					}
+				}
+				eventGroup.getEvents().clear();
+				persistenceStrategy.getEventGroupDAO().delete( eventGroup );
+
+			}
+			else
+			{
+				if ( eventGroup.getEvents() != null )
+				{
+					List<Event> events = new ArrayList<Event>();
+					events.addAll( eventGroup.getEvents() );
+					for ( Event event : events )
+					{
+						event.getEventInterestProfiles().clear();
+						event.setAdded( false );
+						persistenceStrategy.getEventDAO().persist( event );
+					}
+
+				}
+				// remove flag properties but kept information
+				persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+			}
+
+		}
+		responseMap.put( "status", "ok" );
+		responseMap.put( "statusMessage", "Event Group is deleted" );
+
+		return responseMap;
+	}
+
 }

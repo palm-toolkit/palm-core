@@ -27,7 +27,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
-@SessionAttributes( { "user", "author" } )
+@SessionAttributes( { "user" } )
 @RequestMapping( value = "/user/profile" )
 public class UserProfileController
 {
@@ -49,12 +49,12 @@ public class UserProfileController
 	 */
 	@Transactional
 	@RequestMapping( method = RequestMethod.GET )
-	public ModelAndView getSources( 
+	public ModelAndView getUserProfilePage( 
 			final HttpServletResponse response) throws InterruptedException
 	{
 		// set model and view
 		ModelAndView model = TemplateHelper.createViewWithLink( "widgetLayoutAjax", LINK_NAME );
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "profile" );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-profile" );
 
 		// assign the model
 		model.addObject( "widgets", widgets );
@@ -77,7 +77,7 @@ public class UserProfileController
 				researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
 
 			if ( researcher.getPublicationAuthors() != null )
-				researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
+				researcherMap.put( "publicationsNumber", researcher.getNoPublication() );
 			else
 				researcherMap.put( "publicationsNumber", 0 );
 			String otherDetail = "";
@@ -90,12 +90,12 @@ public class UserProfileController
 
 			researcherMap.put( "isAdded", researcher.isAdded() );
 
-			model.addObject( "author", researcherMap );
+			model.addObject( "authorMap", researcherMap );
 		}
 
 		return model;
 	}
-
+	
 	/**
 	 * Save changes from Source detail, via Spring binding
 	 * 
@@ -106,7 +106,7 @@ public class UserProfileController
 	 */
 	@Transactional
 	@RequestMapping( method = RequestMethod.POST )
-	public @ResponseBody Map<String, Object> saveSources( 
+	public @ResponseBody Map<String, Object> saveUserAuthor( 
 			@ModelAttribute( "user" ) User user, 
 			@RequestParam( value = "userId", required = false ) final String userId, 
 			@RequestParam( value = "authorId", required = false ) final String authorId,
@@ -138,5 +138,4 @@ public class UserProfileController
 
 		return responseMap;
 	}
-
 }

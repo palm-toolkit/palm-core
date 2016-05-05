@@ -10,27 +10,57 @@ import java.util.Map;
 
 import org.springframework.web.client.RestTemplate;
 
+import de.rwth.i9.palm.model.ExtractionService;
+import de.rwth.i9.palm.model.ExtractionServiceProperty;
+
 public class YahooContentAnalysisAPITopicExtraction
 {
-	/**
-	 * 
-	 * @throws URISyntaxException
-	 * @throws UnsupportedEncodingException
-	 */
 
+	/**
+	 * Extract keywords given text
+	 * 
+	 * @param text
+	 * @return
+	 * @throws UnsupportedEncodingException
+	 * @throws URISyntaxException
+	 */
 	public static Map<String, Object> getTextContentAnalysis( String text ) throws UnsupportedEncodingException, URISyntaxException
 	{
+		return getTextContentAnalysis( text, null );
+	}
+
+	/**
+	 * Extract keywords given text and ExtractionService
+	 * 
+	 * @param text
+	 * @return
+	 * @throws UnsupportedEncodingException
+	 * @throws URISyntaxException
+	 */
+	public static Map<String, Object> getTextContentAnalysis( String text, ExtractionService extractionService ) throws UnsupportedEncodingException, URISyntaxException
+	{
+		// default value
+		String endpoint = "https://query.yahooapis.com/v1/public/yql";
+		String query = "select%20*%20from%20contentanalysis.analyze%20where%20text%3D%22";
+		String endQuery = "%22&format=json";
+
+		if ( extractionService != null )
+			for ( ExtractionServiceProperty esp : extractionService.getExtractionServiceProperties() )
+			{
+				if ( esp.getMainIdentifier().equals( "api" ) )
+				{
+					if ( esp.getSecondaryIdentifier().equals( "endpoint" ) )
+						endpoint = esp.getValue();
+				}
+			}
+
 		Map<String, Object> mapResults = new LinkedHashMap<String, Object>();
 
 		Map<String, Double> termsMapResults = new LinkedHashMap<String, Double>();
 
 		RestTemplate restTemplate = new RestTemplate();
 
-		String endpoint = "https://query.yahooapis.com/v1/public/yql?q=";
-		String query = "select%20*%20from%20contentanalysis.analyze%20where%20text%3D%22";
-		String endQuery = "%22&format=json";
-
-		URI uri = new URI( endpoint + query + URLEncoder.encode( text, "UTF-8" ).replace( "+", "%20" ) + endQuery );
+		URI uri = new URI( endpoint + "?q=" + query + URLEncoder.encode( text, "UTF-8" ).replace( "+", "%20" ) + endQuery );
 
 		@SuppressWarnings( "unchecked" )
 		Map<String, Object> resultsMap = restTemplate.getForObject( uri, Map.class );

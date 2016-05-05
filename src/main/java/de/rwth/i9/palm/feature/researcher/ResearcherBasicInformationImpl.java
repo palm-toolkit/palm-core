@@ -27,11 +27,11 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
-		if ( author.getPublications() == null || author.getPublications().isEmpty() )
-		{
-			responseMap.put( "count", 0 );
-			return responseMap;
-		}
+//		if ( author.getPublications() == null || author.getPublications().isEmpty() )
+//		{
+//			responseMap.put( "count", 0 );
+//			return responseMap;
+//		}
 		// author data
 		responseMap.put( "author", printAuthorInformation( author ) );
 
@@ -197,7 +197,7 @@ public class ResearcherBasicInformationImpl implements ResearcherBasicInformatio
 			researcherMap.put( "citedBy", researcher.getCitedBy() );
 
 		if ( researcher.getPublicationAuthors() != null )
-			researcherMap.put( "publicationsNumber", researcher.getPublicationAuthors().size() );
+			researcherMap.put( "publicationsNumber", researcher.getNoPublication() );
 		else
 			researcherMap.put( "publicationsNumber", 0 );
 

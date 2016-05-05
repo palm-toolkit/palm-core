@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,7 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserAuthorBookmark;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -43,6 +46,7 @@ import de.rwth.i9.palm.service.SecurityService;
 @RequestMapping( value = "/researcher" )
 public class ResearcherController
 {
+	private final static Logger log = LoggerFactory.getLogger( ResearcherController.class );
 
 	private static final String LINK_NAME = "researcher";
 
@@ -70,7 +74,7 @@ public class ResearcherController
 	@Transactional
 	public ModelAndView researcherPage( 
 			@RequestParam( value = "id", required = false ) final String id, 
-			@RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "name", required = false ) String name,
 			@RequestParam( value = "add", required = false ) final String add,
 			final HttpServletResponse response ) throws InterruptedException
 	{
@@ -96,13 +100,20 @@ public class ResearcherController
 		}
 		else
 			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.RESEARCHER, WidgetStatus.DEFAULT ) );
-		// assign the model
-		model.addObject( "widgets", widgets );
+
 		// assign the model
 		model.addObject( "widgets", widgets );
 		// assign query
 		if ( id != null )
+		{
 			model.addObject( "targetId", id );
+			if ( name == null )
+			{
+				Author author = persistenceStrategy.getAuthorDAO().getById( id );
+				if ( author != null )
+					name = author.getName();
+			}
+		}
 		if ( name != null )
 			model.addObject( "targetName", name );
 		if ( add != null )
@@ -131,7 +142,7 @@ public class ResearcherController
 	public @ResponseBody Map<String, Object> getAuthorList(
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "queryType", required = false ) String queryType,
-			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "page", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "source", required = false ) String source,
 			@RequestParam( value = "addedAuthor", required = false ) String addedAuthor,
@@ -140,6 +151,7 @@ public class ResearcherController
 			HttpServletRequest request,
 			HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
+
 		/* == Set Default Values== */
 		if ( query == null ) 			query = "";
 		if ( queryType == null ) 		queryType = "name";
@@ -175,9 +187,40 @@ public class ResearcherController
 		
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )
-			request.getSession().setAttribute( "authors", authorsMap.get( "authors" ) );
+		{
+			request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
+
+			// recheck if session really has been updated
+			// (there is a bug in spring session, which makes session is
+			// not updated sometimes) - a little workaround
+			boolean isSessionUpdated = false;
+			while ( !isSessionUpdated )
+			{
+				Object authors = request.getSession().getAttribute( "researchers" );
+				if ( authors.equals( authorsMap.get( "authors" ) ) )
+					isSessionUpdated = true;
+				else
+					request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
+			}
+
+			log.info( "\nRESEARCHER SESSION SEARCH" );
+			@SuppressWarnings( "unchecked" )
+			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
+			// get author from session -> just for debug
+			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+			{
+				for ( Author sessionAuthor : sessionAuthors )
+				{
+					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+					{
+						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+					}
+				}
+			}
+
+		}
 		
-		if ( (Integer) authorsMap.get( "totalCount" ) > 0 )
+		if ( authorsMap != null && (Integer) authorsMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) authorsMap.get( "totalCount" ) );
 			return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, (List<Author>) authorsMap.get( "authors" ) );
@@ -199,7 +242,7 @@ public class ResearcherController
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
 		@SuppressWarnings( "unchecked" )
-		List<Author> authors = (List<Author>) request.getSession().getAttribute( "authors" );
+		List<Author> authors = (List<Author>) request.getSession().getAttribute( "researchers" );
 		
 		if ( authors != null && !authors.isEmpty() )
 		{
@@ -212,7 +255,7 @@ public class ResearcherController
 	}
 	
 	/**
-	 * Fetch author data, mining author information and publication from
+	 * Extract author information and publication from
 	 * academic network if necessary
 	 * 
 	 * @param id
@@ -243,12 +286,34 @@ public class ResearcherController
 			HttpServletRequest request,
 			HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-		@SuppressWarnings( "unchecked" )
-		List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "authors" );
-		
-		return researcherFeature.getResearcherMining().fetchResearcherData( id, name, uri, affiliation, pid, force, sessionAuthors );
+		return researcherFeature.getResearcherMining().fetchResearcherData( id, name, uri, affiliation, pid, force, request );
 	}
 	
+	/**
+	 * 
+	 * @param id
+	 * @param pid
+	 * @param force
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 * @throws ParseException
+	 */
+	@RequestMapping( value = "/fetchPublicationDetail", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherFetchNetworkDataset( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "pid", required = false ) final String pid, 
+			@RequestParam( value = "force", required = false ) final String force, 
+			HttpServletRequest request, 
+			HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, ParseException 
+	{
+		return researcherFeature.getResearcherMining().fetchResearcherPublicationData( id, pid, force, request );
+	}
+
 	/**
 	 * Get author interest
 	 * 
@@ -269,24 +334,51 @@ public class ResearcherController
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterest( 
 			@RequestParam( value = "id", required = false ) final String authorId, 
-			@RequestParam( value = "name", required = false ) final String name, 
-			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
-			@RequestParam( value = "startDate", required = false ) final String startDate,
-			@RequestParam( value = "endDate", required = false ) final String endDate,
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
-		if ( name != null )
-			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
-		else
-			return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
-		// return Collections.emptyMap();
+		boolean isReplaceExistingResult = false;
+		if ( updateResult != null && updateResult.equals( "yes" ) )
+			isReplaceExistingResult = true;
+		return researcherFeature.getResearcherInterest().getAuthorInterestById( authorId, isReplaceExistingResult );
+
 	}
 	
+	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> researcherTopicModel( 
+			@RequestParam( value = "id", required = false ) final String authorId, 
+			@RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	{
+		if ( authorId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return researcherFeature.getResearcherTopicModeling().getTopicModeling( authorId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+
+	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopic( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( authorId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return researcherFeature.getResearcherTopicModeling().getStaticTopicModelingNgrams( authorId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 	@RequestMapping( value = "/enrich", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherEnrich( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException, TimeoutException
 	{
-		// id=90522536-4717-4fa3-ac43-b3f6300ad6c4
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
 		publicationCollectionService.enrichPublicationByExtractOriginalSources( new ArrayList<Publication>( author.getPublications() ), author, true );
 		return Collections.emptyMap();
@@ -392,7 +484,7 @@ public class ResearcherController
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping( value = "/coAuhtorList", method = RequestMethod.GET )
+	@RequestMapping( value = "/coAuthorList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getCoAuthorList( 
 			@RequestParam( value = "id", required = false ) final String authorId, 
@@ -409,6 +501,11 @@ public class ResearcherController
 			return responseMap;
 		}
 
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 30;
+
 		// get author
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
 
@@ -420,7 +517,7 @@ public class ResearcherController
 		}
 
 		// get coauthor calculation
-		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author ) );
+		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
 
 		return responseMap;
 	}
@@ -458,8 +555,19 @@ public class ResearcherController
 			return responseMap;
 		}
 
-		// get coauthor calculation
+		// get basic information
 		responseMap.putAll( researcherFeature.getResearcherBasicInformation().getResearcherBasicInformationMap( author ) );
+
+		// check whether publication is already followed or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+			UserAuthorBookmark uab = persistenceStrategy.getUserAuthorBookmarkDAO().getByUserAndAuthor( user, author );
+			if ( uab != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
 
 		return responseMap;
 	}
@@ -504,37 +612,37 @@ public class ResearcherController
 		return responseMap;
 	}
 	
-	/**
-	 * Get author Topics
-	 * 
-	 * @param authorId
-	 * @param name
-	 * @param extractionServiceType
-	 * @param startDate
-	 * @param endDate
-	 * @param response
-	 * @return
-	 * @throws InterruptedException
-	 * @throws IOException
-	 * @throws ExecutionException
-	 * @throws URISyntaxException
-	 * @throws ParseException
-	 */
-	@RequestMapping( value = "/topicmodeling", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> researcherTopicModeling( 
-			@RequestParam( value = "id", required = false ) final String authorId, 
-			@RequestParam( value = "name", required = false ) final String name, 
-			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
-			@RequestParam( value = "startDate", required = false ) final String startDate,
-			@RequestParam( value = "endDate", required = false ) final String endDate,
-			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
-	{
-		if ( name != null )
-			return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
-		else
-			return researcherFeature.getResearcherTopicModelingLDA().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
-		// return Collections.emptyMap();
-	}
+//	/**
+//	 * Get author Topics
+//	 * 
+//	 * @param authorId
+//	 * @param name
+//	 * @param extractionServiceType
+//	 * @param startDate
+//	 * @param endDate
+//	 * @param response
+//	 * @return
+//	 * @throws InterruptedException
+//	 * @throws IOException
+//	 * @throws ExecutionException
+//	 * @throws URISyntaxException
+//	 * @throws ParseException
+//	 */
+//	@RequestMapping( value = "/topicmodeling", method = RequestMethod.GET )
+//	@Transactional
+//	public @ResponseBody Map<String, Object> researcherTopicModeling( 
+//			@RequestParam( value = "id", required = false ) final String authorId, 
+//			@RequestParam( value = "name", required = false ) final String name, 
+//			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
+//			@RequestParam( value = "startDate", required = false ) final String startDate,
+//			@RequestParam( value = "endDate", required = false ) final String endDate,
+//			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+//	{
+//		if ( name != null )
+//			//return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
+//		else
+//			//return researcherFeature.getResearcherTopicModelingLDA().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
+//		// return Collections.emptyMap();
+//	}
 
 }

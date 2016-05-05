@@ -14,13 +14,13 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 @RunWith( SpringJUnit4ClassRunner.class )
 @ContextConfiguration( loader = AnnotationConfigContextLoader.class )
+@Ignore
 public class GoogleScholarPublicationCollectionTest
 {
 	@Test
-	@Ignore
 	public void getListOfAuthorsTest() throws IOException
 	{
-		List<Map<String, String>> authorList = GoogleScholarPublicationCollection.getListOfAuthors( "chatti" );
+		List<Map<String, String>> authorList = GoogleScholarPublicationCollection.getListOfAuthors( "Marcus Specht", null );
 
 		for ( Map<String, String> eachAuthor : authorList )
 		{
@@ -31,7 +31,7 @@ public class GoogleScholarPublicationCollectionTest
 	}
 
 	@Test
-
+	@Ignore
 	public void getListOfPublicationTest() throws IOException
 	{
 		List<Map<String, String>> publicationMapLists = GoogleScholarPublicationCollection.getPublicationListByAuthorUrl( "https://scholar.google.com/citations?user=gyLI8FYAAAAJ&hl=en", null );

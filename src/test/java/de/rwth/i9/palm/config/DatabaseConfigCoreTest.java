@@ -36,6 +36,8 @@ import de.rwth.i9.palm.model.ConfigProperty;
 import de.rwth.i9.palm.model.Country;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.EventInterest;
+import de.rwth.i9.palm.model.EventInterestProfile;
 import de.rwth.i9.palm.model.ExtractionService;
 import de.rwth.i9.palm.model.ExtractionServiceProperty;
 import de.rwth.i9.palm.model.Function;
@@ -44,6 +46,7 @@ import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.InterestAuthor;
 import de.rwth.i9.palm.model.InterestProfile;
 import de.rwth.i9.palm.model.InterestProfileCircle;
+import de.rwth.i9.palm.model.InterestProfileEvent;
 import de.rwth.i9.palm.model.InterestProfileProperty;
 import de.rwth.i9.palm.model.Location;
 import de.rwth.i9.palm.model.Publication;
@@ -59,6 +62,10 @@ import de.rwth.i9.palm.model.Subject;
 import de.rwth.i9.palm.model.TopicModelingAlgorithmAuthor;
 import de.rwth.i9.palm.model.TopicModelingAlgorithmCircle;
 import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserAuthorBookmark;
+import de.rwth.i9.palm.model.UserCircleBookmark;
+import de.rwth.i9.palm.model.UserEventGroupBookmark;
+import de.rwth.i9.palm.model.UserPublicationBookmark;
 import de.rwth.i9.palm.model.UserRequest;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.WeightingAlgorithm;
@@ -162,6 +169,8 @@ public class DatabaseConfigCoreTest
 				Config.class,
 				ConfigProperty.class,
 				Event.class,
+				EventInterest.class,
+				EventInterestProfile.class,
 				EventGroup.class,
 				ExtractionService.class,
 				ExtractionServiceProperty.class,
@@ -171,6 +180,7 @@ public class DatabaseConfigCoreTest
 				InterestAuthor.class,
 				InterestProfile.class,
 				InterestProfileCircle.class,
+				InterestProfileEvent.class,
 				InterestProfileProperty.class,
 				Location.class,
 				Publication.class,
@@ -186,6 +196,10 @@ public class DatabaseConfigCoreTest
 				TopicModelingAlgorithmAuthor.class,
 				TopicModelingAlgorithmCircle.class,
 				User.class,
+				UserAuthorBookmark.class,
+				UserCircleBookmark.class,
+				UserEventGroupBookmark.class,
+				UserPublicationBookmark.class,
 				UserRequest.class,
 				UserWidget.class,
 				Widget.class,

@@ -68,7 +68,7 @@ public class DblpPublicationCollectionTest
 		source.addSourceProperty( sourceProperty1 );
 		source.addSourceProperty( sourceProperty2 );
 
-		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/j/Jarke:Matthias", source );
+		List<Map<String, String>> publicationMapLists = DblpPublicationCollection.getPublicationListByAuthorUrl( "http://dblp.uni-trier.de/pers/hd/k/Krau=szlig=:Christopher", source );
 		int count = 1;
 
 		for ( Map<String, String> eachPublicationMap : publicationMapLists )

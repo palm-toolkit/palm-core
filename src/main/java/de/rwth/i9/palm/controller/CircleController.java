@@ -3,6 +3,8 @@ package de.rwth.i9.palm.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,12 +24,15 @@ import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
-import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.CircleWidget;
+import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserCircleBookmark;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.service.SecurityService;
 
 @Controller
 @SessionAttributes( { "sessionDataSet" } )
@@ -35,6 +40,9 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 public class CircleController
 {
 	private static final String LINK_NAME = "circle";
+
+	@Autowired
+	private SecurityService securityService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -53,13 +61,75 @@ public class CircleController
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
 	public ModelAndView circlePage( 
- @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "name", required = false ) final String name,
+			@RequestParam( value = "id", required = false ) final String circleId, 
+			@RequestParam( value = "name", required = false ) String name,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// set model and view
 		ModelAndView model = TemplateHelper.createViewWithLink( "circle", LINK_NAME );
 
-		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CIRCLE, WidgetStatus.DEFAULT );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CIRCLE, "sidebar" );
+		// assign the model
+		model.addObject( "widgets", widgets );
+
+		if ( circleId != null )
+		{
+			model.addObject( "targetId", circleId );
+			if ( name == null )
+			{
+				Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+				if ( circle != null )
+					name = circle.getName();
+			}
+		}
+
+		if ( name != null )
+			model.addObject( "targetName", name );
+
+		return model;
+	}
+	
+	/**
+	 * Get the circle page
+	 * 
+	 * @param sessionId
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@RequestMapping( value = "/widgetContent", method = RequestMethod.GET )
+	@Transactional
+	public ModelAndView circleContentWidget( 
+			@RequestParam( value = "id", required = false ) final String circleId, 
+			@RequestParam( value = "name", required = false ) final String name,
+			final HttpServletResponse response ) throws InterruptedException
+	{
+		// set model and view
+		ModelAndView model = TemplateHelper.createViewWithLink( "widgetLayoutMainContent", LINK_NAME );
+
+		List<Widget> widgets = new ArrayList<Widget>();
+
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+
+		if ( circle == null )
+		{
+			model = TemplateHelper.createViewWithLink( "404", "error" );
+			model.addObject( "erorMessage", "Circle with id " + circleId + " not found" );
+			return model;
+		}
+
+		List<CircleWidget> circleWidgets = persistenceStrategy.getCircleWidgetDAO().getWidget( circle, WidgetType.CIRCLE, WidgetStatus.ACTIVE );
+		for ( CircleWidget circleWidget : circleWidgets )
+		{
+			Widget widget = circleWidget.getWidget();
+			widget.setColor( circleWidget.getWidgetColor() );
+			widget.setWidgetHeight( circleWidget.getWidgetHeight() );
+			widget.setWidgetWidth( circleWidget.getWidgetWidth() );
+			widget.setPosition( circleWidget.getPosition() );
+
+			widgets.add( widget );
+		}
+
 		// assign the model
 		model.addObject( "widgets", widgets );
 
@@ -83,14 +153,15 @@ public class CircleController
 	 * @param response
 	 * @return JSON Map
 	 */
+	@SuppressWarnings( "unchecked" )
 	@Transactional
 	@RequestMapping( value = "/search", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getCircleList( 
 			@RequestParam( value = "id", required = false ) String circleId,
- @RequestParam( value = "creatorId", required = false ) String creatorId,
+			@RequestParam( value = "creatorId", required = false ) String creatorId,
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "page", required = false ) Integer page, 
- @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "orderBy", required = false ) String orderBy,
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response )
 	{
 		/* == Set Default Values== */
@@ -117,16 +188,8 @@ public class CircleController
 
 		Map<String, Object> circleMap = circleFeature.getCircleSearch().getCircleListByQuery( query, creatorId, page, maxresult, fulltextSearch, orderBy );
 
-		if ( (Integer) circleMap.get( "totalCount" ) > 0 )
-		{
-			responseMap.put( "totalCount", (Integer) circleMap.get( "totalCount" ) );
-			return circleFeature.getCircleSearch().printJsonOutput( responseMap, (List<Circle>) circleMap.get( "circles" ) );
-		}
-		else
-		{
-			responseMap.put( "totalCount", 0 );
-			return responseMap;
-		}
+		return circleFeature.getCircleSearch().printJsonOutput( responseMap, (List<Circle>) circleMap.get( "circles" ) );
+
 	}
 
 	/**
@@ -145,12 +208,29 @@ public class CircleController
 	@Transactional
 	public @ResponseBody Map<String, Object> getCircleDetail( 
 			@RequestParam( value = "id", required = false ) final String id, 
-			@RequestParam( value = "uri", required = false ) final String uri, 
+			@RequestParam( value = "uri", required = false ) final String uri,
+			@RequestParam( value = "retrieveAuthor", required = false ) String retrieveAuthor,
+			@RequestParam( value = "retrievePubication", required = false ) String retrievePublication, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return circleFeature.getCircleDetail().getCircleDetailById( id );
+		boolean isRetrieveAuthorDetail = false;
+		if ( retrieveAuthor != null && retrieveAuthor.equals( "yes" ) )
+			isRetrieveAuthorDetail = true;
+
+		boolean isRetrievePublicationDetail = false;
+		if ( retrievePublication != null && retrievePublication.equals( "yes" ) )
+			isRetrievePublicationDetail = true;
+
+		return circleFeature.getCircleDetail().getCircleDetailById( id, isRetrieveAuthorDetail, isRetrievePublicationDetail );
 	}
 
+	/**
+	 * Get basic information of circle
+	 * 
+	 * @param circleid
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping( value = "/basicInformation", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getBasicInformationMap( 
@@ -177,6 +257,17 @@ public class CircleController
 
 		// get coauthor calculation
 		responseMap.put( "circle", circleFeature.getCircleBasicInformation().getCircleBasicInformationMap( circle ) );
+
+		// check whether circle is already booked or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+			UserCircleBookmark ucb = persistenceStrategy.getUserCircleBookmarkDAO().getByUserAndCircle( user, circle );
+			if ( ucb != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
 
 		return responseMap;
 	}
@@ -243,18 +334,60 @@ public class CircleController
 		return responseMap;
 	}
 	
+	/**
+	 * Get PublicationMap (JSON), containing publications basic information and detail.
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/publication", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationList( 
+			@RequestParam( value = "id", required = false ) final String circleId,
+			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "year", required = false ) String year,
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			final HttpServletResponse response)
+	{
+		if ( year == null )				year = "all";
+		if ( query == null )			query = "";
+		if ( orderBy == null )			orderBy = "date";
+		
+		return circleFeature.getCirclePublication().getCirclePublicationByCircleId( circleId, query, year, startPage, maxresult, orderBy );
+	}
+	
 	@RequestMapping( value = "/interest", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherInterest( 
 			@RequestParam( value = "id", required = false ) final String circleId, 
-			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
-			@RequestParam( value = "startDate", required = false ) final String startDate,
-			@RequestParam( value = "endDate", required = false ) final String endDate,
+			@RequestParam( value = "updateResult", required = false ) final String updateResult,
 			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
 	{
-		return circleFeature.getCircleInterest().getCircleInterestById( circleId, extractionServiceType, startDate, endDate );
+		boolean isReplaceExistingResult = false;
+		if ( updateResult != null && updateResult.equals( "yes" ) )
+			isReplaceExistingResult = true;
+		return circleFeature.getCircleInterest().getCircleInterestById( circleId, isReplaceExistingResult );
 	}
 	
+	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> circleTopicModel( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+	{
+		if ( circleId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			return circleFeature.getCircleTopicModeling().getLdaBasicExample( circleId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 	/**
 	 * Get PublicationMap (JSON), containing top publications (highly cited publications) information and detail.
 	 * @param circleId

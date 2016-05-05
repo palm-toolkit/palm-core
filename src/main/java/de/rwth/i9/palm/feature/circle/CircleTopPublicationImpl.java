@@ -134,7 +134,9 @@ public class CircleTopPublicationImpl implements CircleTopPublication
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
 				eventMap.put( "name", publication.getEvent().getEventGroup().getName() );
-				if ( !publication.getEvent().getEventGroup().getNotation().equals( publication.getEvent().getEventGroup().getName() ) )
+				if ( publication.getEvent().getEventGroup().getNotation() != null && 
+						!publication.getEvent().getEventGroup().getNotation().isEmpty() && 
+						!publication.getEvent().getEventGroup().getNotation().equals( publication.getEvent().getEventGroup().getName() ) )
 					eventMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
 				eventMap.put( "isAdded", publication.getEvent().isAdded() );
 				if ( publication.getEvent().getEventGroup() != null )
@@ -147,6 +149,11 @@ public class CircleTopPublicationImpl implements CircleTopPublication
 
 			if ( publication.getStartPage() > 0 )
 				publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
+
+			if ( publication.getAbstractText() != null || publication.getKeywordText() != null )
+				publicationMap.put( "contentExist", true );
+			else
+				publicationMap.put( "contentExist", false );
 
 			publicationList.add( publicationMap );
 

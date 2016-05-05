@@ -21,6 +21,7 @@ import de.rwth.i9.palm.oauth2.Oauth2Client;
 
 @RunWith( SpringJUnit4ClassRunner.class )
 @ContextConfiguration( loader = AnnotationConfigContextLoader.class )
+@Ignore
 public class MendeleyPublicationCollectionTest
 {
 	@Test

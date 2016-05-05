@@ -1,6 +1,8 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,6 +25,7 @@ import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
+import de.rwth.i9.palm.model.UserPublicationBookmark;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
 import de.rwth.i9.palm.model.WidgetStatus;
@@ -59,7 +62,7 @@ public class PublicationController
 	public ModelAndView publicationPage( 
 			@RequestParam( value = "sessionid", required = false ) final String sessionId, 
 			@RequestParam( value = "id", required = false ) final String publicationId, 
-			@RequestParam( value = "title", required = false ) final String title,
+			@RequestParam( value = "title", required = false ) String title,
 			final HttpServletResponse response ) throws InterruptedException
 	{
 		// set model and view
@@ -88,8 +91,15 @@ public class PublicationController
 		model.addObject( "widgets", widgets );
 
 		if ( publicationId != null )
+		{
 			model.addObject( "targetId", publicationId );
-
+			if ( title == null )
+			{
+				Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
+				if ( publication != null )
+					title = publication.getTitle();
+			}
+		}
 		if ( title != null )
 			model.addObject( "targetTitle", title );
 
@@ -128,9 +138,11 @@ public class PublicationController
 		if ( publicationType == null ) 	publicationType = "all";
 		if ( page == null )				page = 0;
 		if ( maxresult == null )		maxresult = 50;
-		if ( fulltextSearch == null )	fulltextSearch = "yes";
+		if ( fulltextSearch == null || ( fulltextSearch != null && fulltextSearch.equals( "yes" ) ) )
+			fulltextSearch = "yes";
 		else							fulltextSearch = "no";
-		if ( year == null )				year = "all";
+		if ( year == null || year.isEmpty() )
+			year = "all";
 		if ( orderBy == null )			orderBy = "citation";
 		// Currently, system only provides query on internal database
 		source = "internal";
@@ -143,7 +155,7 @@ public class PublicationController
 		if ( !publicationType.equals( "all" ) )
 			responseMap.put( "publicationType", publicationType );
 		if ( !year.equals( "all" ) )
-			responseMap.put( "year", publicationType );
+			responseMap.put( "year", year );
 		responseMap.put( "page", page );
 		responseMap.put( "maxresult", maxresult );
 		responseMap.put( "fulltextSearch", fulltextSearch );
@@ -213,10 +225,13 @@ public class PublicationController
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationDetail( 
 			@RequestParam( value = "id", required = false ) final String id, 
-			@RequestParam( value = "uri", required = false ) final String uri, 
+			@RequestParam( value = "uri", required = false ) final String uri,
+			@RequestParam( value = "section", required = false ) String section,
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return publicationFeature.getPublicationDetail().getPublicationDetailById( id );
+		if ( section == null || ( section != null && section.isEmpty() ) )
+			section = "all";
+		return publicationFeature.getPublicationDetail().getPublicationDetailById( id, section );
 	}
 	
 	/**
@@ -239,14 +254,42 @@ public class PublicationController
 			@RequestParam( value = "uri", required = false ) final String uri, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
+		Map<String, Object> responseMap = publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
+
+		// check whether publication is already booked or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+			Publication publication = persistenceStrategy.getPublicationDAO().getById( id );
+			if ( publication == null )
+				return responseMap;
+
+			UserPublicationBookmark upb = persistenceStrategy.getUserPublicationBookmarkDAO().getByUserAndPublication( user, publication );
+			if ( upb != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
+		return responseMap;
+	}
+	
+	@RequestMapping( value = "/pdfHtmlExtract", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> doPdfHtmlExtraction( 
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "pid", required = false ) final String pid,
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	{
+		return publicationFeature.getPublicationApi().extractPublicationFromPdfHtml( id, pid );
 	}
 	
 	/**
-	 * Extract Pdf on a specific publication
+	 * Extract scientific information from Pdf on a specific publication or given URL
 	 * 
 	 * @param id
 	 *            of publication
+	 * @param url
+	 * 			PDF Url
 	 * @param response
 	 * @return JSON Map
 	 * @throws InterruptedException
@@ -256,40 +299,103 @@ public class PublicationController
 	@RequestMapping( value = "/pdfExtract", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> doPdfExtraction( 
-			@RequestParam( value = "id", required = false ) final String id, 
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "url", required = false ) final String url, 
 			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
-		return publicationFeature.getPublicationManage().extractPublicationFromPdf( id );
+		if( id != null )
+			return publicationFeature.getPublicationManage().extractPublicationFromPdf( id );
+		else
+			return publicationFeature.getPublicationApi().extractPfdFile( url );
 	}
 	
-	@RequestMapping( value = "/pdfExtractTest", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> doPdfExtractionTest( @RequestParam( value = "url", required = false ) final String url, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
-	{
-		return publicationFeature.getPublicationApi().extractPfdFile( url );
-	}
 
-	@RequestMapping( value = "/htmlExtractTest", method = RequestMethod.GET )
+	/**
+	 * Extract scientific information from web page on a specific publication or given URL
+	 * 
+	 * @param id
+	 * 			of publication
+	 * @param url
+	 * 			Digital Library URL
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 */
+	@RequestMapping( value = "/htmlExtract", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, String> doHtmlExtractionTest( @RequestParam( value = "url", required = false ) final String url, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
+	public @ResponseBody Map<String, String> doHtmlExtractionTest(
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "url", required = false ) final String url, 
+			final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException
 	{
 		return publicationFeature.getPublicationApi().extractHtmlFile( url );
 	}
 
 	/**
-	 * Get list of PuiblicationTopic
+	 * Get list of PublicationTopic
+	 * 
+	 * @param id
+	 * @param response
+	 * @return
+	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
+	 */
+	@RequestMapping( value = "/topic", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopic( 
+			@RequestParam( value = "id", required = false ) final String id,
+			@RequestParam( value = "pid", required = false ) final String pid, 
+			@RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve,
+			final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+	{
+		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, pid, maxRetrieve );
+	}
+	
+	/**
+	 * Get bibtex modelview
+	 * 
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 */
+	@Transactional
+	@RequestMapping( value = "/bibtexview", method = RequestMethod.GET )
+	public ModelAndView addBibtexView( 
+			@RequestParam( value = "id", required = false ) final String id, 
+			final HttpServletResponse response ) throws InterruptedException
+	{
+		ModelAndView model = null;
+
+		model = TemplateHelper.createViewWithLink( "dialogIframeLayout", LINK_NAME );
+		List<Widget> widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.PUBLICATION, "publication-bibtex" );
+
+		// assign the model
+		model.addObject( "widgets", widgets );
+		model.addObject( "targetId", id );
+
+		return model;
+	}
+
+	/**
+	 * Get Bibtex
 	 * 
 	 * @param id
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping( value = "/topic", method = RequestMethod.GET )
+	@RequestMapping( value = "/bibtex", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationTopic( 
+	public @ResponseBody Map<String, Object> getPublicationBibtex( 
 			@RequestParam( value = "id", required = false ) final String id, 
- @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, 
+			@RequestParam( value = "retrieve", required = false ) String retrieve, 
 			final HttpServletResponse response)
 	{
-		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, maxRetrieve );
+		if( retrieve == null )
+			retrieve = "all";
+		return publicationFeature.getPublicationApi().getPublicationBibTex( id, retrieve );
 	}
 }

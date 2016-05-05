@@ -1,7 +1,9 @@
 package de.rwth.i9.palm.controller;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.transaction.Transactional;
 
@@ -31,10 +33,13 @@ public class ManageTopicModelingController
 	{
 		ParallelTopicModel ptm = palmAnalytics.getDynamicTopicModel().createModel( "C:\\Users\\Piro\\Desktop\\Years\\", "Years", 11, 10 );
 
-		List<String> topics = palmAnalytics.getDynamicTopicModel().getListTopics( ptm, 10 );
+		List<String> topics = palmAnalytics.getDynamicTopicModel().getListTopics( 10 );
 		
 		LinkedHashMap<String, List<Double>> distribution = palmAnalytics.getDynamicTopicModel().getTopicDistributionforDocuments( ptm, 0.0, 10, ptm.numTopics );
 
+		Map<String, Object> ldaObjectResults = new HashMap<>();
+		ldaObjectResults.put( "algorithm", "lda" );
+		ldaObjectResults.put( "termvalues", "lda" );
 		return "success";
 	}
 }

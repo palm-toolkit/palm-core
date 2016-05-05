@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
@@ -17,11 +19,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
+import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.helper.DateTimeHelper;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.AuthorSource;
+import de.rwth.i9.palm.model.Source;
+import de.rwth.i9.palm.model.SourceMethod;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationService;
-import de.rwth.i9.palm.util.IdentifierFactory;
 
 @Component
 public class ResearcherMiningImpl implements ResearcherMining
@@ -37,15 +42,24 @@ public class ResearcherMiningImpl implements ResearcherMining
 	@Autowired
 	private ApplicationService applicationService;
 
+	@Autowired
+	private ResearcherCollectionService researcherCollectionService;
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force, List<Author> sessionAuthors ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public Map<String, Object> fetchResearcherData( String id, String name, String uri, String affiliation, String pid, String force, HttpServletRequest request ) throws IOException, InterruptedException, ExecutionException, ParseException, TimeoutException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		// check author on session
 		Author author = null;
 
+		boolean isAuthorFromSession = false;
 		// get author from session
+		@SuppressWarnings( "unchecked" )
+		List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
 		if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
 		{
 			if ( id != null )
@@ -55,6 +69,9 @@ public class ResearcherMiningImpl implements ResearcherMining
 					if ( sessionAuthor.getId().equals( id ) )
 					{
 						author = sessionAuthor;
+						isAuthorFromSession = true;
+						// remove session
+						request.getSession().removeAttribute( "researchers" );
 						break;
 					}
 				}
@@ -73,19 +90,88 @@ public class ResearcherMiningImpl implements ResearcherMining
 		}
 
 		// pid must exist
-		if ( pid == null )
-			pid = IdentifierFactory.getNextDefaultIdentifier();
+		// if ( pid == null )
+		// pid = IdentifierFactory.getNextDefaultIdentifier();
 
 		responseMap.put( "status", "ok" );
 
 		// check whether it is necessary to collect information from network
 		if ( this.isFetchDatasetFromNetwork( author ) || force.equals( "true" ) )
 		{
+			// -- check if author source complete for active source
+			boolean isSourceParsePageMissing = false;
+			// first get active sources
+			Map<String, Source> sourceMap = applicationService.getAcademicNetworkSources();
+
+			// author from session means that the author just added
+			// loop through all source which is active
+			if ( !isAuthorFromSession )
+			{
+				for ( Map.Entry<String, Source> sourceEntry : sourceMap.entrySet() )
+				{
+					Source source = sourceEntry.getValue();
+					// only check for active source and parse page method
+					if ( source.isActive() && source.getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+					{
+						if ( !author.isContainSource( source ) )
+						{
+							isSourceParsePageMissing = true;
+							break;
+						}
+					}
+				}
+			}
+
+
+			// try to get missing source
+			if ( isSourceParsePageMissing )
+			{
+				// set to false, with assumption that source not missing, but in
+				// reality is not exist
+				isSourceParsePageMissing = false;
+				List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( author.getName(), false );
+
+				if ( researcherList != null && !researcherList.isEmpty() )
+				{
+					// try to add author source
+					for ( Author researcher : researcherList )
+					{
+						if ( researcher.getName().toLowerCase().equals( author.getName().toLowerCase() ) )
+						{
+
+							if ( researcher.getAuthorSources() == null || researcher.getAuthorSources().isEmpty() )
+								continue;
+
+							if ( researcher.equals( author ) )
+							{
+								for ( AuthorSource as : researcher.getAuthorSources() )
+								{
+									if ( !author.isContainAuthorSource( as ) && sourceMap.get( as.getSourceType().toString() ).getSourceMethod().equals( SourceMethod.PARSEPAGE ) )
+									{
+										author.addAuthorSource( as );
+										isSourceParsePageMissing = true;
+									}
+								}
+							}
+							else
+							{
+								// persistenceStrategy.getAuthorDAO().delete(
+								// author );
+								author = researcher;
+							}
+
+							break;
+						}
+					}
+				}
+				persistenceStrategy.getAuthorDAO().persist( author );
+			}
+
 			publicationCollectionService.collectPublicationListFromNetwork( responseMap, author, pid );
-			responseMap.put( "fetchPerformed", "yes" );
+			responseMap.put( "fetchPublicationPerformed", "yes" );
 		}
 		else
-			responseMap.put( "fetchPerformed", "no" );
+			responseMap.put( "fetchPublicationPerformed", "no" );
 
 		Author targetAuthor = persistenceStrategy.getAuthorDAO().getById( id );
 		// get basic author information
@@ -103,6 +189,64 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		if ( targetAuthor.getPublicationAuthors() != null )
 			authorMap.put( "publicationsNumber", targetAuthor.getPublicationAuthors().size() );
+		else
+			authorMap.put( "publicationsNumber", 0 );
+
+		responseMap.put( "author", authorMap );
+
+		return responseMap;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Map<String, Object> fetchResearcherPublicationData( String id, String pid, String force, HttpServletRequest request ) throws IOException, InterruptedException, ExecutionException, ParseException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		// check author on session
+		Author author = persistenceStrategy.getAuthorDAO().getById( id );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "error-msg", "author not found in system" );
+			return responseMap;
+		}
+
+		responseMap.put( "status", "ok" );
+
+		// check whether publication details neeed to be collected
+		if ( author.isFetchPublicationDetail() )
+		{
+			publicationCollectionService.extractPublicationDetails( author, pid );
+
+			author.setFetchPublicationDetail( false );
+			persistenceStrategy.getAuthorDAO().persist( author );
+
+			responseMap.put( "fetchPublicationDetailPerformed", "yes" );
+		}
+		else
+		{
+			responseMap.put( "fetchPublicationDetailPerformed", "no" );
+		}
+
+		// get basic author information
+		Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
+		authorMap.put( "id", author.getId() );
+		authorMap.put( "name", author.getName() );
+		if ( author.getPhotoUrl() != null )
+			authorMap.put( "photo", author.getPhotoUrl() );
+		if ( author.getAcademicStatus() != null )
+			authorMap.put( "status", author.getAcademicStatus() );
+		if ( author.getInstitution() != null )
+			authorMap.put( "aff", author.getInstitution().getName() );
+		if ( author.getCitedBy() > 0 )
+			authorMap.put( "citedBy", author.getCitedBy() );
+
+		if ( author.getPublicationAuthors() != null )
+			authorMap.put( "publicationsNumber", author.getPublicationAuthors().size() );
 		else
 			authorMap.put( "publicationsNumber", 0 );
 
@@ -202,5 +346,4 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		return false;
 	}
-
 }
