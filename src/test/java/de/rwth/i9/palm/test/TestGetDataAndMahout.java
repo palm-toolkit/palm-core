@@ -1,7 +1,6 @@
 package de.rwth.i9.palm.test;
 
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -49,6 +48,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	private final static Logger log = LoggerFactory.getLogger( TestGetDataAndMahout.class );
 
 	@Test
+	@Ignore
 	public void getResearcherPublication()
 	{
 		String authorId = "07397ed7-3deb-442f-a297-bdb5b476d3e6";
@@ -112,6 +112,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 	
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		int count = 0;
@@ -121,8 +122,8 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 		if( !authors.isEmpty())
 			for (Author author:authors)
 			{	
-				PrintWriter writer = new PrintWriter("C:/Users/Piro/Desktop/New Data/Authors/Authors/" + author.getId() +".txt", "UTF-8");
-				writer.println( "Author Name : " + author.getName());
+				PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Authors/Authors/" + author.getId() + ".txt", "UTF-8" );
+				// writer.println( "Author Name : " + author.getName());
 				for(Publication publication : author.getPublications()){
 					if (publication.getAbstractText() != null){
 						writer.println( publication.getTitle());
@@ -138,6 +139,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			}
 	}
 	
+	
 	@Test
 	@Ignore
 	public void testGetDatabaseFromDatabaseOnSpecificYear() throws IOException
@@ -147,7 +149,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 		if( !authors.isEmpty())
 			for (Author author:authors)
 			{	
-			for( int year = 1900 ; year < 2016 ; year ++)
+				for ( int year = 1900; year < 2017; year++ )
 				for(Publication publication : author.getPublicationsByYear(year )){
 					System.out.println(publication.getTitle());
 					System.out.println(publication.getAbstractText());
@@ -158,7 +160,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 
 	
 	@Test
-	@Ignore
+
 	public void testGetDatabaseFromDatabase2() throws IOException
 	{
 
@@ -173,13 +175,13 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 				for(Publication publication : author.getPublications()){
 	
 					if (publication.getKeywords()!= null){
-						PrintWriter pub = new PrintWriter(new FileWriter( "C:\\Users\\Piro\\Desktop\\labeledLDA\\labeledLDA\\labeledPublications.txt", true) );
-						pub.print(count + "\t");
+						PrintWriter pub = new PrintWriter( "C:/Users/Piro/Desktop/Publications/Publications/" + publication.getId() + ".txt", "UTF-8" );
+						// pub.print(count + "\t");
 						pub.print( publication.getKeywordText() + "\t" );
 						pub.print(publication.getTitle() + " " + publication.getAbstractText());
 						pub.println();
-						count++;
-						System.out.println(count);
+						// count++;
+						// (System.out.println(count);
 						pub.close();
 					}	
 					

@@ -383,7 +383,23 @@ public class CircleController
 			if ( updateResult != null && updateResult.equals( "yes" ) )
 				isReplaceExistingResult = true;
 
-			return circleFeature.getCircleTopicModeling().getLdaBasicExample( circleId, isReplaceExistingResult );
+			// return
+			// circleFeature.getCircleTopicModeling().getLdaBasicExample(circleId,
+			// isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getCircleTopicComposition( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( circleId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return circleFeature.getCircleTopicModeling().getStaticTopicModelingNgrams( circleId, isReplaceExistingResult );
 		}
 		return Collections.emptyMap();
 	}

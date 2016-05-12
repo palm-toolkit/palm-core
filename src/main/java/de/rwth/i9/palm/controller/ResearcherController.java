@@ -363,7 +363,7 @@ public class ResearcherController
 
 	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationTopic( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getResearcherTopicComposition( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
 	{
 		if ( authorId != null )
 		{
