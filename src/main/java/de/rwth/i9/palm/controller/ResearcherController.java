@@ -522,8 +522,10 @@ public class ResearcherController
 		return responseMap;
 	}
 	
+
 	/**
 	 * Get basic information of given author
+	 * 
 	 * @param authorId
 	 * @param startPage
 	 * @param maxresult
