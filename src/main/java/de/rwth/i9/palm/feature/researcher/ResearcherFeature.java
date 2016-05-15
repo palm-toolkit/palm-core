@@ -16,6 +16,10 @@ public interface ResearcherFeature
 
 	public ResearcherCoauthor getResearcherCoauthor();
 
+	// public ResearcherRecommededauthor getResearcherRecommendedauthor();
+
+	public ResearcherSimilarauthor getResearcherSimilarauthor();
+
 	public ResearcherInterest getResearcherInterest();
 	
 	public ResearcherInterestEvolution getResearcherInterestEvolution();

@@ -560,7 +560,9 @@ public class ResearcherController
 		}
 
 		// get recommended authors based on calculations
-		responseMap.putAll( researcherFeature.getResearcherRecommendedauthor().getResearcherRecommendedAuthorMap( author, startPage, maxresult ) );
+		// responseMap.putAll(
+		// researcherFeature.getResearcherRecommendedauthor().getResearcherRecommendedAuthorMap(
+		// author, startPage, maxresult ) );
 
 		return responseMap;
 	}
@@ -603,9 +605,7 @@ public class ResearcherController
 		}
 
 		// get recommended authors based on calculations
-		// responseMap.putAll(
-		// researcherFeature.getResearcherSimilarauthor().getResearcherSimilarAuthorMap(
-		// author, startPage, maxresult ) );
+		responseMap.putAll( researcherFeature.getResearcherSimilarauthor().getResearcherSimilarAuthorMap( author, startPage, maxresult ) );
 
 		return responseMap;
 	}

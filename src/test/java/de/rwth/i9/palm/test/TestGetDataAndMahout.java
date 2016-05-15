@@ -141,7 +141,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	
 	
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabaseOnSpecificYear() throws IOException
 	{
 		System.out.println( "\n========== TEST 3 - Fetch publications per author Yearly from database ==========" );
@@ -150,17 +149,22 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			for (Author author:authors)
 			{	
 				for ( int year = 1900; year < 2017; year++ )
-				for(Publication publication : author.getPublicationsByYear(year )){
-					System.out.println(publication.getTitle());
-					System.out.println(publication.getAbstractText());
-					System.out.println();
+				{
+					System.out.println( year );
+					for ( Publication publication : author.getPublicationsByYear( year ) )
+					{
+
+						System.out.println( publication.getTitle() );
+						System.out.println( publication.getAbstractText() );
+						System.out.println();
 					}
 				}
+			}
 			}
 
 	
 	@Test
-
+	@Ignore
 	public void testGetDatabaseFromDatabase2() throws IOException
 	{
 
