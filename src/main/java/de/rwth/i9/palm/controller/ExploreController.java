@@ -1,6 +1,8 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
@@ -56,6 +59,10 @@ public class ExploreController
 	@Autowired
 	private ResearcherFeature researcherFeature;
 
+	@Autowired
+	private CircleFeature circleFeature;
+
+
 	// @Autowired
 	// private PublicationCollectionService publicationCollectionService;
 
@@ -84,7 +91,7 @@ public class ExploreController
 
 		if ( user != null )
 		{
-			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.EXPLORE, WidgetStatus.DEFAULT );
+			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.EXPLORE, WidgetStatus.ACTIVE );
 			for ( UserWidget userWidget : userWidgets )
 			{
 				Widget widget = userWidget.getWidget();
@@ -196,6 +203,13 @@ public class ExploreController
 			responseMap.put( "count", 0 );
 			return responseMap;
 		}
+	}
+
+	@RequestMapping( value = "/topic", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopic( @RequestParam( value = "id", required = false ) final String id, @RequestParam( value = "pid", required = false ) final String pid, @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+	{
+		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( "fd201481-1fe6-498f-9878-7e511e40e236", pid, maxRetrieve );
 	}
 
 }
