@@ -28,6 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
+import de.rwth.i9.palm.graph.feature.GraphFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
@@ -62,6 +63,8 @@ public class ExploreController
 	@Autowired
 	private CircleFeature circleFeature;
 
+	@Autowired
+	private GraphFeature graphFeature;
 
 	// @Autowired
 	// private PublicationCollectionService publicationCollectionService;
@@ -210,6 +213,63 @@ public class ExploreController
 	public @ResponseBody Map<String, Object> getPublicationTopic( @RequestParam( value = "id", required = false ) final String id, @RequestParam( value = "pid", required = false ) final String pid, @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
 	{
 		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( "fd201481-1fe6-498f-9878-7e511e40e236", pid, maxRetrieve );
+	}
+
+	/**
+	 * Get coauthorMap of given author
+	 * 
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/coAuthors", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getCoAuthorList(
+			// @RequestParam( value = "id", required = false ) final String
+			// authorId,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response )
+	{
+
+		String authorId = "d5bf439f-9a44-4442-addc-034b4d55953d"; // Eva
+																	// Altenbernd-giani
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 30;
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
+
+		graphFeature.graphData( author );
+
+		graphFeature.newFunc();
+
+		// graphFeature.testFunction();
+
+		System.out.println( responseMap.get( "coAuthors" ) );
+
+		return responseMap;
 	}
 
 }
