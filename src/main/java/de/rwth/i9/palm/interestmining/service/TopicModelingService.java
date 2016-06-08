@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
-import de.rwth.i9.palm.helper.comparator.AuthorTopicModelingByDateComparator;
 import de.rwth.i9.palm.helper.comparator.CircleTopicModelingByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorTopicModeling;
@@ -45,6 +44,8 @@ public class TopicModelingService
 
 	@Autowired
 	private PalmAnalytics palmAnalytics;
+
+	private String path = "C:/Users/Piro/Desktop/";
 
 	public void calculateAuthorTopicModeling( Author author, boolean isReplaceExistingResult, boolean Static )
 	{
@@ -201,10 +202,11 @@ public class TopicModelingService
 			// ==Set Author TopicModeling profile==
 
 			Calendar calendar = Calendar.getInstance();
+
 			// default profile name [DEFAULT_PROFILENAME]
 			String authorTopicModelingProfileName = activeDefaultAlgorithm.getName();
 
-			// create new author topicModeling profile for basic dummy
+			// create new author topicModeling profile
 			AuthorTopicModelingProfile authorTopicModelingProfile = new AuthorTopicModelingProfile();
 			authorTopicModelingProfile.setCreated( calendar.getTime() );
 			authorTopicModelingProfile.setDescription( "Topic Model mining using " + activeDefaultAlgorithm.getName() + " algorithm" );
@@ -329,10 +331,10 @@ public class TopicModelingService
 		// to calculate the LDA and get the result as Map / List
 
 		// get dummy results based on years cluster
-		List<Object> dummyClusterResults = getUnigramResultsAuthor( author, Static );
+		List<Object> ClusterResults = getUnigramResultsAuthor( author, Static );
 
 		// now put this cluster list into authorTopicModeling object
-		transformTopicModelingResultIntoAuthorTopicModeling( authorTopicModelingProfile, dummyClusterResults, Static );
+		transformTopicModelingResultIntoAuthorTopicModeling( authorTopicModelingProfile, ClusterResults, Static );
 	}
 	
 	/**
@@ -384,25 +386,30 @@ public class TopicModelingService
 			@SuppressWarnings( "unchecked" )
 			Map<String, Double> termValueMap = (Map<String, Double>) clusterResultMap.get( "termvalues" );
 
+			@SuppressWarnings( "unchecked" )
+			String topic = (String) clusterResultMap.get( "topic" );
+
 			// if null or empty just skip
 			if ( termValueMap == null || termValueMap.isEmpty() )
 				continue;
 
 			// get date
-			Date clusterYear = null;
-			try
-			{
-				clusterYear = dateFormat.parse( clusterResultMap.get( "year" ).toString() );
-			}
-			catch ( Exception e )
-			{
-			}
+			// Date clusterYear = null;
+			// try
+			// {
+			// clusterYear = dateFormat.parse( clusterResultMap.get( "year"
+			// ).toString() );
+			// }
+			// catch ( Exception e )
+			// {
+			// }
 
 			// create new AuthorTopicModeling (year cluster) and fill attributes
 			AuthorTopicModeling atm = new AuthorTopicModeling();
-			atm.setYear( clusterYear );
+			// atm.setYear( clusterYear );
 			atm.setLanguage( clusterResultMap.get( "language" ).toString() );
 			atm.setTermWeightsString( termValueMap );
+			atm.setURI( topic );
 			atm.setAuthorTopicModelingProfile( authorTopicModelingProfile );
 			authorTopicModelingProfile.addAuthorTopicModeling( atm );
 		}
@@ -468,49 +475,41 @@ public class TopicModelingService
 		// list of cluster container
 		List<Object> clusterResults = new ArrayList<Object>();
 
-		// dummy start year array
-		int[] startYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 };
-
-		// dummy end year array
-		int[] endYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 };
-
 		// needed for dynamic visualization
 		if ( !Static )
 		{
-			for ( int i = startYearArray[0]; i < endYearArray[endYearArray.length - 1]; i++ )
+			Map<String, Double> termValueMap = new LinkedHashMap<String, Double>();
+
+			Map<String, List<String>> topicNgrams = null;
+			try
 			{
-				// store dummy information regarding cluster information
-				Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
+				// topicNgrams =
+				// palmAnalytics.getNGrams().getEvolutionofTopicOverTime( 0, 5,
+				// true );
+				// getTopicUnigramsDocument(i-2005,-1, 0.0,11,5,true );
 
-				// store dummy information regarding result information
-				Map<String, Double> termValueMap = new HashMap<String, Double>();
-
-				clusterResultMap.put( "year", i );
-				clusterResultMap.put( "language", "english" );
-				clusterResultMap.put( "termvalues", termValueMap );
-
-				Map<String, List<String>> topicNgrams;
-				try
+				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
-					topicNgrams = palmAnalytics.getNGrams().getTopicUnigramsDocument( i - 2005, -1, 0.0, 11, 5, true );
-					for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
+					Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
+					clusterResultMap.put( "language", "english" );
+					for ( String topicproportion : topicngrams.getValue() )
 					{
-						for ( String topicproportion : topicngrams.getValue() )
-						{
-							String[] components = topicproportion.split( "_-_" );
-							// termValueMap.put( "term", components[0] );
-							// termValueMap.put( "value", components[1] );
-							termValueMap.put( components[0], Double.parseDouble( components[1] ) );
-						}
+						String[] components = topicproportion.split( "_-_" );
+						// termValueMap.put( "term", components[0] );
+						// termValueMap.put( "value", components[1] );
+						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
 					}
+					clusterResultMap.put( "termvalues", termValueMap );
+					clusterResultMap.put( "topic", topicngrams.getKey() );
+					clusterResultMap.put( "color", "#ff7f0e" );
+					clusterResults.add( clusterResultMap );
 				}
+			}
 			catch ( Exception e )
 			{
 				e.printStackTrace();
 			}
-				clusterResultMap.put( "termvalues", termValueMap );
-				clusterResults.add( clusterResultMap );
-			}
+
 		}
 
 		// case when Static = True
@@ -528,18 +527,20 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams;
 			try
 			{
-				topicNgrams = palmAnalytics.getNGrams().getTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId().toString() ), -1, 0.0, 10, 10, true );
+				//topicNgrams = palmAnalytics.getNGrams().getTopTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId().toString() ), -1, 0.0, 5, 5, true );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Author-Test", 20, 10, 7, false, true, true );
+				
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
-				{
+			{
 					for ( String topicproportion : topicngrams.getValue() )
 					{
-						String[] components = topicproportion.split( "_-_ " );
+						String[] components = topicproportion.split( "_-_" );
 						// termValueMap.put( "term", components[0] );
 						// termValueMap.put( "value", components[1] );
 						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
 					}
-				}
 			}
+		}
 			catch ( Exception e )
 			{
 				e.printStackTrace();
@@ -588,10 +589,12 @@ public class TopicModelingService
 				clusterResultMap.put( "language", "english" );
 				clusterResultMap.put( "termvalues", termValueMap );
 
-				Map<String, List<String>> topicNgrams;
+				Map<String, List<String>> topicNgrams = null;
 				try
 				{
-					topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( i - 2005, -1, 0.0, 11, 5, true );
+					// topicNgrams =
+					// palmAnalytics.getNGrams().getTopicNgramsDocument( i -
+					// 2005, -1, 0.0, 11, 5, true );
 
 					// add into termValueMap
 					// termValueMap.put(palmAnalytics.getDynamicTopicModel().getListTopics(
@@ -633,12 +636,16 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams;
 			try
 				{
-				topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId() ), -1, 0.0, 10, 10, true );
+				// topicNgrams =
+				// palmAnalytics.getNGrams().getTopTopicNgramsDocument(
+				// palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId()
+				// ), -1, 0.0, 5, 5, true );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Author-Test", 20, 10, 5, false, true, false );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 					{
 					for ( String topicproportion : topicngrams.getValue() )
 					{
-						String[] components = topicproportion.split( "_-_ " );
+						String[] components = topicproportion.split( "_-_" );
 						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
 					}
 					}
@@ -656,7 +663,8 @@ public class TopicModelingService
 	}
 
 	/**
-	 * This method uses the getTopicUnigramsDocument from TopicalNgram Algorithm
+	 * This method uses the getTopTopicUnigramsDocument from TopicalNgram
+	 * Algorithm
 	 * 
 	 * @param circle
 	 * @return
@@ -691,10 +699,12 @@ public class TopicModelingService
 				clusterResultMap.put( "language", "english" );
 				clusterResultMap.put( "termvalues", termValueMap );
 
-				Map<String, List<String>> topicNgrams;
+				Map<String, List<String>> topicNgrams = null;
 				try
 				{
-					topicNgrams = palmAnalytics.getNGrams().getTopicUnigramsDocument( i - 2005, -1, 0.0, 11, 5, true );
+					// topicNgrams =
+					// palmAnalytics.getNGrams().getTopTopicUnigramsDocument( i
+					// - 2005, -1, 0.0, 11, 5, true );
 					for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 					{
 						for ( String topicproportion : topicngrams.getValue() )
@@ -727,10 +737,13 @@ public class TopicModelingService
 
 			// get the results for a specific id
 			Map<String, Double> termValueMap = new HashMap<String, Double>();
-			Map<String, List<String>> topicNgrams;
+			Map<String, List<String>> topicNgrams = null;
 			try
 			{
-				topicNgrams = palmAnalytics.getNGrams().getTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId() ), -1, 0.0, 7, 10, true );
+				// topicNgrams =
+				// palmAnalytics.getNGrams().getTopTopicUnigramsDocument(
+				// palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId()
+				// ), -1, 0.0, 5, 5, true );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
@@ -755,7 +768,7 @@ public class TopicModelingService
 	}
 
 	/**
-	 * This method is supposed to use the getTopicNgramsDocument from
+	 * This method is supposed to use the getTopTopicNgramsDocument from
 	 * TopicalNgram Algorithm
 	 * 
 	 * @param circle
@@ -790,10 +803,12 @@ public class TopicModelingService
 				clusterResultMap.put( "language", "english" );
 				clusterResultMap.put( "termvalues", termValueMap );
 
-				Map<String, List<String>> topicNgrams;
+				Map<String, List<String>> topicNgrams = null;
 				try
 				{
-					topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( i - 2005, -1, 0.0, 11, 5, true );
+					// topicNgrams =
+					// palmAnalytics.getNGrams().getTopTopicNgramsDocument( i -
+					// 2005, -1, 0.0, 11, 5, true );
 
 					// add into termValueMap
 					// termValueMap.put(palmAnalytics.getDynamicTopicModel().getListTopics(
@@ -829,10 +844,13 @@ public class TopicModelingService
 
 			// get the results for a specific id
 			Map<String, Double> termValueMap = new HashMap<String, Double>();
-			Map<String, List<String>> topicNgrams;
+			Map<String, List<String>> topicNgrams = null;
 			try
 			{
-				topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId() ), -1, 0.0, 7, 10, true );
+				// topicNgrams =
+				// palmAnalytics.getNGrams().getTopTopicNgramsDocument(
+				// palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId()
+				// ), -1, 0.0, 5, 5, true );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
@@ -919,7 +937,8 @@ public class TopicModelingService
 				List<AuthorTopicModeling> interestList = authorTopicModelingLanguageIterator.getValue();
 
 				// sort based on year
-				Collections.sort( interestList, new AuthorTopicModelingByDateComparator() );
+				// Collections.sort( interestList, new
+				// AuthorTopicModelingByDateComparator() );
 
 				// term values based on year result container
 				List<Object> authorTopicModelingResultYearList = new ArrayList<Object>();
@@ -934,8 +953,9 @@ public class TopicModelingService
 					Map<String, Object> authorTopicModelingResultYearMap = new LinkedHashMap<String, Object>();
 
 					// get year
-					calendar.setTime( authorTopicModeling.getYear() );
-					String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+					// calendar.setTime( authorTopicModeling.getYear() );
+					// String year = Integer.toString( calendar.get(
+					// Calendar.YEAR ) );
 
 					List<Object> termValueResult = new ArrayList<Object>();
 
@@ -947,7 +967,7 @@ public class TopicModelingService
 						termWeightObjects.add( termWeightMap.getValue() );
 						termValueResult.add( termWeightObjects );
 					}
-					authorTopicModelingResultYearMap.put( "year", year );
+					// authorTopicModelingResultYearMap.put( "year", year );
 					authorTopicModelingResultYearMap.put( "termvalue", termValueResult );
 					authorTopicModelingResultYearList.add( authorTopicModelingResultYearMap );
 				}
@@ -1204,4 +1224,5 @@ public class TopicModelingService
 		}
 		return circleTopicModelingResult;
 	}
+
 }

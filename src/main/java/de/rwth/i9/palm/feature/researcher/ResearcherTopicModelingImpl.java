@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.rwth.i9.palm.interestmining.service.TopicModelingService;
+import de.rwth.i9.palm.interestmining.service.ResearcherTopicModelingService;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -19,7 +19,7 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 	private final static Logger logger = LoggerFactory.getLogger( ResearcherTopicModelingImpl.class );
 
 	@Autowired
-	private TopicModelingService topicModelingService;
+	private ResearcherTopicModelingService ResearchertopicModelingService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -44,10 +44,10 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 		
 		// calculate and store the result of topic modeling
 		// True/False for Static or Dynamic View
-		topicModelingService.calculateAuthorTopicModeling( author, isReplaceExistingResult, false );
+		ResearchertopicModelingService.calculateAuthorTopicModeling( authorId, isReplaceExistingResult, false );
 
 		// get JSON represent AuthorTOpicModelingProfile
-		List<Object> topicModelingResults = topicModelingService.getAuthorTopicModeliFromDatabase( author );
+		List<Object> topicModelingResults = ResearchertopicModelingService.getAuthorTopicModeliFromDatabase( author );
 		
 		if ( topicModelingResults == null || topicModelingResults.isEmpty() )
 		{
@@ -83,10 +83,10 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 		}
 
 		// calculate and store the result of topic modeling
-		topicModelingService.calculateAuthorTopicModeling( author, isReplaceExistingResult, true );
+		ResearchertopicModelingService.calculateAuthorTopicModeling( authorId, isReplaceExistingResult, true );
 
 		// get JSON represent AuthorTOpicModelingProfile
-		List<Object> topicModelingResults = topicModelingService.getStaticAuthorTopicModelingFromDatabase( author );
+		List<Object> topicModelingResults = ResearchertopicModelingService.getStaticAuthorTopicModelingFromDatabase( author );
 
 		if ( topicModelingResults == null || topicModelingResults.isEmpty() )
 		{
@@ -157,4 +157,5 @@ public class ResearcherTopicModelingImpl implements ResearcherTopicModeling
 	//
 	// return responseMap;
 	// }
+
 }
