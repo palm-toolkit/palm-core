@@ -375,6 +375,42 @@ public class ResearcherController
 		return Collections.emptyMap();
 	}
 
+	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getResearcherTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( authorId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get author
+			Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+			return researcherFeature.getResearcherTopicModelingCloud().getTopicModelUniCloud( author, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/topicCompositionNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getResearcherTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( authorId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get author
+			Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+			return researcherFeature.getResearcherTopicModelingCloud().getTopicModelNCloud( author, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 	@RequestMapping( value = "/enrich", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> researcherEnrich( @RequestParam( value = "id", required = false ) final String authorId, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException, TimeoutException
@@ -661,6 +697,49 @@ public class ResearcherController
 		return responseMap;
 	}
 	
+	/**
+	 * Get Similar authorMap of given author
+	 * 
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topicEvolution", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getTopicEvolution( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get recommended authors based on calculations
+		responseMap.putAll( researcherFeature.getResearcherDynamicTopicModellingauthorTest().getResearcherTopicEvolutionTest( author ) );
+
+		return responseMap;
+	}
+
 	/**
 	 * Get academic event tree of given author
 	 * 
