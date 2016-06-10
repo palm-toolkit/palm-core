@@ -2,17 +2,20 @@ package de.rwth.i9.palm.feature.publication;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 // latest updates on 05.06 Uhr. 15:00
@@ -62,8 +65,8 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		List<String> resultngrams;
 		try
 		{
-			resultunigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true ).get( publicationId );
-			resultngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false ).get( publicationId );
+			resultunigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true, false ).get( publicationId );
+			resultngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false, false ).get( publicationId );
 
 			for ( String terms : resultunigrams )
 			{
@@ -137,7 +140,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Publications", publicationId, 5, 5, 5, true, false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicCompositionforPublications( path, "Author-Test", publicationId, extractCoauthros( publicationId ), 5, 5, 5, true, true );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -163,6 +166,66 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 			// TO DO Unigrams/Ngrams preferences
 		}
 		responseMap.put( "termvalue", topicList );
+
+		return responseMap;
+	}
+
+	@Override
+	public Map<String, Object> getResearcherSimilarPublicationMap( Publication publication, int startPage, int maxresult )
+	{
+		// researchers list container
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		List<String> similarPublications = new ArrayList<String>();
+		similarPublications = palmAnalytics.getNGrams().runSimilarEntities( publication.getId().toString(), "C:/Users/Piro/Desktop/", "Publications", 20, 10, 3, true );
+		// similarEntities( author.getId(), maxresult, 3 );
+
+		// Prepare set of similarPublication HashSet;
+		Set<String> similarpublicationSet = new HashSet<String>();
+
+		for ( String similar : similarPublications )
+		{
+			if ( persistenceStrategy.getPublicationDAO().getById( similar.split( "->" )[0] ).equals( publication ) )
+				continue;
+
+			similarpublicationSet.add( similar );
+		}
+
+		// prepare list of object map containing similarPublication details
+		List<Map<String, Object>> similarPublicationList = new ArrayList<Map<String, Object>>();
+
+		for ( String similarPublication : similarpublicationSet )
+		{
+			// only copy necessary attributes
+			// persistenceStrategy.( similar.split( "->"
+			// )[0] )
+			Map<String, Object> similarPublicationMap = new LinkedHashMap<String, Object>();
+			similarPublicationMap.put( "id", similarPublication.split( "->" )[0] );
+			similarPublicationMap.put( "name", persistenceStrategy.getPublicationDAO().getById( similarPublication.split( "->" )[0] ).getTitle() );
+			similarPublicationMap.put( "similarity", similarPublication.split( "->" )[1] );
+			similarPublicationMap.put( "author", persistenceStrategy.getPublicationDAO().getById( similarPublication ).getAuthors() );
+			// add into list
+			similarPublicationList.add( similarPublicationMap );
+		}
+
+		// prepare list of object map containing similarPublication details
+		List<Map<String, Object>> similarPublicationListPaging = new ArrayList<Map<String, Object>>();
+
+		int position = 0;
+		for ( Map<String, Object> similarPublication : similarPublicationList )
+		{
+			if ( position >= startPage && similarPublicationListPaging.size() < maxresult )
+			{
+				similarPublicationListPaging.add( similarPublication );
+			}
+		}
+
+		// remove unnecessary result
+
+		// put similarPublication to responseMap
+		responseMap.put( "countTotal", similarPublicationList.size() );
+		responseMap.put( "count", similarPublicationListPaging.size() );
+		responseMap.put( "similarPublications", similarPublicationListPaging );
 
 		return responseMap;
 	}
