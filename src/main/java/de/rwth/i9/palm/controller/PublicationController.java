@@ -386,49 +386,6 @@ public class PublicationController
 	}
 
 	/**
-	 * Get Similar publications of given author
-	 * 
-	 * @param publications
-	 * @param startPage
-	 * @param maxresult
-	 * @param response
-	 * @return
-	 */
-	@RequestMapping( value = "/similarPublicationsList", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> getSimilarPublicationList( @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
-	{
-		// create JSON mapper for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-		if ( publicationId == null || publicationId.equals( "" ) )
-		{
-			responseMap.put( "status", "error" );
-			responseMap.put( "statusMessage", "publicationId null" );
-			return responseMap;
-		}
-
-		if ( startPage == null )
-			startPage = 0;
-		if ( maxresult == null )
-			maxresult = 10;
-
-		// get publication
-		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
-
-		if ( publication == null )
-		{
-			responseMap.put( "status", "error" );
-			responseMap.put( "statusMessage", "publication not found in database" );
-			return responseMap;
-		}
-
-		// get recommended publications based on calculations
-		responseMap.putAll( publicationFeature.getPublicationTopicModeling().getResearcherSimilarPublicationMap( publication, startPage, maxresult ) );
-
-		return responseMap;
-	}
-
-	/**
 	 * Get bibtex modelview
 	 * 
 	 * @param response
