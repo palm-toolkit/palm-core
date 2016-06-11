@@ -1,6 +1,8 @@
 package de.rwth.i9.palm.test;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -64,39 +66,77 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 
 	@Test
 	@Ignore
-	public void testGetCirclePublicationsFromDatabaseYearly() throws FileNotFoundException, UnsupportedEncodingException
+	public void testcreateEntityDirectories() throws IOException
 	{
-		int count = 0;
-		System.out.println( "\n========== TEST 1 - Get Event publication ==========" );
-		// Event event = persistenceStrategy.getEventDAO().getById(
-		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
-
-		List<Event> events = persistenceStrategy.getEventDAO().getAll();
-
+		System.out.println( "\n========== TEST 2 - Create Architecture for the Data Collection ==========" );
+		List<Event> events = persistenceStrategy.getEventDAO().getAll();// getByName(
+																			// "mohamed
+																			// amine
+																			// chatti"
+																			// );//getById(
+																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
+																			// );
 		if ( !events.isEmpty() )
 			for ( Event event : events )
-
 			{
-				for ( int year = 1980; year < 2017; year++ )
-				{
-					PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Circles/Circles/" + event.getId() + ".txt", "UTF-8" );
-					writer.println( "Event Name : " + event.getName() );
-					for ( Publication publication : event.getPublications() )
-					{
-						if ( publication.getAbstractText() != null )
-						{
-							writer.println( publication.getTitle() );
-							writer.println( publication.getAbstractText() );
-							writer.println();
-							count++;
-						}
-					}
 
-				writer.println();
-				writer.println( count );
-				count = 0;
-				writer.close();
+				File theDir = new File( "C:/Users/Piro/Desktop/Event-Test/" + event.getId().toString() );
+
+				// if the directory does not exist, create it
+				if ( !theDir.exists() )
+				{
+					boolean result = false;
+
+					try
+					{
+						theDir.mkdir();
+						result = true;
+					}
+					catch ( SecurityException se )
+					{
+						// handle it
+					}
+					if ( result )
+					{
+						System.out.println( "DIR created" );
+					}
 				}
 			}
 	}
+
+	@Test
+	@Ignore
+	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
+	{
+		System.out.println( "\n========== TEST 1 - Fetch publications per Event from database ==========" );
+		List<Event> events = persistenceStrategy.getEventDAO().getAll();// getByName(
+																			// "mohamed
+																			// amine
+																			// chatti"
+																			// );//getById(
+																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
+																			// );
+
+		if ( !events.isEmpty() )
+			for ( Event event : events )
+			{
+				System.out.println( event.getName() );
+				for ( Publication publication : event.getPublications() )
+				{
+					if ( publication.getAbstractText() != "null" )
+					{
+						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Event-Test/" + event.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+						writer.print( publication.getTitle() + " " );
+						writer.print( publication.getAbstractText() );
+						writer.println();
+						writer.close();
+					}
+					else
+					{
+						continue;
+					}
+				}
+			}
+	}
+
 }
