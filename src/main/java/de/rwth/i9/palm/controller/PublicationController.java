@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -356,37 +355,6 @@ public class PublicationController
 		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, pid, maxRetrieve );
 	}
 	
-	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationTopicComposition( @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
-	{
-		if ( publicationId != null )
-		{
-			boolean isReplaceExistingResult = false;
-			if ( updateResult != null && updateResult.equals( "yes" ) )
-				isReplaceExistingResult = true;
-			return publicationFeature.getPublicationTopicModeling().getTopicModeling( publicationId, isReplaceExistingResult );
-		}
-		return Collections.emptyMap();
-	}
-
-	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
-	{
-		if ( publicationId != null )
-		{
-			boolean isReplaceExistingResult = false;
-			if ( updateResult != null && updateResult.equals( "yes" ) )
-				isReplaceExistingResult = true;
-
-			// return
-			// publicationFeature.getPublicationTopicModeling().getTopicModelUniCloud(
-			// publicationId, isReplaceExistingResult );
-		}
-		return Collections.emptyMap();
-	}
-
 	/**
 	 * Get bibtex modelview
 	 * 
