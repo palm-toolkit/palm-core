@@ -3,6 +3,7 @@ package de.rwth.i9.palm.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -255,6 +256,21 @@ public class AcademicEventController
 			isReplaceExistingResult = true;
 		return academicEventFeature.getEventInterest().getEventInterestById( eventId, isReplaceExistingResult );
 	}
+
+	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getConferenceTopicComposition( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( conferenceId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return academicEventFeature.getEventTopicModeling().getStaticTopicModelingNgrams( conferenceId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
