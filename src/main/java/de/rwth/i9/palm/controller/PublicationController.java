@@ -380,7 +380,9 @@ public class PublicationController
 			if ( updateResult != null && updateResult.equals( "yes" ) )
 				isReplaceExistingResult = true;
 
-			return publicationFeature.getPublicationTopicModeling().getTopicModelUniCloud( publicationId, isReplaceExistingResult );
+			// return
+			// publicationFeature.getPublicationTopicModeling().getTopicModelUniCloud(
+			// publicationId, isReplaceExistingResult );
 		}
 		return Collections.emptyMap();
 	}
