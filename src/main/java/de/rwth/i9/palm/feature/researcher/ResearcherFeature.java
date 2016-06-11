@@ -16,6 +16,14 @@ public interface ResearcherFeature
 
 	public ResearcherCoauthor getResearcherCoauthor();
 
+	// public ResearcherRecommededauthor getResearcherRecommendedauthor();
+
+	public ResearcherSimilarauthor getResearcherSimilarauthor();
+
+	public ResearcherTopicEvolutionTest getResearcherDynamicTopicModellingauthorTest();
+
+	public ResearcherTopicCompositionCloud getResearcherTopicModelingCloud();
+
 	public ResearcherInterest getResearcherInterest();
 	
 	public ResearcherInterestEvolution getResearcherInterestEvolution();
@@ -40,4 +48,5 @@ public interface ResearcherFeature
 	
 	public ResearcherTopicModelingLabeledLDA getResearcherTopicModelingLabeledLDA();
 	
+
 }

@@ -16,6 +16,18 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	@Autowired( required = false )
 	private ResearcherCoauthor researcherCoauthor;
 
+	// @Autowired( required = false )
+	// private ResearcherRecommededauthor researcherRecommendedauthor;
+
+	@Autowired( required = false )
+	private ResearcherSimilarauthor researcherSimilarauthor;
+
+	@Autowired( required = false )
+	private ResearcherTopicEvolutionTest researcherTopicEvolutionTest;
+
+	@Autowired( required = false )
+	private ResearcherTopicCompositionCloud researcherTopicCloud;
+
 	@Autowired( required = false )
 	private ResearcherInterest researcherInterest;
 	
@@ -86,6 +98,42 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherCoauthor = new ResearcherCoauthorImpl();
 
 		return this.researcherCoauthor;
+	}
+
+	// @Override
+	// public ResearcherRecommededauthor getResearcherRecommendedauthor()
+	// {
+	// if ( this.researcherRecommendedauthor == null )
+	// this.researcherRecommendedauthor = new ResearcherRecommendedauthorImpl();
+	//
+	// return this.researcherRecommendedauthor;
+	// }
+
+	@Override
+	public ResearcherSimilarauthor getResearcherSimilarauthor()
+	{
+		if ( this.researcherSimilarauthor == null )
+			this.researcherSimilarauthor = new ResearcherSimilarauthorImpl();
+
+		return this.researcherSimilarauthor;
+	}
+
+	@Override
+	public ResearcherTopicEvolutionTest getResearcherDynamicTopicModellingauthorTest()
+	{
+		if ( this.researcherTopicEvolutionTest == null )
+			this.researcherTopicEvolutionTest = new ResearcherTopicEvolutionImplTest();
+
+		return this.researcherTopicEvolutionTest;
+	}
+
+	@Override
+	public ResearcherTopicCompositionCloud getResearcherTopicModelingCloud()
+	{
+		if ( this.researcherTopicCloud == null )
+			this.researcherTopicCloud = new ResearcherTopicCompositionCloudImpl();
+
+		return this.researcherTopicCloud;
 	}
 
 	@Override

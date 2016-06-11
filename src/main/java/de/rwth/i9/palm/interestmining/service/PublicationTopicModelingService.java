@@ -34,10 +34,10 @@ import de.rwth.i9.palm.model.TopicModelingAlgorithmCircle;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Service
-public class TopicModelingService
+public class PublicationTopicModelingService
 {
 
-	private final static Logger logger = LoggerFactory.getLogger( TopicModelingService.class );
+	private final static Logger logger = LoggerFactory.getLogger( PublicationTopicModelingService.class );
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -306,7 +306,6 @@ public class TopicModelingService
 		transformTopicModelingResultIntoCircleTopicModeling( circleTopicModelingProfile, dummyClusterResults, Static );
 	}
 
-
 	/**
 	 * Method used to get the unigrams from TopicalNgrams algorithm using N=1
 	 */
@@ -321,7 +320,7 @@ public class TopicModelingService
 		// now put this cluster list into authorTopicModeling object
 		transformTopicModelingResultIntoAuthorTopicModeling( authorTopicModelingProfile, dummyClusterResults, Static );
 	}
-	
+
 	/**
 	 * Method used to get the unigrams from TopicalNgrams algorithm using N=1
 	 */
@@ -341,17 +340,17 @@ public class TopicModelingService
 	 * Method used to get the unigrams from TopicalNgrams algorithm
 	 */
 	private void calculateNgramCircle( Circle circle, CircleTopicModelingProfile circleTopicModelingProfile, boolean Static )
-	{	
+	{
 		// Normally, here you call palmAnalytics.getNgram....
 		// to calculate the LDA and get the result as Map / List
-		
+
 		// get dummy results based on years cluster
 		List<Object> dummyClusterResults = getNgramResultsCircle( circle, Static );
 
 		// now put this cluster list into circleTopicModeling object
 		transformTopicModelingResultIntoCircleTopicModeling( circleTopicModelingProfile, dummyClusterResults, Static );
 	}
-	
+
 	/**
 	 * Method used to get the unigrams from TopicalNgrams algorithm
 	 */
@@ -527,7 +526,10 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams;
 			try
 			{
-				//topicNgrams = palmAnalytics.getNGrams().getTopTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId().toString() ), -1, 0.0, 5, 5, true );
+				// topicNgrams =
+				// palmAnalytics.getNGrams().getTopTopicUnigramsDocument(
+				// palmAnalytics.getNGrams().maptoRealDatabaseID(
+				// author.getId().toString() ), -1, 0.0, 5, 5, true );
 				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Author-Test", 20, 10, 7, false, true, true );
 				
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
@@ -866,7 +868,7 @@ public class TopicModelingService
 			}
 			clusterResultMap.put( "termvalues", termValueMap );
 			clusterResults.add( clusterResultMap );
-			}
+		}
 
 		// return results
 		return clusterResults;
@@ -1014,7 +1016,8 @@ public class TopicModelingService
 
 			// get interest profile name and description
 			String interestProfileName = authorTopicModelingProfile.getName();
-			//String interestProfileDescription = authorTopicModelingProfile.getDescription();
+			// String interestProfileDescription =
+			// authorTopicModelingProfile.getDescription();
 
 			// get authorTopicModeling set on profile
 			Set<AuthorTopicModeling> authorTopicModelings = authorTopicModelingProfile.getAuthorTopicModelings();
@@ -1026,13 +1029,13 @@ public class TopicModelingService
 				// get interest year, term and value
 			for ( AuthorTopicModeling authorTopicModeling : authorTopicModelings )
 				{
-					if ( authorTopicModeling.getTermWeightsString() == null || authorTopicModeling.getTermWeightsString().isEmpty() )
+				if ( authorTopicModeling.getTermWeightsString() == null || authorTopicModeling.getTermWeightsString().isEmpty() )
 						continue;
 
 					List<Object> termValueResult = new ArrayList<Object>();
 
 					// put term and value
-					for ( Map.Entry<String, Double> termWeightMap : authorTopicModeling.getTermWeightsString().entrySet() )
+				for ( Map.Entry<String, Double> termWeightMap : authorTopicModeling.getTermWeightsString().entrySet() )
 					{
 						List<Object> termWeightObjects = new ArrayList<Object>();
 						termWeightObjects.add( termWeightMap.getKey() );
