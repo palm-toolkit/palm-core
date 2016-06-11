@@ -385,6 +385,21 @@ public class PublicationController
 		return Collections.emptyMap();
 	}
 
+	@RequestMapping( value = "/topicCompositionNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopicCompositionCloudNgrams( @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( publicationId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			return publicationFeature.getPublicationTopicModeling().getTopicModelNCloud( publicationId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 	/**
 	 * Get Similar publications of given author
 	 * 

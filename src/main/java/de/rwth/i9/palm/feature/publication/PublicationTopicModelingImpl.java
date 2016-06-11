@@ -171,6 +171,49 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 	}
 
 	@Override
+	public Map<String, Object> getTopicModelNCloud( String publicationId, boolean isReplaceExistingResult )
+	{
+		// researchers list container
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// author details
+		Map<String, String> publicationdetail = new HashMap<String, String>();
+		publicationdetail.put( "id", publicationId.toString() );
+		// publicationdetail.put( "name", publicationId.getT().toString() );
+
+		// algorithm result
+		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicCompositionforPublications( path, "Author-Test", publicationId, extractCoauthros( publicationId ), 5, 5, 5, true, false );
+
+		if ( topiccomposition.isEmpty() != true )
+		{
+			responseMap.put( "status", "Ok" );
+		}
+
+		responseMap.put( "publication", publicationdetail );
+
+		// add the author id to the map
+		// responseMap.put( "author", author.getId().toString() );
+
+		// hold the temporal results from the algorithm
+
+		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
+
+		for ( Entry<String, Double> topic : topiccomposition.entrySet() )
+		{
+			Map<String, Object> topicdistribution = new LinkedHashMap<String, Object>();
+			topicdistribution.put( topic.getKey().toString(), topic.getValue() );
+			// topicdistribution.put( "size", topic.getValue() );
+			topicList.add( (LinkedHashMap<String, Object>) topicdistribution );
+
+			// TO DO Unigrams/Ngrams preferences
+		}
+		responseMap.put( "termvalue", topicList );
+
+		return responseMap;
+	}
+
+	@Override
 	public Map<String, Object> getResearcherSimilarPublicationMap( Publication publication, int startPage, int maxresult )
 	{
 		// researchers list container

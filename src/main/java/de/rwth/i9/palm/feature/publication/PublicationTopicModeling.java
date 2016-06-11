@@ -12,5 +12,7 @@ public interface PublicationTopicModeling
 
 	public Map<String, Object> getTopicModelUniCloud( String publicationId, boolean isReplaceExistingResult );
 
+	public Map<String, Object> getTopicModelNCloud( String publicationId, boolean isReplaceExistingResult );
+
 	public Map<String, Object> getResearcherSimilarPublicationMap( Publication publication, int startPage, int maxresult );
 }
