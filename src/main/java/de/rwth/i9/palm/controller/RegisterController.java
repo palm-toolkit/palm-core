@@ -123,6 +123,8 @@ public class RegisterController
 		defaultWidgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CONFERENCE, WidgetStatus.DEFAULT ) );
 		// get default circle widget
 		defaultWidgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.CIRCLE, WidgetStatus.DEFAULT ) );
+		// get default explore widget
+		defaultWidgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.EXPLORE, WidgetStatus.DEFAULT ) );
 
 		// assign all default widget to user
 		for ( Widget eachWidget : defaultWidgets )
