@@ -28,9 +28,6 @@ public class PublicationFeatureImpl implements PublicationFeature
 	@Autowired( required = false )
 	private PublicationSimilar publicationSimilar;
 
-	@Autowired( required = false )
-	private PublicationTopicModeling publicationTopicModeling;
-
 	@Override
 	public PublicationApi getPublicationApi()
 	{
@@ -83,15 +80,6 @@ public class PublicationFeatureImpl implements PublicationFeature
 			this.publicationMining = new PublicationMiningImpl();
 
 		return this.publicationMining;
-	}
-
-	@Override
-	public PublicationTopicModeling getPublicationTopicModeling()
-	{
-		if ( this.publicationTopicModeling == null )
-			this.publicationTopicModeling = new PublicationTopicModelingImpl();
-
-		return this.publicationTopicModeling;
 	}
 
 	@Override

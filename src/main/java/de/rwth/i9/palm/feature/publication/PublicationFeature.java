@@ -9,8 +9,6 @@ public interface PublicationFeature
 {
 	public PublicationApi getPublicationApi();
 
-	public PublicationTopicModeling getPublicationTopicModeling();
-
 	public PublicationBasicStatistic getPublicationBasicStatistic();
 
 	public PublicationDetail getPublicationDetail();
