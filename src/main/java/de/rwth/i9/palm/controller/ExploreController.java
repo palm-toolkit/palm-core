@@ -32,11 +32,14 @@ import de.rwth.i9.palm.graph.feature.GraphFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
+import de.rwth.i9.palm.model.Color;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
+import de.rwth.i9.palm.model.WidgetSource;
 import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
+import de.rwth.i9.palm.model.WidgetWidth;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
 
@@ -69,14 +72,154 @@ public class ExploreController
 	// @Autowired
 	// private PublicationCollectionService publicationCollectionService;
 
-	/**
-	 * Landing page of researcher page
-	 * 
-	 * @param sessionId
-	 * @param response
-	 * @return
-	 * @throws InterruptedException
-	 */
+	// Use explore/createVAWidgets to create Visual Analytics Widgets in Explore
+	@Transactional
+	@RequestMapping( value = "/createVAWidgets", method = RequestMethod.GET )
+	public void createVAWidgets( final HttpServletResponse response ) throws InterruptedException
+	{
+		List<Widget> existingWidgets = persistenceStrategy.getWidgetDAO().getAllWidgets();
+		Boolean alreadyExist = false;
+		for ( Widget widget : existingWidgets )
+		{
+			if ( widget.getWidgetType().equals( WidgetType.EXPLORE ) )
+			{
+				alreadyExist = true;
+				break;
+			}
+		}
+		if ( !alreadyExist )
+		{
+			// create RESEARCHER Widget in Explore
+			Widget researchersWidget = new Widget();
+			researchersWidget.setTitle( "Researchers" );
+			researchersWidget.setUniqueName( "explore_researchers" );
+			researchersWidget.setWidgetType( WidgetType.EXPLORE );
+			researchersWidget.setWidgetGroup( "content" );
+			researchersWidget.setWidgetSource( WidgetSource.INCLUDE );
+			researchersWidget.setSourcePath( "../../explore/widget/researcherAnalytics.ftl" );
+			researchersWidget.setWidgetWidth( WidgetWidth.HALF );
+			researchersWidget.setColor( Color.YELLOW );
+			researchersWidget.setInformation( "Visual Analytics widget for researchers/authors" );
+			researchersWidget.setCloseEnabled( true );
+			researchersWidget.setMinimizeEnabled( true );
+			researchersWidget.setMoveableEnabled( true );
+			researchersWidget.setHeaderVisible( true );
+			researchersWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			researchersWidget.setPosition( 0 );
+			persistenceStrategy.getWidgetDAO().persist( researchersWidget );
+
+			// create RESEARCHER Widget in Explore
+			Widget topicsWidget = new Widget();
+			topicsWidget.setTitle( "Topics/Interests" );
+			topicsWidget.setUniqueName( "explore_topics" );
+			topicsWidget.setWidgetType( WidgetType.EXPLORE );
+			topicsWidget.setWidgetGroup( "content" );
+			topicsWidget.setWidgetSource( WidgetSource.INCLUDE );
+			topicsWidget.setSourcePath( "../../explore/widget/topicAnalytics.ftl" );
+			topicsWidget.setWidgetWidth( WidgetWidth.HALF );
+			topicsWidget.setColor( Color.RED );
+			topicsWidget.setInformation( "Visual Analytics widget for topics or researchers' interests" );
+			topicsWidget.setCloseEnabled( true );
+			topicsWidget.setMinimizeEnabled( true );
+			topicsWidget.setMoveableEnabled( true );
+			topicsWidget.setHeaderVisible( true );
+			topicsWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			topicsWidget.setPosition( 0 );
+			persistenceStrategy.getWidgetDAO().persist( topicsWidget );
+
+			// create RESEARCHER Widget in Explore
+			Widget publicationsWidget = new Widget();
+			publicationsWidget.setTitle( "Publications" );
+			publicationsWidget.setUniqueName( "explore_publications" );
+			publicationsWidget.setWidgetType( WidgetType.EXPLORE );
+			publicationsWidget.setWidgetGroup( "content" );
+			publicationsWidget.setWidgetSource( WidgetSource.INCLUDE );
+			publicationsWidget.setSourcePath( "../../explore/widget/publicationAnalytics.ftl" );
+			publicationsWidget.setWidgetWidth( WidgetWidth.HALF );
+			publicationsWidget.setColor( Color.GREEN );
+			publicationsWidget.setInformation( "Visual Analytics widget for publications" );
+			publicationsWidget.setCloseEnabled( true );
+			publicationsWidget.setMinimizeEnabled( true );
+			publicationsWidget.setMoveableEnabled( true );
+			publicationsWidget.setHeaderVisible( true );
+			publicationsWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			publicationsWidget.setPosition( 0 );
+			persistenceStrategy.getWidgetDAO().persist( publicationsWidget );
+
+			// create RESEARCHER Widget in Explore
+			Widget conferencesWidget = new Widget();
+			conferencesWidget.setTitle( "Conferences" );
+			conferencesWidget.setUniqueName( "explore_researcher" );
+			conferencesWidget.setWidgetType( WidgetType.EXPLORE );
+			conferencesWidget.setWidgetGroup( "content" );
+			conferencesWidget.setWidgetSource( WidgetSource.INCLUDE );
+			conferencesWidget.setSourcePath( "../../explore/widget/conferenceAnalytics.ftl" );
+			conferencesWidget.setWidgetWidth( WidgetWidth.HALF );
+			conferencesWidget.setColor( Color.BLUE );
+			conferencesWidget.setInformation( "Visual Analytics widget for conferences" );
+			conferencesWidget.setCloseEnabled( true );
+			conferencesWidget.setMinimizeEnabled( true );
+			conferencesWidget.setMoveableEnabled( true );
+			conferencesWidget.setHeaderVisible( true );
+			conferencesWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			conferencesWidget.setPosition( 0 );
+			persistenceStrategy.getWidgetDAO().persist( conferencesWidget );
+
+		}
+	}
+
+	// Use explore/addWidgetToExistingUsers to add explore widgets to PALM
+	@RequestMapping( value = "/addWidgetToExistingUsers", method = RequestMethod.GET )
+	@Transactional
+	public void addWidgetToExistingUsers( final HttpServletResponse response ) throws InterruptedException
+	{
+
+		List<User> existingUsers = persistenceStrategy.getUserDAO().allUsers();
+
+		// list of explore widgets
+		List<Widget> exploreWidgets = new ArrayList<>();
+		// get default explore widget
+		exploreWidgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.EXPLORE, WidgetStatus.DEFAULT ) );
+
+		// assign all default explore widgets to existing users
+		for ( User user : existingUsers )
+		{
+			Boolean alreadyAdded = false;
+			List<UserWidget> userWidgets = user.getUserWidgets();
+
+			// don't add if already added
+			for ( UserWidget userWidget : userWidgets )
+			{
+				if ( userWidget.getWidgetWidth().equals( WidgetWidth.HALF ) )
+				{
+					alreadyAdded = true;
+					break;
+				}
+			}
+			if ( !alreadyAdded )
+			{
+				for ( Widget eachWidget : exploreWidgets )
+				{
+					UserWidget userWidget = new UserWidget();
+					userWidget.setWidget( eachWidget );
+					userWidget.setWidgetStatus( WidgetStatus.ACTIVE );
+					userWidget.setWidgetColor( eachWidget.getColor() );
+					userWidget.setWidgetWidth( eachWidget.getWidgetWidth() );
+					userWidget.setPosition( eachWidget.getPosition() );
+					if ( eachWidget.getWidgetHeight() != null )
+						userWidget.setWidgetHeight( eachWidget.getWidgetHeight() );
+
+					user.addUserWidget( userWidget );
+				}
+			}
+			// persist user at the end
+			persistenceStrategy.getUserDAO().persist( user );
+
+		}
+
+
+	}
+
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
 	public ModelAndView explorePage(
@@ -94,7 +237,7 @@ public class ExploreController
 
 		if ( user != null )
 		{
-			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.EXPLORE, WidgetStatus.ACTIVE );
+			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidgetByColor( user, WidgetType.EXPLORE, WidgetStatus.ACTIVE );
 			for ( UserWidget userWidget : userWidgets )
 			{
 				Widget widget = userWidget.getWidget();
