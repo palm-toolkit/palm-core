@@ -23,8 +23,6 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	private String path = "C:/Users/Piro/Desktop/";
-
 	@Override
 	public Map<String, Object> getResearcherSimilarAuthorMap( Author author, int startPage, int maxresult )
 	{
@@ -32,8 +30,7 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		List<String> similarAuthors = new ArrayList<String>();
-		similarAuthors = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), "C:/Users/Piro/Desktop/", "Authors", 20, 10, 3, false );
-		//similarEntities( author.getId(), maxresult, 3 );
+		similarAuthors = palmAnalytics.getNGrams().similarEntities( author.getId(), maxresult );
 
 		// Prepare set of similarAuthor HashSet;
 		Set<String> similarauthorSet = new HashSet<String>();
