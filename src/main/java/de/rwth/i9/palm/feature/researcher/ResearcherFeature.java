@@ -20,10 +20,6 @@ public interface ResearcherFeature
 
 	public ResearcherSimilarauthor getResearcherSimilarauthor();
 
-	public ResearcherTopicEvolutionTest getResearcherDynamicTopicModellingauthorTest();
-
-	public ResearcherTopicCompositionCloud getResearcherTopicModelingCloud();
-
 	public ResearcherInterest getResearcherInterest();
 	
 	public ResearcherInterestEvolution getResearcherInterestEvolution();
