@@ -271,6 +271,42 @@ public class AcademicEventController
 		return Collections.emptyMap();
 	}
 
+	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get event
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelUniCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/topicCompositionNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get event
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelNCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 
 
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )

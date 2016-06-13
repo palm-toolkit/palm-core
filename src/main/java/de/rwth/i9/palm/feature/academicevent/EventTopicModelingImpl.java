@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.feature.academicevent;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,13 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
-import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.model.Event;
 
 @Component
 public class EventTopicModelingImpl implements EventTopicModeling
 {
-	@Autowired
-	private PersistenceStrategy persistenceStrategy;
 
 	@Autowired
 	private PalmAnalytics palmAnalytics;
@@ -100,6 +99,98 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		// add the result of topic Modeling into the result Map
 		responseMap.put( "topicModel", topicModel );
+
+		return responseMap;
+	}
+
+	@Override
+	public Map<String, Object> getTopicModelUniCloud( Event event, boolean isReplaceExistingResult )
+	{
+		// researchers list container
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// event details
+		Map<String, String> eventdetail = new HashMap<String, String>();
+		eventdetail.put( "id", event.getId().toString() );
+		eventdetail.put( "name", event.getName().toString() );
+
+		// algorithm result
+		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event-Test", event.getId().toString(), 5, 5, 5, true, true );
+
+		if ( topiccomposition.isEmpty() != true )
+		{
+			responseMap.put( "status", "Ok" );
+		}
+		else
+		{
+			responseMap.put( "status", "No Topics discovered" );
+		}
+
+		responseMap.put( "event", eventdetail );
+
+		// add the event id to the map
+		responseMap.put( "event", event.getId().toString() );
+
+		// hold the temporal results from the algorithm
+
+		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
+
+		for ( Entry<String, Double> topic : topiccomposition.entrySet() )
+		{
+			Map<String, Object> topicdistribution = new LinkedHashMap<String, Object>();
+			topicdistribution.put( topic.getKey().toString(), topic.getValue() );
+			// topicdistribution.put( "size", topic.getValue() );
+			topicList.add( (LinkedHashMap<String, Object>) topicdistribution );
+
+			// TO DO Unigrams/Ngrams preferences
+		}
+		responseMap.put( "termvalue", topicList );
+
+		return responseMap;
+	}
+
+	@Override
+	public Map<String, Object> getTopicModelNCloud( Event event, boolean isReplaceExistingResult )
+	{
+		// researchers list container
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// event details
+		Map<String, String> eventdetail = new HashMap<String, String>();
+		eventdetail.put( "id", event.getId().toString() );
+		eventdetail.put( "name", event.getName().toString() );
+
+		// algorithm result
+		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event-Test", event.getId().toString(), 5, 5, 5, true, false );
+
+		if ( topiccomposition.isEmpty() != true )
+		{
+			responseMap.put( "status", "Ok" );
+		}
+		else
+		{
+			responseMap.put( "status", "No Topics discovered" );
+		}
+
+		responseMap.put( "event", eventdetail );
+
+		// add the event id to the map
+		// responseMap.put( "event", event.getId().toString() );
+
+		// hold the temporal results from the algorithm
+
+		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
+
+		for ( Entry<String, Double> topic : topiccomposition.entrySet() )
+		{
+			Map<String, Object> topicdistribution = new LinkedHashMap<String, Object>();
+			topicdistribution.put( topic.getKey().toString(), topic.getValue() );
+			// topicdistribution.put( "size", topic.getValue() );
+			topicList.add( (LinkedHashMap<String, Object>) topicdistribution );
+		}
+		responseMap.put( "termvalue", topicList );
 
 		return responseMap;
 	}
