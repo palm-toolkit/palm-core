@@ -259,7 +259,7 @@ public class AcademicEventController
 
 	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getConferenceTopicComposition( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getEventTopicComposition( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
 	{
 		if ( conferenceId != null )
 		{
@@ -270,6 +270,7 @@ public class AcademicEventController
 		}
 		return Collections.emptyMap();
 	}
+
 
 
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
