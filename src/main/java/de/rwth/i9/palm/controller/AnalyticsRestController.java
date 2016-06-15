@@ -2,6 +2,7 @@ package de.rwth.i9.palm.controller;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -70,56 +71,8 @@ public class AnalyticsRestController
 
 	private Map<String, Integer> clusterPublications( String algorithm, String relatedObjectId, String relatedObjectType ) throws Exception
 	{
-		Map<String, Integer> resultMap = new HashMap<String, Integer>();
 
-		List<Publication> publications;
-		if ( relatedObjectId != null && relatedObjectType != null )
-		{
-			switch ( relatedObjectType ) {
-			case "event":
-				publications = persistenceStrategy.getPublicationDAO().getPublicationByEventId( relatedObjectId );
-				break;
-			case "author":
-				publications = persistenceStrategy.getPublicationDAO().getPublicationByAuthorId( relatedObjectId );
-				break;
-			default:
-				publications = persistenceStrategy.getPublicationDAO().getPublicationByEventId( relatedObjectId );
-				break;
-			}
-		}
-		else
-		{
-			publications = persistenceStrategy.getPublicationDAO().getAll();
-		}
-
-		if ( publications.size() > 0 )
-		{
-			System.out.println( "Clustering Publications" );
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			Attribute citedBy = new Attribute( "citedBy" );
-			attributes.add( citedBy );
-
-			Instances data = new Instances( "publications", attributes, publications.size() );
-
-			for ( Publication p : publications )
-			{
-				Instance i = new DenseInstance( attributes.size() );
-				i.setValue( citedBy, p.getCitedBy() );
-				data.add( i );
-			}
-
-			if ( algorithm.equals( "kmeans" ) )
-			{
-				SimpleKMeans result = WekaSimpleKMeans.run( 4, data );
-				int i = 0;
-				for ( int clusterNum : result.getAssignments() )
-				{
-					resultMap.put( mapper.writeValueAsString( publications.get( i ).getJsonStub() ), clusterNum );
-					i++;
-				}
-			}
-		}
-
+		Map<String, Integer> resultMap = palmAnalytics.getClustering().clusterPublications( persistenceStrategy, algorithm, relatedObjectId, relatedObjectType );
 		return resultMap;
 	}
 
@@ -164,6 +117,8 @@ public class AnalyticsRestController
 				i.setValue( citedBy, a.getCitedBy() );
 				i.setValue( noPublication, a.getNoPublication() );
 				data.add( i );
+				Map<String, Object> m = new LinkedHashMap<String, Object>();
+				interestMiningService.getInterestFromDatabase( a, m );
 			}
 
 			if ( algorithm.equals( "kmeans" ) )
@@ -179,5 +134,6 @@ public class AnalyticsRestController
 		}
 
 		return resultMap;
+
 	}
 }

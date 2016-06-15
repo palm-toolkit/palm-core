@@ -592,7 +592,7 @@ public class InterestMiningService
 	 * @param responseMap
 	 * @return
 	 */
-	private Map<String, Object> getInterestFromDatabase( Author author, Map<String, Object> responseMap )
+	public Map<String, Object> getInterestFromDatabase( Author author, Map<String, Object> responseMap )
 	{
 		// get available year
 		List<String> years = persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( author, "ASC" );
@@ -617,6 +617,8 @@ public class InterestMiningService
 
 			// get authorInterest set on profile
 			Set<AuthorInterest> authorInterests = authorInterestProfile.getAuthorInterests();
+
+			System.out.println( authorInterests );
 
 			// if profile contain no authorInterest just skip
 			if ( authorInterests == null || authorInterests.isEmpty() )
