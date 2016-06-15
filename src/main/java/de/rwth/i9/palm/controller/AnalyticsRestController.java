@@ -20,6 +20,7 @@ import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.interestmining.service.InterestMiningService;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.DataMiningPublication;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import weka.clusterers.SimpleKMeans;
@@ -71,8 +72,12 @@ public class AnalyticsRestController
 
 	private Map<String, Integer> clusterPublications( String algorithm, String relatedObjectId, String relatedObjectType ) throws Exception
 	{
-
-		Map<String, Integer> resultMap = palmAnalytics.getClustering().clusterPublications( persistenceStrategy, algorithm, relatedObjectId, relatedObjectType );
+		Map<DataMiningPublication, Integer> clustering = palmAnalytics.getClustering().clusterPublications( persistenceStrategy, algorithm, relatedObjectId, relatedObjectType );
+		Map<String, Integer> resultMap = new HashMap<String, Integer>();
+		for(DataMiningPublication p : clustering.keySet()) {
+			System.out.println( p.getTitle() + ", " + p.getId() );
+			resultMap.put( mapper.writeValueAsString( p.getJsonStub() ), clustering.get( p ) );
+		}
 		return resultMap;
 	}
 
