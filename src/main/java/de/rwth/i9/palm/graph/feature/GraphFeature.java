@@ -11,4 +11,6 @@ public interface GraphFeature
 	public void newFunc();
 
 	public void testFunction();
+
+	public Map<String, Object> anotherFunction();
 }
