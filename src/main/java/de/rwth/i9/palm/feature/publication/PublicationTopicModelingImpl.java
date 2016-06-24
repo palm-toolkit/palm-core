@@ -41,8 +41,6 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		
 		responseMap.put( "status", "ok" );
 		
-		// find the list of authors having published a publication
-		LinkedList<String> coauthors = (LinkedList<String>) extractCoauthros( publicationId );
 		// create a List of topic maps for two profiles 
 		List<LinkedHashMap<String, Object>> topics = new ArrayList<LinkedHashMap<String, Object>>();
 		

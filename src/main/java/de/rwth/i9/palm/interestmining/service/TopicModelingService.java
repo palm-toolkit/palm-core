@@ -740,15 +740,12 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams = null;
 			try
 			{
-				// topicNgrams =
-				// palmAnalytics.getNGrams().getTopTopicUnigramsDocument(
-				// palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId()
-				// ), -1, 0.0, 5, 5, true );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 5, 7, false, true, true );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
 					{
-						String[] components = topicproportion.split( "_-_ " );
+						String[] components = topicproportion.split( "_-_" );
 						// termValueMap.put( "term", components[0] );
 						// termValueMap.put( "value", components[1] );
 						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
@@ -838,6 +835,7 @@ public class TopicModelingService
 			// case when Static = True
 			// prepare results for Donut :)
 			Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
+			clusterResultMap.put( "circleId", circle.getId().toString() );
 			clusterResultMap.put( "year", new SimpleDateFormat( "yyyy", Locale.ENGLISH ).format( new Date() ) );
 			clusterResultMap.put( "language", "english" );
 			clusterResultMap.put( "extractor", "TopicalNgram" );
@@ -847,15 +845,14 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams = null;
 			try
 			{
-				// topicNgrams =
-				// palmAnalytics.getNGrams().getTopTopicNgramsDocument(
-				// palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId()
-				// ), -1, 0.0, 5, 5, true );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 5, 7, false, true, false );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
 					{
-						String[] components = topicproportion.split( "_-_ " );
+						String[] components = topicproportion.split( "_-_" );
+						// termValueMap.put( "term", components[0] );
+						// termValueMap.put( "value", components[1] );
 						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
 					}
 				}
@@ -866,8 +863,7 @@ public class TopicModelingService
 			}
 			clusterResultMap.put( "termvalues", termValueMap );
 			clusterResults.add( clusterResultMap );
-			}
-
+		}
 		// return results
 		return clusterResults;
 	}
