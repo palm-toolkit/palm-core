@@ -307,6 +307,40 @@ public class AcademicEventController
 		return Collections.emptyMap();
 	}
 
+	@RequestMapping( value = "/similarEventList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getSimilarEventList( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( eventId == null || eventId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "eventId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get event
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( event == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "event not found in database" );
+			return responseMap;
+		}
+
+		// get recommended events based on calculations
+		responseMap.putAll( academicEventFeature.getEventTopicModeling().getSimilarEventsMap( event, startPage, maxresult ) );
+
+		return responseMap;
+	}
+
 
 
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )

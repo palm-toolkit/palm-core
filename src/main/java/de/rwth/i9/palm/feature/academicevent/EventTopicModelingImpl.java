@@ -2,16 +2,19 @@ package de.rwth.i9.palm.feature.academicevent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Event;
+import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
 public class EventTopicModelingImpl implements EventTopicModeling
@@ -19,6 +22,9 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 	@Autowired
 	private PalmAnalytics palmAnalytics;
+
+	@Autowired
+	private PersistenceStrategy persistenceStrategy;
 
 	private String path = "C:/Users/Piro/Desktop/";
 
@@ -191,6 +197,67 @@ public class EventTopicModelingImpl implements EventTopicModeling
 			topicList.add( (LinkedHashMap<String, Object>) topicdistribution );
 		}
 		responseMap.put( "termvalue", topicList );
+
+		return responseMap;
+	}
+
+	@Override
+	public Map<String, Object> getSimilarEventsMap( Event event, int startPage, int maxresult )
+	{
+		// researchers list container
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		List<String> similarEvents = new ArrayList<String>();
+		similarEvents = palmAnalytics.getNGrams().runSimilarEntities( event.getId().toString(), "C:/Users/Piro/Desktop/", "Conferences", 20, 10, 3, true );
+		// similarEntities( event.getId(), maxresult, 3 );
+
+		// Prepare set of similarEvent HashSet;
+		Set<String> similareventSet = new HashSet<String>();
+
+		for ( String similar : similarEvents )
+		{
+			// if ( persistenceStrategy.getEventDAO().getById( similar.split(
+			// "->" )[0] ).equals( event ) )
+			// continue;
+
+			similareventSet.add( similar );
+		}
+
+		// prepare list of object map containing similarEvent details
+		List<Map<String, Object>> similarEventList = new ArrayList<Map<String, Object>>();
+
+		for ( String similarEvent : similareventSet )
+		{
+			// only copy necessary attributes
+			// persistenceStrategy.( similar.split( "->"
+			// )[0] )
+			Map<String, Object> similarEventMap = new LinkedHashMap<String, Object>();
+			similarEventMap.put( "id", similarEvent.split( "->" )[0] );
+			if ( !persistenceStrategy.getEventDAO().getById( similarEvent.split( "->" )[0] ).getName().isEmpty() )
+				similarEventMap.put( "name", persistenceStrategy.getEventDAO().getById( similarEvent.split( "->" )[0] ).getName() );
+			similarEventMap.put( "similarity", similarEvent.split( "->" )[1] );
+			// add into list
+			similarEventList.add( similarEventMap );
+		}
+
+		// prepare list of object map containing similarEvent details
+		List<Map<String, Object>> similarEventListPaging = new ArrayList<Map<String, Object>>();
+
+		int position = 0;
+		for ( Map<String, Object> similarEvent : similarEventList )
+		{
+			if ( position >= startPage && similarEventListPaging.size() < maxresult )
+			{
+				similarEventListPaging.add( similarEvent );
+			}
+		}
+
+		// remove unnecessary result
+
+		// put similarEvent to responseMap
+		responseMap.put( "countTotal", similarEventList.size() );
+		responseMap.put( "count", similarEventListPaging.size() );
+		responseMap.put( "similarEvents", similarEventListPaging );
 
 		return responseMap;
 	}
