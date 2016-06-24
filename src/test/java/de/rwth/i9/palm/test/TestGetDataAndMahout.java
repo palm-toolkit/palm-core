@@ -98,7 +98,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 				for(Publication publication : author.getPublications()){
 					if ( publication.getAbstractText() != "null" )
 					{
-					PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Author-Test/" + author.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Author-Test/" + author.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
 						writer.print( publication.getTitle() + " " );
 						writer.print( publication.getAbstractText() );
 						writer.println();
@@ -128,7 +128,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			for ( Author author : authors )
 			{
 
-				File theDir = new File( "C:/Users/Piro/Desktop/Year-Test/" + author.getId().toString() );
+				File theDir = new File( "C:/Users/Piro/Desktop/Author-Year-Test/" + author.getId().toString() );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -171,7 +171,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 				{
 					if ( !author.getPublicationsByYear( year ).isEmpty() )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Year-Test/" + author.getId().toString() + "/" + year + ".txt" );
+						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Author-Year-Test/" + author.getId().toString() + "/" + year + ".txt" );
 						for ( Publication publication : author.getPublicationsByYear( year ) )
 						{
 							writer.print( publication.getTitle() + " " );
@@ -190,7 +190,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 
 		System.out.println( "\n========== TEST 4 - Fetch publications from database ==========" );
 		
-		@SuppressWarnings( "unchecked" )
 		Author authors = persistenceStrategy.getAuthorDAO().getById( "c442983a-0099-4d6d-89b1-6cfc57fa6138" );// getAll();//getByName(
 																																	// "mohamed
 																																	// amine
