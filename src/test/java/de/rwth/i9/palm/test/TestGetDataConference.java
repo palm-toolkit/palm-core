@@ -67,11 +67,48 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 
 	@Test
+	public void testGetEventGroupPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
+	{
+		System.out.println( "\n========== TEST 1 - Fetch publications per Event from database ==========" );
+		List<Event> events = persistenceStrategy.getEventDAO().getAll();// getByName(
+																		// "mohamed
+																		// amine
+																		// chatti"
+																		// );//getById(
+																		// "e14fd198-1e54-449f-96aa-7e19d0eec488"
+																		// );
+
+		if ( !events.isEmpty() )
+			for ( Event event : events )
+			{
+				System.out.println( event.getName() );
+				// for ( Event event : eventgroup.getEvents() )
+				// {
+					for ( Publication publication : event.getPublications() )
+					{
+						if ( publication.getAbstractText() != "null" )
+						{
+						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Event-Test/" + event.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+							writer.print( publication.getTitle() + " " );
+							writer.print( publication.getAbstractText() );
+							writer.println();
+							writer.close();
+						}
+						else
+						{
+							continue;
+						}
+					}
+				}
+		// }
+	}
+
+	@Test
 	@Ignore
 	public void testcreateEntityDirectories() throws IOException
 	{
 		System.out.println( "\n========== TEST 2 - Create Architecture for the Data Collection ==========" );
-		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();// getByName(
+		List<Event> eventgroups = persistenceStrategy.getEventDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
 																			// chatti"
@@ -79,12 +116,10 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
 																			// );
 		if ( !eventgroups.isEmpty() )
-			for ( EventGroup event : eventgroups )
+			for ( Event event : eventgroups )
 			{
-				for ( Event eventof : event.getEvents() )
-				{
 
-					File theDir = new File( "C:/Users/Piro/Desktop/TEST/" + event.getId().toString() + "/" + eventof.getId().toString() );
+				File theDir = new File( "C:/Users/Piro/Desktop/Event-Test/" + event.getId().toString() + "/" );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -104,7 +139,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 					{
 						System.out.println( "DIR created" );
 					}
-				}
 				}
 			}
 	}
@@ -145,6 +179,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabaseGroupEvents() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Fetch publications per Event from database ==========" );

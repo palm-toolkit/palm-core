@@ -103,7 +103,6 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	}
 
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Fetch publications per circlefrom database ==========" );

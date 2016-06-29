@@ -128,7 +128,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			for ( Author author : authors )
 			{
 
-				File theDir = new File( "C:/Users/Piro/Desktop/Author-Year-Test/" + author.getId().toString() );
+				File theDir = new File( "C:/Users/Piro/Desktop/Author-Test/" + author.getId().toString() );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
