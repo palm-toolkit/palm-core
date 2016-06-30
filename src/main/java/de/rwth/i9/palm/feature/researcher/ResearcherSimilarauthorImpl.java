@@ -98,7 +98,7 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		Map<String, List<String>> similarAuthors = new LinkedHashMap<String, List<String>>();
-		similarAuthors = palmAnalytics.getNGrams().runSimilarEntitiesTopicLevel( author.getId().toString(), "C:/Users/Piro/Desktop/", "Authors", 30, 10, 3, false );
+		similarAuthors = palmAnalytics.getNGrams().runSimilarEntitiesTopicLevel( author.getId().toString(), "C:/Users/Piro/Desktop/", "Authors", 50, 10, 3, false );
 
 		// get the id, degree of similarity, topics proportions
 		// put them into the map

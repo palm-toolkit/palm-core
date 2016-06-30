@@ -35,8 +35,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
-	@Ignore
-	public void testGetDataFromDatabase()
+	public void testGetDataFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 0 - Fetch data from database ==========" );
 
@@ -46,24 +45,25 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 		if ( authors != null )
 			for ( Author author : authors )
 			{
-				System.out.println( "author id : " + author.getId() + " > author name : " + author.getName() );
+				// System.out.println( "author id : " + author.getId() + " >
+				// author name : " + author.getName() );
 				// print one of the publication
+				PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Authors/Authors/" + author.getId() + ".txt", "UTF-8" );
 
 				if ( author.getPublications() != null )
 				{
 					for ( Publication publication : author.getPublications() )
 					{
-						System.out.println( "publication id : " + publication.getId() + " > pub title: " + publication.getTitle() );
+						// System.out.println( "publication id : " +
+						// publication.getId() + " > pub title: " +
+						// publication.getTitle() );
+						writer.print( publication.getTitle() + " " );
+						writer.print( publication.getAbstractText() );
+						writer.println();
 					}
+					writer.close();
 				}
-				System.out.println();
-
-				if ( count > 200 )
-					break;
-
-				count++;
 			}
-		System.out.println( "\n\n" );
 	}
 	
 	@Test
@@ -128,7 +128,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			for ( Author author : authors )
 			{
 
-				File theDir = new File( "C:/Users/Piro/Desktop/Author-Test/" + author.getId().toString() );
+				File theDir = new File( "C:/Users/Piro/Desktop/Author-Year-Test/" + author.getId().toString() );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )

@@ -77,7 +77,7 @@ public class ResearcherTopicCompositionCloudImpl implements ResearcherTopicCompo
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Author-Test", author.getId().toString(), 5, 5, 5, true, false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Author-Test", author.getId().toString(), 20, 10, 5, true, false );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
