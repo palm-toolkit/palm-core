@@ -579,6 +579,9 @@ public class CircleInterestMiningService
 	 */
 	private Map<String, Object> getInterestFromDatabase( Circle circle, Map<String, Object> responseMap )
 	{
+		// get available year
+		List<String> years = persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByCircle( circle, "ASC" );
+
 		List<CircleInterestProfile> circleInterestProfiles = new ArrayList<CircleInterestProfile>();
 		circleInterestProfiles.addAll( circle.getCircleInterestProfiles() );
 		// sort based on profile length ( currently there is no attribute to
@@ -644,31 +647,73 @@ public class CircleInterestMiningService
 				List<Object> circleInterestResultYearList = new ArrayList<Object>();
 
 				// get interest year, term and value
+				int indexYear = 0;
+				boolean increaseIndex = true;
 				for ( CircleInterest circleInterest : interestList )
 				{
 					if ( circleInterest.getTermWeights() == null || circleInterest.getTermWeights().isEmpty() )
 						continue;
 
-					// result container
-					Map<String, Object> circleInterestResultYearMap = new LinkedHashMap<String, Object>();
-
 					// get year
 					calendar.setTime( circleInterest.getYear() );
 					String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+
+					while ( !years.get( indexYear ).equals( year ) )
+					{
+
+						// empty result
+						Map<String, Object> circleInterestResultYearMap = new LinkedHashMap<String, Object>();
+
+						circleInterestResultYearMap.put( "year", years.get( indexYear ) );
+						circleInterestResultYearMap.put( "termvalue", Collections.emptyList() );
+						indexYear++;
+						increaseIndex = false;
+
+						// remove duplicated year
+						if ( !circleInterestResultYearList.isEmpty() )
+						{
+							@SuppressWarnings( "unchecked" )
+							Map<String, Object> prevAuthorInterestResultYearMap = (Map<String, Object>) circleInterestResultYearList.get( circleInterestResultYearList.size() - 1 );
+							if ( prevAuthorInterestResultYearMap.get( "year" ).equals( years.get( indexYear - 1 ) ) )
+								continue;
+						}
+						circleInterestResultYearList.add( circleInterestResultYearMap );
+
+					}
 
 					List<Object> termValueResult = new ArrayList<Object>();
 
 					// put term and value
 					for ( Map.Entry<Interest, Double> termWeightMap : circleInterest.getTermWeights().entrySet() )
 					{
+						// just remove not significant value
+						if ( termWeightMap.getValue() < 0.4 )
+							continue;
+
 						List<Object> termWeightObjects = new ArrayList<Object>();
 						termWeightObjects.add( termWeightMap.getKey().getId() );
 						termWeightObjects.add( termWeightMap.getKey().getTerm() );
 						termWeightObjects.add( termWeightMap.getValue() );
 						termValueResult.add( termWeightObjects );
 					}
+
+					// result container
+					Map<String, Object> circleInterestResultYearMap = new LinkedHashMap<String, Object>();
+
 					circleInterestResultYearMap.put( "year", year );
 					circleInterestResultYearMap.put( "termvalue", termValueResult );
+					circleInterestResultYearList.add( circleInterestResultYearMap );
+					if ( increaseIndex )
+						indexYear++;
+				}
+
+				// continue interest year which is missing
+				for ( int i = indexYear + 1; i < years.size(); i++ )
+				{
+					Map<String, Object> circleInterestResultYearMap = new LinkedHashMap<String, Object>();
+
+					circleInterestResultYearMap.put( "year", years.get( i ) );
+					circleInterestResultYearMap.put( "termvalue", Collections.emptyList() );
 					circleInterestResultYearList.add( circleInterestResultYearMap );
 				}
 

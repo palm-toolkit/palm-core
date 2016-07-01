@@ -123,6 +123,10 @@ public class WordFreqEventInterestProfile
 		for ( Map.Entry<String, Double> termWeightHelperEntry : termWeightHelperMap.entrySet() )
 		{
 			String term = termWeightHelperEntry.getKey();
+
+			if ( maxWeightValue == 0 )
+				continue;
+
 			double normalizedWeighting = termWeightHelperEntry.getValue() / maxWeightValue;
 
 			// process term to event interest map

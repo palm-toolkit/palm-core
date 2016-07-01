@@ -50,4 +50,19 @@ public class PublicationCollectionWithTransactionalTest extends AbstractTransact
 			publicationCollectionService.enrichPublicationByExtractOriginalSources( new ArrayList<Publication>( authors.get( 0 ).getPublications() ), authors.get( 0 ), false );
 	}
 
+	@Test
+	public void testLuceneSlopQuery()
+	{
+		String publicationTitle = "Dynamic topic models";
+		List<Publication> fromDbPublications = persistenceStrategy.getPublicationDAO().getPublicationViaPhraseSlopQuery( publicationTitle.toLowerCase(), 2 );
+
+		if ( !fromDbPublications.isEmpty() )
+		{
+			for ( Publication publication : fromDbPublications )
+			{
+				System.out.println( publication.getTitle() );
+			}
+		}
+	}
+
 }

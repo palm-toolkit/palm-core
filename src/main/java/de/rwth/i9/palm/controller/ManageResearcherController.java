@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,10 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.ParseException;
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +31,7 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
+import de.rwth.i9.palm.datasetcollect.service.ResearcherCollectionService;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
@@ -57,6 +63,9 @@ public class ManageResearcherController
 
 	@Autowired
 	private PublicationFeature publicationFeature;
+
+	@Autowired
+	private ResearcherCollectionService researcherCollectionService;
 
 	/**
 	 * Load the add publication form together with publication object
@@ -104,13 +113,18 @@ public class ManageResearcherController
 	 * @param extractionServiceListWrapper
 	 * @param response
 	 * @return
+	 * @throws OAuthProblemException
+	 * @throws OAuthSystemException
+	 * @throws ExecutionException
+	 * @throws IOException
+	 * @throws ParseException
 	 * @throws InterruptedException
 	 */
 	@Transactional
 	@RequestMapping( value = "/add", method = RequestMethod.POST )
 	public @ResponseBody Map<String, Object> saveNewAuthor( 
-			@ModelAttribute( "author" ) Author author, 
-			HttpServletRequest request, HttpServletResponse response)
+			@ModelAttribute( "author" ) Author author, @RequestParam( value = "name" ) final String name,
+			HttpServletRequest request, HttpServletResponse response ) throws ParseException, IOException, InterruptedException, ExecutionException, OAuthSystemException, OAuthProblemException
 	{
 
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -148,6 +162,7 @@ public class ManageResearcherController
 			// get author from session
 			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
 			{
+				// first checking based on id
 				for ( Author sessionAuthor : sessionAuthors )
 				{
 					if ( sessionAuthor.getId().equals( author.getTempId() ) )
@@ -158,12 +173,53 @@ public class ManageResearcherController
 						break;
 					}
 				}
+
+				// second checking based on exact name
+				if ( newAuthor == null )
+				{
+					// check session with author name
+					// in case the author is already changed
+					// but correct researcher already on session
+					for ( Author sessionAuthor : sessionAuthors )
+					{
+						if ( sessionAuthor.getId().equals( name ) )
+						{
+							persistenceStrategy.getAuthorDAO().persist( sessionAuthor );
+
+							newAuthor = persistenceStrategy.getAuthorDAO().getById( author.getTempId() );
+							break;
+						}
+					}
+				}
 			}
 		}
 		else
 		{
+			// try to assign with suggested author
+
 			// user create new author not suggested by system
-			newAuthor = new Author();
+			List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( author.getName(), false );
+
+			if ( researcherList != null && !researcherList.isEmpty() )
+			{
+				// try to add author source
+				for ( Author researcher : researcherList )
+				{
+					if ( researcher.getName().toLowerCase().equals( author.getName().toLowerCase() ) )
+					{
+
+						if ( researcher.getAuthorSources() == null || researcher.getAuthorSources().isEmpty() )
+							continue;
+
+						newAuthor = researcher;
+						newAuthor.setAdded( true );
+						break;
+					}
+				}
+			}
+
+			if ( newAuthor == null )
+				newAuthor = new Author();
 		}
 
 		// if there is something wrong with the session
@@ -381,7 +437,16 @@ public class ManageResearcherController
 
 		author.setRequestDate( null );
 
-		persistenceStrategy.getAuthorDAO().persist( author );
+		// check if researcher do not have publication
+		if ( author.getPublications() == null || author.getPublications().isEmpty() )
+		{
+			persistenceStrategy.getAuthorDAO().delete( author );
+		}
+		else
+		{
+			// kept author but remove all properties
+			persistenceStrategy.getAuthorDAO().persist( author );
+		}
 
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", "author is now invisible" );

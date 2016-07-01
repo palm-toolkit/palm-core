@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.controller;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,49 +158,54 @@ public class ManageAcademicEventController
 		
 		if ( eventGroupIdTemp != null && !eventGroupIdTemp.equals( "" ) )
 		{
+			// try to get conference from  eventGroupIdTemp
+			newEventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupIdTemp );
+			
+			if( newEventGroup == null ){
 //			log.info( "\nCONFERENCE SESSION SEARCH" );
-			@SuppressWarnings( "unchecked" )
-			List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
-			// get author from session -> just for debug
-//			if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
-//			{
-//				for ( EventGroup sessionEventGroup : sessionEventGroups )
-//				{
-//					for ( EventGroupSource as : sessionEventGroup.getEventGroupSources() )
-//					{
-//						log.info( sessionEventGroup.getId() + "-" + sessionEventGroup.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-//					}
-//				}
-//			}
-
-			// user select author that available form autocomplete
-//			@SuppressWarnings( "unchecked" )
-//			List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
-
-			// get author from session
-			if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
-			{
-				for ( EventGroup sessionEventGroup : sessionEventGroups )
+				@SuppressWarnings( "unchecked" )
+				List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
+				// get author from session -> just for debug
+	//			if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
+	//			{
+	//				for ( EventGroup sessionEventGroup : sessionEventGroups )
+	//				{
+	//					for ( EventGroupSource as : sessionEventGroup.getEventGroupSources() )
+	//					{
+	//						log.info( sessionEventGroup.getId() + "-" + sessionEventGroup.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+	//					}
+	//				}
+	//			}
+	
+				// user select author that available form autocomplete
+	//			@SuppressWarnings( "unchecked" )
+	//			List<EventGroup> sessionEventGroups = (List<EventGroup>) request.getSession().getAttribute( "eventGroups" );
+	
+				// get author from session
+				if ( sessionEventGroups != null && !sessionEventGroups.isEmpty() )
 				{
-					if ( sessionEventGroup.getId().equals( eventGroupIdTemp ) )
+					for ( EventGroup sessionEventGroup : sessionEventGroups )
 					{
-						if ( newEventGroup == null )
+						if ( sessionEventGroup.getId().equals( eventGroupIdTemp ) )
 						{
-							persistenceStrategy.getEventGroupDAO().persist( sessionEventGroup );
-							newEventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupIdTemp );
+							if ( newEventGroup == null )
+							{
+								persistenceStrategy.getEventGroupDAO().persist( sessionEventGroup );
+								newEventGroup = persistenceStrategy.getEventGroupDAO().getById( eventGroupIdTemp );
+							}
+							else
+							{
+								// copy attributes
+								newEventGroup.setDblpUrl( sessionEventGroup.getDblpUrl() );
+								newEventGroup.setName( name );
+								if ( !notation.isEmpty() )
+									newEventGroup.setNotation( notation );
+								newEventGroup.setDescription( description );
+								persistenceStrategy.getEventGroupDAO().persist( newEventGroup );
+							}
+							request.getSession().removeAttribute( "eventGroups" );
+							break;
 						}
-						else
-						{
-							// copy attributes
-							newEventGroup.setDblpUrl( sessionEventGroup.getDblpUrl() );
-							newEventGroup.setName( sessionEventGroup.getName() );
-							if ( !sessionEventGroup.getNotation().isEmpty() )
-								newEventGroup.setNotation( sessionEventGroup.getNotation() );
-							newEventGroup.setDescription( sessionEventGroup.getDescription() );
-							persistenceStrategy.getEventGroupDAO().persist( newEventGroup );
-						}
-						request.getSession().removeAttribute( "eventGroups" );
-						break;
 					}
 				}
 			}
@@ -217,6 +223,11 @@ public class ManageAcademicEventController
 
 		// set flag added to true
 		newEventGroup.setAdded( true );
+		newEventGroup.setName( name );
+		if ( notation != null && !notation.isEmpty() )
+			newEventGroup.setNotation( notation );
+		if ( description != null && !description.isEmpty() )
+			newEventGroup.setDescription( description );
 		// set event type, incase changed
 		if ( type != null )
 		{
@@ -461,7 +472,7 @@ public class ManageAcademicEventController
 
 	@Transactional
 	@RequestMapping( value = "/delete", method = RequestMethod.POST )
-	public @ResponseBody Map<String, Object> deletePublication( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
+	public @ResponseBody Map<String, Object> deleteEventGroup( @RequestParam( value = "id" ) final String id, HttpServletRequest request, HttpServletResponse response )
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
@@ -526,20 +537,65 @@ public class ManageAcademicEventController
 		else
 		{
 			eventGroup.setAdded( false );
+			int numberOfPublication = 0;
 			if ( eventGroup.getEvents() != null )
 			{
+
 				for ( Event event : eventGroup.getEvents() )
 				{
-					event.getEventInterestProfiles().clear();
-					event.setAdded( false );
-					persistenceStrategy.getEventDAO().persist( event );
+					if ( event.getPublications() != null && !event.getPublications().isEmpty() )
+					{
+						numberOfPublication += event.getPublications().size();
+					}
 				}
+
 			}
-			persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+
+			// determine to delete eventGroup entirely or kept the information
+			if ( numberOfPublication == 0 )
+			{
+				// if event still do not belong to any publication then it's
+				// save to remove it entirely
+				if ( eventGroup.getEvents() != null )
+				{
+					List<Event> events = new ArrayList<Event>();
+					events.addAll( eventGroup.getEvents() );
+					for ( Event event : events )
+					{
+						event.setLocation( null );
+						event.setEventGroup( null );
+						event.getEventInterestProfiles().clear();
+						eventGroup.removeEvent( event );
+						persistenceStrategy.getEventDAO().delete( event );
+					}
+				}
+				eventGroup.getEvents().clear();
+				persistenceStrategy.getEventGroupDAO().delete( eventGroup );
+
+			}
+			else
+			{
+				if ( eventGroup.getEvents() != null )
+				{
+					List<Event> events = new ArrayList<Event>();
+					events.addAll( eventGroup.getEvents() );
+					for ( Event event : events )
+					{
+						event.getEventInterestProfiles().clear();
+						event.setAdded( false );
+						persistenceStrategy.getEventDAO().persist( event );
+					}
+
+				}
+				// remove flag properties but kept information
+				persistenceStrategy.getEventGroupDAO().persist( eventGroup );
+			}
+
 		}
 		responseMap.put( "status", "ok" );
 		responseMap.put( "statusMessage", "Event Group is deleted" );
 
 		return responseMap;
 	}
+
 }

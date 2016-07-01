@@ -32,7 +32,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 @ContextConfiguration( classes = { WebAppConfigTest.class, DatabaseConfigCoreTest.class }, loader = AnnotationConfigContextLoader.class )
 @TransactionConfiguration
 @Transactional
-@Ignore
+
 public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringContextTests
 {
 	@Autowired
@@ -48,6 +48,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	private final static Logger log = LoggerFactory.getLogger( TestGetDataAndMahout.class );
 
 	@Test
+	@Ignore
 	public void getResearcherPublication()
 	{
 		String authorId = "07397ed7-3deb-442f-a297-bdb5b476d3e6";
@@ -121,19 +122,14 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 		if( !authors.isEmpty())
 			for (Author author:authors)
 			{	
-				PrintWriter writer = new PrintWriter("C:/Users/Piro/Desktop/Authors/Authors/" + author.getId() +".txt", "UTF-8");
-				writer.println( author.getName() );
+				PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Authors/Authors/" + author.getId() + ".txt", "UTF-8" );
+				// writer.println( "Author Name : " + author.getName());
 				for(Publication publication : author.getPublications()){
-					if ( publication.getAbstractText() != null )
-					{
-					writer.println( publication.getTitle());
-					writer.println(publication.getAbstractText());
-					writer.println();
-						count++;
-					}
-					else
-					{
-						continue;
+					if (publication.getAbstractText() != null){
+						writer.println( publication.getTitle());
+						writer.println(publication.getAbstractText());
+						writer.println();
+						count ++;
 					}
 				}
 				writer.println();
@@ -143,8 +139,8 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			}
 	}
 	
+	
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabaseOnSpecificYear() throws IOException
 	{
 		System.out.println( "\n========== TEST 3 - Fetch publications per author Yearly from database ==========" );
@@ -152,39 +148,47 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 		if( !authors.isEmpty())
 			for (Author author:authors)
 			{	
-			for( int year = 1900 ; year < 2016 ; year ++)
-				for(Publication publication : author.getPublicationsByYear(year )){
-					System.out.println(publication.getTitle());
-					System.out.println(publication.getAbstractText());
-					System.out.println();
-//					PrintWriter writer = new PrintWriter(new BufferedWriter( new FileWriter("C:/Users/Piro/Desktop/Years/Years/" +year +".txt", true)));
-//					writer.println(publication.getTitle());
-//					writer.println(publication.getAbstractText());
-//					writer.println();
-//					writer.close();
+				for ( int year = 1900; year < 2017; year++ )
+				{
+					System.out.println( year );
+					for ( Publication publication : author.getPublicationsByYear( year ) )
+					{
+
+						System.out.println( publication.getTitle() );
+						System.out.println( publication.getAbstractText() );
+						System.out.println();
 					}
 				}
+			}
 			}
 
 	
 	@Test
 	@Ignore
-	public void testGetDatabaseFromDatabase2() throws FileNotFoundException, UnsupportedEncodingException
+	public void testGetDatabaseFromDatabase2() throws IOException
 	{
 
 		System.out.println( "\n========== TEST 2 - Fetch publications from database ==========" );
-		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();
+		int count =0;
+		//new FileWriter(log, true)
+		
+		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
 		if( !authors.isEmpty())
 			for (Author author:authors)
 			{	
 				for(Publication publication : author.getPublications()){
-					if (publication.getAbstractText()!= null){
-						PrintWriter pub = new PrintWriter( "C:\\Users\\nifry\\Desktop\\Publications\\" + publication.getId() + ".txt", "UTF-8" );
-					pub.println( publication.getTitle());
-					pub.println( publication.getAbstractText());
-					pub.println();
-					pub.close();
-					}
+	
+					if (publication.getKeywords()!= null){
+						PrintWriter pub = new PrintWriter( "C:/Users/Piro/Desktop/Publications/Publications/" + publication.getId() + ".txt", "UTF-8" );
+						// pub.print(count + "\t");
+						pub.print( publication.getKeywordText() + "\t" );
+						pub.print(publication.getTitle() + " " + publication.getAbstractText());
+						pub.println();
+						// count++;
+						// (System.out.println(count);
+						pub.close();
+					}	
+					
 				}
 
 			}

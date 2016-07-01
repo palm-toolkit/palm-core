@@ -8,5 +8,4 @@ public interface ResearcherTopicModeling
 
 	public Map<String, Object> getStaticTopicModelingNgrams( String authorId, boolean isReplaceExistingResult );
 
-
 }

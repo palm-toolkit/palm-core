@@ -66,7 +66,7 @@ public class DblpEventCollection extends PublicationCollection
 			if ( element.tagName().equals( "header" ) )
 			{
 				// main header
-				if ( element.attr( "id" ) != null && element.attr( "id" ).equals( "headline" ) )
+				if ( element.hasClass( "headline" ) )
 				{
 					mainHeaderText = element.text();
 				}
@@ -111,6 +111,8 @@ public class DblpEventCollection extends PublicationCollection
 							// get publication list from journal
 							if ( publicationElement.attr( "class" ).contains( "article" ) )
 								publicationDetails = getDblpJournalPublication( publicationElement );
+							else if ( publicationElement.attr( "class" ).contains( "informal" ) )
+								publicationDetails = getDblpInformalPublication( publicationElement, PublicationType.JOURNAL );
 						}
 						else if ( venueInformationMap.get( "type" ).equals( PublicationType.CONFERENCE ) )
 						{
@@ -118,7 +120,7 @@ public class DblpEventCollection extends PublicationCollection
 							if ( publicationElement.attr( "class" ).contains( "inproceedings" ) )
 								publicationDetails = getDblpConferencePublication( publicationElement );
 							else if ( publicationElement.attr( "class" ).contains( "informal" ) )
-								publicationDetails = getDblpInformalPublication( publicationElement );
+								publicationDetails = getDblpInformalPublication( publicationElement, PublicationType.CONFERENCE );
 							else if ( publicationElement.attr( "class" ).contains( "editor" ) ){
 								publicationDetails = getDblpEditorshipPublication( publicationElement );
 								//TODO: get conference theme and date from editorship title
@@ -359,7 +361,7 @@ public class DblpEventCollection extends PublicationCollection
 	 * @return
 	 * @throws IOException
 	 */
-	private static Map<String, String> getDblpInformalPublication( Element publicationElement ) throws IOException
+	private static Map<String, String> getDblpInformalPublication( Element publicationElement, PublicationType publicationType ) throws IOException
 	{
 		Map<String, String> publicationDetails = new LinkedHashMap<String, String>();
 
@@ -368,7 +370,7 @@ public class DblpEventCollection extends PublicationCollection
 
 		// second, extract specific information which is only available for
 		// conference.
-		publicationDetails.put( "type", PublicationType.INFORMAL.toString() );
+		publicationDetails.put( "type", publicationType.toString() );
 		// get container, where all of information resides
 		Element dataElement = publicationElement.select( "div.data" ).first();
 		publicationDetails.put( "pages", dataElement.select( "[itemprop=pagination]" ).text() );

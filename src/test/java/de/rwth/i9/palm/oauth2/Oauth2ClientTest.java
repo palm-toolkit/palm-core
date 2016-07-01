@@ -5,10 +5,12 @@ import java.io.IOException;
 import org.apache.http.ParseException;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+@Ignore
 public class Oauth2ClientTest
 {
 

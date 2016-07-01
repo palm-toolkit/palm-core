@@ -95,8 +95,9 @@ public class CirclePublicationImpl implements CirclePublication
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
 				String eventName = publication.getEvent().getEventGroup().getName();
-				if ( !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
-					eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
+				if ( publication.getEvent().getEventGroup().getNotation() != null )
+					if ( !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
+						eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
 				eventMap.put( "name", eventName );
 				eventMap.put( "isAdded", publication.getEvent().isAdded() );
 				publicationMap.put( "event", eventMap );
@@ -165,7 +166,7 @@ public class CirclePublicationImpl implements CirclePublication
 		}
 
 		// get available year
-		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByCircle( targetCircle ) );
+		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByCircle( targetCircle, "DESC" ) );
 
 		if ( publications == null || publications.isEmpty() )
 		{
@@ -243,8 +244,9 @@ public class CirclePublicationImpl implements CirclePublication
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
 				eventMap.put( "name", publication.getEvent().getEventGroup().getName() );
-				if ( !publication.getEvent().getEventGroup().getNotation().equals( publication.getEvent().getEventGroup().getName() ) )
-					eventMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
+				if ( publication.getEvent().getEventGroup().getNotation() != null )
+					if ( !publication.getEvent().getEventGroup().getNotation().equals( publication.getEvent().getEventGroup().getName() ) )
+						eventMap.put( "abbr", publication.getEvent().getEventGroup().getNotation() );
 				eventMap.put( "isAdded", publication.getEvent().isAdded() );
 				if ( publication.getEvent().getEventGroup() != null )
 					eventMap.put( "isGroupAdded", publication.getEvent().getEventGroup().isAdded() );

@@ -1,6 +1,5 @@
 package de.rwth.i9.palm.feature.publication;
 
-import java.text.SimpleDateFormat;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +42,7 @@ public class PublicationDeleteImpl implements PublicationDelete
 			author.removePublicationAuthor( pa );
 
 			// calculate publication and citation
-			reCalculateNumberOfPublicationAndCitation( author );
+			author.reCalculateNumberOfPublicationAndCitation();
 
 			pa.setAuthor( null );
 			pa.setPublication( null );
@@ -64,30 +63,5 @@ public class PublicationDeleteImpl implements PublicationDelete
 			this.deletePublication( publication );
 
 	}
-
-	/**
-	 * Recalculate publication and citation
-	 * 
-	 * @param author
-	 */
-	private void reCalculateNumberOfPublicationAndCitation( Author author )
-	{
-		// count total citation on author
-		int citation = 0;
-		SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
-
-		for ( Publication publication : author.getPublications() )
-		{
-			citation += publication.getCitedBy();
-			// set publication year
-			if ( publication.getPublicationDate() != null )
-				publication.setYear( sdf.format( publication.getPublicationDate() ) );
-		}
-
-		author.setNoPublication( author.getPublications().size() );
-		author.setCitedBy( citation );
-		persistenceStrategy.getAuthorDAO().persist( author );
-	}
-
 
 }

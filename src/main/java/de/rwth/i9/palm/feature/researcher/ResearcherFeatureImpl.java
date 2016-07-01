@@ -16,6 +16,12 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	@Autowired( required = false )
 	private ResearcherCoauthor researcherCoauthor;
 
+	// @Autowired( required = false )
+	// private ResearcherRecommededauthor researcherRecommendedauthor;
+
+	@Autowired( required = false )
+	private ResearcherSimilarauthor researcherSimilarauthor;
+
 	@Autowired( required = false )
 	private ResearcherInterest researcherInterest;
 	
@@ -33,6 +39,21 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 
 	@Autowired( required = false )
 	private ResearcherTopPublication researcherTopPublication;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingLDA researcherTopicModelingLDA;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingNGram researcherTopicModelingNGram;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingTOT researcherTopicModelingTOT;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingDiscreteLDA researcherTopicModelingDiscreteLDA;
+	
+	@Autowired( required = false )
+	private ResearcherTopicModelingLabeledLDA researcherTopicModelingLabeledLDA;
 
 	@Autowired( required = false )
 	private ResearcherTopicModeling researcherTopicModeling;
@@ -71,6 +92,24 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherCoauthor = new ResearcherCoauthorImpl();
 
 		return this.researcherCoauthor;
+	}
+
+	// @Override
+	// public ResearcherRecommededauthor getResearcherRecommendedauthor()
+	// {
+	// if ( this.researcherRecommendedauthor == null )
+	// this.researcherRecommendedauthor = new ResearcherRecommendedauthorImpl();
+	//
+	// return this.researcherRecommendedauthor;
+	// }
+
+	@Override
+	public ResearcherSimilarauthor getResearcherSimilarauthor()
+	{
+		if ( this.researcherSimilarauthor == null )
+			this.researcherSimilarauthor = new ResearcherSimilarauthorImpl();
+
+		return this.researcherSimilarauthor;
 	}
 
 	@Override
@@ -134,6 +173,45 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherTopicModeling = new ResearcherTopicModelingImpl();
 
 		return this.researcherTopicModeling;
+	}
+
+	public ResearcherTopicModelingLDA getResearcherTopicModelingLDA()
+	{
+		if ( this.researcherTopicModelingLDA == null)
+			this.researcherTopicModelingLDA = new ResearcherTopicModelingLDAImpl();
+		return this.researcherTopicModelingLDA;
+	}
+
+	@Override
+	public ResearcherTopicModelingNGram getResearcherTopicModelingNGram()
+	{
+		if ( this.researcherTopicModelingNGram == null)
+			this.researcherTopicModelingNGram = new ResearcherTopicModelingNGramImpl();
+		return this.researcherTopicModelingNGram;
+	}
+
+	@Override
+	public ResearcherTopicModelingTOT getResearcherTopicModelingTOT()
+	{
+		if ( this.researcherTopicModelingTOT == null)
+			this.researcherTopicModelingTOT = new ResearcherTopicModelingTOTImpl();
+		return this.researcherTopicModelingTOT;
+	}
+
+	@Override
+	public ResearcherTopicModelingDiscreteLDA getResearcherTopicModelingDiscreteLDA()
+	{
+		if ( this.researcherTopicModelingDiscreteLDA == null)
+			this.researcherTopicModelingDiscreteLDA = new ResearcherTopicModelingDiscreteLDAImpl();
+		return this.researcherTopicModelingDiscreteLDA;
+	}
+
+	@Override
+	public ResearcherTopicModelingLabeledLDA getResearcherTopicModelingLabeledLDA()
+	{
+		if ( this.researcherTopicModelingLabeledLDA == null)
+			this.researcherTopicModelingLabeledLDA = new ResearcherTopicModelingLabeledLDAImpl();
+		return this.researcherTopicModelingLabeledLDA;
 	}
 
 }

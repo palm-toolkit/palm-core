@@ -142,7 +142,7 @@ public class ResearcherController
 	public @ResponseBody Map<String, Object> getAuthorList(
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "queryType", required = false ) String queryType,
-			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "page", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "source", required = false ) String source,
 			@RequestParam( value = "addedAuthor", required = false ) String addedAuthor,
@@ -203,21 +203,20 @@ public class ResearcherController
 					request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
 			}
 
-//			log.info( "\nRESEARCHER SESSION SEARCH" );
-//			@SuppressWarnings( "unchecked" )
-//			 List<Author> sessionAuthors = (List<Author>)
-//			 request.getSession().getAttribute( "researchers" );
-//			// get author from session -> just for debug
-//			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
-//			{
-//				for ( Author sessionAuthor : sessionAuthors )
-//				{
-//					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
-//					{
-//						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-//					}
-//				}
-//			}
+			log.info( "\nRESEARCHER SESSION SEARCH" );
+			@SuppressWarnings( "unchecked" )
+			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
+			// get author from session -> just for debug
+			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
+			{
+				for ( Author sessionAuthor : sessionAuthors )
+				{
+					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
+					{
+						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
+					}
+				}
+			}
 
 		}
 		
@@ -364,7 +363,7 @@ public class ResearcherController
 
 	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationTopic( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getResearcherTopicComposition( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
 	{
 		if ( authorId != null )
 		{
@@ -524,7 +523,96 @@ public class ResearcherController
 	}
 	
 	/**
+	 * Get Recommended authorMap of given author
+	 * 
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/recommendedAuthorList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getRecommendedAuthorList( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get recommended authors based on calculations
+		// responseMap.putAll(
+		// researcherFeature.getResearcherRecommendedauthor().getResearcherRecommendedAuthorMap(
+		// author, startPage, maxresult ) );
+
+		return responseMap;
+	}
+
+	/**
+	 * Get Similar authorMap of given author
+	 * 
+	 * @param authorId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/similarAuthorList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getSimilarAuthorList( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get author
+		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		if ( author == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "author not found in database" );
+			return responseMap;
+		}
+
+		// get recommended authors based on calculations
+		responseMap.putAll( researcherFeature.getResearcherSimilarauthor().getResearcherSimilarAuthorMap( author, startPage, maxresult ) );
+
+		return responseMap;
+	}
+
+	/**
 	 * Get basic information of given author
+	 * 
 	 * @param authorId
 	 * @param startPage
 	 * @param maxresult
@@ -612,5 +700,38 @@ public class ResearcherController
 
 		return responseMap;
 	}
+	
+//	/**
+//	 * Get author Topics
+//	 * 
+//	 * @param authorId
+//	 * @param name
+//	 * @param extractionServiceType
+//	 * @param startDate
+//	 * @param endDate
+//	 * @param response
+//	 * @return
+//	 * @throws InterruptedException
+//	 * @throws IOException
+//	 * @throws ExecutionException
+//	 * @throws URISyntaxException
+//	 * @throws ParseException
+//	 */
+//	@RequestMapping( value = "/topicmodeling", method = RequestMethod.GET )
+//	@Transactional
+//	public @ResponseBody Map<String, Object> researcherTopicModeling( 
+//			@RequestParam( value = "id", required = false ) final String authorId, 
+//			@RequestParam( value = "name", required = false ) final String name, 
+//			@RequestParam( value = "extractType", required = false ) final String extractionServiceType,
+//			@RequestParam( value = "startDate", required = false ) final String startDate,
+//			@RequestParam( value = "endDate", required = false ) final String endDate,
+//			final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
+//	{
+//		if ( name != null )
+//			//return researcherFeature.getResearcherInterest().getAuthorInterestByName( name, extractionServiceType, startDate, endDate );
+//		else
+//			//return researcherFeature.getResearcherTopicModelingLDA().getAuthorInterestById( authorId, extractionServiceType, startDate, endDate );
+//		// return Collections.emptyMap();
+//	}
 
 }

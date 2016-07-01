@@ -124,8 +124,9 @@ public class PublicationSimilarImpl implements PublicationSimilar
 				Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 				eventMap.put( "id", publication.getEvent().getId() );
 				String eventName = publication.getEvent().getEventGroup().getName();
-				if ( !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
-					eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
+				if ( publication.getEvent().getEventGroup().getNotation() != null )
+					if ( !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
+						eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
 				eventMap.put( "name", eventName );
 				eventMap.put( "isAdded", publication.getEvent().isAdded() );
 				publicationMap.put( "event", eventMap );

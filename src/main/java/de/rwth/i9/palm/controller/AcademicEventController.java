@@ -149,11 +149,13 @@ public class AcademicEventController
 	public @ResponseBody Map<String, Object> getConferenceList( 
 			@RequestParam( value = "query", required = false ) String query, 
 			@RequestParam( value = "abbr", required = false ) String notation, 
-			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "page", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "type", required = false ) String type,
 			@RequestParam( value = "source", required = false ) String source,
+			@RequestParam( value = "addedVenue", required = false ) String addedVenue,
 			@RequestParam( value = "persist", required = false ) String persist,
+			@RequestParam( value = "eventId", required = false ) String eventId,
 			HttpServletRequest request,
 			HttpServletResponse response)
 	{
@@ -163,6 +165,7 @@ public class AcademicEventController
 		if ( type == null )			type = "all";
 		if ( source == null )		source = "internal";
 		if ( persist == null )		persist = "no";
+		if ( addedVenue == null )	addedVenue = "yes";
 		
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -180,7 +183,7 @@ public class AcademicEventController
 			persistResult = true;
 		}
 		
-		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, notation, startPage, maxresult, source, type, persistResult );
+		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, notation, startPage, maxresult, source, type, persistResult, eventId, addedVenue );
 
 		// store in session
 		if ( source.equals( "external" ) || source.equals( "all" ) )

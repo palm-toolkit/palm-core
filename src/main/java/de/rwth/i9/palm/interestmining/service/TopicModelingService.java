@@ -116,35 +116,34 @@ public class TopicModelingService
 		}
 	}
 
-	public void calculateCircleTopicModeling( Circle circle, boolean isReplaceExistingResult )
+	public void calculateCircleTopicModeling( Circle circle, boolean isReplaceExistingResult, boolean Static )
 	{
-
 		// First get active algorithm profile (DEFAULT & DERIVED)
 		List<TopicModelingAlgorithmCircle> activeDefaultAlgorithms = persistenceStrategy.getTopicModelingAlgorithmCircleDAO().getAllActiveInterestProfile( InterestProfileType.DEFAULT );
 		List<TopicModelingAlgorithmCircle> activeDerivedAlgorithms = persistenceStrategy.getTopicModelingAlgorithmCircleDAO().getAllActiveInterestProfile( InterestProfileType.DERIVED );
 
 		// if no algorithms found or no topic modeling results found
-		if ( ( activeDefaultAlgorithms == null || activeDefaultAlgorithms.isEmpty() ) && ( activeDerivedAlgorithms == null || activeDerivedAlgorithms.isEmpty() ) && ( circle.getCircleInterestProfiles() == null && circle.getCircleTopicModelingProfiles().isEmpty() ) )
+		if ( ( activeDefaultAlgorithms == null || activeDefaultAlgorithms.isEmpty() ) && ( activeDerivedAlgorithms == null || activeDerivedAlgorithms.isEmpty() ) && ( circle.getCircleTopicModelingProfiles() == null && circle.getCircleTopicModelingProfiles().isEmpty() ) )
 		{
 			logger.warn( "status", "error - no active topic modeling algorithms found" );
 		}
 
-		// now check whether we need to replace existing results
+		// check whether we need to replace existing results
 		if ( isReplaceExistingResult )
 		{
 			// First remove all results from previous calculation
-			// by removing links between Author and AlgorithmProfile
+			// by removing links between Circle and AlgorithmProfile
 			if ( circle.getCircleTopicModelingProfiles() != null && !circle.getCircleTopicModelingProfiles().isEmpty() )
 			{
 				// for( CircleTopicModelingProfile atmp :
-				// author.getCircleTopicModelingProfiles() ){
+				// circle.getCircleTopicModelingProfiles() ){
 				// atmp.setCircle( null );
 				// }
 				circle.getCircleTopicModelingProfiles().clear();
 			}
 
 			// calculate interest with active default algorithms
-			calculateDefaultTopicModelingAlgorithmCircle( circle, activeDefaultAlgorithms );
+			calculateDefaultTopicModelingAlgorithmCircle( circle, activeDefaultAlgorithms, Static );
 		}
 		else
 		{
@@ -152,7 +151,7 @@ public class TopicModelingService
 			if ( circle.getCircleTopicModelingProfiles() == null || circle.getCircleTopicModelingProfiles().isEmpty() )
 			{
 				// calculate interest with active default algorithms
-				calculateDefaultTopicModelingAlgorithmCircle( circle, activeDefaultAlgorithms );
+				calculateDefaultTopicModelingAlgorithmCircle( circle, activeDefaultAlgorithms, Static );
 			}
 			// else, check if there is missing profile
 			else
@@ -161,7 +160,7 @@ public class TopicModelingService
 				{
 					TopicModelingAlgorithmCircle topicModelingAlgorithmCircle = it.next();
 
-					// check if algorithm profile is already exist on author
+					// check if algorithm profile is already exist on circle
 					boolean isAlgoritmProfileAlreadyExist = false;
 					for ( CircleTopicModelingProfile atmp : circle.getCircleTopicModelingProfiles() )
 					{
@@ -181,7 +180,7 @@ public class TopicModelingService
 				// run the calculation
 				if ( !activeDefaultAlgorithms.isEmpty() )
 					// calculate interest with active default algorithms
-					calculateDefaultTopicModelingAlgorithmCircle( circle, activeDefaultAlgorithms );
+					calculateDefaultTopicModelingAlgorithmCircle( circle, activeDefaultAlgorithms, Static );
 			}
 		}
 	}
@@ -213,13 +212,13 @@ public class TopicModelingService
 			authorTopicModelingProfile.setTopicModelingAlgorithmAuthor( activeDefaultAlgorithm );
 
 			// this is the actual implementation of NGrams N=1
-			if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "basic dummy lda" ) )
+			if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "unigrams" ) )
 			{
 				calculateUnigramsAuthor( author, authorTopicModelingProfile, Static );
 			}
 
 			// calculate dummy ngram
-			else if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "basic dummy ngram" ) )
+			else if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "ngrams" ) )
 			{
 				calculateNgramAuthor( author, authorTopicModelingProfile, Static );
 			}
@@ -241,16 +240,15 @@ public class TopicModelingService
 	/**
 	 * Calculate active default topic modeling from specific circle
 	 * 
-	 * @param author
+	 * @param circle
 	 * @param activeDefaultAlgorithms
 	 */
-	private void calculateDefaultTopicModelingAlgorithmCircle( Circle circle, List<TopicModelingAlgorithmCircle> activeDefaultAlgorithms )
+	private void calculateDefaultTopicModelingAlgorithmCircle( Circle circle, List<TopicModelingAlgorithmCircle> activeDefaultAlgorithms, boolean Static )
 	{
-
 		for ( TopicModelingAlgorithmCircle activeDefaultAlgorithm : activeDefaultAlgorithms )
 		{
 
-			// ==Set Circle TopicModeling profile==
+			// ==Set Author TopicModeling profile==
 
 			Calendar calendar = Calendar.getInstance();
 			// default profile name [DEFAULT_PROFILENAME]
@@ -263,16 +261,16 @@ public class TopicModelingService
 			circleTopicModelingProfile.setName( circleTopicModelingProfileName );
 			circleTopicModelingProfile.setTopicModelingAlgorithmCircle( activeDefaultAlgorithm );
 
-			// calculate dummy lda
-			if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "basic dummy lda" ) )
+			// this is the actual implementation of NGrams N=1
+			if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "unigrams" ) )
 			{
-				calculateBasicDummyLDACircle( circle, circleTopicModelingProfile );
+				calculateUnigramsCircle( circle, circleTopicModelingProfile, Static );
 			}
 
 			// calculate dummy ngram
-			else if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "basic dummy ngram" ) )
+			else if ( activeDefaultAlgorithm.getName().toLowerCase().equals( "ngrams" ) )
 			{
-				calculateBasicDummyNgramCircle( circle, circleTopicModelingProfile );
+				calculateNgramCircle( circle, circleTopicModelingProfile, Static );
 			}
 			// put other algorithm selection here, such as ngram etc
 
@@ -281,7 +279,7 @@ public class TopicModelingService
 			{
 				// link circle with circleTopicModelingProfile
 				circleTopicModelingProfile.setCircle( circle );
-				circle.addAuthorTopicModelingProfiles( circleTopicModelingProfile );
+				circle.addCircleTopicModelingProfiles( circleTopicModelingProfile );
 			}
 		}
 
@@ -294,20 +292,34 @@ public class TopicModelingService
 	 * circleTopicModelingProfile and circleTopic>Modeling
 	 * 
 	 */
-
-	// RENAME NEEDED SUCH AS RENAMED AUTHOR
-	private void calculateBasicDummyLDACircle( Circle circle, CircleTopicModelingProfile circleTopicModelingProfile )
+	private void calculateUnigramsCircle( Circle circle, CircleTopicModelingProfile circleTopicModelingProfile, boolean Static )
 	{
-		// Normally, here you call palmAnalytics.getLDA....
+		// Normally, here you call palmAnalytics.getNgram....
 		// to calculate the LDA and get the result as Map / List
 
 		// get dummy results based on years cluster
-		List<Object> dummyClusterResults = getDummyClusterResultsCircle( circle );
+		List<Object> dummyClusterResults = getUnigramResultsCircle( circle, Static );
 
 		// now put this cluster list into circleTopicModeling object
-		transformTopicModelingResultIntoCircleTopicModeling( circleTopicModelingProfile, dummyClusterResults );
+		transformTopicModelingResultIntoCircleTopicModeling( circleTopicModelingProfile, dummyClusterResults, Static );
 	}
 
+
+	/**
+	 * Method used to get the unigrams from TopicalNgrams algorithm using N=1
+	 */
+	private void calculateUnigramsCircle( Author author, AuthorTopicModelingProfile authorTopicModelingProfile, boolean Static )
+	{
+		// Normally, here you call palmAnalytics.getNgram....
+		// to calculate the LDA and get the result as Map / List
+
+		// get dummy results based on years cluster
+		List<Object> dummyClusterResults = getUnigramResultsAuthor( author, Static );
+
+		// now put this cluster list into authorTopicModeling object
+		transformTopicModelingResultIntoAuthorTopicModeling( authorTopicModelingProfile, dummyClusterResults, Static );
+	}
+	
 	/**
 	 * Method used to get the unigrams from TopicalNgrams algorithm using N=1
 	 */
@@ -322,7 +334,22 @@ public class TopicModelingService
 		// now put this cluster list into authorTopicModeling object
 		transformTopicModelingResultIntoAuthorTopicModeling( authorTopicModelingProfile, dummyClusterResults, Static );
 	}
+	
+	/**
+	 * Method used to get the unigrams from TopicalNgrams algorithm
+	 */
+	private void calculateNgramCircle( Circle circle, CircleTopicModelingProfile circleTopicModelingProfile, boolean Static )
+	{	
+		// Normally, here you call palmAnalytics.getNgram....
+		// to calculate the LDA and get the result as Map / List
+		
+		// get dummy results based on years cluster
+		List<Object> dummyClusterResults = getNgramResultsCircle( circle, Static );
 
+		// now put this cluster list into circleTopicModeling object
+		transformTopicModelingResultIntoCircleTopicModeling( circleTopicModelingProfile, dummyClusterResults, Static );
+	}
+	
 	/**
 	 * Method used to get the unigrams from TopicalNgrams algorithm
 	 */
@@ -336,24 +363,6 @@ public class TopicModelingService
 
 		// now put this cluster list into authorTopicModeling object
 		transformTopicModelingResultIntoAuthorTopicModeling( authorTopicModelingProfile, dummyClusterResults, Static );
-	}
-
-
-	/**
-	 * Dummy method to show how to convert result on map into
-	 * authorTopicModelingProfile and authorTopic>Modeling
-	 * 
-	 */
-	private void calculateBasicDummyNgramCircle( Circle circle, CircleTopicModelingProfile circleTopicModelingProfile )
-	{
-		// Normally, here you call palmAnalytics.getNgram....
-		// to calculate the LDA and get the result as Map / List
-
-		// get dummy results based on years cluster
-		List<Object> dummyClusterResults = getDummyClusterResultsCircle( circle );
-
-		// now put this cluster list into authorTopicModeling object
-		transformTopicModelingResultIntoCircleTopicModeling( circleTopicModelingProfile, dummyClusterResults );
 	}
 
 	/**
@@ -402,10 +411,10 @@ public class TopicModelingService
 
 	/**
 	 * Method to show how to transform topic modeling results from Collections
-	 * to circleTopicModeling object
+	 * to authorTopicModeling object
 	 * 
 	 */
-	private void transformTopicModelingResultIntoCircleTopicModeling( CircleTopicModelingProfile circleTopicModelingProfile, List<Object> dummyClusterResults )
+	private void transformTopicModelingResultIntoCircleTopicModeling( CircleTopicModelingProfile circleTopicModelingProfile, List<Object> dummyClusterResults, boolean Static )
 	{
 		DateFormat dateFormat = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
 
@@ -433,13 +442,12 @@ public class TopicModelingService
 			{
 			}
 
-			// create new AuthorTopicModeling (year cluster) and fill attributes
+			// create new CircleTopicModeling (year cluster) and fill attributes
 			CircleTopicModeling atm = new CircleTopicModeling();
 			atm.setYear( clusterYear );
 			atm.setLanguage( clusterResultMap.get( "language" ).toString() );
 			atm.setTermWeightsString( termValueMap );
 			atm.setCircleTopicModelingProfile( circleTopicModelingProfile );
-
 			circleTopicModelingProfile.addCircleTopicModeling( atm );
 		}
 
@@ -520,7 +528,7 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams;
 			try
 			{
-				topicNgrams = palmAnalytics.getNGrams().getTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( "07397ed7-3deb-442f-a297-bdb5b476d3e6" ), -1, 0.0, 11, 10, true );
+				topicNgrams = palmAnalytics.getNGrams().getTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId().toString() ), -1, 0.0, 10, 10, true );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
@@ -604,6 +612,208 @@ public class TopicModelingService
 				{
 					e.printStackTrace();
 				}
+				clusterResultMap.put( "termvalues", termValueMap );
+				clusterResults.add( clusterResultMap );
+			}
+
+		}
+		else
+		{
+			// case when Static = True
+			// prepare results for Donut :)
+			Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
+			clusterResultMap.put( "year", new SimpleDateFormat( "yyyy", Locale.ENGLISH ).format( new Date() ) );
+			clusterResultMap.put( "language", "english" );
+			clusterResultMap.put( "extractor", "TopicalNgram" );
+
+			// get the results for a specific id
+			// c442983a-0099-4d6d-89b1-6cfc57fa6138
+			// 07397ed7-3deb-442f-a297-bdb5b476d3e6
+			Map<String, Double> termValueMap = new HashMap<String, Double>();
+			Map<String, List<String>> topicNgrams;
+			try
+				{
+				topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId() ), -1, 0.0, 10, 10, true );
+				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
+					{
+					for ( String topicproportion : topicngrams.getValue() )
+					{
+						String[] components = topicproportion.split( "_-_ " );
+						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
+					}
+					}
+				}
+			catch ( Exception e )
+			{
+				e.printStackTrace();
+			}
+			clusterResultMap.put( "termvalues", termValueMap );
+			clusterResults.add( clusterResultMap );
+			}
+
+	// return results
+	return clusterResults;
+	}
+
+	/**
+	 * This method uses the getTopicUnigramsDocument from TopicalNgram Algorithm
+	 * 
+	 * @param circle
+	 * @return
+	 * @throws Exception
+	 */
+	public List<Object> getUnigramResultsCircle( Circle circle, boolean Static )
+	{
+		// Note: usually you need circle object, to get circle publications, etc
+		// but circle object is unused in this dummy method
+
+		// list of cluster container
+		List<Object> clusterResults = new ArrayList<Object>();
+
+		// dummy start year array
+		int[] startYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 };
+
+		// dummy end year array
+		int[] endYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 };
+
+		// needed for dynamic visualization
+		if ( !Static )
+		{
+			for ( int i = startYearArray[0]; i < endYearArray[endYearArray.length - 1]; i++ )
+			{
+				// store dummy information regarding cluster information
+				Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
+
+				// store dummy information regarding result information
+				Map<String, Double> termValueMap = new HashMap<String, Double>();
+
+				clusterResultMap.put( "year", i );
+				clusterResultMap.put( "language", "english" );
+				clusterResultMap.put( "termvalues", termValueMap );
+
+				Map<String, List<String>> topicNgrams;
+				try
+				{
+					topicNgrams = palmAnalytics.getNGrams().getTopicUnigramsDocument( i - 2005, -1, 0.0, 11, 5, true );
+					for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
+					{
+						for ( String topicproportion : topicngrams.getValue() )
+						{
+							String[] components = topicproportion.split( "_-_" );
+							// termValueMap.put( "term", components[0] );
+							// termValueMap.put( "value", components[1] );
+							termValueMap.put( components[0], Double.parseDouble( components[1] ) );
+						}
+					}
+				}
+				catch ( Exception e )
+				{
+					e.printStackTrace();
+				}
+				clusterResultMap.put( "termvalues", termValueMap );
+				clusterResults.add( clusterResultMap );
+			}
+		}
+
+		// case when Static = True
+		// prepare results for Donut :)
+		else
+		{
+			Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
+			clusterResultMap.put( "circleId", circle.getId().toString() );
+			clusterResultMap.put( "year", new SimpleDateFormat( "yyyy", Locale.ENGLISH ).format( new Date() ) );
+			clusterResultMap.put( "language", "english" );
+			clusterResultMap.put( "extractor", "TopicalNgram" );
+
+			// get the results for a specific id
+			Map<String, Double> termValueMap = new HashMap<String, Double>();
+			Map<String, List<String>> topicNgrams;
+			try
+			{
+				topicNgrams = palmAnalytics.getNGrams().getTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId() ), -1, 0.0, 7, 10, true );
+				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
+				{
+					for ( String topicproportion : topicngrams.getValue() )
+					{
+						String[] components = topicproportion.split( "_-_ " );
+						// termValueMap.put( "term", components[0] );
+						// termValueMap.put( "value", components[1] );
+						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
+					}
+				}
+			}
+			catch ( Exception e )
+			{
+				e.printStackTrace();
+			}
+			clusterResultMap.put( "termvalues", termValueMap );
+			clusterResults.add( clusterResultMap );
+		}
+
+		// return dummy results
+		return clusterResults;
+	}
+
+	/**
+	 * This method is supposed to use the getTopicNgramsDocument from
+	 * TopicalNgram Algorithm
+	 * 
+	 * @param circle
+	 * @return
+	 * @throws Exception
+	 */
+	public List<Object> getNgramResultsCircle( Circle circle, boolean Static )
+	{
+		// Note: usually you need circle object, to get circle publications, etc
+		// but circle object is unused in this dummy method
+
+		// list of cluster container
+		List<Object> clusterResults = new ArrayList<Object>();
+
+		// dummy start year array
+		int[] startYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015 };
+
+		// dummy end year array
+		int[] endYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015 };
+
+		if ( !Static )
+		{
+			for ( int i = startYearArray[0]; i < endYearArray[endYearArray.length - 1]; i++ )
+			{
+				// store dummy information regarding cluster information
+				Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
+
+				// store dummy information regarding result information
+				Map<String, Double> termValueMap = new HashMap<String, Double>();
+
+				clusterResultMap.put( "year", i );
+				clusterResultMap.put( "language", "english" );
+				clusterResultMap.put( "termvalues", termValueMap );
+
+				Map<String, List<String>> topicNgrams;
+				try
+				{
+					topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( i - 2005, -1, 0.0, 11, 5, true );
+
+					// add into termValueMap
+					// termValueMap.put(palmAnalytics.getDynamicTopicModel().getListTopics(
+					// 10 ).get( j ),
+					// palmAnalytics.getDynamicTopicModel().getTopicProportion2(0.0,
+					// i-2005, 11, 11 ).get( j ) );//dummyWordString.toString(),
+					// Math.random() );
+					for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
+					{
+						for ( String topicproportion : topicngrams.getValue() )
+						{
+							String[] components = topicproportion.split( "_-_ " );
+							termValueMap.put( components[0], Double.parseDouble( components[1] ) );
+						}
+					}
+				}
+				catch ( Exception e )
+				{
+					e.printStackTrace();
+				}
 				clusterResults.add( clusterResultMap );
 			}
 
@@ -621,73 +831,27 @@ public class TopicModelingService
 			Map<String, Double> termValueMap = new HashMap<String, Double>();
 			Map<String, List<String>> topicNgrams;
 			try
-				{
-				topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( "07397ed7-3deb-442f-a297-bdb5b476d3e6" ), -1, 0.0, 11, 10, true );
+			{
+				topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId() ), -1, 0.0, 7, 10, true );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
-					{
+				{
 					for ( String topicproportion : topicngrams.getValue() )
 					{
 						String[] components = topicproportion.split( "_-_ " );
 						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
 					}
-					}
 				}
+			}
 			catch ( Exception e )
 			{
 				e.printStackTrace();
 			}
 			clusterResultMap.put( "termvalues", termValueMap );
+			clusterResults.add( clusterResultMap );
 			}
 
-	// return results
-	return clusterResults;
-	}
-
-	/**
-	 * This method generate dummy data
-	 * 
-	 * @param author
-	 * @param topicModelingAlgorithmAuthor
-	 * @return
-	 */
-	private List<Object> getDummyClusterResultsCircle( Circle circle )
-	{
-		// Note: usually you need author object, to get author publications, etc
-		// but author object is unused in this dummy method
-
-		// list of cluster container
-		List<Object> dummyClusterResults = new ArrayList<Object>();
-
-		// dummy start year array
-		int[] startYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015 };
-
-		// dummy end year array
-		int[] endYearArray = { 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015 };
-
-		for ( int i = startYearArray[0]; i < endYearArray[endYearArray.length - 1]; i++ )
-		{
-			// store dummy information regarding cluster information
-			Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
-
-			// store dummy information regarding result information
-			Map<String, Double> termValueMap = new HashMap<String, Double>();
-
-			clusterResultMap.put( "year", i );
-			clusterResultMap.put( "language", "english" );
-			clusterResultMap.put( "termvalues", termValueMap );
-
-			// generate dummy terms
-			// int numberOfWords = random.nextInt( 5 ) + 5;
-			// int numberOfTermValues = random.nextInt( 10 ) + 10;
-			for ( int j = 0; j < 11; j++ )
-			{
-				termValueMap.put( palmAnalytics.getDynamicTopicModel().getListTopics( 10 ).get( j ), palmAnalytics.getDynamicTopicModel().getTopicProportion2( 0.0, i - 2005, 11, 11 ).get( j ) ); // );
-				dummyClusterResults.add( clusterResultMap );
-			}
-		}
-		// return dummy results
-		return dummyClusterResults;
-
+		// return results
+		return clusterResults;
 	}
 
 	/**
@@ -980,6 +1144,64 @@ public class TopicModelingService
 
 		// put also publication
 
+		return circleTopicModelingResult;
+	}
+
+	/**
+	 * Collect the circle interest result as JSON object
+	 * 
+	 * @param circle
+	 * @param responseMap
+	 * @return
+	 */
+	public List<Object> getStaticCircleTopicModelingFromDatabase( Circle circle )
+	{
+		List<CircleTopicModelingProfile> circleTopicModelingProfiles = new ArrayList<CircleTopicModelingProfile>();
+		circleTopicModelingProfiles.addAll( circle.getCircleTopicModelingProfiles() );
+
+		// the whole result related to interest
+		List<Object> circleTopicModelingResult = new ArrayList<Object>();
+
+		for ( CircleTopicModelingProfile circleTopicModelingProfile : circleTopicModelingProfiles )
+		{
+			// put profile on map
+			Map<String, Object> circleTopicModelingResultProfilesMap = new HashMap<String, Object>();
+
+			// get interest profile name and description
+			String interestProfileName = circleTopicModelingProfile.getName();
+			// String interestProfileDescription =
+			// circleTopicModelingProfile.getDescription();
+
+			// get circleTopicModeling set on profile
+			Set<CircleTopicModeling> circleTopicModelings = circleTopicModelingProfile.getCircleTopicModelings();
+
+			// if profile contain no circleTopicModeling just skip
+			if ( circleTopicModelings == null || circleTopicModelings.isEmpty() )
+				continue;
+
+			// get interest year, term and value
+			for ( CircleTopicModeling circleTopicModeling : circleTopicModelings )
+			{
+				if ( circleTopicModeling.getTermWeightsString() == null || circleTopicModeling.getTermWeightsString().isEmpty() )
+					continue;
+
+				List<Object> termValueResult = new ArrayList<Object>();
+
+				// put term and value
+				for ( Map.Entry<String, Double> termWeightMap : circleTopicModeling.getTermWeightsString().entrySet() )
+				{
+					List<Object> termWeightObjects = new ArrayList<Object>();
+					termWeightObjects.add( termWeightMap.getKey() );
+					termWeightObjects.add( termWeightMap.getValue() );
+					termValueResult.add( termWeightObjects );
+				}
+				circleTopicModelingResultProfilesMap.put( "termvalue", termValueResult );
+			}
+
+			// put profile map
+			circleTopicModelingResultProfilesMap.put( "profile", interestProfileName );
+			circleTopicModelingResult.add( circleTopicModelingResultProfilesMap );
+		}
 		return circleTopicModelingResult;
 	}
 }

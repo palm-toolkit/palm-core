@@ -300,40 +300,9 @@ public class PublicationCollectionService
 		}
 
 		// recalculate citation number
-		this.reCalculateNumberOfPublicationAndCitation( author );
-
+		author.reCalculateNumberOfPublicationAndCitation();
+		persistenceStrategy.getAuthorDAO().persist( author );
 	}
-
-	/**
-	 * Recalculate publication and citation
-	 * 
-	 * @param author
-	 */
-	private void reCalculateNumberOfPublicationAndCitation( Author author )
-	{
-		// count total citation on author
-		int citation = 0;
-		SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
-
-		for ( Publication publication : author.getPublications() )
-		{
-			citation += publication.getCitedBy();
-			// set publication year
-			if ( publication.getPublicationDate() != null )
-				publication.setYear( sdf.format( publication.getPublicationDate() ) );
-		}
-		if ( author.getNoPublication() < author.getPublications().size() )
-		{
-			author.setNoPublication( author.getPublications().size() );
-			persistenceStrategy.getAuthorDAO().persist( author );
-		}
-		if ( author.getCitedBy() < citation )
-		{
-			author.setCitedBy( citation );
-			persistenceStrategy.getAuthorDAO().persist( author );
-		}
-	}
-	
 
 	/**
 	 * Remove all publication that considered incorrect.
@@ -575,35 +544,20 @@ public class PublicationCollectionService
 					// check publication from database
 					if ( !fromDbPublications.isEmpty() )
 					{
-						if ( fromDbPublications.size() > 1 )
+						for ( Publication pub : fromDbPublications )
 						{
-							// check with year
-							for ( Publication pub : fromDbPublications )
+							if ( palmAnalitics.getTextCompare().getDistanceByLuceneLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) > .9f )
 							{
-								if ( pub.getPublicationDate() == null )
-									continue;
-
-								Calendar cal = Calendar.getInstance();
-								cal.setTime( pub.getPublicationDate() );
-								if ( Integer.toString( cal.get( Calendar.YEAR ) ).equals( publicationMap.get( "datePublished" ) ) )
+								if ( palmAnalitics.getTextCompare().getNumberCharacterDistanceByLevenshteinDistance( pub.getTitle().toLowerCase(), publicationTitle.toLowerCase() ) <= 5 )
 								{
 									publication = pub;
+									selectedPublications.add( publication );
 									break;
 								}
 							}
-							// if publication still null, due to publication
-							// date is null
-							if ( publication == null )
-								publication = fromDbPublications.get( 0 );
 						}
-						else
-							publication = fromDbPublications.get( 0 );
-						// added to selected list
-						selectedPublications.add( publication );
 					}
-					// remove old publicationSource
-					//if ( publication != null )
-						//publication.removeNonUserInputPublicationSource();
+
 				}
 
 				// if not exist any where create new publication
@@ -687,6 +641,9 @@ public class PublicationCollectionService
 						publicationSource.addOrUpdateAdditionalInformation( "volume", publicationMap.get( "eventVolume" ) );
 					if ( publicationMap.get( "eventNumber" ) != null )
 						publicationSource.addOrUpdateAdditionalInformation( "number", publicationMap.get( "eventNumber" ) );
+					if ( publicationMap.get( "page" ) != null )
+						publicationSource.setPages( publicationMap.get( "page" ) );
+
 				}
 
 				// assign publication authors
@@ -962,22 +919,6 @@ public class PublicationCollectionService
 					publication.setPublicationDateFormat( publicationDateFormat );
 				}
 
-				if ( pubSource.getPages() != null )
-				{
-					String[] pageSplit = pubSource.getPages().split( "-" );
-					if ( pageSplit.length == 2 )
-					{
-						try
-						{
-							publication.setStartPage( Integer.parseInt( pageSplit[0] ) );
-							publication.setEndPage( Integer.parseInt( pageSplit[1] ) );
-						}
-						catch ( Exception e )
-						{
-						}
-					}
-				}
-
 				if ( pubSource.getAdditionalInformation() != null )
 					publication.setAdditionalInformation( pubSource.getAdditionalInformation() );
 
@@ -1164,6 +1105,23 @@ public class PublicationCollectionService
 
 			}
 
+			// set publication pages
+			if ( publication.getStartPage() == 0 && pubSource.getPages() != null )
+			{
+				String[] pageSplit = pubSource.getPages().split( "-" );
+				if ( pageSplit.length == 2 )
+				{
+					try
+					{
+						publication.setStartPage( Integer.parseInt( pageSplit[0] ) );
+						publication.setEndPage( Integer.parseInt( pageSplit[1] ) );
+					}
+					catch ( Exception e )
+					{
+					}
+				}
+			}
+
 			// original sources (PDF and WebPage)
 			if ( pubSource.getMainSourceUrl() != null )
 			{
@@ -1276,7 +1234,7 @@ public class PublicationCollectionService
 						// remove PublicationFile if consist the prevent URLs
 						if ( !htmlPublicationFile.isPublicationFileUrlContainsUrls( preventUrls ) )
 						{
-							log.info( "Extract WebPage for publication " + publication.getTitle() );
+
 							// find the prioritize pages
 							htmlPublicationFileTarget = htmlPublicationFile;
 							if ( htmlPublicationFile.isPublicationFileUrlContainsUrls( prioritizeUrls ) )
@@ -1285,6 +1243,7 @@ public class PublicationCollectionService
 					}
 					if ( htmlPublicationFileTarget != null )
 					{
+						log.info( "Extract WebPage for publication " + publication.getTitle() );
 						// extract information from selected PublicationFiles
 						PublicationSource publicationSource = new PublicationSource();
 						publicationSource.setSourceUrl( htmlPublicationFileTarget.getUrl() );
