@@ -6,11 +6,5 @@ import de.rwth.i9.palm.model.Author;
 
 public interface GraphFeature
 {
-	public Map<String, Object> graphData( Author author );
-
-	public void newFunc();
-
-	public void testFunction();
-
-	public Map<String, Object> anotherFunction();
+	public Map<String, Object> getGephiGraph( Author author );
 }

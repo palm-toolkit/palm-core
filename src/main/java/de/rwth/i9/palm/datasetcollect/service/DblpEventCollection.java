@@ -66,7 +66,7 @@ public class DblpEventCollection extends PublicationCollection
 			if ( element.tagName().equals( "header" ) )
 			{
 				// main header
-				if ( element.attr( "id" ) != null && element.attr( "id" ).equals( "headline" ) )
+				if ( element.hasClass( "headline" ) )
 				{
 					mainHeaderText = element.text();
 				}

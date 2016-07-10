@@ -1,16 +1,14 @@
 package de.rwth.i9.palm.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,6 +29,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
@@ -39,7 +38,6 @@ import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
 import de.rwth.i9.palm.model.Color;
-import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
@@ -76,8 +74,12 @@ public class ExploreController
 	@Autowired
 	private GraphFeature graphFeature;
 
-	// @Autowired
-	// private PublicationCollectionService publicationCollectionService;
+	@Autowired
+	private AcademicEventFeature academicEventFeature;
+
+	@Autowired
+	private AnalyticsRestController analyticsRestController;
+
 
 	// Use explore/createVAWidgets to create Visual Analytics Widgets in Explore
 	@Transactional
@@ -224,7 +226,6 @@ public class ExploreController
 
 		}
 
-
 	}
 
 	@RequestMapping( method = RequestMethod.GET )
@@ -265,16 +266,15 @@ public class ExploreController
 	}
 
 	@SuppressWarnings( "unchecked" )
-	@RequestMapping( value = "/coAuthors", method = RequestMethod.GET )
+	@RequestMapping( value = "/coAuthorsGephi", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getCoAuthorList(
 			// @RequestParam( value = "id", required = false ) final String
 			// authorId,
 			@RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response )
 	{
-
 		// String authorId = "d5bf439f-9a44-4442-addc-034b4d55953d"; // Eva
-																	// Altenbernd-giani
+		// Altenbernd-giani
 
 		String authorId = "73cda3b1-b2ef-4aa1-a802-2095aebf8901"; // Ulrik
 																	// Shroeder
@@ -306,18 +306,7 @@ public class ExploreController
 		// get coauthor calculation
 		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
 
-
-
-		// commented this now graphFeature.graphData( author );
-
-		// graphFeature.newFunc();
-
-		// graphFeature.testFunction();
-
-		responseMap.put( "filename", graphFeature.anotherFunction().get( "filename" ) );
-
-		// System.out.println( responseMap.get( "coAuthors" ) );
-
+		responseMap.put( "filename", graphFeature.getGephiGraph( author ).get( "filename" ) );
 
 		return responseMap;
 	}
@@ -326,29 +315,66 @@ public class ExploreController
 	@RequestMapping( value = "/coAuthorsCluster", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getCoAuthorCluster(
-			// @RequestParam( value = "id", required = false ) final String
-			// authorId,
+			@RequestParam( value = "id", required = false ) String id,
 			@RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response )
 	{
 
-		String authorId = "d5bf439f-9a44-4442-addc-034b4d55953d"; // Eva
-																	// Altenbernd-giani
+		// String authorId = "d5bf439f-9a44-4442-addc-034b4d55953d"; // Eva
+		// Altenbernd-giani
 
 		// String authorId = "73cda3b1-b2ef-4aa1-a802-2095aebf8901"; // Ulrik
 		// Shroeder
 
 		// get author
-		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
+		// Author author = persistenceStrategy.getAuthorDAO().getById( authorId
+		// );
+
+		String eventId = "";
+
+		if ( id == null || id.equals( "none" ) )
+		{
+			eventId = "05e68e30-fbdc-483a-8187-3ecf72d3984d";
+		}
+		else
+			eventId = id;
+
+		System.out.println( "id in authors:" + eventId );
 
 		ObjectMapper mapper = new ObjectMapper();
 
 		// Convert JSON string from file to Object
+
+		Map<Object, Object> mapLevel0 = new LinkedHashMap<Object, Object>();
 		Map<Object, Integer> mapLevel1 = new LinkedHashMap<Object, Integer>();
+		Map<String, Object> mapClusterCenters = new LinkedHashMap<String, Object>();
 		try
 		{
-			Object jsonData = mapper.readValue( new File( "C:/Users/Manpriya/Downloads/clustering_test_results.txt" ), Object.class );
-			String jsonInString = mapper.writeValueAsString( jsonData );
-			mapLevel1 = (Map<Object, Integer>) mapper.readValue( jsonInString, Object.class );
+			String jsonInString = analyticsRestController.cluster( "authors", "xmeans", "event", eventId );
+			// System.out.println( jsonInString );
+
+			mapLevel0 = (Map<Object, Object>) mapper.readValue( jsonInString, Object.class );
+			Iterator<Object> mapLevel0KeysIterator = mapLevel0.keySet().iterator();
+			Iterator<Object> mapLevel0ValuesIterator = mapLevel0.values().iterator();
+
+			while ( mapLevel0KeysIterator.hasNext() && mapLevel0ValuesIterator.hasNext() )
+			{
+				Object mapObject = mapLevel0KeysIterator.next();
+				// Iterator<Object> mapValues = mapLevel0.values().iterator();
+				if ( mapObject.equals( "clusters" ) )
+				{
+					mapLevel1 = (Map<Object, Integer>) mapLevel0ValuesIterator.next();
+				}
+				if ( mapObject.equals( "clusterCenters" ) )
+				{
+
+					mapClusterCenters = (Map<String, Object>) mapLevel0ValuesIterator.next();
+					// mapClusterCenters = (Map<String, Object>)
+					// mapLevel0ValuesIterator.next();
+
+				}
+			}
+			// mapLevel1 = (Map<Object, Integer>) mapper.readValue(
+			// jsonInString, Object.class );
 		}
 		catch ( Exception e )
 		{
@@ -367,28 +393,24 @@ public class ExploreController
 		// 1st Level Keys i.e information about author
 		Iterator<Object> objectsIterator = mapLevel1.keySet().iterator();
 
-		System.out.println( mapLevel1.keySet().size() );
-
 		List<String> names = new ArrayList<String>();
 		List<String> ids = new ArrayList<String>();
 
+		Object jsonObject;
+		String jsonString;
+		Map<String, String> mapValues = new LinkedHashMap<String, String>();
+
 		while ( objectsIterator.hasNext() )
 		{
-
 			String objectString = (String) objectsIterator.next();
-			Object jsonObject;
-			String jsonString;
-			Map<String, String> mapValues = new LinkedHashMap<String, String>();
 			try
 			{
 				jsonObject = mapper.readValue( objectString, Object.class );
 				jsonString = mapper.writeValueAsString( jsonObject );
 				mapValues = (Map<String, String>) mapper.readValue( jsonString, Object.class );
-
 			}
 			catch ( Exception e )
 			{
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -399,64 +421,25 @@ public class ExploreController
 				names.add( iterator.next() );
 				ids.add( iterator.next() );
 			}
-
 		}
-
-		// System.out.println( names );
-		// System.out.println( ids );
-
-		// Fetch co-authors of a researcher
-		Set<Author> coauthorSet = new HashSet<Author>();
-		// number of collaboration
-		for ( Publication publication : author.getPublications() )
-		{
-			for ( Author coAuthor : publication.getAuthors() )
-			{
-				// just skip if its himself
-				if ( coAuthor.equals( author ) )
-					continue;
-
-				coauthorSet.add( coAuthor );
-
-			}
-		}
-
-		List<Integer> indexes = new ArrayList<Integer>();
-
-		for ( String id : ids )
-		{
-			for ( Author authorVar : coauthorSet )
-			{
-				if ( id.equals( authorVar.getId() ) )
-				{
-					// System.out.println( authorVar.getFirstName() );
-					indexes.add( ids.indexOf( id ) );
-				}
-			}
-
-		}
-
-		// System.out.println( "SIZE: " + indexes.size() );
-		// System.out.println( "co-author index 1: " + indexes.get( 0 ) );
 
 		Map<String, Object> responseMapTest = new LinkedHashMap<String, Object>();
 
-		List<Map<String, Object>> coAuthorList = new ArrayList<Map<String, Object>>();
+		List<Map<String, Object>> authorList = new ArrayList<Map<String, Object>>();
 
-		for ( Integer i : indexes )
+		for ( int i = 0; i < clusters.size(); i++ )
+
 		{
 			Map<String, Object> responseMapTemp = new LinkedHashMap<String, Object>();
 
 			responseMapTemp.put( "id", ids.get( i ) );
 			responseMapTemp.put( "name", names.get( i ) );
 			responseMapTemp.put( "cluster", clusters.get( i ) );
-			// System.out.println( names.get( i ) );
-			coAuthorList.add( responseMapTemp );
-			// System.out.println( "co-LIST: " + coAuthorList );
+			responseMapTemp.put( "clusterTerms", mapClusterCenters.get( "" + clusters.get( i ) + "" ) );
+			authorList.add( responseMapTemp );
 		}
 
-		responseMapTest.put( "coauthors", coAuthorList );
-//		System.out.println( responseMapTest );
+		responseMapTest.put( "coauthors", authorList );
 
 		return responseMapTest;
 	}
@@ -466,7 +449,6 @@ public class ExploreController
 	@RequestMapping( value = "/researchers", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getAuthorList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "queryType", required = false ) String queryType, @RequestParam( value = "page", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "addedAuthor", required = false ) String addedAuthor, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "persist", required = false ) String persist, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-
 		/* == Set Default Values== */
 		if ( query == null )
 			query = "";
@@ -555,34 +537,32 @@ public class ExploreController
 		}
 	}
 
-
-
 	@RequestMapping( value = "/topic", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationTopic( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "pid", required = false ) final String pid, @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
 	{
-		if ( id == null )
+		if ( id == null || id.equals( "none" ) )
 		{
 			id = "fd201481-1fe6-498f-9878-7e511e40e236";
 		}
-
 
 		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, pid, maxRetrieve );
 	}
-	
 
 	@RequestMapping( value = "/topicList", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationTopicTest( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "pid", required = false ) final String pid, @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+	public @ResponseBody Map<String, Object> getPublicationTopicTest( 
+			@RequestParam( value = "id", required = false ) String id, 
+			@RequestParam( value = "pid", required = false ) final String pid, 
+			@RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, 
+			final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException, ParseException
 	{
-		if ( id == null )
-		{
-			id = "fd201481-1fe6-498f-9878-7e511e40e236";
-		}
+		if ( id == null || id.equals( "none" ) )
+			id = "05e68e30-fbdc-483a-8187-3ecf72d3984d";
 
-		// System.out.println( "id: " + id );
+		System.out.println( "id in topics:" + id );
 
-		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, pid, maxRetrieve );
+		return academicEventFeature.getEventInterest().getEventInterestById( id, true );
 	}
 
 	@SuppressWarnings( "unchecked" )
@@ -678,5 +658,143 @@ public class ExploreController
 			return responseMap;
 		}
 	}
+
+	@SuppressWarnings( "unchecked" )
+	@RequestMapping( value = "/publicationsCluster", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> publicationsCluster(
+			@RequestParam( value = "id", required = false ) String id,
+			@RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response )
+	{
+
+		String eventId = "";
+
+		if ( id == null || id.equals( "none" ) )
+		{
+			eventId = "05e68e30-fbdc-483a-8187-3ecf72d3984d";
+		}
+		else
+			eventId = id;
+
+		System.out.println( "id in publications:" + eventId );
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		// Convert JSON string from file to Object
+
+		Map<Object, Object> mapLevel0 = new LinkedHashMap<Object, Object>();
+		Map<Object, Integer> mapLevel1 = new LinkedHashMap<Object, Integer>();
+		Map<String, Object> mapClusterCenters = new LinkedHashMap<String, Object>();
+		try
+		{
+			String jsonInString = analyticsRestController.cluster( "publications", "xmeans", "event", eventId );
+			// System.out.println( jsonInString );
+
+			mapLevel0 = (Map<Object, Object>) mapper.readValue( jsonInString, Object.class );
+			Iterator<Object> mapLevel0KeysIterator = mapLevel0.keySet().iterator();
+			Iterator<Object> mapLevel0ValuesIterator = mapLevel0.values().iterator();
+
+			while ( mapLevel0KeysIterator.hasNext() && mapLevel0ValuesIterator.hasNext() )
+			{
+				Object mapObject = mapLevel0KeysIterator.next();
+				// Iterator<Object> mapValues = mapLevel0.values().iterator();
+				if ( mapObject.equals( "clusters" ) )
+				{
+					mapLevel1 = (Map<Object, Integer>) mapLevel0ValuesIterator.next();
+				}
+				if ( mapObject.equals( "clusterCenters" ) )
+				{
+
+					mapClusterCenters = (Map<String, Object>) mapLevel0ValuesIterator.next();
+					// mapClusterCenters = (Map<String, Object>)
+					// mapLevel0ValuesIterator.next();
+
+				}
+			}
+			// mapLevel1 = (Map<Object, Integer>) mapper.readValue(
+			// jsonInString, Object.class );
+		}
+		catch ( Exception e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// 1st Level Values i.e cluster number
+		Iterator<Integer> clusterIterator = mapLevel1.values().iterator();
+		List<Integer> clusters = new ArrayList<Integer>();
+		while ( clusterIterator.hasNext() )
+		{
+			clusters.add( clusterIterator.next() );
+		}
+
+		// 1st Level Keys i.e information about author
+		Iterator<Object> objectsIterator = mapLevel1.keySet().iterator();
+
+		List<String> names = new ArrayList<String>();
+		List<String> ids = new ArrayList<String>();
+
+		Object jsonObject;
+		String jsonString;
+		Map<String, String> mapValues = new LinkedHashMap<String, String>();
+
+		while ( objectsIterator.hasNext() )
+		{
+			String objectString = (String) objectsIterator.next();
+			try
+			{
+				jsonObject = mapper.readValue( objectString, Object.class );
+				jsonString = mapper.writeValueAsString( jsonObject );
+				mapValues = (Map<String, String>) mapper.readValue( jsonString, Object.class );
+			}
+			catch ( Exception e )
+			{
+				e.printStackTrace();
+			}
+
+			Iterator<String> iterator = mapValues.values().iterator();
+
+			while ( iterator.hasNext() )
+			{
+				names.add( iterator.next() );
+				ids.add( iterator.next() );
+			}
+		}
+
+		Map<String, Object> responseMapTest = new LinkedHashMap<String, Object>();
+
+		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
+
+		for ( int i = 0; i < clusters.size(); i++ )
+
+		{
+			Map<String, Object> responseMapTemp = new LinkedHashMap<String, Object>();
+
+			responseMapTemp.put( "id", ids.get( i ) );
+			responseMapTemp.put( "name", names.get( i ) );
+			responseMapTemp.put( "cluster", clusters.get( i ) );
+			responseMapTemp.put( "clusterTerms", mapClusterCenters.get( "" + clusters.get( i ) + "" ) );
+			publicationList.add( responseMapTemp );
+		}
+
+		responseMapTest.put( "publications", publicationList );
+
+		return responseMapTest;
+	}
+
+	@RequestMapping( value = "/conference", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> conference( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "pid", required = false ) final String pid, @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException, ParseException
+	{
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		List<String> conferences = new ArrayList<String>();
+		conferences.add( "LAK 15" );
+		conferences.add( "LAK 16" );
+		conferences.add( "EDM 15" );
+		responseMap.put( "conferences", conferences );
+
+		return responseMap;
+	}
+
 }
-	
