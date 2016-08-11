@@ -35,6 +35,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
+	@Ignore
 	public void testGetDataFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 0 - Fetch data from database ==========" );
@@ -86,7 +87,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Fetch publications per author from database ==========" );
@@ -128,7 +128,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			for ( Author author : authors )
 			{
 
-				File theDir = new File( "C:/Users/Piro/Desktop/Author-Year-Test/" + author.getId().toString() );
+				File theDir = new File( "C:/Users/Piro/Desktop/Author-Test/" + author.getId().toString() );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
