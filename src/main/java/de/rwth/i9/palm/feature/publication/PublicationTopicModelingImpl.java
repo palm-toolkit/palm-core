@@ -59,14 +59,20 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		// create the list for the termvalues
 		List<LinkedHashMap<String, Object>> termvalues = new ArrayList<LinkedHashMap<String, Object>>();
 		List<LinkedHashMap<String, Object>> termvalues2 = new ArrayList<LinkedHashMap<String, Object>>();
-		List<String> resultunigrams;
-		List<String> resultngrams;
+		List<String> unigrams;
+		List<String> ngrams;
+		List<String> resultsunigrams;
+		List<String> resultsngrams;
 		try
 		{
-			resultunigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true, false ).get( publicationId );
-			resultngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false, false ).get( publicationId );
+			unigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true, false ).get( publicationId );
+			ngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false, false ).get( publicationId );
 
-			for ( String terms : resultunigrams )
+			// get the top 10 topics from the merged topics
+			resultsunigrams = extractTopTopics( unigrams, 10 );
+			resultsngrams = extractTopTopics( ngrams, 10 );
+
+			for ( String terms : resultsunigrams )
 			{
 				LinkedHashMap<String, Object> algorithmResult = new LinkedHashMap<String, Object>();
 
@@ -74,7 +80,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 				algorithmResult.put( "value", Double.parseDouble( terms.split( "_-_" )[1] ) );
 				termvalues.add( algorithmResult );
 			}
-			for ( String terms : resultngrams )
+			for ( String terms : resultsngrams )
 			{
 				LinkedHashMap<String, Object> algorithmResult = new LinkedHashMap<String, Object>();
 
@@ -101,6 +107,37 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 
 		return responseMap;
 }
+
+	// method used to get the top elements from an unsorted list created by
+	// composed elements
+	private List<String> extractTopTopics( List<String> topics, int maxResult )
+	{
+		List<String> result = new ArrayList<String>( topics.size() );
+		int N = maxResult;
+		// loop to get the top elements
+		while ( N > 0 )
+		{
+			double max = -1;
+			String temporalMax;
+			String topic = "";
+			int index = -1;
+			for ( int i = 0; i < topics.size(); i++ )
+			{
+
+				if ( Double.parseDouble( topics.get( i ).split( "_-_" )[1] ) >= max )
+				{
+					max = Double.parseDouble( topics.get( i ).split( "_-_" )[1] );
+					topic = topics.get( i ).split( "_-_" )[0];
+					index = i;
+				}
+			}
+			temporalMax = topic + "_-_" + max;
+			result.add( temporalMax );
+			topics.remove( index );
+			N--;
+		}
+		return result;
+	}
 
 	@Override
 	public Map<String, Object> getStaticTopicModelingNgrams( String publicationId, boolean isReplaceExistingResult )
