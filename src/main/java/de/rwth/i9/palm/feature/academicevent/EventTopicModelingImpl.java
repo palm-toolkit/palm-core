@@ -193,7 +193,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event-Test", event.getId().toString(), 5, 5, 5, true, true );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event-Test", event.getId().toString(), 10, 10, 10, true, true );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -240,7 +240,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event-Test", event.getId().toString(), 5, 5, 5, true, false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event-Test", event.getId().toString(), 10, 10, 10, true, false );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -343,7 +343,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		HashMap<String, List<String>> topicevolution = new LinkedHashMap<String, List<String>>();
 
 		// getEvolutionofTopicOverTime( 0, 5, false );
-		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "EventGroup", event.getId().toString(), 5, 5, 5, true, false, false );
+		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "EventGroupsClustered", event.getId().toString(), 5, 10, 10, true, false, false );
 		// Prepare set of similarAuthor HashSet;
 		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
 		String[] colors = { "0efff8", "ff7f0e", "0eff7f", "ffa70e", "ff7f5a", "d4991c", "ad937c", "ff430e", "ff0e8e", "0e8eff" };
@@ -353,7 +353,12 @@ public class EventTopicModelingImpl implements EventTopicModeling
 			LinkedHashMap<String, Object> evolutionMap = new LinkedHashMap<String, Object>();
 			LinkedHashMap<String, String> yearproportion = new LinkedHashMap<String, String>();
 			for ( String proportions : topic.getValue() )
-				yearproportion.put( proportions.split( "_-_" )[0], proportions.split( "_-_" )[1] );
+			{
+				if ( !Double.isNaN( Double.parseDouble( proportions.split( "_-_" )[1] ) ) )
+					yearproportion.put( proportions.split( "_-_" )[0], proportions.split( "_-_" )[1] );
+				else
+					yearproportion.put( proportions.split( "_-_" )[0], "0.0" );
+			}
 			evolutionMap.put( "values", yearproportion );
 			evolutionMap.put( "key", topic.getKey() );
 			evolutionMap.put( "color", colors[col] );
@@ -381,6 +386,5 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		responseMap.put( "termvalues", idk );
 
 		return responseMap;
-
 	}
 }
