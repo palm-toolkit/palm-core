@@ -67,6 +67,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 
 	@Test
+	@Ignore
 	public void testGetEventGroupPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Fetch publications per Event from database ==========" );
@@ -108,7 +109,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	public void testcreateEntityDirectories() throws IOException
 	{
 		System.out.println( "\n========== TEST 2 - Create Architecture for the Data Collection ==========" );
-		List<Event> eventgroups = persistenceStrategy.getEventDAO().getAll();// getByName(
+		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
 																			// chatti"
@@ -116,10 +117,10 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
 																			// );
 		if ( !eventgroups.isEmpty() )
-			for ( Event event : eventgroups )
+			for ( EventGroup eventgroup : eventgroups )
 			{
 
-				File theDir = new File( "C:/Users/Piro/Desktop/Event-Test/" + event.getId().toString() + "/" );
+				File theDir = new File( "C:/Users/Piro/Desktop/EventGroupsClustered/" + eventgroup.getId().toString() + "/" );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -144,11 +145,10 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Fetch publications per Event from database ==========" );
-		List<Event> events = persistenceStrategy.getEventDAO().getAll();// getByName(
+		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
 																			// chatti"
@@ -156,24 +156,28 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
 																			// );
 
-		if ( !events.isEmpty() )
-			for ( Event event : events )
+		if ( !eventgroups.isEmpty() )
+			for ( EventGroup eventgroup : eventgroups )
 			{
-				System.out.println( event.getName() );
-				for ( Publication publication : event.getPublications() )
+				System.out.println( eventgroup.getName() );
+				for ( Event event : eventgroup.getEvents() )
 				{
-					if ( publication.getAbstractText() != "null" )
+					PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/EventGroupsClustered/" + eventgroup.getId() + "/" + event.getYear().toString() + ".txt", "UTF-8" );
+
+					for ( Publication publication : event.getPublications() )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Event-Test/" + event.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
-						writer.print( publication.getTitle() + " " );
-						writer.print( publication.getAbstractText() );
-						writer.println();
-						writer.close();
+						if ( publication.getAbstractText() != "null" )
+						{
+							writer.print( publication.getTitle() + " " );
+							writer.print( publication.getAbstractText() );
+							writer.println();
+						}
+						else
+						{
+							continue;
+						}
 					}
-					else
-					{
-						continue;
-					}
+					writer.close();
 				}
 			}
 	}
