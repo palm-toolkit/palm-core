@@ -387,4 +387,94 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		return responseMap;
 	}
+
+	@Override
+	public Map<String, Object> getTopicModelEventGroupUniCloud( EventGroup eventgroup, boolean isReplaceExistingResult )
+	{
+		// researchers list container
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// eventgroup details
+		Map<String, String> eventgroupdetail = new HashMap<String, String>();
+		eventgroupdetail.put( "id", eventgroup.getId().toString() );
+		eventgroupdetail.put( "name", eventgroup.getName().toString() );
+
+		// algorithm result
+		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getId().toString(), 5, 5, 5, true, true );
+
+		if ( topiccomposition.isEmpty() != true )
+		{
+			responseMap.put( "status", "Ok" );
+		}
+		else
+		{
+			responseMap.put( "status", "No Topics discovered" );
+		}
+
+		responseMap.put( "eventgroup", eventgroupdetail );
+
+		// add the eventgroup id to the map
+		responseMap.put( "eventgroup", eventgroup.getId().toString() );
+
+		// hold the temporal results from the algorithm
+
+		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
+
+		for ( Entry<String, Double> topic : topiccomposition.entrySet() )
+		{
+			Map<String, Object> topicdistribution = new LinkedHashMap<String, Object>();
+			topicdistribution.put( topic.getKey().toString(), topic.getValue() );
+			// topicdistribution.put( "size", topic.getValue() );
+			topicList.add( (LinkedHashMap<String, Object>) topicdistribution );
+
+			// TO DO Unigrams/Ngrams preferences
+		}
+		responseMap.put( "termvalue", topicList );
+
+		return responseMap;
+	}
+
+	@Override
+	public Map<String, Object> getTopicModelEventGroupNCloud( EventGroup eventgroup, boolean isReplaceExistingResult )
+	{
+		// researchers list container
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// eventgroupgroup details
+		Map<String, String> eventgroupdetail = new HashMap<String, String>();
+		eventgroupdetail.put( "id", eventgroup.getId().toString() );
+		eventgroupdetail.put( "name", eventgroup.getName().toString() );
+
+		// algorithm result
+		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getId().toString(), 5, 5, 5, true, false );
+
+		if ( topiccomposition.isEmpty() != true )
+		{
+			responseMap.put( "status", "Ok" );
+		}
+
+		responseMap.put( "eventgroup", eventgroupdetail );
+
+		// add the eventgroup id to the map
+		// responseMap.put( "eventgroup", eventgroup.getId().toString() );
+
+		// hold the temporal results from the algorithm
+
+		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
+
+		for ( Entry<String, Double> topic : topiccomposition.entrySet() )
+		{
+			Map<String, Object> topicdistribution = new LinkedHashMap<String, Object>();
+			topicdistribution.put( topic.getKey().toString(), topic.getValue() );
+			// topicdistribution.put( "size", topic.getValue() );
+			topicList.add( (LinkedHashMap<String, Object>) topicdistribution );
+
+			// TO DO Unigrams/Ngrams preferences
+		}
+		responseMap.put( "termvalue", topicList );
+
+		return responseMap;
+	}
 }

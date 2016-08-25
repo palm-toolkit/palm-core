@@ -463,4 +463,54 @@ public class AcademicEventController
 		}
 	}
 
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topicCompositionEventGroupUniCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get author
+			EventGroup event = persistenceStrategy.getEventGroupDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelEventGroupUniCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topicCompositionEventGroupNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get author
+			EventGroup event = persistenceStrategy.getEventGroupDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelEventGroupNCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
 }

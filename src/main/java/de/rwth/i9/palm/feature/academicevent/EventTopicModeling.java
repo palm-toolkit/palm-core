@@ -20,4 +20,8 @@ public interface EventTopicModeling
 	public Map<String, Object> getSimilarEventsMap( Event event, int startPage, int maxresult );
 
 	public Map<String, Object> getEventGroupTopicEvolutionTest( EventGroup event );
+
+	public Map<String, Object> getTopicModelEventGroupUniCloud( EventGroup event, boolean isReplaceExistingResult );
+
+	public Map<String, Object> getTopicModelEventGroupNCloud( EventGroup event, boolean isReplaceExistingResult );
 }
