@@ -36,7 +36,6 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
-	@Ignore
 	public void testGetCirclePublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		int count = 0;
@@ -70,6 +69,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	}
 
 	@Test
+	@Ignore
 	public void testGetCirclePublicationsFromDatabaseYearly() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Get Circle publication per YEAR ==========" );
@@ -103,6 +103,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	}
 
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Fetch publications per circlefrom database ==========" );
@@ -151,7 +152,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 			for ( Circle circle : circles )
 			{
 
-				File theDir = new File( "C:/Users/Piro/Desktop/Circle-Year-Test/" + circle.getId().toString() );
+				File theDir = new File( "C:/Users/Piro/Desktop/Circle-Test/" + circle.getId().toString() );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
