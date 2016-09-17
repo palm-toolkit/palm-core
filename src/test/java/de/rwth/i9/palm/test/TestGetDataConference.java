@@ -50,7 +50,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 			for ( Event event : events )
 
 		{
-				PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Conferences/Conferences/" + event.getId() + ".txt", "UTF-8" );
+				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Conferences/Conferences/" + event.getId() + ".txt", "UTF-8" );
 				// writer.println( "Event Name : " + event.getName() );
 				for ( Publication publication : event.getPublications() )
 			{
@@ -89,7 +89,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 					{
 						if ( publication.getAbstractText() != "null" )
 						{
-						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Event-Test/" + event.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Event-Test/" + event.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
 							writer.print( publication.getTitle() + " " );
 							writer.print( publication.getAbstractText() );
 							writer.println();
@@ -120,7 +120,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 			for ( EventGroup eventgroup : eventgroups )
 			{
 
-				File theDir = new File( "C:/Users/Piro/Desktop/EventGroups/" + eventgroup.getId().toString() + "/" );
+				File theDir = new File( "C:/Users/Albi/Desktop/EventGroups/" + eventgroup.getId().toString() + "/" );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -160,7 +160,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 			for ( Event event : events )
 			{
 
-				File theDir = new File( "C:/Users/Piro/Desktop/Event-Test/" + event.getId().toString() + "/" );
+				File theDir = new File( "C:/Users/Albi/Desktop/Event-Test/" + event.getId().toString() + "/" );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -203,7 +203,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 				System.out.println( eventgroup.getName() );
 				for ( Event event : eventgroup.getEvents() )
 				{
-					PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/EventGroups/" + eventgroup.getId() + "/" + event.toString() + ".txt", "UTF-8" );
+					PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/EventGroups/" + eventgroup.getId() + "/" + event.toString() + ".txt", "UTF-8" );
 
 					for ( Publication publication : event.getPublications() )
 					{
@@ -247,7 +247,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 					{
 						if ( publication.getAbstractText() != "null" )
 						{
-							PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/TEST/" + group.getId() + "/" + event.getId().toString() + "/" + publication.getId() + ".txt", "UTF-8" );
+							PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/TEST/" + group.getId() + "/" + event.getId().toString() + "/" + publication.getId() + ".txt", "UTF-8" );
 							writer.print( publication.getTitle() + " " );
 							writer.print( publication.getAbstractText() );
 							writer.println();

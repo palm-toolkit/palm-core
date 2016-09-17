@@ -23,7 +23,7 @@ public class ResearcherTopicEvolutionImplTest implements ResearcherTopicEvolutio
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	private String path = "C:/Users/Piro/Desktop/";
+	private String path = "C:/Users/Albi/Desktop/";
 
 	@Override
 	public Map<String, Object> getResearcherTopicEvolutionTest( Author author )

@@ -52,7 +52,7 @@ public class TestGetDataPublications extends AbstractTransactionalJUnit4SpringCo
 				{
 					if ( publication.getAbstractText() != "null" )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Publications/Publications/" + publication.getId() + ".txt", "UTF-8" );
+						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Publications/Publications/" + publication.getId() + ".txt", "UTF-8" );
 						writer.print( publication.getTitle() + " " );
 						writer.print( publication.getAbstractText() );
 						writer.println();
@@ -85,7 +85,7 @@ public class TestGetDataPublications extends AbstractTransactionalJUnit4SpringCo
 				{
 					if ( !author.getPublicationsByYear( year ).isEmpty() )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Year-Test/" + author.getId().toString() + "/" + year + ".txt" );
+						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Year-Test/" + author.getId().toString() + "/" + year + ".txt" );
 						for ( Publication publication : author.getPublicationsByYear( year ) )
 						{
 							writer.print( publication.getTitle() + " " );
@@ -106,7 +106,7 @@ public class TestGetDataPublications extends AbstractTransactionalJUnit4SpringCo
 			for ( Author author : authors )
 			{
 			// to be updated
-				File theDir = new File( "C:/Users/Piro/Desktop/Year-Test/" + author.getId().toString() );
+				File theDir = new File( "C:/Users/Albi/Desktop/Year-Test/" + author.getId().toString() );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )

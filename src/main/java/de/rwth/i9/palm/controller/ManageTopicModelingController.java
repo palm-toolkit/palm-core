@@ -31,7 +31,7 @@ public class ManageTopicModelingController
 	@RequestMapping( method = RequestMethod.GET )
 	public @ResponseBody String allReindex()									 
 	{
-		ParallelTopicModel ptm = palmAnalytics.getDynamicTopicModel().createModel( "C:\\Users\\Piro\\Desktop\\Years\\", "Years", 11, 10 );
+		ParallelTopicModel ptm = palmAnalytics.getDynamicTopicModel().createModel( "C:\\Users\\Albi\\Desktop\\Years\\", "Years", 11, 10 );
 
 		List<String> topics = palmAnalytics.getDynamicTopicModel().getListTopics( 10 );
 		

@@ -9,4 +9,6 @@ public interface ResearcherSimilarauthor
 	public Map<String, Object> getResearcherSimilarAuthorMap( Author author, int startPage, int maxresult );
 
 	public Map<String, Object> getResearcherSimilarAuthorTopicLevelMap( Author author, int startPage, int maxresult );
+
+	Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised(Author author, int startPage, int maxresult);
 }

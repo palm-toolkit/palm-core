@@ -28,7 +28,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	private String path = "C:/Users/Piro/Desktop/";
+	private String path = "C:/Users/Albi/Desktop/";
 
 	@Override
 	public Map<String, Object> getTopicModeling( String publicationId, boolean isReplaceExistingResult )
@@ -255,7 +255,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		List<String> similarPublications = new ArrayList<String>();
-		similarPublications = palmAnalytics.getNGrams().runSimilarEntities( publication.getId().toString(), "C:/Users/Piro/Desktop/", "Publications", 20, 10, 3, true );
+		similarPublications = palmAnalytics.getNGrams().runSimilarEntities( publication.getId().toString(), "C:/Users/Albi/Desktop/", "Publications", 20, 10, 3, true );
 		// similarEntities( author.getId(), maxresult, 3 );
 
 		// Prepare set of similarPublication HashSet;

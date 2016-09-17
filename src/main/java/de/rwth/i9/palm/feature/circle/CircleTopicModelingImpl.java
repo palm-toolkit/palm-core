@@ -29,7 +29,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	private String path = "C:/Users/Piro/Desktop/";
+	private String path = "C:/Users/Albi/Desktop/";
 
 	/**
 	 * This is the first method used to show the widget Simple LDA
@@ -250,7 +250,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		List<String> similarCircles = new ArrayList<String>();
-		similarCircles = palmAnalytics.getNGrams().runSimilarEntities( circle.getId().toString(), "C:/Users/Piro/Desktop/", "Circles", 20, 4, 3, true );
+		similarCircles = palmAnalytics.getNGrams().runSimilarEntities( circle.getId().toString(), "C:/Users/Albi/Desktop/", "Circles", 20, 4, 3, true );
 		// similarEntities( circle.getId(), maxresult, 3 );
 
 		// Prepare set of similarCircle HashSet;

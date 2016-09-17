@@ -18,7 +18,7 @@ public class ResearcherTopicModelingLDAImpl implements ResearcherTopicModelingLD
 	
 	public Map<String, Object> researcherTopicDistribution(){
 		Map<String, Object> topicdist = new HashMap<String, Object>();
-		//List<Object> topics = palmAnalytics.getDynamicTopicModel().getListTopics( palmAnalytics.getDynamicTopicModel().createModel( "C:\\Users\\Piro\\Desktop\\Years\\", "Years", 11, 10 ), 10 );
+		//List<Object> topics = palmAnalytics.getDynamicTopicModel().getListTopics( palmAnalytics.getDynamicTopicModel().createModel( "C:\\Users\\Albi\\Desktop\\Years\\", "Years", 11, 10 ), 10 );
 		
 		return topicdist;
 	}

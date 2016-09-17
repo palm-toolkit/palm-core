@@ -27,7 +27,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	private String path = "C:/Users/Piro/Desktop/";
+	private String path = "C:/Users/Albi/Desktop/";
 
 	/**
 	 * This is the first method used to show the widget Simple LDA
@@ -279,7 +279,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		List<String> similarEvents = new ArrayList<String>();
-		similarEvents = palmAnalytics.getNGrams().runSimilarEntities( event.getId().toString(), "C:/Users/Piro/Desktop/", "Conferences", 20, 10, 3, true );
+		similarEvents = palmAnalytics.getNGrams().runSimilarEntities( event.getId().toString(), "C:/Users/Albi/Desktop/", "Conferences", 20, 10, 3, true );
 		// similarEntities( event.getId(), maxresult, 3 );
 
 		// Prepare set of similarEvent HashSet;

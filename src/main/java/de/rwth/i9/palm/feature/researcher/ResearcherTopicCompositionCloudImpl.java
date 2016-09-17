@@ -19,7 +19,7 @@ public class ResearcherTopicCompositionCloudImpl implements ResearcherTopicCompo
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	private String path = "C:/Users/Piro/Desktop/";
+	private String path = "C:/Users/Albi/Desktop/";
 
 	@Override
 	public Map<String, Object> getTopicModelUniCloud( Author author, boolean isReplaceExistingResult )

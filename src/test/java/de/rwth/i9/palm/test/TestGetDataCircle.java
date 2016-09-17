@@ -49,7 +49,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 			for ( Circle circle : circles )
 
 		{
-				PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Circles/Circles/" + circle.getId() + ".txt", "UTF-8" );
+				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circles/Circles/" + circle.getId() + ".txt", "UTF-8" );
 				writer.println( "Circle Name : " + circle.getName() );
 				for ( Publication publication : circle.getPublications() )
 			{
@@ -88,7 +88,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 					{
 						if ( !author.getPublicationsByYear( year ).isEmpty() )
 						{
-							PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Circle-Year-Test/" + circle.getId().toString() + "/" + year + ".txt" );
+							PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circle-Year-Test/" + circle.getId().toString() + "/" + year + ".txt" );
 							for ( Publication publication : author.getPublicationsByYear( year ) )
 							{
 								writer.print( publication.getTitle() + " " );
@@ -122,7 +122,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 				{
 					if ( publication.getAbstractText() != "null" )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Circle-Test/" + circle.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circle-Test/" + circle.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
 						writer.print( publication.getTitle() + " " );
 						writer.print( publication.getAbstractText() );
 						writer.println();
@@ -152,7 +152,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 			for ( Circle circle : circles )
 			{
 
-				File theDir = new File( "C:/Users/Piro/Desktop/Circle-Test/" + circle.getId().toString() );
+				File theDir = new File( "C:/Users/Albi/Desktop/Circle-Test/" + circle.getId().toString() );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )

@@ -38,7 +38,7 @@ public class ResearcherTopicModelingService
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	private String path = "C:/Users/Piro/Desktop/";
+	private String path = "C:/Users/Albi/Desktop/";
 
 	public void calculateAuthorTopicModeling( String authorid, boolean isReplaceExistingResult, boolean Static )
 	{
