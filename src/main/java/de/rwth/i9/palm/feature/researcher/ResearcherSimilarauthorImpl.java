@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.feature.researcher;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -162,55 +163,57 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 	}
 
 @Override
-public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author author, int startPage, int maxresult )
+public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author author, int startPage, int maxresult ) throws NullPointerException
 {
 	// researchers list container
 	Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-
-	Map<String, List<String>> similarAuthors = new LinkedHashMap<String, List<String>>();
-	similarAuthors = palmAnalytics.getNGrams().runSimilarEntitiesTopicLevel( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 50, 10, 3, false );
-
-	// get the id, degree of similarity, topics proportions
-	// put them into the map
-	// prepare list of object map containing similarAuthor details
+	
+	// find the list of similar authors
+	List<String> similarEntities = new ArrayList<String>();
+	similarEntities = palmAnalytics.getNGrams().similarEntities( author.getId(), 10, 3);
+	
 	List<Map<String, Object>> similarAuthorList = new ArrayList<Map<String, Object>>();
+	
+	// get the list of words for the author 
+	List<String> authortopicWords = new ArrayList<String>();
+	for (String entity : similarEntities){
+		if(entity.split("->")[0].equals(author.getId()))
+			authortopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author-Test", entity, 10, 10, 10, true, false ).keySet());
+	}
+	
+	// run for each of the entities of the list the weightedTopic Composition
+	for (String entity : similarEntities){
+		if(!entity.split("->")[0].equals(author.getId())){		
+			List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author-Test", entity, 10, 10, 10, true, false ).keySet());
+			
+			Map<String, Object> similarAuthorMap = new LinkedHashMap<String, Object>();
 
-	for ( Entry<String, List<String>> similar : similarAuthors.entrySet() )
-	{
-		if ( !persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).equals( author ) )
-		{
-		Map<String, Object> similarAuthorMap = new LinkedHashMap<String, Object>();
-
-		// insert the initial basic information
-		similarAuthorMap.put( "id", similar.getKey().split( "->" )[0] );
-		similarAuthorMap.put( "name", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getName() );
-		if ( persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getInstitution() != null )
-			similarAuthorMap.put( "affiliation", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getInstitution().getName() );
-		if ( persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getPhotoUrl() != null )
-			similarAuthorMap.put( "photo", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getPhotoUrl() );
-		similarAuthorMap.put( "isAdded", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).isAdded() );
-		similarAuthorMap.put( "similarity", similar.getKey().split( "->" )[1] );
-
-		// construct the map for the list of topics
-		List<Object> topicleveldetail = new ArrayList<Object>();
-		for ( String topic : similar.getValue() )
-		{
+			// insert the initial basic information
+			similarAuthorMap.put( "id", entity.split("->")[0] );
+			similarAuthorMap.put( "name", persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).getName() );
+			if ( persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).getInstitution() != null )
+				similarAuthorMap.put( "affiliation", persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).getInstitution().getName() );
+			if ( persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).getPhotoUrl() != null )
+				similarAuthorMap.put( "photo", persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).getPhotoUrl() );
+			similarAuthorMap.put( "isAdded", persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).isAdded() );
+			
+			// return a HashMap with the similar words and similarity degree 
+			HashMap<String, Double> similarDetail = comparePhraseTopicLevel(authortopicWords,similartopicWords );
+			similarAuthorMap.put( "similarity", similarDetail.get(similarAuthorMap.keySet().toArray()[0]));
+			
+			// construct the map for the list of topics
+			List<Object> topicleveldetail = new ArrayList<Object>();
 			Map<String, Object> topicproportions = new LinkedHashMap<String, Object>();
-			topicproportions.put( "name", topic.split( "_-_" )[0] );
-				topicproportions.put( "value", "" );// Math.round( (
-													// Double.parseDouble(
-													// topic.split( "_-_"
-													// )[1] ) * 100 ) / 100
-													// ) );
+			topicproportions.put( "name", similarDetail.keySet().toArray()[0] );
+			topicproportions.put( "value", "" );
 			topicleveldetail.add( topicproportions );
-		}
+			
 
-		similarAuthorMap.put( "topicdetail", topicleveldetail );
-		// add into list
-		similarAuthorList.add( similarAuthorMap );
+			similarAuthorMap.put( "topicdetail", topicleveldetail );
+			// add into list
+			similarAuthorList.add( similarAuthorMap );	
 		}
 	}
-
 	// prepare list of object map containing similarAuthor details
 	List<Map<String, Object>> similarAuthorListPaging = new ArrayList<Map<String, Object>>();
 
@@ -227,8 +230,32 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 	responseMap.put( "countTotal", similarAuthorList.size() );
 	responseMap.put( "count", similarAuthorListPaging.size() );
 	responseMap.put( "similarAuthors", similarAuthorListPaging );
-
+	
 	return responseMap;
+}
+
+// compare the two authors in word level
+private HashMap<String, Double> comparePhraseTopicLevel(List<String> authortopicWords, List<String> similartopicWords) {
+	HashMap<String, Double> result = new HashMap<String,Double>();
+	String topic = "";
+	int count = 0;
+	
+	for (String authorphrase : authortopicWords){
+		for (String similarphrase : similartopicWords){
+			if (authorphrase.contains(similarphrase)){
+				topic +=  authorphrase + ",";
+				count++;
+			}
+			else{
+				topic +=  similarphrase + ",";
+				count++;
+			}
+		}
+	}
+	
+	result.put(topic, (double)count/authortopicWords.size());
+	
+	return result;
 }
 
 }
