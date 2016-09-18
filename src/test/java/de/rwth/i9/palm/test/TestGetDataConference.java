@@ -36,7 +36,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
-	@Ignore
 	public void testGetEventPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		// int count = 0;

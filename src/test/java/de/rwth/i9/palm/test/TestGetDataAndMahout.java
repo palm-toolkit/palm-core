@@ -35,6 +35,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
+	@Ignore
 	public void testGetDataFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 0 - Fetch data from database ==========" );
@@ -86,7 +87,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Fetch publications per author from database ==========" );
@@ -114,9 +114,9 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	
 	@Test
 	@Ignore
-	public void testcreateEntityDirectories() throws IOException
+	public void testcreateAuthorDirectoriesYearly() throws IOException
 	{
-		System.out.println( "\n========== TEST 2 - Create Architecture for the Data Collection ==========" );
+		System.out.println( "\n========== TEST 2 - Create Architecture for the Data Collection Yearly ==========" );
 		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
@@ -154,6 +154,45 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	
 	@Test
 	@Ignore
+	public void testcreateAuthorDirectories() throws IOException
+	{
+		System.out.println( "\n========== TEST 2 - Create Architecture for the Data Collection ==========" );
+		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();// getByName(
+																			// "mohamed
+																			// amine
+																			// chatti"
+																			// );//getById(
+																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
+																			// );
+		if ( !authors.isEmpty() )
+			for ( Author author : authors )
+			{
+
+				File theDir = new File( "C:/Users/Albi/Desktop/Author-Test/" + author.getId().toString() );
+
+				// if the directory does not exist, create it
+				if ( !theDir.exists() )
+				{
+					boolean result = false;
+
+					try
+					{
+						theDir.mkdir();
+						result = true;
+					}
+					catch ( SecurityException se )
+					{
+						// handle it
+					}
+					if ( result )
+					{
+						System.out.println( "DIR created" );
+					}
+				}
+			}
+	}
+	
+	@Test
 	public void testGetDatabaseFromDatabaseOnSpecificYear2() throws IOException
 	{
 		System.out.println( "\n========== TEST 3 - Fetch publications per author Yearly from database ==========" );

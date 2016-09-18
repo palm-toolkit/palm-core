@@ -36,10 +36,11 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
+	@Ignore
 	public void testGetCirclePublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		int count = 0;
-		System.out.println( "\n========== TEST 1 - Get Circle publication ==========" );
+		System.out.println( "\n========== TEST 0 - Get Circle publication ==========" );
 		// Circle circle = persistenceStrategy.getCircleDAO().getById(
 		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
 
@@ -69,7 +70,6 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	}
 
 	@Test
-	@Ignore
 	public void testGetCirclePublicationsFromDatabaseYearly() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Get Circle publication per YEAR ==========" );
@@ -103,7 +103,6 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	}
 
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Fetch publications per circlefrom database ==========" );
@@ -175,12 +174,12 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 				}
 			}
 	}
-
+	
 	@Test
 	@Ignore
-	public void testGetDatabaseFromDatabaseOnSpecificYear2() throws IOException
+	public void testcreateEntityDirectoriesYear() throws IOException
 	{
-		System.out.println( "\n========== TEST 3 - Fetch publications per circleYearly from database ==========" );
+		System.out.println( "\n========== TEST 4 - Create Architecture for the Data Collection Year==========" );
 		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
@@ -191,9 +190,27 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 		if ( !circles.isEmpty() )
 			for ( Circle circle : circles )
 			{
-				for ( int year = 1980; year < 2017; year++ )
-				{
 
+				File theDir = new File( "C:/Users/Albi/Desktop/Circle-Year-Test/" + circle.getId().toString() );
+
+				// if the directory does not exist, create it
+				if ( !theDir.exists() )
+				{
+					boolean result = false;
+
+					try
+					{
+						theDir.mkdir();
+						result = true;
+					}
+					catch ( SecurityException se )
+					{
+						// handle it
+					}
+					if ( result )
+					{
+						System.out.println( "DIR created" );
+					}
 				}
 			}
 	}
