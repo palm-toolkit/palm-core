@@ -197,8 +197,6 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 			topicdistribution.put( topic.getKey().toString(), topic.getValue() );
 			// topicdistribution.put( "size", topic.getValue() );
 			topicList.add( (LinkedHashMap<String, Object>) topicdistribution );
-
-			// TO DO Unigrams/Ngrams preferences
 		}
 		responseMap.put( "termvalue", topicList );
 
