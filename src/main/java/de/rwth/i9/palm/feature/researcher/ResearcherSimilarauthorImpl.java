@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.feature.researcher;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -170,7 +171,7 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 	
 	// find the list of similar authors
 	List<String> similarEntities = new ArrayList<String>();
-	similarEntities = palmAnalytics.getNGrams().similarEntities( author.getId(), 10, 3);
+	similarEntities = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 50, 10, 3, false );
 	
 	List<Map<String, Object>> similarAuthorList = new ArrayList<Map<String, Object>>();
 	
@@ -178,13 +179,13 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 	List<String> authortopicWords = new ArrayList<String>();
 	for (String entity : similarEntities){
 		if(entity.split("->")[0].equals(author.getId()))
-			authortopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author-Test", entity, 10, 10, 10, true, false ).keySet());
+			authortopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author-Test", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
 	}
 	
 	// run for each of the entities of the list the weightedTopic Composition
 	for (String entity : similarEntities){
 		if(!entity.split("->")[0].equals(author.getId())){		
-			List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author-Test", entity, 10, 10, 10, true, false ).keySet());
+			List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author-Test", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
 			
 			Map<String, Object> similarAuthorMap = new LinkedHashMap<String, Object>();
 
@@ -199,7 +200,7 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 			
 			// return a HashMap with the similar words and similarity degree 
 			HashMap<String, Double> similarDetail = comparePhraseTopicLevel(authortopicWords,similartopicWords );
-			similarAuthorMap.put( "similarity", similarDetail.get(similarAuthorMap.keySet().toArray()[0]));
+			similarAuthorMap.put( "similarity", similarDetail.entrySet().iterator().next().getValue());
 			
 			// construct the map for the list of topics
 			List<Object> topicleveldetail = new ArrayList<Object>();
@@ -246,12 +247,25 @@ private HashMap<String, Double> comparePhraseTopicLevel(List<String> authortopic
 				topic +=  authorphrase + ",";
 				count++;
 			}
-			else{
-				topic +=  similarphrase + ",";
-				count++;
-			}
+			else if(similarphrase.contains(authorphrase)){
+					topic +=  authorphrase + ",";
+					count++;
+				}
+			else
+				continue;
 		}
 	}
+	
+	String [] topicArray = new HashSet<String>(Arrays.asList(topic.split(","))).toArray(new String[0]);
+	String phrase = " ";
+	
+	for (int i = 0; i < topicArray.length; i++){
+		if (i < topicArray.length - 1)
+			phrase +=  topicArray[i] + ", ";
+		else
+			phrase += topicArray[i];
+	}
+		
 	
 	result.put(topic, (double)count/authortopicWords.size());
 	
