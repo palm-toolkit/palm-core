@@ -36,11 +36,10 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
-	@Ignore
 	public void testGetCirclePublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		int count = 0;
-		System.out.println( "\n========== TEST 0 - Get Circle publication ==========" );
+		System.out.println( "\n========== TEST 0 - Get publications for Circles ==========" );
 		// Circle circle = persistenceStrategy.getCircleDAO().getById(
 		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
 
@@ -68,78 +67,12 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 				writer.close();
 		}
 	}
-
-	@Test
-	public void testGetCirclePublicationsFromDatabaseYearly() throws FileNotFoundException, UnsupportedEncodingException
-	{
-		System.out.println( "\n========== TEST 1 - Get Circle publication per YEAR ==========" );
-		// Circle circle = persistenceStrategy.getCircleDAO().getById(
-		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
-
-		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();
-
-		if ( !circles.isEmpty() )
-			for ( Circle circle : circles )
-			{
-				System.out.println( circle.getName().toString() );
-				for ( int year = 1980; year < 2017; year++ )
-				{
-					for ( Author author : circle.getAuthors() )
-					{
-						if ( !author.getPublicationsByYear( year ).isEmpty() )
-						{
-							PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circle-Year-Test/" + circle.getId().toString() + "/" + year + ".txt" );
-							for ( Publication publication : author.getPublicationsByYear( year ) )
-							{
-								writer.print( publication.getTitle() + " " );
-								writer.println( publication.getAbstractText() + " " );
-							}
-							writer.close();
-							System.out.println( year );
-						}
-					}
-				}
-			}
-	}
-
-	@Test
-	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
-	{
-		System.out.println( "\n========== TEST 1 - Fetch publications per circlefrom database ==========" );
-		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();// getByName(
-																			// "mohamed
-																			// amine
-																			// chatti"
-																			// );//getById(
-																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-																			// );
-
-		if ( !circles.isEmpty() )
-			for ( Circle circle : circles )
-			{
-				for ( Publication publication : circle.getPublications() )
-				{
-					if ( publication.getAbstractText() != "null" )
-					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circle-Test/" + circle.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
-						writer.print( publication.getTitle() + " " );
-						writer.print( publication.getAbstractText() );
-						writer.println();
-						writer.close();
-					}
-					else
-					{
-						continue;
-					}
-				}
-			}
-	}
-
+	
 	@Test
 	@Ignore
 	public void testcreateEntityDirectories() throws IOException
 	{
-		System.out.println( "\n========== TEST 2 - Create Architecture for the Data Collection ==========" );
+		System.out.println( "\n========== TEST 1 - Create Architecture for Circle-Test Collection ==========" );
 		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
@@ -176,10 +109,43 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	}
 	
 	@Test
+	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
+	{
+		System.out.println( "\n========== TEST 2 - Fetch publications for Circle-Test database ==========" );
+		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();// getByName(
+																			// "mohamed
+																			// amine
+																			// chatti"
+																			// );//getById(
+																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
+																			// );
+
+		if ( !circles.isEmpty() )
+			for ( Circle circle : circles )
+			{
+				for ( Publication publication : circle.getPublications() )
+				{
+					if ( publication.getAbstractText() != "null" )
+					{
+						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circle-Test/" + circle.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+						writer.print( publication.getTitle() + " " );
+						writer.print( publication.getAbstractText() );
+						writer.println();
+						writer.close();
+					}
+					else
+					{
+						continue;
+					}
+				}
+			}
+	}
+	
+	@Test
 	@Ignore
 	public void testcreateEntityDirectoriesYear() throws IOException
 	{
-		System.out.println( "\n========== TEST 4 - Create Architecture for the Data Collection Year==========" );
+		System.out.println( "\n========== TEST 3 - Create Architecture for Circle-Year-Test==========" );
 		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
@@ -210,6 +176,39 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 					if ( result )
 					{
 						System.out.println( "DIR created" );
+					}
+				}
+			}
+	}
+
+	@Test
+	public void testGetCirclePublicationsFromDatabaseYearly() throws FileNotFoundException, UnsupportedEncodingException
+	{
+		System.out.println( "\n========== TEST 4 - Get Circle publications for Circle-Year-Test ==========" );
+		// Circle circle = persistenceStrategy.getCircleDAO().getById(
+		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
+
+		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();
+
+		if ( !circles.isEmpty() )
+			for ( Circle circle : circles )
+			{
+				System.out.println( circle.getName().toString() );
+				for ( int year = 1980; year < 2017; year++ )
+				{
+					for ( Author author : circle.getAuthors() )
+					{
+						if ( !author.getPublicationsByYear( year ).isEmpty() )
+						{
+							PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circle-Year-Test/" + circle.getId().toString() + "/" + year + ".txt" );
+							for ( Publication publication : author.getPublicationsByYear( year ) )
+							{
+								writer.print( publication.getTitle() + " " );
+								writer.println( publication.getAbstractText() + " " );
+							}
+							writer.close();
+							System.out.println( year );
+						}
 					}
 				}
 			}

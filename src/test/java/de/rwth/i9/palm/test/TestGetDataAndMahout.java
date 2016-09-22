@@ -35,10 +35,9 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
-	@Ignore
 	public void testGetDataFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
-		System.out.println( "\n========== TEST 0 - Fetch data from database ==========" );
+		System.out.println( "\n========== TEST 0 - Fetch Authors from database ==========" );
 
 		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();
 
@@ -69,27 +68,48 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	
 	@Test
 	@Ignore
-	public void testGetCoauthorsofPublication()
+	public void testcreateAuthorDirectories() throws IOException
 	{
-		System.out.println( "\n========== TEST 4 - Fetch authors of publication from database ==========" );
-
-		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();
-
-		if ( authors != null )
+		System.out.println( "\n========== TEST 1 - Create Architecture for the Author-Test Collection ==========" );
+		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();// getByName(
+																			// "mohamed
+																			// amine
+																			// chatti"
+																			// );//getById(
+																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
+																			// );
+		if ( !authors.isEmpty() )
 			for ( Author author : authors )
 			{
-				for ( Publication publication : author.getPublications() )
+
+				File theDir = new File( "C:/Users/Albi/Desktop/Author-Test/" + author.getId().toString() );
+
+				// if the directory does not exist, create it
+				if ( !theDir.exists() )
 				{
-					List<Author> p = publication.getAuthors();
+					boolean result = false;
+
+					try
+					{
+						theDir.mkdir();
+						result = true;
+					}
+					catch ( SecurityException se )
+					{
+						// handle it
+					}
+					if ( result )
+					{
+						System.out.println( "DIR created" );
+					}
 				}
 			}
-		System.out.println( "\n\n" );
 	}
 
 	@Test
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
-		System.out.println( "\n========== TEST 1 - Fetch publications per author from database ==========" );
+		System.out.println( "\n========== TEST 2 - Fetch publications for each Author-Test from database ==========" );
 		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
 	
 		if( !authors.isEmpty())
@@ -116,7 +136,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	@Ignore
 	public void testcreateAuthorDirectoriesYearly() throws IOException
 	{
-		System.out.println( "\n========== TEST 2 - Create Architecture for the Data Collection Yearly ==========" );
+		System.out.println( "\n========== TEST 3 - Create Architecture for the Author-Year-Test Collection Yearly ==========" );
 		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
@@ -152,50 +172,12 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 			}
 	}
 	
-	@Test
-	@Ignore
-	public void testcreateAuthorDirectories() throws IOException
-	{
-		System.out.println( "\n========== TEST 2 - Create Architecture for the Data Collection ==========" );
-		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();// getByName(
-																			// "mohamed
-																			// amine
-																			// chatti"
-																			// );//getById(
-																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-																			// );
-		if ( !authors.isEmpty() )
-			for ( Author author : authors )
-			{
-
-				File theDir = new File( "C:/Users/Albi/Desktop/Author-Test/" + author.getId().toString() );
-
-				// if the directory does not exist, create it
-				if ( !theDir.exists() )
-				{
-					boolean result = false;
-
-					try
-					{
-						theDir.mkdir();
-						result = true;
-					}
-					catch ( SecurityException se )
-					{
-						// handle it
-					}
-					if ( result )
-					{
-						System.out.println( "DIR created" );
-					}
-				}
-			}
-	}
+	
 	
 	@Test
 	public void testGetDatabaseFromDatabaseOnSpecificYear2() throws IOException
 	{
-		System.out.println( "\n========== TEST 3 - Fetch publications per author Yearly from database ==========" );
+		System.out.println( "\n========== TEST 4 - Fetch publications per Author-Yearl-Test from database ==========" );
 		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
@@ -221,27 +203,4 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 				}
 			}
 	}
-	
-	@Test
-	@Ignore
-	public void testGetDatabaseFromDatabase2() throws IOException
-	{
-
-		System.out.println( "\n========== TEST 4 - Fetch publications from database ==========" );
-		
-		Author authors = persistenceStrategy.getAuthorDAO().getById( "c442983a-0099-4d6d-89b1-6cfc57fa6138" );// getAll();//getByName(
-																																	// "mohamed
-																																	// amine
-																																	// chatti"
-																																	// );//getById(
-																																	// ""
-																																	// );
-		for ( Publication publication : authors.getPublications() )
-		{
-						PrintWriter pub = new PrintWriter( "C:/Users/Albi/Desktop/Authors/Publications_Chatti/" + publication.getId() + ".txt", "UTF-8" );
-						pub.print(publication.getTitle() + " " + publication.getAbstractText());
-						pub.println();
-						pub.close();
-					}	
-			}
 }
