@@ -365,7 +365,7 @@ public class PublicationController
 			boolean isReplaceExistingResult = false;
 			if ( updateResult != null && updateResult.equals( "yes" ) )
 				isReplaceExistingResult = true;
-			return publicationFeature.getPublicationTopicModeling().getTopicModeling( publicationId, isReplaceExistingResult );
+			return publicationFeature.getPublicationTopicModeling().getTopicComposition( publicationId, isReplaceExistingResult );
 		}
 		return Collections.emptyMap();
 	}
