@@ -171,7 +171,7 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 	
 	// find the list of similar authors
 	List<String> similarEntities = new ArrayList<String>();
-	similarEntities = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 50, 10, 3, false );
+	similarEntities = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 50, 10, 3, true );
 	
 	List<Map<String, Object>> similarAuthorList = new ArrayList<Map<String, Object>>();
 	
