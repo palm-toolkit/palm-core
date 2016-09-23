@@ -107,6 +107,78 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 
 		return responseMap;
 }
+	
+	
+	public Map<String, Object> getTopicComposition( String publicationId, boolean isReplaceExistingResult )
+	{
+		// Create JSON map with the responses
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// Handle the status entry on the result
+		if ( !publicationId.isEmpty() )
+		{
+			responseMap.put( "status", "ok" );
+		}
+		else
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "Publication not found" );
+			return responseMap;
+		}
+
+		// create the List with objects which will hold the profiles
+		List<Object> topicModel = new ArrayList<Object>();
+
+		// create HashMap to hold the result and profileName for each algorithm
+		Map<String, Object> algorithmResultUniGrams = new LinkedHashMap<String, Object>();
+		Map<String, Object> algorithmResultNGrams = new LinkedHashMap<String, Object>();
+
+		// add the profile names on the respective map
+		algorithmResultUniGrams.put( "profile", "Unigrams" );
+		algorithmResultNGrams.put( "profile", "Ngrams" );
+		
+		List<Object> termValueResultunigrams = new ArrayList<Object>();
+		// loop over all the results of algorithm and put the elements in List
+		List<String> unigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities(  path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true, false).get(publicationId); 
+		
+		// method used to get the top topics (in this case 5)
+		unigrams = extractTopTopics(unigrams,5);
+		
+		for ( String topics : unigrams){
+			
+			List<Object> termvalueUnigram = new ArrayList<Object>();
+			termvalueUnigram.add( topics.split( "_-_" )[0] );
+			termvalueUnigram.add( Double.parseDouble( topics.split( "_-_" )[1] ) );
+			termValueResultunigrams.add( termvalueUnigram );
+		}
+		
+		algorithmResultUniGrams.put( "termvalue", termValueResultunigrams );
+
+		// add the unigrams into the topicModel list
+		topicModel.add( algorithmResultUniGrams );
+		
+		List<Object> termValueResultngrams = new ArrayList<Object>();
+		List<String> ngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false, false ).get( publicationId ) ;
+		
+		// method used to get the top topics (in this case 5)
+		ngrams = extractTopTopics(ngrams,5);
+		
+		for ( String topics : ngrams){
+			List<Object> termvalueNgram = new ArrayList<Object>();
+			termvalueNgram.add( topics.split( "_-_" )[0] );
+			termvalueNgram.add( Double.parseDouble( topics.split( "_-_" )[1] ) );
+			termValueResultngrams.add( termvalueNgram );
+		}
+		algorithmResultNGrams.put( "termvalue", termValueResultngrams );
+		// add the ngrams into the topicModel list
+		topicModel.add( algorithmResultNGrams );
+
+		// add the result of topic Modeling into the result Map
+		responseMap.put( "topicModel", topicModel );
+
+		return responseMap;
+	}
+
 
 	// method used to get the top elements from an unsorted list created by
 	// composed elements
