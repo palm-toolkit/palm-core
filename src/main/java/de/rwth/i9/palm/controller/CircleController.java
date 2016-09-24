@@ -502,7 +502,7 @@ public class CircleController
 		}
 
 		// get recommended circles based on calculations
-		responseMap.putAll( circleFeature.getCircleTopicModeling().getSimilarCirclesMap( circle, startPage, maxresult ) );
+		responseMap.putAll( circleFeature.getCircleTopicModeling().getSimilarCircles( circle, startPage, maxresult ) );
 
 		return responseMap;
 	}
