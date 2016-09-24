@@ -17,5 +17,7 @@ public interface CircleTopicModeling
 	public Map<String, Object> getCircleTopicEvolutionTest( Circle circle );
 
 	public Map<String, Object> getSimilarCirclesMap( Circle circle, int startPage, int maxresult );
+	
+	public Map<String, Object> getSimilarCircles( Circle circle, int startPage, int maxresult );
 
 }
