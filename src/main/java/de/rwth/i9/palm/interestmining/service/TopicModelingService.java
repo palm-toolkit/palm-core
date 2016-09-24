@@ -740,7 +740,7 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams = null;
 			try
 			{
-				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 5, 7, false, true, true );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 10, 5, false, true, true );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
@@ -845,7 +845,7 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams = null;
 			try
 			{
-				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 5, 7, false, true, false );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 10,5 , false, true, false );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
