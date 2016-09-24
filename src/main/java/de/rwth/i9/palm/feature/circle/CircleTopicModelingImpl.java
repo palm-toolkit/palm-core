@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.feature.circle;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -201,7 +202,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 		HashMap<String, List<String>> topicevolution = new LinkedHashMap<String, List<String>>();
 
 		// getEvolutionofTopicOverTime( 0, 5, false );
-		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "Circle-Year-Test", circle.getId().toString(), 5, 5, 5, true, false, false );
+		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "Circle-Year-Test", circle.getId().toString(), 5, 10, 10, true, false, false );
 		// Prepare set of similarCircle HashSet;
 		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
 
@@ -301,4 +302,119 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 
 		return responseMap;
 	}
+
+	@Override
+	public Map<String, Object> getSimilarCircles(Circle circle, int startPage, int maxresult) {
+		// researchers list container
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		
+		// find the list of similar circles
+		List<String> similarEntities = new ArrayList<String>();
+		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( circle.getId().toString(), "C:/Users/Albi/Desktop/", "Circles", 10, 10, 3, true );
+		
+		List<Map<String, Object>> similarCircleList = new ArrayList<Map<String, Object>>();
+		
+		// get the list of words for the circle 
+		List<String> circletopicWords = new ArrayList<String>();
+		for (String entity : similarEntities){
+			if(entity.split("->")[0].equals(circle.getId()))
+				circletopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Circle-Test", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+		}
+		
+		// run for each of the entities of the list the weightedTopic Composition
+		for (String entity : similarEntities){
+			if(!entity.split("->")[0].equals(circle.getId()))
+			{		
+				List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Circle-Test", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+				
+				Map<String, Object> similarCircleMap = new LinkedHashMap<String, Object>();
+
+				// insert the initial basic information
+				similarCircleMap.put( "id", entity.split("->")[0] );
+				similarCircleMap.put( "name", persistenceStrategy.getCircleDAO().getById( entity.split("->")[0] ).getName() );
+				
+				// return a HashMap with the similar words and similarity degree 
+				HashMap<String, Double> similarDetail = comparePhraseTopicLevel(circletopicWords,similartopicWords );
+				similarCircleMap.put( "similarity", similarDetail.entrySet().iterator().next().getValue());
+				
+				// construct the map for the list of topics
+				List<Object> topicleveldetail = new ArrayList<Object>();
+				Map<String, Object> topicproportions = new LinkedHashMap<String, Object>();
+				topicproportions.put( "name", similarDetail.keySet().toArray()[0] );
+				topicproportions.put( "value", "" );
+				topicleveldetail.add( topicproportions );
+
+				similarCircleMap.put( "topicdetail", topicleveldetail );
+				
+				// check if the similarity is significant 
+				// The threshhold is decided heuristically 
+				double a = similarDetail.entrySet().iterator().next().getValue();
+				if ( a > 0.035){
+					// add into list if the similarity 
+					similarCircleList.add( similarCircleMap );
+				}
+				else
+				{
+					continue;
+				}
+			}
+		}
+		// prepare list of object map containing similarCircle details
+		List<Map<String, Object>> similarCircleListPaging = new ArrayList<Map<String, Object>>();
+
+		int position = 0;
+		for ( Map<String, Object> similarCircle : similarCircleList )
+		{
+			if ( position >= startPage && similarCircleListPaging.size() < maxresult )
+			{
+				similarCircleListPaging.add( similarCircle );
+			}
+		}
+
+		// put similarCircle to responseMap
+		responseMap.put( "countTotal", similarCircleList.size() );
+		responseMap.put( "count", similarCircleListPaging.size() );
+		responseMap.put( "similarCircles", similarCircleListPaging );
+		
+		return responseMap;
+	}
+	
+	
+	// compare the two authors in word level
+	private HashMap<String, Double> comparePhraseTopicLevel(List<String> circletopicWords, List<String> similartopicWords) {
+		HashMap<String, Double> result = new HashMap<String,Double>();
+		String topic = "";
+		int count = 0;
+		
+		for (String circlephrase : circletopicWords){
+			for (String similarphrase : similartopicWords){
+				if (circlephrase.contains(similarphrase)){
+					topic +=  circlephrase + ",";
+					count++;
+				}
+				else if(similarphrase.contains(circlephrase)){
+						topic +=  circlephrase + ",";
+						count++;
+					}
+				else
+					continue;
+			}
+		}
+		
+		String [] topicArray = new HashSet<String>(Arrays.asList(topic.split(","))).toArray(new String[0]);
+		String phrase = " ";
+		
+		for (String str : topicArray){
+			phrase +=  str + ",";
+			}
+		
+		if (phrase != null && phrase.length() > 0 && phrase.charAt(phrase.length()-1)==',') {
+			phrase = phrase.substring(0, phrase.length()-1);
+		    }
+		
+		result.put(phrase, (double)topicArray.length/circletopicWords.size());
+		
+		return result;
+	}
+	
 }

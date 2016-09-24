@@ -209,7 +209,6 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 			topicproportions.put( "value", "" );
 			topicleveldetail.add( topicproportions );
 			
-
 			similarAuthorMap.put( "topicdetail", topicleveldetail );
 			// add into list
 			similarAuthorList.add( similarAuthorMap );	
@@ -259,15 +258,16 @@ private HashMap<String, Double> comparePhraseTopicLevel(List<String> authortopic
 	String [] topicArray = new HashSet<String>(Arrays.asList(topic.split(","))).toArray(new String[0]);
 	String phrase = " ";
 	
-	for (int i = 0; i < topicArray.length; i++){
-		if (i < topicArray.length - 1)
-			phrase +=  topicArray[i] + ", ";
-		else
-			phrase += topicArray[i];
-	}
+	for (String str : topicArray){
+		phrase +=  str + ",";
+		}
+	
+	if (phrase != null && phrase.length() > 0 && phrase.charAt(phrase.length()-1)==',') {
+		phrase = phrase.substring(0, phrase.length()-1);
+	    }
 		
 	
-	result.put(topic, (double)count/authortopicWords.size());
+	result.put(topic, (double)topicArray.length/authortopicWords.size());
 	
 	return result;
 }
