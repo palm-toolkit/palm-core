@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.feature.academicevent;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -70,7 +71,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		algorithmResultNGrams.put( "profile", "Ngrams" );
 
 		// loop over all the results of algorithm and put the elements in List
-		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "Event-Test", 5, 5, 5, false, true, true ).entrySet() )
+		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "Event-Test", 10, 10, 5, false, true, true ).entrySet() )
 		{
 			List<Object> termValueResult = new ArrayList<Object>();
 			// Expected only one entry in this map with eventId
@@ -87,7 +88,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		// add the unigrams into the topicModel list
 		topicModel.add( algorithmResultUniGrams );
 
-		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "Event-Test", 5, 5, 5, false, true, false ).entrySet() )
+		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "Event-Test", 10, 10, 5, false, true, false ).entrySet() )
 		{
 			List<Object> termValueResult = new ArrayList<Object>();
 			// expacted only one entry in this map with eventId
@@ -140,7 +141,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		algorithmResultNGrams.put( "profile", "Ngrams" );
 
 		// loop over all the results of algorithm and put the elements in List
-		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "EventGroups", 5, 5, 5, false, true, true ).entrySet() )
+		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "EventGroups", 10, 10, 5, false, true, true ).entrySet() )
 		{
 			List<Object> termValueResult = new ArrayList<Object>();
 			// Expected only one entry in this map with eventId
@@ -157,7 +158,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		// add the unigrams into the topicModel list
 		topicModel.add( algorithmResultUniGrams );
 
-		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "EventGroups", 5, 5, 5, false, true, false ).entrySet() )
+		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "EventGroups", 10, 10, 5, false, true, false ).entrySet() )
 		{
 			List<Object> termValueResult = new ArrayList<Object>();
 			// expacted only one entry in this map with eventId
@@ -189,7 +190,6 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		// event details
 		Map<String, String> eventdetail = new HashMap<String, String>();
 		eventdetail.put( "id", event.getId().toString() );
-		eventdetail.put( "name", event.getName().toString() );
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
@@ -332,6 +332,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		return responseMap;
 	}
+	
 
 	@Override
 	public Map<String, Object> getEventGroupTopicEvolutionTest( EventGroup event )
@@ -477,4 +478,120 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		return responseMap;
 	}
+
+	@Override
+	public Map<String, Object> getSimilarEvents(EventGroup event, int startPage, int maxresult) {
+		// researchers list container
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		
+		// find the list of similar events
+		List<String> similarEntities = new ArrayList<String>();
+		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( event.getId().toString(), "C:/Users/Albi/Desktop/", "Conferences", 50, 10, 3, false );
+		
+		List<Map<String, Object>> similarEventList = new ArrayList<Map<String, Object>>();
+		
+		// get the list of words for the event 
+		List<String> eventtopicWords = new ArrayList<String>();
+		for (String entity : similarEntities){
+			if(entity.split("->")[0].equals(event.getId()))
+				eventtopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"EventGroups", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+		}
+		
+		// run for each of the entities of the list the weightedTopic Composition
+		for (String entity : similarEntities){
+			if(!entity.split("->")[0].equals(event.getId()))
+			{		
+				List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"EventGroups", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+				
+				Map<String, Object> similarEventMap = new LinkedHashMap<String, Object>();
+
+				// insert the initial basic information
+				similarEventMap.put( "id", entity.split("->")[0] );
+				similarEventMap.put( "name", persistenceStrategy.getEventGroupDAO().getById( entity.split("->")[0] ).getName() );
+				
+				
+				// return a HashMap with the similar words and similarity degree 
+				HashMap<String, Double> similarDetail = comparePhraseTopicLevel(eventtopicWords,similartopicWords );
+				similarEventMap.put( "similarity", similarDetail.entrySet().iterator().next().getValue());
+				
+				// construct the map for the list of topics
+				List<Object> topicleveldetail = new ArrayList<Object>();
+				Map<String, Object> topicproportions = new LinkedHashMap<String, Object>();
+				topicproportions.put( "name", similarDetail.keySet().toArray()[0] );
+				topicproportions.put( "value", "" );
+				topicleveldetail.add( topicproportions );
+				
+
+				similarEventMap.put( "topicdetail", topicleveldetail );
+				
+				// check if the similarity is significant 
+				// The threshhold is decided heuristically 
+				double a = similarDetail.entrySet().iterator().next().getValue();
+				if ( a > 0.035){
+					// add into list if the similarity 
+					similarEventList.add( similarEventMap );
+				}
+				else
+				{
+					continue;
+				}
+			}
+		}
+		// prepare list of object map containing similarEvent details
+		List<Map<String, Object>> similarEventListPaging = new ArrayList<Map<String, Object>>();
+
+		int position = 0;
+		for ( Map<String, Object> similarEvent : similarEventList )
+		{
+			if ( position >= startPage && similarEventListPaging.size() < maxresult )
+			{
+				similarEventListPaging.add( similarEvent );
+			}
+		}
+
+		// put similarEvent to responseMap
+		responseMap.put( "countTotal", similarEventList.size() );
+		responseMap.put( "count", similarEventListPaging.size() );
+		responseMap.put( "similarEvents", similarEventListPaging );
+		
+		return responseMap;
+	}
+	
+	// compare the two events in word level
+	private HashMap<String, Double> comparePhraseTopicLevel(List<String> eventtopicWords, List<String> similartopicWords) {
+		HashMap<String, Double> result = new HashMap<String,Double>();
+		String topic = "";
+		int count = 0;
+		
+		for (String eventphrase : eventtopicWords){
+			for (String similarphrase : similartopicWords){
+				if (eventphrase.contains(similarphrase)){
+					topic +=  eventphrase + ",";
+					count++;
+				}
+				else if(similarphrase.contains(eventphrase)){
+						topic +=  eventphrase + ",";
+						count++;
+					}
+				else
+					continue;
+			}
+		}
+		
+		String [] topicArray = new HashSet<String>(Arrays.asList(topic.split(","))).toArray(new String[0]);
+		String phrase = " ";
+		
+		for (String str : topicArray){
+			phrase +=  str + ",";
+			}
+		
+		if (phrase != null && phrase.length() > 0 && phrase.charAt(phrase.length()-1)==',') {
+			phrase = phrase.substring(0, phrase.length()-1);
+		    }
+		
+		result.put(phrase, (double)topicArray.length/eventtopicWords.size());
+		
+		return result;
+	}
+
 }
