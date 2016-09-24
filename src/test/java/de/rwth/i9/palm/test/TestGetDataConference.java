@@ -68,6 +68,37 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	
 	@Test
 	@Ignore
+	public void testGetEventGroupsPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
+	{
+		// int count = 0;
+		System.out.println( "\n========== TEST 0 - Get Conferences publications ==========" );
+		// Event event = persistenceStrategy.getEventDAO().getById(
+		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
+
+		List<Event> events = persistenceStrategy.getEventDAO().getAll();
+
+		if ( !events.isEmpty() )
+			for ( Event event : events )
+
+		{
+				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Conferences/Conferences/" + event.getId() + ".txt", "UTF-8" );
+				// writer.println( "Event Name : " + event.getName() );
+				for ( Publication publication : event.getPublications() )
+			{
+					if ( publication.getAbstractText() != null )
+					{
+						writer.println( publication.getTitle() );
+						writer.println( publication.getAbstractText() );
+						writer.println();
+						// count++;
+					}
+			}
+				writer.close();
+		}
+	}
+	
+	@Test
+	@Ignore
 	public void testcreateEntityDirectories() throws IOException
 	{
 		System.out.println( "\n========== TEST 1 - Create Architecture for Event-Test Collection ==========" );
@@ -107,11 +138,10 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 
 	@Test
-	@Ignore
 	public void testGetEventGroupPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for Event-Test from database ==========" );
-		List<Event> events = persistenceStrategy.getEventDAO().getAll();// getByName(
+		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();// getByName(
 																		// "mohamed
 																		// amine
 																		// chatti"
@@ -119,19 +149,20 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 																		// "e14fd198-1e54-449f-96aa-7e19d0eec488"
 																		// );
 
-		if ( !events.isEmpty() )
-			for ( Event event : events )
+		if ( !eventgroups.isEmpty() )
+			for ( EventGroup eventgroup : eventgroups )
 			{
-				System.out.println( event.getName() );
+				System.out.println( eventgroup.getName() );
+				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Conferences/Conferences/" + eventgroup.getId().toString() + ".txt", "UTF-8" );
+				for ( Event event : eventgroup.getEvents() )
+				{
 					for ( Publication publication : event.getPublications() )
 					{
 						if ( publication.getAbstractText() != "null" )
 						{
-						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Event-Test/" + event.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
 							writer.print( publication.getTitle() + " " );
 							writer.print( publication.getAbstractText() );
 							writer.println();
-							writer.close();
 						}
 						else
 						{
@@ -139,6 +170,8 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 						}
 					}
 				}
+				writer.close();
+			}
 	}
 
 	@Test
@@ -184,6 +217,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	
 
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 4 - Fetch publications per Eventgroups from database ==========" );
@@ -264,6 +298,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	
 
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabaseConferenceClustered() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 4 - Fetch publications per Eventgroups from database ==========" );
