@@ -340,9 +340,9 @@ public class AcademicEventController
 			maxresult = 10;
 
 		// get event
-		Event event = persistenceStrategy.getEventDAO().getById( eventId );
+		EventGroup eventgroup = persistenceStrategy.getEventGroupDAO().getById( eventId );
 
-		if ( event == null )
+		if ( eventgroup == null )
 		{
 			responseMap.put( "status", "error" );
 			responseMap.put( "statusMessage", "event not found in database" );
@@ -350,7 +350,7 @@ public class AcademicEventController
 		}
 
 		// get recommended events based on calculations
-		responseMap.putAll( academicEventFeature.getEventTopicModeling().getSimilarEventsMap( event, startPage, maxresult ) );
+		responseMap.putAll( academicEventFeature.getEventTopicModeling().getSimilarEvents( eventgroup, startPage, maxresult ) );
 
 		return responseMap;
 	}
