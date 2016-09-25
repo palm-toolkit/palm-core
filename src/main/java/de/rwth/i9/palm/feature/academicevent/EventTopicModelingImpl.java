@@ -139,9 +139,9 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		// add the profile names on the respective map
 		algorithmResultUniGrams.put( "profile", "Unigrams" );
 		algorithmResultNGrams.put( "profile", "Ngrams" );
-
+	
 		// loop over all the results of algorithm and put the elements in List
-		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "EventGroups", 10, 10, 5, false, true, true ).entrySet() )
+		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( persistenceStrategy.getEventDAO().getById(eventId).getEventGroup().getId().toString() , path, "EventGroups", 10, 10, 5, false, true, true ).entrySet() )
 		{
 			List<Object> termValueResult = new ArrayList<Object>();
 			// Expected only one entry in this map with eventId
@@ -158,7 +158,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		// add the unigrams into the topicModel list
 		topicModel.add( algorithmResultUniGrams );
 
-		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "EventGroups", 10, 10, 5, false, true, false ).entrySet() )
+		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( persistenceStrategy.getEventDAO().getById(eventId).getEventGroup().getId().toString(), path, "EventGroups", 10, 10, 5, false, true, false ).entrySet() )
 		{
 			List<Object> termValueResult = new ArrayList<Object>();
 			// expacted only one entry in this map with eventId
@@ -335,7 +335,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	
 
 	@Override
-	public Map<String, Object> getEventGroupTopicEvolutionTest( EventGroup event )
+	public Map<String, Object> getEventGroupTopicEvolutionTest( Event event )
 	{
 
 		// researchers list container
@@ -344,7 +344,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		HashMap<String, List<String>> topicevolution = new LinkedHashMap<String, List<String>>();
 
 		// getEvolutionofTopicOverTime( 0, 5, false );
-		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "EventGroupsClustered", event.getId().toString(), 5, 10, 10, true, false, false );
+		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "EventGroupsClustered", event.getEventGroup().getId().toString(), 5, 10, 10, true, false, false );
 		// Prepare set of similarAuthor HashSet;
 		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
 		String[] colors = { "0efff8", "ff7f0e", "0eff7f", "ffa70e", "ff7f5a", "d4991c", "ad937c", "ff430e", "ff0e8e", "0e8eff" };
@@ -390,7 +390,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getTopicModelEventGroupUniCloud( EventGroup eventgroup, boolean isReplaceExistingResult )
+	public Map<String, Object> getTopicModelEventGroupUniCloud( Event eventgroup, boolean isReplaceExistingResult )
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -402,7 +402,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getId().toString(), 5, 5, 5, true, true );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getEventGroup().getId().toString(), 5, 5, 5, true, true );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -437,7 +437,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getTopicModelEventGroupNCloud( EventGroup eventgroup, boolean isReplaceExistingResult )
+	public Map<String, Object> getTopicModelEventGroupNCloud( Event eventgroup, boolean isReplaceExistingResult )
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -449,7 +449,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getId().toString(), 5, 5, 5, true, false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getEventGroup().getId().toString(), 5, 5, 5, true, false );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -480,13 +480,13 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getSimilarEvents(EventGroup event, int startPage, int maxresult) {
+	public Map<String, Object> getSimilarEvents(Event event, int startPage, int maxresult) {
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
 		// find the list of similar events
 		List<String> similarEntities = new ArrayList<String>();
-		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( event.getId().toString(), "C:/Users/Albi/Desktop/", "Conferences", 50, 10, 3, false );
+		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( event.getEventGroup().getId().toString(), "C:/Users/Albi/Desktop/", "Conferences", 50, 10, 3, false );
 		
 		List<Map<String, Object>> similarEventList = new ArrayList<Map<String, Object>>();
 		
