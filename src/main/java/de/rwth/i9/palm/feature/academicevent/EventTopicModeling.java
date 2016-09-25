@@ -19,11 +19,11 @@ public interface EventTopicModeling
 
 	public Map<String, Object> getSimilarEventsMap( Event event, int startPage, int maxresult );
 	
-	public Map<String, Object> getSimilarEvents( EventGroup event, int startPage, int maxresult );
+	public Map<String, Object> getSimilarEvents( Event event, int startPage, int maxresult );
 
-	public Map<String, Object> getEventGroupTopicEvolutionTest( EventGroup event );
+	public Map<String, Object> getEventGroupTopicEvolutionTest( Event event );
 
-	public Map<String, Object> getTopicModelEventGroupUniCloud( EventGroup event, boolean isReplaceExistingResult );
+	public Map<String, Object> getTopicModelEventGroupUniCloud( Event event, boolean isReplaceExistingResult );
 
-	public Map<String, Object> getTopicModelEventGroupNCloud( EventGroup event, boolean isReplaceExistingResult );
+	public Map<String, Object> getTopicModelEventGroupNCloud( Event event, boolean isReplaceExistingResult );
 }
