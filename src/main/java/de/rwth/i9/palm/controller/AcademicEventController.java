@@ -340,7 +340,7 @@ public class AcademicEventController
 			maxresult = 10;
 
 		// get event
-		EventGroup eventgroup = persistenceStrategy.getEventGroupDAO().getById( eventId );
+		Event eventgroup = persistenceStrategy.getEventDAO().getById( eventId );
 
 		if ( eventgroup == null )
 		{
@@ -383,7 +383,7 @@ public class AcademicEventController
 			maxresult = 10;
 
 		// get event
-		EventGroup event = persistenceStrategy.getEventGroupDAO().getById( eventId );
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
 
 		if ( event == null )
 		{
@@ -481,7 +481,7 @@ public class AcademicEventController
 				isReplaceExistingResult = true;
 
 			// get author
-			EventGroup event = persistenceStrategy.getEventGroupDAO().getById( eventId );
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
 
 			return academicEventFeature.getEventTopicModeling().getTopicModelEventGroupUniCloud( event, isReplaceExistingResult );
 		}
@@ -506,7 +506,7 @@ public class AcademicEventController
 				isReplaceExistingResult = true;
 
 			// get author
-			EventGroup event = persistenceStrategy.getEventGroupDAO().getById( eventId );
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
 
 			return academicEventFeature.getEventTopicModeling().getTopicModelEventGroupNCloud( event, isReplaceExistingResult );
 		}
