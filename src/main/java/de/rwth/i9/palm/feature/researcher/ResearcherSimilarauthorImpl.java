@@ -171,7 +171,7 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 	
 	// find the list of similar authors
 	List<String> similarEntities = new ArrayList<String>();
-	similarEntities = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 50, 10, 3, true );
+	similarEntities = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 50, 10, 3, false );
 	
 	List<Map<String, Object>> similarAuthorList = new ArrayList<Map<String, Object>>();
 	
@@ -211,7 +211,18 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 			
 			similarAuthorMap.put( "topicdetail", topicleveldetail );
 			// add into list
-			similarAuthorList.add( similarAuthorMap );	
+			// check if the similarity is significant 
+			// The threshhold is decided heuristically 
+			double a = similarDetail.entrySet().iterator().next().getValue();
+			if ( a > 0.035){
+				// add into list if the similarity 
+				similarAuthorList.add( similarAuthorMap );
+			}
+			else
+			{
+				continue;
+			}
+				
 		}
 	}
 	// prepare list of object map containing similarAuthor details
