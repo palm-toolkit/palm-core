@@ -115,4 +115,14 @@ public class CircleSearchImpl implements CircleSearch
 		return responseMap;
 	}
 
+	@Override
+	public Map<String, Object> getCircleListByResearchers( List<String> idsList, String orderBy )
+	{
+		Map<String, Object> circleMap;
+
+		circleMap = persistenceStrategy.getCircleDAO().getCirclesByResearchers( idsList, orderBy );
+
+		return circleMap;
+	}
+
 }

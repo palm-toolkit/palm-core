@@ -127,7 +127,6 @@ public class EventMiningImpl implements EventMining
 		// get eventGroup from database
 		if ( eventGroup == null )
 			eventGroup = persistenceStrategy.getEventGroupDAO().getById( id );
-
 		if ( eventGroup == null )
 		{
 			responseMap.put( "status", "error" );
@@ -206,16 +205,21 @@ public class EventMiningImpl implements EventMining
 										newEvent.addOrUpdateAdditionalInformation( "state", state );
 									if ( country != null )
 										newEvent.addOrUpdateAdditionalInformation( "country", country );
-									
+
 									eventGroup.addEvent( newEvent );
 								}
 							}
 							// event year
 							else if ( eachEventYearEntry.getKey().equals( "year" ) )
 							{
-								// reset 
-								year = null;number = null;abbr = null;city = null;state = null;country = null;
-								
+								// reset
+								year = null;
+								number = null;
+								abbr = null;
+								city = null;
+								state = null;
+								country = null;
+
 								// get year
 								if ( eachEventYearMap.get( "year" ) != null && !eachEventYearMap.get( "year" ).equals( "" ) )
 									year = (String) eachEventYearMap.get( "year" );
@@ -235,7 +239,7 @@ public class EventMiningImpl implements EventMining
 								if ( eachEventYearMap.get( "country" ) != null && !eachEventYearMap.get( "country" ).equals( "" ) )
 									country = (String) eachEventYearMap.get( "country" );
 							}
-								
+
 						}
 					}
 				}
@@ -256,6 +260,7 @@ public class EventMiningImpl implements EventMining
 		// put event group map to json
 		Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
 		eventGroupMap.put( "id", eventGroup.getId() );
+		System.out.println( eventGroup.getName() + " in mining" );
 		eventGroupMap.put( "name", WordUtils.capitalize( eventGroup.getName() ) );
 		if ( eventGroup.getNotation() != null )
 			eventGroupMap.put( "abbr", eventGroup.getNotation() );
@@ -325,7 +330,7 @@ public class EventMiningImpl implements EventMining
 				if ( !location.equals( "" ) )
 					eventMap.put( "location", location );
 			}
-
+			eventMap.put( "eventGroupName", eventGroup.getName() );
 			eventMap.put( "isAdded", event.isAdded() );
 
 			eventList.add( eventMap );
@@ -347,17 +352,15 @@ public class EventMiningImpl implements EventMining
 	{
 		if ( eventGroup.getPublicationType().equals( PublicationType.CONFERENCE ) )
 		{
-			// get the event  date
+			// get the event date
 			String[] nameArray = name.split( "," );
-			for( String namePart : nameArray ){
-				if( namePart.length() < 18 ){
+			for ( String namePart : nameArray )
+			{
+				if ( namePart.length() < 18 )
+				{
 					String namePartLowercase = namePart.toLowerCase();
-					if( namePartLowercase.contains( "january" ) || namePartLowercase.contains( "february" ) ||
-						namePartLowercase.contains( "march" ) || namePartLowercase.contains( "april" ) ||
-						namePartLowercase.contains( "may" ) || namePartLowercase.contains( "june" ) ||
-						namePartLowercase.contains( "july" ) || namePartLowercase.contains( "august" ) ||
-						namePartLowercase.contains( "september" ) || namePartLowercase.contains( "october" ) ||
-						namePartLowercase.contains( "november" ) || namePartLowercase.contains( "descember" ) ){
+					if ( namePartLowercase.contains( "january" ) || namePartLowercase.contains( "february" ) || namePartLowercase.contains( "march" ) || namePartLowercase.contains( "april" ) || namePartLowercase.contains( "may" ) || namePartLowercase.contains( "june" ) || namePartLowercase.contains( "july" ) || namePartLowercase.contains( "august" ) || namePartLowercase.contains( "september" ) || namePartLowercase.contains( "october" ) || namePartLowercase.contains( "november" ) || namePartLowercase.contains( "descember" ) )
+					{
 						newEvent.addOrUpdateAdditionalInformation( "date", namePart.trim() );
 						break;
 					}

@@ -10,4 +10,6 @@ public interface CircleSearch
 	public Map<String, Object> getCircleListByQuery( String query, String creatorId, Integer page, Integer maxresult, String fulltextSearch, String orderBy );
 
 	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<Circle> circles );
+
+	public Map<String, Object> getCircleListByResearchers( List<String> idsList, String orderBy );
 }

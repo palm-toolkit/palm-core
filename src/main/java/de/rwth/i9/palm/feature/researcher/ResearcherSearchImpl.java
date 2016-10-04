@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.text.WordUtils;
+import org.apache.http.ParseException;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.slf4j.Logger;
@@ -35,15 +36,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 	private ResearcherCollectionService researcherCollectionService;
 
 	@Override
-	public Map<String, Object> getResearcherMapByQuery( 
-			String query, 
-			String queryType, 
-			Integer startPage, 
-			Integer maxresult, 
-			String source, 
- String addedAuthor, 
-			String fulltextSearch, 
-			boolean persist ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public Map<String, Object> getResearcherMapByQuery( String query, String queryType, Integer startPage, Integer maxresult, String source, String addedAuthor, String fulltextSearch, boolean persist ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		// researchers list container
 		Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
@@ -70,19 +63,23 @@ public class ResearcherSearchImpl implements ResearcherSearch
 			if ( !query.equals( "" ) && startPage == 0 )
 			{
 				// collect author from network
-//				if ( isCollectAuthorFromNetworkNeeded( query ) )
+				// if ( isCollectAuthorFromNetworkNeeded( query ) )
 				List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( query, persist );
 				authorMap.put( "totalCount", researcherList.size() );
 				authorMap.put( "authors", researcherList );
-				
-				//				else
-//				{
-//					// the authors is querying from database
-//					if ( fulltextSearch.equals( "no" ) )
-//						researcherList.addAll( persistenceStrategy.getAuthorDAO().getAuthorListWithPaging( query, startPage, maxresult ) );
-//					else
-//						researcherList.addAll( persistenceStrategy.getAuthorDAO().getAuthorListByFullTextSearchWithPaging( query, startPage, maxresult ) );
-//				}
+
+				// else
+				// {
+				// // the authors is querying from database
+				// if ( fulltextSearch.equals( "no" ) )
+				// researcherList.addAll(
+				// persistenceStrategy.getAuthorDAO().getAuthorListWithPaging(
+				// query, startPage, maxresult ) );
+				// else
+				// researcherList.addAll(
+				// persistenceStrategy.getAuthorDAO().getAuthorListByFullTextSearchWithPaging(
+				// query, startPage, maxresult ) );
+				// }
 			}
 		}
 
@@ -187,6 +184,46 @@ public class ResearcherSearchImpl implements ResearcherSearch
 		}
 
 		return collectFromNetwork;
+	}
+
+	@Override
+	public Map<String, Object> getResearchersByQuery( String query, String queryType, String source, String addedAuthor, String fulltextSearch, boolean persist ) throws IOException, InterruptedException, ExecutionException, ParseException, OAuthSystemException, OAuthProblemException
+	{
+		// researchers list container
+		Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
+
+		// get authors from the datasource
+		if ( source.equals( "internal" ) )
+		{
+			// the authors is querying from database
+			if ( fulltextSearch.equals( "no" ) )
+				authorMap = persistenceStrategy.getAuthorDAO().getAuthorWithoutPaging( query, addedAuthor );
+			else
+			{
+				// authorMap =
+				// persistenceStrategy.getAuthorDAO().getAuthorByFullTextSearchWithPaging(
+				// query, addedAuthor, startPage, maxresult );
+			}
+		}
+		else if ( source.equals( "external" ) )
+		{
+			// TODO: the authors are querying from external (academic networks)
+
+		}
+		else if ( source.equals( "all" ) )
+		{
+			// the authors are combination from internal and external sources
+			if ( !query.equals( "" ) )
+			{
+				// collect author from network
+				// if ( isCollectAuthorFromNetworkNeeded( query ) )
+				List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( query, persist );
+				authorMap.put( "authors", researcherList );
+
+			}
+		}
+
+		return authorMap;
 	}
 
 }

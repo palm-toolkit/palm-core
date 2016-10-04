@@ -1,14 +1,12 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,8 +14,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,17 +23,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import de.rwth.i9.palm.explore.service.ExploreFilter;
+import de.rwth.i9.palm.explore.service.ExploreVisualization;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
-import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
-import de.rwth.i9.palm.graph.feature.GraphFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.AuthorSource;
+import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Color;
+import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserWidget;
 import de.rwth.i9.palm.model.Widget;
@@ -52,7 +48,6 @@ import de.rwth.i9.palm.service.SecurityService;
 @RequestMapping( value = "/explore" )
 public class ExploreController
 {
-	private final static Logger log = LoggerFactory.getLogger( ExploreController.class );
 
 	private static final String LINK_NAME = "explore";
 
@@ -69,21 +64,17 @@ public class ExploreController
 	private ResearcherFeature researcherFeature;
 
 	@Autowired
-	private CircleFeature circleFeature;
-
-	@Autowired
-	private GraphFeature graphFeature;
-
-	@Autowired
 	private AcademicEventFeature academicEventFeature;
 
 	@Autowired
-	private AnalyticsRestController analyticsRestController;
+	private ExploreFilter exploreFilter;
 
-
-	// Use explore/createVAWidgets to create Visual Analytics Widgets in Explore
+	@Autowired
+	private ExploreVisualization exploreVis;
+	// Use explore/createVAWidgets to create Visual Analytics Widgets
 	@Transactional
 	@RequestMapping( value = "/createVAWidgets", method = RequestMethod.GET )
+
 	public void createVAWidgets( final HttpServletResponse response ) throws InterruptedException
 	{
 		List<Widget> existingWidgets = persistenceStrategy.getWidgetDAO().getAllWidgets();
@@ -98,81 +89,81 @@ public class ExploreController
 		}
 		if ( !alreadyExist )
 		{
-			// create RESEARCHER Widget in Explore
-			Widget researchersWidget = new Widget();
-			researchersWidget.setTitle( "Researchers" );
-			researchersWidget.setUniqueName( "explore_researchers" );
-			researchersWidget.setWidgetType( WidgetType.EXPLORE );
-			researchersWidget.setWidgetGroup( "content" );
-			researchersWidget.setWidgetSource( WidgetSource.INCLUDE );
-			researchersWidget.setSourcePath( "../../explore/widget/researcherAnalytics.ftl" );
-			researchersWidget.setWidgetWidth( WidgetWidth.HALF );
-			researchersWidget.setColor( Color.YELLOW );
-			researchersWidget.setInformation( "Visual Analytics widget for researchers/authors" );
-			researchersWidget.setCloseEnabled( true );
-			researchersWidget.setMinimizeEnabled( true );
-			researchersWidget.setMoveableEnabled( true );
-			researchersWidget.setHeaderVisible( true );
-			researchersWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			researchersWidget.setPosition( 0 );
-			persistenceStrategy.getWidgetDAO().persist( researchersWidget );
+			// create SEARCH Widget in Explore
+			Widget searchWidget = new Widget();
+			searchWidget.setTitle( "Search" );
+			searchWidget.setUniqueName( "explore_search" );
+			searchWidget.setWidgetType( WidgetType.EXPLORE );
+			searchWidget.setWidgetGroup( "content" );
+			searchWidget.setWidgetSource( WidgetSource.INCLUDE );
+			searchWidget.setSourcePath( "../../explore/widget/search.ftl" );
+			searchWidget.setWidgetWidth( WidgetWidth.QUARTER );
+			searchWidget.setColor( Color.YELLOW );
+			searchWidget.setInformation( "Visual Analytics widget for searching any item" );
+			searchWidget.setCloseEnabled( false );
+			searchWidget.setMinimizeEnabled( true );
+			searchWidget.setMoveableEnabled( true );
+			searchWidget.setHeaderVisible( true );
+			searchWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			searchWidget.setPosition( 0 );
+			persistenceStrategy.getWidgetDAO().persist( searchWidget );
 
-			// create RESEARCHER Widget in Explore
-			Widget topicsWidget = new Widget();
-			topicsWidget.setTitle( "Topics/Interests" );
-			topicsWidget.setUniqueName( "explore_topics" );
-			topicsWidget.setWidgetType( WidgetType.EXPLORE );
-			topicsWidget.setWidgetGroup( "content" );
-			topicsWidget.setWidgetSource( WidgetSource.INCLUDE );
-			topicsWidget.setSourcePath( "../../explore/widget/topicAnalytics.ftl" );
-			topicsWidget.setWidgetWidth( WidgetWidth.HALF );
-			topicsWidget.setColor( Color.RED );
-			topicsWidget.setInformation( "Visual Analytics widget for topics or researchers' interests" );
-			topicsWidget.setCloseEnabled( true );
-			topicsWidget.setMinimizeEnabled( true );
-			topicsWidget.setMoveableEnabled( true );
-			topicsWidget.setHeaderVisible( true );
-			topicsWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			topicsWidget.setPosition( 0 );
-			persistenceStrategy.getWidgetDAO().persist( topicsWidget );
+			// create Visualization Widget in Explore
+			Widget visualizationWidget = new Widget();
+			visualizationWidget.setTitle( "Visualization" );
+			visualizationWidget.setUniqueName( "explore_visualize" );
+			visualizationWidget.setWidgetType( WidgetType.EXPLORE );
+			visualizationWidget.setWidgetGroup( "content" );
+			visualizationWidget.setWidgetSource( WidgetSource.INCLUDE );
+			visualizationWidget.setSourcePath( "../../explore/widget/visualize.ftl" );
+			visualizationWidget.setWidgetWidth( WidgetWidth.HALF );
+			visualizationWidget.setColor( Color.GREEN );
+			visualizationWidget.setInformation( "Visual Analytics widget for all visualizations" );
+			visualizationWidget.setCloseEnabled( false );
+			visualizationWidget.setMinimizeEnabled( true );
+			visualizationWidget.setMoveableEnabled( true );
+			visualizationWidget.setHeaderVisible( false );
+			visualizationWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			visualizationWidget.setPosition( 0 );
+			persistenceStrategy.getWidgetDAO().persist( visualizationWidget );
 
-			// create RESEARCHER Widget in Explore
-			Widget publicationsWidget = new Widget();
-			publicationsWidget.setTitle( "Publications" );
-			publicationsWidget.setUniqueName( "explore_publications" );
-			publicationsWidget.setWidgetType( WidgetType.EXPLORE );
-			publicationsWidget.setWidgetGroup( "content" );
-			publicationsWidget.setWidgetSource( WidgetSource.INCLUDE );
-			publicationsWidget.setSourcePath( "../../explore/widget/publicationAnalytics.ftl" );
-			publicationsWidget.setWidgetWidth( WidgetWidth.HALF );
-			publicationsWidget.setColor( Color.GREEN );
-			publicationsWidget.setInformation( "Visual Analytics widget for publications" );
-			publicationsWidget.setCloseEnabled( true );
-			publicationsWidget.setMinimizeEnabled( true );
-			publicationsWidget.setMoveableEnabled( true );
-			publicationsWidget.setHeaderVisible( true );
-			publicationsWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			publicationsWidget.setPosition( 0 );
-			persistenceStrategy.getWidgetDAO().persist( publicationsWidget );
+			// create Filter Widget in Explore
+			Widget filterWidget = new Widget();
+			filterWidget.setTitle( "Filters" );
+			filterWidget.setUniqueName( "explore_filter" );
+			filterWidget.setWidgetType( WidgetType.EXPLORE );
+			filterWidget.setWidgetGroup( "content" );
+			filterWidget.setWidgetSource( WidgetSource.INCLUDE );
+			filterWidget.setSourcePath( "../../explore/widget/filter.ftl" );
+			filterWidget.setWidgetWidth( WidgetWidth.QUARTER );
+			filterWidget.setColor( Color.BLUE );
+			filterWidget.setInformation( "Visual Analytics widget for filters" );
+			filterWidget.setCloseEnabled( false );
+			filterWidget.setMinimizeEnabled( true );
+			filterWidget.setMoveableEnabled( true );
+			filterWidget.setHeaderVisible( true );
+			filterWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			filterWidget.setPosition( 0 );
+			persistenceStrategy.getWidgetDAO().persist( filterWidget );
 
-			// create RESEARCHER Widget in Explore
-			Widget conferencesWidget = new Widget();
-			conferencesWidget.setTitle( "Conferences" );
-			conferencesWidget.setUniqueName( "explore_researcher" );
-			conferencesWidget.setWidgetType( WidgetType.EXPLORE );
-			conferencesWidget.setWidgetGroup( "content" );
-			conferencesWidget.setWidgetSource( WidgetSource.INCLUDE );
-			conferencesWidget.setSourcePath( "../../explore/widget/conferenceAnalytics.ftl" );
-			conferencesWidget.setWidgetWidth( WidgetWidth.HALF );
-			conferencesWidget.setColor( Color.BLUE );
-			conferencesWidget.setInformation( "Visual Analytics widget for conferences" );
-			conferencesWidget.setCloseEnabled( true );
-			conferencesWidget.setMinimizeEnabled( true );
-			conferencesWidget.setMoveableEnabled( true );
-			conferencesWidget.setHeaderVisible( true );
-			conferencesWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			conferencesWidget.setPosition( 0 );
-			persistenceStrategy.getWidgetDAO().persist( conferencesWidget );
+			// create Setup Widget in Explore
+			Widget setupWidget = new Widget();
+			setupWidget.setTitle( "Basic Setup" );
+			setupWidget.setUniqueName( "explore_setup" );
+			setupWidget.setWidgetType( WidgetType.EXPLORE );
+			setupWidget.setWidgetGroup( "content" );
+			setupWidget.setWidgetSource( WidgetSource.INCLUDE );
+			setupWidget.setSourcePath( "../../explore/widget/setup.ftl" );
+			setupWidget.setWidgetWidth( WidgetWidth.THREE4TH );
+			setupWidget.setColor( Color.RED );
+			setupWidget.setInformation( "Visual Analytics widget for basic setup" );
+			setupWidget.setCloseEnabled( false );
+			setupWidget.setMinimizeEnabled( false );
+			setupWidget.setMoveableEnabled( false );
+			setupWidget.setHeaderVisible( false );
+			setupWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			setupWidget.setPosition( 0 );
+			persistenceStrategy.getWidgetDAO().persist( setupWidget );
 
 		}
 	}
@@ -230,12 +221,7 @@ public class ExploreController
 
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
-	public ModelAndView explorePage(
-			// @RequestParam( value = "id", required = false ) final String id,
-			// @RequestParam( value = "name", required = false ) String name,
-			// @RequestParam( value = "add", required = false ) final String
-			// add,
-			final HttpServletResponse response ) throws InterruptedException
+	public ModelAndView explorePage( final HttpServletResponse response ) throws InterruptedException
 	{
 		ModelAndView model = TemplateHelper.createViewWithLink( "explore", LINK_NAME );
 
@@ -258,7 +244,7 @@ public class ExploreController
 			}
 		}
 		else
-			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.EXPLORE, WidgetStatus.DEFAULT ) );
+			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidgetByColor( WidgetType.EXPLORE, WidgetStatus.DEFAULT ) );
 
 		// assign the model
 		model.addObject( "widgets", widgets );
@@ -266,189 +252,11 @@ public class ExploreController
 	}
 
 	@SuppressWarnings( "unchecked" )
-	@RequestMapping( value = "/coAuthorsGephi", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getCoAuthorList(
-			// @RequestParam( value = "id", required = false ) final String
-			// authorId,
-			@RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response )
-	{
-		// String authorId = "d5bf439f-9a44-4442-addc-034b4d55953d"; // Eva
-		// Altenbernd-giani
-
-		String authorId = "73cda3b1-b2ef-4aa1-a802-2095aebf8901"; // Ulrik
-																	// Shroeder
-
-		// create JSON mapper for response
-		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-		if ( authorId == null || authorId.equals( "" ) )
-		{
-			responseMap.put( "status", "error" );
-			responseMap.put( "statusMessage", "authorId null" );
-			return responseMap;
-		}
-
-		if ( startPage == null )
-			startPage = 0;
-		if ( maxresult == null )
-			maxresult = 30;
-
-		// get author
-		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
-
-		if ( author == null )
-		{
-			responseMap.put( "status", "error" );
-			responseMap.put( "statusMessage", "author not found in database" );
-			return responseMap;
-		}
-
-		// get coauthor calculation
-		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
-
-		responseMap.put( "filename", graphFeature.getGephiGraph( author ).get( "filename" ) );
-
-		return responseMap;
-	}
-
-	@SuppressWarnings( "unchecked" )
-	@RequestMapping( value = "/coAuthorsCluster", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> getCoAuthorCluster(
-			@RequestParam( value = "id", required = false ) String id,
-			@RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response )
+	@RequestMapping( value = "/searchResearchers", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> getResearcherList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "queryType", required = false ) String queryType, @RequestParam( value = "page", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "addedAuthor", required = false ) String addedAuthor, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "persist", required = false ) String persist, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 
-		// String authorId = "d5bf439f-9a44-4442-addc-034b4d55953d"; // Eva
-		// Altenbernd-giani
-
-		// String authorId = "73cda3b1-b2ef-4aa1-a802-2095aebf8901"; // Ulrik
-		// Shroeder
-
-		// get author
-		// Author author = persistenceStrategy.getAuthorDAO().getById( authorId
-		// );
-
-		String eventId = "";
-
-		if ( id == null || id.equals( "none" ) )
-		{
-			eventId = "05e68e30-fbdc-483a-8187-3ecf72d3984d";
-		}
-		else
-			eventId = id;
-
-		System.out.println( "id in authors:" + eventId );
-
-		ObjectMapper mapper = new ObjectMapper();
-
-		// Convert JSON string from file to Object
-
-		Map<Object, Object> mapLevel0 = new LinkedHashMap<Object, Object>();
-		Map<Object, Integer> mapLevel1 = new LinkedHashMap<Object, Integer>();
-		Map<String, Object> mapClusterCenters = new LinkedHashMap<String, Object>();
-		try
-		{
-			String jsonInString = analyticsRestController.cluster( "authors", "xmeans", "event", eventId );
-			// System.out.println( jsonInString );
-
-			mapLevel0 = (Map<Object, Object>) mapper.readValue( jsonInString, Object.class );
-			Iterator<Object> mapLevel0KeysIterator = mapLevel0.keySet().iterator();
-			Iterator<Object> mapLevel0ValuesIterator = mapLevel0.values().iterator();
-
-			while ( mapLevel0KeysIterator.hasNext() && mapLevel0ValuesIterator.hasNext() )
-			{
-				Object mapObject = mapLevel0KeysIterator.next();
-				// Iterator<Object> mapValues = mapLevel0.values().iterator();
-				if ( mapObject.equals( "clusters" ) )
-				{
-					mapLevel1 = (Map<Object, Integer>) mapLevel0ValuesIterator.next();
-				}
-				if ( mapObject.equals( "clusterCenters" ) )
-				{
-
-					mapClusterCenters = (Map<String, Object>) mapLevel0ValuesIterator.next();
-					// mapClusterCenters = (Map<String, Object>)
-					// mapLevel0ValuesIterator.next();
-
-				}
-			}
-			// mapLevel1 = (Map<Object, Integer>) mapper.readValue(
-			// jsonInString, Object.class );
-		}
-		catch ( Exception e )
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		// 1st Level Values i.e cluster number
-		Iterator<Integer> clusterIterator = mapLevel1.values().iterator();
-		List<Integer> clusters = new ArrayList<Integer>();
-		while ( clusterIterator.hasNext() )
-		{
-			clusters.add( clusterIterator.next() );
-		}
-
-		// 1st Level Keys i.e information about author
-		Iterator<Object> objectsIterator = mapLevel1.keySet().iterator();
-
-		List<String> names = new ArrayList<String>();
-		List<String> ids = new ArrayList<String>();
-
-		Object jsonObject;
-		String jsonString;
-		Map<String, String> mapValues = new LinkedHashMap<String, String>();
-
-		while ( objectsIterator.hasNext() )
-		{
-			String objectString = (String) objectsIterator.next();
-			try
-			{
-				jsonObject = mapper.readValue( objectString, Object.class );
-				jsonString = mapper.writeValueAsString( jsonObject );
-				mapValues = (Map<String, String>) mapper.readValue( jsonString, Object.class );
-			}
-			catch ( Exception e )
-			{
-				e.printStackTrace();
-			}
-
-			Iterator<String> iterator = mapValues.values().iterator();
-
-			while ( iterator.hasNext() )
-			{
-				names.add( iterator.next() );
-				ids.add( iterator.next() );
-			}
-		}
-
-		Map<String, Object> responseMapTest = new LinkedHashMap<String, Object>();
-
-		List<Map<String, Object>> authorList = new ArrayList<Map<String, Object>>();
-
-		for ( int i = 0; i < clusters.size(); i++ )
-
-		{
-			Map<String, Object> responseMapTemp = new LinkedHashMap<String, Object>();
-
-			responseMapTemp.put( "id", ids.get( i ) );
-			responseMapTemp.put( "name", names.get( i ) );
-			responseMapTemp.put( "cluster", clusters.get( i ) );
-			responseMapTemp.put( "clusterTerms", mapClusterCenters.get( "" + clusters.get( i ) + "" ) );
-			authorList.add( responseMapTemp );
-		}
-
-		responseMapTest.put( "coauthors", authorList );
-
-		return responseMapTest;
-	}
-
-	@SuppressWarnings( "unchecked" )
-	@Transactional
-	@RequestMapping( value = "/researchers", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> getAuthorList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "queryType", required = false ) String queryType, @RequestParam( value = "page", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "addedAuthor", required = false ) String addedAuthor, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "persist", required = false ) String persist, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
-	{
 		/* == Set Default Values== */
 		if ( query == null )
 			query = "";
@@ -461,7 +269,7 @@ public class ExploreController
 		if ( source == null )
 			source = "internal";
 		if ( addedAuthor == null )
-			addedAuthor = "no";
+			addedAuthor = "yes";
 		if ( fulltextSearch == null )
 			fulltextSearch = "no";
 		if ( persist == null )
@@ -489,41 +297,6 @@ public class ExploreController
 
 		Map<String, Object> authorsMap = researcherFeature.getResearcherSearch().getResearcherMapByQuery( query, queryType, startPage, maxresult, source, addedAuthor, fulltextSearch, persistResult );
 
-		// store in session
-		if ( source.equals( "external" ) || source.equals( "all" ) )
-		{
-			request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
-
-			// recheck if session really has been updated
-			// (there is a bug in spring session, which makes session is
-			// not updated sometimes) - a little workaround
-			boolean isSessionUpdated = false;
-			while ( !isSessionUpdated )
-			{
-				Object authors = request.getSession().getAttribute( "researchers" );
-				if ( authors.equals( authorsMap.get( "authors" ) ) )
-					isSessionUpdated = true;
-				else
-					request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
-			}
-
-			log.info( "\nRESEARCHER SESSION SEARCH" );
-			@SuppressWarnings( "unchecked" )
-			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
-			// get author from session -> just for debug
-			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
-			{
-				for ( Author sessionAuthor : sessionAuthors )
-				{
-					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
-					{
-						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-					}
-				}
-			}
-
-		}
-
 		if ( authorsMap != null && (Integer) authorsMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) authorsMap.get( "totalCount" ) );
@@ -537,119 +310,48 @@ public class ExploreController
 		}
 	}
 
-	@RequestMapping( value = "/topic", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationTopic( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "pid", required = false ) final String pid, @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
-	{
-		if ( id == null || id.equals( "none" ) )
-		{
-			id = "fd201481-1fe6-498f-9878-7e511e40e236";
-		}
-
-		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, pid, maxRetrieve );
-	}
-
-	@RequestMapping( value = "/topicList", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> getPublicationTopicTest( 
-			@RequestParam( value = "id", required = false ) String id, 
-			@RequestParam( value = "pid", required = false ) final String pid, 
-			@RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, 
-			final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException, ParseException
-	{
-		if ( id == null || id.equals( "none" ) )
-			id = "05e68e30-fbdc-483a-8187-3ecf72d3984d";
-
-		System.out.println( "id in topics:" + id );
-
-		return academicEventFeature.getEventInterest().getEventInterestById( id, true );
-	}
-
 	@SuppressWarnings( "unchecked" )
 	@Transactional
-	@RequestMapping( value = "/publication", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> getPublication( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "queryType", required = false ) String queryType, @RequestParam( value = "page", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "addedAuthor", required = false ) String addedAuthor, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "persist", required = false ) String persist, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	@RequestMapping( value = "/searchConferences", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> getConferenceList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "abbr", required = false ) String notation, @RequestParam( value = "page", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "type", required = false ) String type, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "addedVenue", required = false ) String addedVenue, @RequestParam( value = "persist", required = false ) String persist, @RequestParam( value = "eventId", required = false ) String eventId, HttpServletRequest request, HttpServletResponse response )
 	{
-
-		/* == Set Default Values== */
 		if ( query == null )
 			query = "";
-		if ( queryType == null )
-			queryType = "name";
 		if ( startPage == null )
 			startPage = 0;
 		if ( maxresult == null )
 			maxresult = 50;
+		if ( type == null )
+			type = "all";
 		if ( source == null )
 			source = "internal";
-		if ( addedAuthor == null )
-			addedAuthor = "no";
-		if ( fulltextSearch == null )
-			fulltextSearch = "no";
 		if ( persist == null )
 			persist = "no";
+		if ( addedVenue == null )
+			addedVenue = "yes";
 
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		boolean persistResult = false;
 
 		responseMap.put( "query", query );
-		if ( !queryType.equals( "name" ) )
-			responseMap.put( "queryType", queryType );
+		responseMap.put( "type", type );
 		responseMap.put( "page", startPage );
 		responseMap.put( "maxresult", maxresult );
 		responseMap.put( "source", source );
-		if ( !fulltextSearch.equals( "no" ) )
-			responseMap.put( "fulltextSearch", fulltextSearch );
+
 		if ( !persist.equals( "no" ) )
 		{
 			responseMap.put( "persist", persist );
 			persistResult = true;
 		}
-		if ( addedAuthor.equals( "yes" ) )
-			responseMap.put( "addedAuthor", addedAuthor );
 
-		Map<String, Object> authorsMap = researcherFeature.getResearcherSearch().getResearcherMapByQuery( query, queryType, startPage, maxresult, source, addedAuthor, fulltextSearch, persistResult );
+		Map<String, Object> eventGroupsMap = academicEventFeature.getEventSearch().getEventGroupMapByQuery( query, notation, startPage, maxresult, source, type, persistResult, eventId, addedVenue );
 
-		// store in session
-		if ( source.equals( "external" ) || source.equals( "all" ) )
+		if ( (Integer) eventGroupsMap.get( "totalCount" ) > 0 )
 		{
-			request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
-
-			// recheck if session really has been updated
-			// (there is a bug in spring session, which makes session is
-			// not updated sometimes) - a little workaround
-			boolean isSessionUpdated = false;
-			while ( !isSessionUpdated )
-			{
-				Object authors = request.getSession().getAttribute( "researchers" );
-				if ( authors.equals( authorsMap.get( "authors" ) ) )
-					isSessionUpdated = true;
-				else
-					request.getSession().setAttribute( "researchers", authorsMap.get( "authors" ) );
-			}
-
-			log.info( "\nRESEARCHER SESSION SEARCH" );
-			@SuppressWarnings( "unchecked" )
-			List<Author> sessionAuthors = (List<Author>) request.getSession().getAttribute( "researchers" );
-			// get author from session -> just for debug
-			if ( sessionAuthors != null && !sessionAuthors.isEmpty() )
-			{
-				for ( Author sessionAuthor : sessionAuthors )
-				{
-					for ( AuthorSource as : sessionAuthor.getAuthorSources() )
-					{
-						log.info( sessionAuthor.getId() + "-" + sessionAuthor.getName() + " - " + as.getSourceType() + " -> " + as.getSourceUrl() );
-					}
-				}
-			}
-
-		}
-
-		if ( authorsMap != null && (Integer) authorsMap.get( "totalCount" ) > 0 )
-		{
-			responseMap.put( "totalCount", (Integer) authorsMap.get( "totalCount" ) );
-			return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, (List<Author>) authorsMap.get( "authors" ) );
+			responseMap.put( "totalCount", (Integer) eventGroupsMap.get( "totalCount" ) );
+			return academicEventFeature.getEventSearch().printJsonOutput( responseMap, (List<EventGroup>) eventGroupsMap.get( "eventGroups" ) );
 		}
 		else
 		{
@@ -660,141 +362,479 @@ public class ExploreController
 	}
 
 	@SuppressWarnings( "unchecked" )
-	@RequestMapping( value = "/publicationsCluster", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> publicationsCluster(
-			@RequestParam( value = "id", required = false ) String id,
-			@RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response )
+	@RequestMapping( value = "/searchPublications", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> getPublicationList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "publicationType", required = false ) String publicationType, @RequestParam( value = "authorId", required = false ) String authorId, @RequestParam( value = "eventId", required = false ) String eventId, @RequestParam( value = "page", required = false ) Integer page, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "year", required = false ) String year, @RequestParam( value = "orderBy", required = false ) String orderBy, final HttpServletResponse response )
 	{
-
-		String eventId = "";
-
-		if ( id == null || id.equals( "none" ) )
-		{
-			eventId = "05e68e30-fbdc-483a-8187-3ecf72d3984d";
-		}
+		/* == Set Default Values== */
+		if ( query == null )
+			query = "";
+		if ( publicationType == null )
+			publicationType = "all";
+		if ( page == null )
+			page = 0;
+		if ( maxresult == null )
+			maxresult = 50;
+		if ( fulltextSearch == null || ( fulltextSearch != null && fulltextSearch.equals( "yes" ) ) )
+			fulltextSearch = "yes";
 		else
-			eventId = id;
+			fulltextSearch = "no";
+		if ( year == null || year.isEmpty() )
+			year = "all";
+		if ( orderBy == null )
+			orderBy = "citation";
+		// Currently, system only provides query on internal database
+		source = "internal";
 
-		System.out.println( "id in publications:" + eventId );
-
-		ObjectMapper mapper = new ObjectMapper();
-
-		// Convert JSON string from file to Object
-
-		Map<Object, Object> mapLevel0 = new LinkedHashMap<Object, Object>();
-		Map<Object, Integer> mapLevel1 = new LinkedHashMap<Object, Integer>();
-		Map<String, Object> mapClusterCenters = new LinkedHashMap<String, Object>();
-		try
-		{
-			String jsonInString = analyticsRestController.cluster( "publications", "xmeans", "event", eventId );
-			// System.out.println( jsonInString );
-
-			mapLevel0 = (Map<Object, Object>) mapper.readValue( jsonInString, Object.class );
-			Iterator<Object> mapLevel0KeysIterator = mapLevel0.keySet().iterator();
-			Iterator<Object> mapLevel0ValuesIterator = mapLevel0.values().iterator();
-
-			while ( mapLevel0KeysIterator.hasNext() && mapLevel0ValuesIterator.hasNext() )
-			{
-				Object mapObject = mapLevel0KeysIterator.next();
-				// Iterator<Object> mapValues = mapLevel0.values().iterator();
-				if ( mapObject.equals( "clusters" ) )
-				{
-					mapLevel1 = (Map<Object, Integer>) mapLevel0ValuesIterator.next();
-				}
-				if ( mapObject.equals( "clusterCenters" ) )
-				{
-
-					mapClusterCenters = (Map<String, Object>) mapLevel0ValuesIterator.next();
-					// mapClusterCenters = (Map<String, Object>)
-					// mapLevel0ValuesIterator.next();
-
-				}
-			}
-			// mapLevel1 = (Map<Object, Integer>) mapper.readValue(
-			// jsonInString, Object.class );
-		}
-		catch ( Exception e )
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		// 1st Level Values i.e cluster number
-		Iterator<Integer> clusterIterator = mapLevel1.values().iterator();
-		List<Integer> clusters = new ArrayList<Integer>();
-		while ( clusterIterator.hasNext() )
-		{
-			clusters.add( clusterIterator.next() );
-		}
-
-		// 1st Level Keys i.e information about author
-		Iterator<Object> objectsIterator = mapLevel1.keySet().iterator();
-
-		List<String> names = new ArrayList<String>();
-		List<String> ids = new ArrayList<String>();
-
-		Object jsonObject;
-		String jsonString;
-		Map<String, String> mapValues = new LinkedHashMap<String, String>();
-
-		while ( objectsIterator.hasNext() )
-		{
-			String objectString = (String) objectsIterator.next();
-			try
-			{
-				jsonObject = mapper.readValue( objectString, Object.class );
-				jsonString = mapper.writeValueAsString( jsonObject );
-				mapValues = (Map<String, String>) mapper.readValue( jsonString, Object.class );
-			}
-			catch ( Exception e )
-			{
-				e.printStackTrace();
-			}
-
-			Iterator<String> iterator = mapValues.values().iterator();
-
-			while ( iterator.hasNext() )
-			{
-				names.add( iterator.next() );
-				ids.add( iterator.next() );
-			}
-		}
-
-		Map<String, Object> responseMapTest = new LinkedHashMap<String, Object>();
-
-		List<Map<String, Object>> publicationList = new ArrayList<Map<String, Object>>();
-
-		for ( int i = 0; i < clusters.size(); i++ )
-
-		{
-			Map<String, Object> responseMapTemp = new LinkedHashMap<String, Object>();
-
-			responseMapTemp.put( "id", ids.get( i ) );
-			responseMapTemp.put( "name", names.get( i ) );
-			responseMapTemp.put( "cluster", clusters.get( i ) );
-			responseMapTemp.put( "clusterTerms", mapClusterCenters.get( "" + clusters.get( i ) + "" ) );
-			publicationList.add( responseMapTemp );
-		}
-
-		responseMapTest.put( "publications", publicationList );
-
-		return responseMapTest;
-	}
-
-	@RequestMapping( value = "/conference", method = RequestMethod.GET )
-	@Transactional
-	public @ResponseBody Map<String, Object> conference( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "pid", required = false ) final String pid, @RequestParam( value = "maxRetrieve", required = false ) final String maxRetrieve, final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException, ParseException
-	{
+		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
-		List<String> conferences = new ArrayList<String>();
-		conferences.add( "LAK 15" );
-		conferences.add( "LAK 16" );
-		conferences.add( "EDM 15" );
-		responseMap.put( "conferences", conferences );
+		responseMap.put( "query", query );
+		if ( !publicationType.equals( "all" ) )
+			responseMap.put( "publicationType", publicationType );
+		if ( !year.equals( "all" ) )
+			responseMap.put( "year", year );
+		responseMap.put( "page", page );
+		responseMap.put( "maxresult", maxresult );
+		responseMap.put( "fulltextSearch", fulltextSearch );
+		responseMap.put( "orderBy", orderBy );
+
+		Map<String, Object> publicationMap = publicationFeature.getPublicationSearch().getPublicationListByQuery( query, publicationType, authorId, eventId, page, maxresult, source, fulltextSearch, year, orderBy );
+
+		if ( (Integer) publicationMap.get( "totalCount" ) > 0 )
+		{
+			responseMap.put( "totalCount", (Integer) publicationMap.get( "totalCount" ) );
+			return publicationFeature.getPublicationSearch().printJsonOutput( responseMap, (List<Publication>) publicationMap.get( "publications" ) );
+		}
+		else
+		{
+			responseMap.put( "totalCount", 0 );
+			responseMap.put( "count", 0 );
+			return responseMap;
+		}
+	}
+
+	@Transactional
+	@RequestMapping( value = "/setupStage", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> setupStage( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "type", required = false ) String type, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	{
+		/* == Set Default Values== */
+		if ( id == null )
+			id = "";
+		if ( type == null )
+			type = "name";
+
+		String name = "";
+		if ( type.equals( "researcher" ) )
+		{
+			Author author = persistenceStrategy.getAuthorDAO().getById( id );
+			name = author.getName();
+		}
+		if ( type.equals( "conference" ) )
+		{
+			EventGroup conference = persistenceStrategy.getEventGroupDAO().getById( id );
+			name = conference.getName();
+		}
+		if ( type.equals( "publication" ) )
+		{
+			Publication publication = persistenceStrategy.getPublicationDAO().getById( id );
+			name = publication.getTitle();
+		}
+		if ( type.equals( "topic" ) )
+		{
+
+		}
+		if ( type.equals( "circle" ) )
+		{
+
+		}
+
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		responseMap.put( "name", name );
+		responseMap.put( "type", type );
+		responseMap.put( "id", id );
+		return responseMap;
+	}
+
+	@Transactional
+	@RequestMapping( value = "/visualize", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> visualize( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "type", required = false ) String type, @RequestParam( value = "visType", required = false ) String visType, @RequestParam( value = "deleteFlag", required = false ) String deleteFlag, @RequestParam( value = "startYear", required = false ) String startYear, @RequestParam( value = "endYear", required = false ) String endYear, @RequestParam( value = "visTab", required = false ) String visTab, @RequestParam( value = "dataList", required = false ) String dataList, @RequestParam( value = "idList", required = false ) String idList, @RequestParam( value = "dataTransfer", required = false ) String dataTransfer, @RequestParam( value = "checkedPubValues", required = false ) String checkedPubValues, @RequestParam( value = "checkedConfValues", required = false ) String checkedConfValues, @RequestParam( value = "checkedTopValues", required = false ) String checkedTopValues, @RequestParam( value = "checkedCirValues", required = false ) String checkedCirValues, @RequestParam( value = "yearFilterPresent", required = false ) String yearFilterPresent, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	{
+
+		/* == Set Default Values== */
+		if ( id == null )
+			id = "";
+		if ( type == null )
+			type = "name";
+		if ( visType == null )
+			visType = "";
+		if ( deleteFlag == null )
+			deleteFlag = "false";
+		if ( startYear == null )
+			startYear = "0";
+		if ( endYear == null )
+			endYear = "0";
+		if ( visTab == null )
+			visTab = "";
+		if ( dataTransfer == null )
+			dataTransfer = "false";
+		if ( checkedPubValues == null )
+			checkedPubValues = "";
+		if ( checkedConfValues == null )
+			checkedConfValues = "";
+		if ( checkedTopValues == null )
+			checkedTopValues = "";
+		if ( checkedCirValues == null )
+			checkedCirValues = "";
+		if ( yearFilterPresent == null )
+			yearFilterPresent = "false";
+
+		List<String> namesList = new ArrayList<String>();
+		List<String> idsList = new ArrayList<String>();
+		List<String> pubFilterList = new ArrayList<String>();
+		List<String> confFilterList = new ArrayList<String>();
+		List<String> topFilterList = new ArrayList<String>();
+		List<String> cirFilterList = new ArrayList<String>();
+		List<Publication> filteredPublication = new ArrayList<Publication>(); // publications
+																				// selected
+																				// from
+																				// the
+																				// filter
+		List<EventGroup> filteredConference = new ArrayList<EventGroup>(); // conferences
+																			// selected
+																			// from
+																			// the
+																			// filter
+		List<String> filteredTopic = new ArrayList<String>(); // topics
+																// selected
+																// from
+																// the
+																// filter
+		List<Circle> filteredCircle = new ArrayList<Circle>(); // circles
+		// selected
+		// from
+		// the
+		// filter
+
+		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( dataList != null && idsList != null )
+		{
+			namesList = new ArrayList<String>( Arrays.asList( dataList.split( "," ) ) );
+			idsList = new ArrayList<String>( Arrays.asList( idList.split( "," ) ) );
+		}
+
+		if ( idList != null )
+		{
+			if ( idList.length() == 0 )
+			{
+				idsList = new ArrayList<String>();
+			}
+		}
+
+		if ( dataTransfer.equals( "true" ) )
+		{
+			responseMap.put( "type", type );
+			responseMap.put( "visType", visType );
+			responseMap.put( "dataList", dataList );
+			responseMap.put( "idsList", idsList );
+			responseMap.put( "yearFilterPresent", yearFilterPresent );
+			responseMap.put( "deleteFlag", deleteFlag );
+
+			if ( checkedPubValues != "" )
+			{
+				responseMap.put( "checkedPubValues", checkedPubValues );
+			}
+			if ( checkedConfValues != "" )
+			{
+				responseMap.put( "checkedConfValues", checkedConfValues );
+			}
+			if ( checkedTopValues != "" )
+			{
+				responseMap.put( "checkedTopValues", checkedTopValues );
+			}
+			if ( checkedCirValues != "" )
+			{
+				responseMap.put( "checkedCirValues", checkedCirValues );
+			}
+
+			if ( startYear != "" && endYear != "" )
+			{
+				responseMap.put( "startYear", startYear );
+				responseMap.put( "endYear", endYear );
+			}
+			// System.out.println( "response map for data transfer: " +
+			// responseMap.toString() );
+
+		}
+		else
+		{
+
+			if ( visTab == "" || visTab.equals( "" ) )
+			{
+				if ( visType.equals( "researchers" ) )
+				{
+					visTab = "Network";
+				}
+				if ( visType.equals( "conferences" ) )
+				{
+					visTab = "Locations";
+				}
+				if ( visType.equals( "publications" ) )
+				{
+					visTab = "Timeline";
+				}
+				if ( visType.equals( "topics" ) )
+				{
+					visTab = "Bubbles";
+				}
+				if ( visType.equals( "circles" ) )
+				{
+					visTab = "TBD";
+				}
+			}
+
+			if ( checkedPubValues.equals( "" ) )
+			{
+			}
+			else
+			{
+				pubFilterList = new ArrayList<String>( Arrays.asList( checkedPubValues.split( "," ) ) );
+				for ( int i = 0; i < pubFilterList.size(); i++ )
+				{
+					filteredPublication.add( persistenceStrategy.getPublicationDAO().getById( pubFilterList.get( i ) ) );
+				}
+			}
+
+			if ( checkedConfValues.equals( "" ) )
+			{
+			}
+			else
+			{
+				confFilterList = new ArrayList<String>( Arrays.asList( checkedConfValues.split( "," ) ) );
+				for ( int i = 0; i < confFilterList.size(); i++ )
+				{
+					filteredConference.add( persistenceStrategy.getEventGroupDAO().getById( confFilterList.get( i ) ) );
+				}
+			}
+
+			if ( checkedTopValues.equals( "" ) )
+			{
+			}
+			else
+			{
+				topFilterList = new ArrayList<String>( Arrays.asList( checkedTopValues.split( "," ) ) );
+				for ( int i = 0; i < topFilterList.size(); i++ )
+				{
+					filteredTopic.add( topFilterList.get( i ) );
+				}
+			}
+			if ( checkedCirValues.equals( "" ) )
+			{
+			}
+			else
+			{
+				cirFilterList = new ArrayList<String>( Arrays.asList( checkedCirValues.split( "," ) ) );
+				for ( int i = 0; i < cirFilterList.size(); i++ )
+				{
+					filteredCircle.add( persistenceStrategy.getCircleDAO().getById( cirFilterList.get( i ) ) );
+				}
+			}
+
+			if ( !startYear.equals( "0" ) )
+			{
+				if ( !yearFilterPresent.equals( "true" ) && idList.length() != 0 )
+				{
+					startYear = exploreFilter.timeResPubFilter( idsList, type ).get( "startYear" ).toString();
+					endYear = exploreFilter.timeResPubFilter( idsList, type ).get( "endYear" ).toString();
+				}
+			}
+			else
+			{
+				startYear = exploreFilter.timeResPubFilter( idsList, type ).get( "startYear" ).toString();
+				endYear = exploreFilter.timeResPubFilter( idsList, type ).get( "endYear" ).toString();
+			}
+			// System.out.println( "start year: " + startYear + ": " + "end year
+			// " + endYear + " year filter: " + yearFilterPresent );
+
+
+			List<Author> authors = new ArrayList<Author>();
+			List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
+			authors = exploreFilter.getAuthorsFromIds( idsList );
+			eventGroupList = exploreFilter.getConferencesFromIds( idsList );
+			// System.out.println( "Authors list: " + authors );
+			Set<Publication> publications = exploreFilter.getFilteredPublications( type, authors, eventGroupList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
+
+			System.out.println( "vis tab: " + visTab );
+
+			visMap = visSwitch( type, idsList, visTab, visType, authors, publications, startYear, endYear, yearFilterPresent, filteredTopic );
+
+			responseMap.put( "type", type );
+			responseMap.put( "visType", visType );
+			responseMap.put( "dataList", dataList );
+			responseMap.put( "idsList", idsList );
+			responseMap.put( "map", visMap );
+			// System.out.println( "response map for 2nd run: " +
+			// responseMap.toString() );
+
+		}
 
 		return responseMap;
 	}
+
+	@Transactional
+	@RequestMapping( value = "/filter", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> filter( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "type", required = false ) String type, @RequestParam( value = "visType", required = false ) String visType, @RequestParam( value = "deleteFlag", required = false ) String deleteFlag, @RequestParam( value = "startYear", required = false ) String startYear, @RequestParam( value = "endYear", required = false ) String endYear, @RequestParam( value = "visTab", required = false ) String visTab, @RequestParam( value = "dataList", required = false ) String dataList, @RequestParam( value = "idList", required = false ) String idList, @RequestParam( value = "dataTransfer", required = false ) String dataTransfer, @RequestParam( value = "filterList", required = false ) String filterList, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	{
+		/* == Set Default Values== */
+		if ( id == null )
+			id = "";
+		if ( type == null )
+			type = "name";
+		if ( visType == null )
+			visType = "";
+		if ( deleteFlag == null )
+			deleteFlag = "false";
+		if ( startYear == null )
+			startYear = "";
+		if ( endYear == null )
+			endYear = "";
+		if ( visTab == null )
+			visTab = "";
+		if ( dataTransfer == null )
+			dataTransfer = "false";
+		if ( idList == null )
+			idList = "";
+		if ( filterList == null )
+			filterList = "";
+
+		List<String> namesList = new ArrayList<String>();
+		List<String> idsList = new ArrayList<String>();
+		List<String> filters = new ArrayList<String>();
+
+		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		if ( dataList != null && idsList != null )
+		{
+			namesList = new ArrayList<String>( Arrays.asList( dataList.split( "," ) ) );
+			idsList = new ArrayList<String>( Arrays.asList( idList.split( "," ) ) );
+		}
+
+		if ( idList != null )
+		{
+			if ( idList.length() == 0 )
+			{
+				idsList = new ArrayList<String>();
+			}
+		}
+
+		if ( dataTransfer.equals( "true" ) )
+		{
+
+			responseMap.put( "type", type );
+			responseMap.put( "visType", visType );
+			responseMap.put( "dataList", dataList );
+			responseMap.put( "idsList", idsList );
+
+		}
+		else
+		{
+			if ( !idList.equals( "" ) )
+			{
+				if ( !filterList.equals( "" ) )
+				{
+					filters = new ArrayList<String>( Arrays.asList( filterList.split( "," ) ) );
+				}
+
+				responseMap.put( "type", type );
+				responseMap.put( "visType", visType );
+				responseMap.put( "dataList", dataList );
+				responseMap.put( "idsList", idsList );
+
+				for ( int i = 0; i < filters.size(); i++ )
+				{
+
+					if ( filters.get( i ).equals( "Time" ) )
+					{
+						responseMap.put( "TimeFilter", exploreFilter.timeResPubFilter( idsList, type ) );
+					}
+					if ( filters.get( i ).equals( "Publications" ) )
+					{
+						responseMap.put( "publicationFilter", exploreFilter.publicationFilter( idsList, type ) );
+					}
+					if ( filters.get( i ).equals( "Conferences" ) )
+					{
+						responseMap.put( "conferenceFilter", exploreFilter.conferenceFilter( idsList, type ) );
+					}
+					if ( filters.get( i ).equals( "Circles" ) )
+					{
+						responseMap.put( "circleFilter", exploreFilter.circleFilter( idsList, type ) );
+					}
+					if ( filters.get( i ).equals( "Researchers" ) )
+					{
+					}
+					if ( filters.get( i ).equals( "Topics" ) )
+					{
+						responseMap.put( "topicFilter", exploreFilter.topicFilter( idsList, type ) );
+					}
+				}
+			}
+
+		}
+		// System.out.println( "response map for filter: " +
+		// responseMap.toString() );
+		return responseMap;
+	}
+
+	public Map<String, Object> visSwitch( String type, List<String> idsList, String visTab, String visType, List<Author> authors, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<String> filteredTopic )
+	{
+
+		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
+
+		switch ( visTab ) {
+		case "Network": {
+			visMap = exploreVis.visualizeNetwork( type, authors, publications, idsList, startYear, endYear );
+			break;
+		}
+		case "Locations": {
+			visMap = exploreVis.visualizeLocations( type, publications, idsList, startYear, endYear, filteredTopic );
+			break;
+		}
+		case "Timeline": {
+			visMap = exploreVis.visualizeTimeline( publications );
+			break;
+		}
+		case "Evolution": {
+			visMap = exploreVis.visualizeEvolution( type, idsList, authors, publications, startYear, endYear );
+			break;
+		}
+		case "Bubbles": {
+			visMap = exploreVis.visualizeBubbles( type, idsList, authors, publications, startYear, endYear );
+			break;
+		}
+		case "Group": {
+			visMap = exploreVis.visualizeGroup( visType, authors, publications );
+			break;
+		}
+		case "List": {
+			visMap = exploreVis.visualizeList( type, visType, authors, publications, startYear, endYear, idsList, filteredTopic );
+			break;
+		}
+		case "Comparison": {
+			visMap = exploreVis.visualizeComparison( type, idsList, visType, authors, publications, startYear, endYear, yearFilterPresent );
+			break;
+		}
+		case "Similar": {
+			System.out.println( "in similar" );
+			visMap = exploreVis.visualizeSimilar( type, visType, authors, idsList );
+			break;
+		}
+		}
+		return visMap;
+	}
+
 
 }

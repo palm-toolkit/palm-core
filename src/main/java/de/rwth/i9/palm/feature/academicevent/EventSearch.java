@@ -12,4 +12,7 @@ public interface EventSearch
 	public Map<String, Object> getEventGroupMapByQuery( String query, String notation, Integer startPage, Integer maxresult, String source, String type, boolean persistResult, String eventId, String addedVenue );
 
 	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<EventGroup> eventGroups );
+
+	public Map<String, Object> getEventGroupsByQuery( String query, String notation, String source, String type, boolean persistResult, String eventId, String addedVenue );
+
 }

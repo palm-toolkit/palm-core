@@ -1,8 +1,12 @@
 package de.rwth.i9.palm.feature.researcher;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.rwth.i9.palm.helper.TreeHelper;
 import de.rwth.i9.palm.helper.comparator.TreeDirectChildByChildNumberComparator;
@@ -39,8 +43,9 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 			if ( publication.getEvent() != null )
 			{
 				TreeHelper treeHelperLv1 = TreeHelper.findNodeByKey( rootTreeHelper, publication.getEvent().getEventGroup().getId() );
-				
-				if( treeHelperLv1 == null ){
+
+				if ( treeHelperLv1 == null )
+				{
 					// create first level (conference group)
 					treeHelperLv1 = new TreeHelper();
 					treeHelperLv1.setKey( publication.getEvent().getEventGroup().getId() );
@@ -48,8 +53,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					String nodeTooltip = publication.getEvent().getEventGroup().getName();
 					String nodeTitle = nodeTooltip;
 
-					if ( publication.getEvent().getEventGroup().getNotation() != null && !publication.getEvent().getEventGroup().getNotation().isEmpty() && 
-							!nodeTitle.equals( publication.getEvent().getEventGroup().getNotation() ) )
+					if ( publication.getEvent().getEventGroup().getNotation() != null && !publication.getEvent().getEventGroup().getNotation().isEmpty() && !nodeTitle.equals( publication.getEvent().getEventGroup().getNotation() ) )
 					{
 						nodeTitle = publication.getEvent().getEventGroup().getNotation();
 						nodeTooltip += " (" + publication.getEvent().getEventGroup().getNotation() + ") ";
@@ -62,10 +66,10 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					treeHelperLv1.setTooltip( nodeTooltip );
 					if ( publication.getEvent().getEventGroup().isAdded() )
 						treeHelperLv1.setAdded( true );
-					
+
 					// add first level as child of root
 					rootTreeHelper.addChild( treeHelperLv1 );
-					
+
 					// create second level ( conference year )
 					TreeHelper treeHelperLv2 = new TreeHelper();
 					treeHelperLv2.setKey( publication.getEvent().getId() );
@@ -74,10 +78,11 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					if ( publication.getEvent().getVolume() != null )
 						nodeTitle += " (" + publication.getEvent().getVolume() + ")";
 
-					if( publication.getEvent().getName() != null)
+					if ( publication.getEvent().getName() != null )
 						nodeTooltip = publication.getEvent().getName();
-					else{
-						if( publication.getEvent().getVolume() != null )
+					else
+					{
+						if ( publication.getEvent().getVolume() != null )
 							nodeTooltip = "Volume " + publication.getEvent().getVolume() + ", " + publication.getEvent().getYear();
 						else
 							nodeTooltip = publication.getEvent().getYear();
@@ -91,10 +96,10 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					if ( publication.getEvent().isAdded() )
 						treeHelperLv2.setAdded( true );
 					treeHelperLv2.setPosition( 2 );
-					
+
 					// add second level as child of first level
 					treeHelperLv1.addChild( treeHelperLv2 );
-					
+
 					// add third level for publication
 					// create second level ( publication )
 					TreeHelper treeHelperLv3 = new TreeHelper();
@@ -106,7 +111,9 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					// add second level as child of first level
 					treeHelperLv2.addChild( treeHelperLv3 );
 
-				} else{
+				}
+				else
+				{
 
 					TreeHelper treeHelperLv2 = TreeHelper.findNodeByKey( treeHelperLv1, publication.getEvent().getId() );
 
@@ -145,7 +152,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 						// add second level as child of first level
 						treeHelperLv1.addChild( treeHelperLv2 );
 					}
-					
+
 					// add third level for publication
 					// create second level ( publication )
 					TreeHelper treeHelperLv3 = new TreeHelper();
@@ -173,9 +180,46 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 			Collections.sort( th.getChildren(), new TreeDirectChildByNaturalOrderComparator() );
 		}
 		// put coauthor to responseMap
-		responseMap.put( "evenTree", rootTreeHelper);
+		responseMap.put( "evenTree", rootTreeHelper );
 
 		return responseMap;
+	}
+
+	@Override
+	public Map<String, Object> getResearcherAllAcademicEvents( Set<Publication> authorPublications )
+	{
+		Map<String, Object> eventsMap = new HashMap<String, Object>();
+
+		List<Publication> publications = new ArrayList<Publication>( authorPublications );
+
+		ArrayList<Map<String, Object>> eventDetailsList = new ArrayList<Map<String, Object>>();
+		List<String> tempIds = new ArrayList<String>();
+
+		for ( int i = 0; i < publications.size(); i++ )
+		{
+
+			if ( publications.get( i ).getEvent() != null )
+			{
+				if ( publications.get( i ).getEvent().getEventGroup() != null )
+				{
+					if ( !tempIds.contains( publications.get( i ).getEvent().getEventGroup().getId() ) )
+					{
+						Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
+						tempIds.add( publications.get( i ).getEvent().getEventGroup().getId() );
+						eventDetail.put( "name", publications.get( i ).getEvent().getEventGroup().getName() );
+						eventDetail.put( "location", publications.get( i ).getEvent().getLocation() );
+						eventDetail.put( "year", publications.get( i ).getEvent().getYear() );
+
+						if ( publications.get( i ).getEvent().getLocation() != null )
+							eventDetailsList.add( eventDetail );
+					}
+				}
+			}
+		}
+
+		eventsMap.put( "events", eventDetailsList );
+
+		return eventsMap;
 	}
 
 }

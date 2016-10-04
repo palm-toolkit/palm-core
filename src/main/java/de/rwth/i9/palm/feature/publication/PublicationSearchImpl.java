@@ -138,4 +138,34 @@ public class PublicationSearchImpl implements PublicationSearch
 		return responseMap;
 	}
 
+	@Override
+	public Map<String, Object> getPublicationsByQuery( String query, String publicationType, String authorId, String eventId, String source, String fulltextSearch, String year, String orderBy )
+	{
+		Map<String, Object> publicationMap;
+
+		Author author = null;
+		if ( authorId != null )
+			author = persistenceStrategy.getAuthorDAO().getById( authorId );
+
+		Event event = null;
+		if ( eventId != null )
+			event = persistenceStrategy.getEventDAO().getById( eventId );
+
+		System.out.println( "step 1" );
+
+		// get the publication
+		if ( fulltextSearch.equals( "yes" ) )
+		{
+			publicationMap = persistenceStrategy.getPublicationDAO().getPublicationByFullTextSearchWithoutPaging( query, publicationType, author, event, year, orderBy );
+		}
+		else
+		{
+			publicationMap = persistenceStrategy.getPublicationDAO().getPublicationWithoutPaging( query, publicationType, author, event, year, orderBy );
+		}
+
+		System.out.println( "step 2" );
+
+		return publicationMap;
+	}
+
 }
