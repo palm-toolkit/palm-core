@@ -186,7 +186,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 	}
 
 	@Override
-	public Map<String, Object> getResearcherAllAcademicEvents( Set<Publication> authorPublications )
+	public Map<String, Object> getResearcherAllAcademicEvents( Set<Publication> authorPublications, Boolean locations )
 	{
 		Map<String, Object> eventsMap = new HashMap<String, Object>();
 
@@ -202,7 +202,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 			{
 				if ( publications.get( i ).getEvent().getEventGroup() != null )
 				{
-					if ( !tempIds.contains( publications.get( i ).getEvent().getEventGroup().getId() ) )
+					if ( !tempIds.contains( publications.get( i ).getEvent().getId() ) )
 					{
 						Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
 						tempIds.add( publications.get( i ).getEvent().getEventGroup().getId() );
@@ -210,7 +210,12 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 						eventDetail.put( "location", publications.get( i ).getEvent().getLocation() );
 						eventDetail.put( "year", publications.get( i ).getEvent().getYear() );
 
-						if ( publications.get( i ).getEvent().getLocation() != null )
+						if ( locations )
+						{
+							if ( publications.get( i ).getEvent().getLocation() != null )
+								eventDetailsList.add( eventDetail );
+						}
+						else
 							eventDetailsList.add( eventDetail );
 					}
 				}

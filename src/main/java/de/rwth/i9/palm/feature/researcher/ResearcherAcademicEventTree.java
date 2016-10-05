@@ -10,6 +10,6 @@ public interface ResearcherAcademicEventTree
 {
 	public Map<String, Object> getResearcherAcademicEventTree( Author author );
 
-	public Map<String, Object> getResearcherAllAcademicEvents( Set<Publication> publications );
+	public Map<String, Object> getResearcherAllAcademicEvents( Set<Publication> publications, Boolean locations );
 
 }
