@@ -58,7 +58,7 @@ public class ExploreVisualization
 
 	private ObjectMapper mapper = new ObjectMapper();
 
-	public Map<String, Object> visualizeNetwork( String type, List<Author> authorList, Set<Publication> publications, List<String> idsList, String startYear, String endYear )
+	public Map<String, Object> visualizeNetwork( String type, List<Author> authorList, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		List<Integer> count = new ArrayList<Integer>();
@@ -120,8 +120,13 @@ public class ExploreVisualization
 					System.out.println( eventGroupAuthors.get( i ).getName() );
 			}
 		}
+		Author authorForCoAuthors = new Author();
+		if ( authoridForCoAuthors != null )
+		{
+			authorForCoAuthors = persistenceStrategy.getAuthorDAO().getById( authoridForCoAuthors );
+		}
 		System.out.println( "event group size " + eventGroupAuthors.size() );
-		visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, eventGroupAuthors ).get( "graphFile" ) );
+		visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, eventGroupAuthors, authorForCoAuthors ).get( "graphFile" ) );
 		System.out.println( "response map for data transfer: " + visMap.toString() );
 		return visMap;
 	}

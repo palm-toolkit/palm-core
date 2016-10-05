@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +37,10 @@ import org.gephi.preview.types.EdgeColor;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.openide.util.Lookup;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
-import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
 @Transactional
@@ -51,13 +50,10 @@ public class GraphFeatureImpl implements GraphFeature
 	Boolean completionFlag = true;
 	ExportController ec;
 
-	@Autowired
-	private PersistenceStrategy persistenceStrategy;
-
 	@Override
-	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, List<Author> eventGroupAuthors )
+	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, List<Author> eventGroupAuthors, Author authorForCoAuthors )
 	{
-
+		System.out.println( "at 4: " + authorForCoAuthors );
 		// Create Thread Pool for parallel layout
 		ExecutorService executor = Executors.newFixedThreadPool( 1 );
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -68,7 +64,7 @@ public class GraphFeatureImpl implements GraphFeature
 		// return responseMap;
 		// }
 
-		Future<?> f = executor.submit( createRunnable( type, authorList, authorPublications, idsList, eventGroupAuthors ) );
+		Future<?> f = executor.submit( createRunnable( type, authorList, authorPublications, idsList, eventGroupAuthors, authorForCoAuthors ) );
 		try
 		{
 			f.get();
@@ -87,13 +83,14 @@ public class GraphFeatureImpl implements GraphFeature
 
 	}
 
-	private Runnable createRunnable( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final List<Author> eventGroupAuthors )
+	private Runnable createRunnable( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final List<Author> eventGroupAuthors, final Author authorForCoAuthors )
 	{
 		return new Runnable()
 		{
 			@Override
 			public void run()
 			{
+				System.out.println( "out HREER: " + authorForCoAuthors );
 				Random rand = new Random();
 
 				int max = 100;
@@ -124,6 +121,14 @@ public class GraphFeatureImpl implements GraphFeature
 				nodes.clear();
 				edges.clear();
 
+				Set<Publication> pubs = new HashSet<Publication>();
+				if ( authorForCoAuthors != null )
+				{
+					pubs = authorForCoAuthors.getPublications();
+					authorPublications.addAll( pubs );
+				}
+
+				String color = "black";
 				// iterating over all publications of the authors
 				for ( Publication publication : authorPublications )
 				{
@@ -145,7 +150,10 @@ public class GraphFeatureImpl implements GraphFeature
 							{
 								nodes.add( n );
 								n.setLabel( publicationAuthor.getName() );
-								n.setSize( 0.1f );
+								if ( pubs.contains( publication ) )
+									n.setSize( 0.3f );
+								else
+									n.setSize( 0.1f );
 								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
 								n.setAttribute( "authorId", publicationAuthor.getId() );
 								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
@@ -197,7 +205,10 @@ public class GraphFeatureImpl implements GraphFeature
 									n.setAttribute( "isAdded", publicationAuthor.isAdded() );
 									n.setAttribute( "authorId", publicationAuthor.getId() );
 									n.setLabel( publicationAuthor.getName() );
-									n.setSize( 0.1f );
+									if ( pubs.contains( publication ) )
+										n.setSize( 0.3f );
+									else
+										n.setSize( 0.1f );
 									n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
 									undirectedGraph.addNode( n );
 								}
@@ -427,8 +438,6 @@ public class GraphFeatureImpl implements GraphFeature
 				model.getProperties().putValue( PreviewProperty.EDGE_COLOR, new EdgeColor( Color.GRAY ) );
 				model.getProperties().putValue( PreviewProperty.EDGE_THICKNESS, new Float( 0.1f ) );
 				model.getProperties().putValue( PreviewProperty.NODE_LABEL_FONT, model.getProperties().getFontValue( PreviewProperty.NODE_LABEL_FONT ).deriveFont( 8 ) );
-
-				// System.out.println( "after layout" );
 
 				// Export full graph
 				ec = Lookup.getDefault().lookup( ExportController.class );

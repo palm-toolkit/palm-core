@@ -462,7 +462,7 @@ public class ExploreController
 
 	@Transactional
 	@RequestMapping( value = "/visualize", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> visualize( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "type", required = false ) String type, @RequestParam( value = "visType", required = false ) String visType, @RequestParam( value = "deleteFlag", required = false ) String deleteFlag, @RequestParam( value = "startYear", required = false ) String startYear, @RequestParam( value = "endYear", required = false ) String endYear, @RequestParam( value = "visTab", required = false ) String visTab, @RequestParam( value = "dataList", required = false ) String dataList, @RequestParam( value = "idList", required = false ) String idList, @RequestParam( value = "dataTransfer", required = false ) String dataTransfer, @RequestParam( value = "checkedPubValues", required = false ) String checkedPubValues, @RequestParam( value = "checkedConfValues", required = false ) String checkedConfValues, @RequestParam( value = "checkedTopValues", required = false ) String checkedTopValues, @RequestParam( value = "checkedCirValues", required = false ) String checkedCirValues, @RequestParam( value = "yearFilterPresent", required = false ) String yearFilterPresent, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public @ResponseBody Map<String, Object> visualize( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "type", required = false ) String type, @RequestParam( value = "visType", required = false ) String visType, @RequestParam( value = "deleteFlag", required = false ) String deleteFlag, @RequestParam( value = "startYear", required = false ) String startYear, @RequestParam( value = "endYear", required = false ) String endYear, @RequestParam( value = "visTab", required = false ) String visTab, @RequestParam( value = "dataList", required = false ) String dataList, @RequestParam( value = "idList", required = false ) String idList, @RequestParam( value = "dataTransfer", required = false ) String dataTransfer, @RequestParam( value = "checkedPubValues", required = false ) String checkedPubValues, @RequestParam( value = "checkedConfValues", required = false ) String checkedConfValues, @RequestParam( value = "checkedTopValues", required = false ) String checkedTopValues, @RequestParam( value = "checkedCirValues", required = false ) String checkedCirValues, @RequestParam( value = "yearFilterPresent", required = false ) String yearFilterPresent, @RequestParam( value = "authoridForCoAuthors", required = false ) String authoridForCoAuthors, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 
 		/* == Set Default Values== */
@@ -492,7 +492,10 @@ public class ExploreController
 			checkedCirValues = "";
 		if ( yearFilterPresent == null )
 			yearFilterPresent = "false";
+		if ( authoridForCoAuthors == null )
+			authoridForCoAuthors = "";
 
+		System.out.println( "at 1: " + authoridForCoAuthors );
 		List<String> namesList = new ArrayList<String>();
 		List<String> idsList = new ArrayList<String>();
 		List<String> pubFilterList = new ArrayList<String>();
@@ -545,6 +548,8 @@ public class ExploreController
 			responseMap.put( "idsList", idsList );
 			responseMap.put( "yearFilterPresent", yearFilterPresent );
 			responseMap.put( "deleteFlag", deleteFlag );
+			responseMap.put( "authoridForCoAuthors", authoridForCoAuthors );
+			System.out.println( "at 2: " + authoridForCoAuthors );
 
 			if ( checkedPubValues != "" )
 			{
@@ -574,7 +579,7 @@ public class ExploreController
 		}
 		else
 		{
-
+			System.out.println( "at 3: " + authoridForCoAuthors );
 			if ( visTab == "" || visTab.equals( "" ) )
 			{
 				if ( visType.equals( "researchers" ) )
@@ -672,7 +677,7 @@ public class ExploreController
 
 			System.out.println( "vis tab: " + visTab );
 
-			visMap = visSwitch( type, idsList, visTab, visType, authors, publications, startYear, endYear, yearFilterPresent, filteredTopic );
+			visMap = visSwitch( type, idsList, visTab, visType, authors, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
 
 			responseMap.put( "type", type );
 			responseMap.put( "visType", visType );
@@ -792,14 +797,14 @@ public class ExploreController
 		return responseMap;
 	}
 
-	public Map<String, Object> visSwitch( String type, List<String> idsList, String visTab, String visType, List<Author> authors, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<String> filteredTopic )
+	public Map<String, Object> visSwitch( String type, List<String> idsList, String visTab, String visType, List<Author> authors, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<String> filteredTopic, String authoridForCoAuthors )
 	{
 
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
 		switch ( visTab ) {
 		case "Network": {
-			visMap = exploreVis.visualizeNetwork( type, authors, publications, idsList, startYear, endYear );
+			visMap = exploreVis.visualizeNetwork( type, authors, publications, idsList, startYear, endYear, authoridForCoAuthors );
 			break;
 		}
 		case "Locations": {
