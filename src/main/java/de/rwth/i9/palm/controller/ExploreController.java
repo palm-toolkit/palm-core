@@ -71,6 +71,7 @@ public class ExploreController
 
 	@Autowired
 	private ExploreVisualization exploreVis;
+
 	// Use explore/createVAWidgets to create Visual Analytics Widgets
 	@Transactional
 	@RequestMapping( value = "/createVAWidgets", method = RequestMethod.GET )
@@ -426,36 +427,41 @@ public class ExploreController
 		if ( replace == null )
 			replace = "";
 
-		String name = "";
-		if ( type.equals( "researcher" ) )
-		{
-			Author author = persistenceStrategy.getAuthorDAO().getById( id );
-			name = author.getName();
-		}
-		if ( type.equals( "conference" ) )
-		{
-			EventGroup conference = persistenceStrategy.getEventGroupDAO().getById( id );
-			name = conference.getName();
-		}
-		if ( type.equals( "publication" ) )
-		{
-			Publication publication = persistenceStrategy.getPublicationDAO().getById( id );
-			name = publication.getTitle();
-		}
-		if ( type.equals( "topic" ) )
+		List<String> idsList = new ArrayList<String>( Arrays.asList( id.split( "," ) ) );
+		List<String> namesList = new ArrayList<String>();
+
+		for ( String i : idsList )
 		{
 
-		}
-		if ( type.equals( "circle" ) )
-		{
+			if ( type.equals( "researcher" ) )
+			{
+				Author author = persistenceStrategy.getAuthorDAO().getById( i );
+				namesList.add( author.getName() );
+			}
+			if ( type.equals( "conference" ) )
+			{
+				EventGroup conference = persistenceStrategy.getEventGroupDAO().getById( i );
+				namesList.add( conference.getName() );
+			}
+			if ( type.equals( "publication" ) )
+			{
+				Publication publication = persistenceStrategy.getPublicationDAO().getById( i );
+				namesList.add( publication.getTitle() );
+			}
+			if ( type.equals( "topic" ) )
+			{
 
-		}
+			}
+			if ( type.equals( "circle" ) )
+			{
 
+			}
+		}
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-		responseMap.put( "name", name );
+		responseMap.put( "name", namesList );
 		responseMap.put( "type", type );
-		responseMap.put( "id", id );
+		responseMap.put( "id", idsList );
 		responseMap.put( "replace", replace );
 		return responseMap;
 	}
@@ -667,7 +673,6 @@ public class ExploreController
 			// System.out.println( "start year: " + startYear + ": " + "end year
 			// " + endYear + " year filter: " + yearFilterPresent );
 
-
 			List<Author> authors = new ArrayList<Author>();
 			List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
 			authors = exploreFilter.getAuthorsFromIds( idsList );
@@ -843,6 +848,5 @@ public class ExploreController
 		}
 		return visMap;
 	}
-
 
 }

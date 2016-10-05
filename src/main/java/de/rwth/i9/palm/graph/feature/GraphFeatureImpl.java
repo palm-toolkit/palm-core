@@ -106,6 +106,10 @@ public class GraphFeatureImpl implements GraphFeature
 
 				graphModel.getNodeTable().addColumn( "isAdded", boolean.class );
 				graphModel.getNodeTable().addColumn( "authorId", String.class );
+				graphModel.getEdgeTable().addColumn( "sourceAuthorId", String.class );
+				graphModel.getEdgeTable().addColumn( "targetAuthorId", String.class );
+				graphModel.getEdgeTable().addColumn( "sourceAuthorIsAdded", boolean.class );
+				graphModel.getEdgeTable().addColumn( "targetAuthorIsAdded", boolean.class );
 
 				FilterController filterController = Lookup.getDefault().lookup( FilterController.class );
 				AppearanceController appearanceController = Lookup.getDefault().lookup( AppearanceController.class );
@@ -128,7 +132,6 @@ public class GraphFeatureImpl implements GraphFeature
 					authorPublications.addAll( pubs );
 				}
 
-				String color = "black";
 				// iterating over all publications of the authors
 				for ( Publication publication : authorPublications )
 				{
@@ -186,6 +189,10 @@ public class GraphFeatureImpl implements GraphFeature
 										Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
 										edges.add( e );
 										e.setWeight( 0.1 );
+										e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
+										e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
+										e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i ).isAdded() );
+										e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
 										undirectedGraph.addEdge( e );
 									}
 
@@ -238,6 +245,10 @@ public class GraphFeatureImpl implements GraphFeature
 											Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
 											edges.add( e );
 											e.setWeight( 0.1 );
+											e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
+											e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
+											e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i ).isAdded() );
+											e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
 											undirectedGraph.addEdge( e );
 										}
 
@@ -332,6 +343,10 @@ public class GraphFeatureImpl implements GraphFeature
 								int indexTempNode = nodes.indexOf( tempAuthorNode );
 								Edge e = graphModel.factory().newEdge( n, nodes.get( indexTempNode ), 0, 1, false );
 								edges.add( e );
+								e.setAttribute( "sourceAuthorId", commonAuthors.get( i ).getId() );
+								e.setAttribute( "targetAuthorId", authorList.get( j ).getId() );
+								e.setAttribute( "sourceAuthorIsAdded", commonAuthors.get( i ).isAdded() );
+								e.setAttribute( "targetAuthorIsAdded", authorList.get( j ).isAdded() );
 								undirectedGraph.addEdge( e );
 							}
 						}
@@ -374,7 +389,7 @@ public class GraphFeatureImpl implements GraphFeature
 											{
 												nodes.add( n2 );
 												n2.setAttribute( "isAdded", list2.get( j ).isAdded() );
-												n.setAttribute( "authorId", list2.get( j ).getId() );
+												n2.setAttribute( "authorId", list2.get( j ).getId() );
 
 												n2.setLabel( list2.get( j ).getName() );
 												n2.setSize( 0.1f );
@@ -385,15 +400,14 @@ public class GraphFeatureImpl implements GraphFeature
 											int indexn = nodes.indexOf( n );
 											int indexn2 = nodes.indexOf( n2 );
 
-											System.out.println( "here" );
-											System.out.println( n.getStoreId() );
-											System.out.println( n2.getStoreId() );
 											Edge e = graphModel.factory().newEdge( nodes.get( indexn ), nodes.get( indexn2 ), 0, 1, false );
-											System.out.println( "this" );
 											edges.add( e );
-											System.out.println( "this2" );
+											e.setAttribute( "sourceAuthorId", a.getId() );
+											e.setAttribute( "targetAuthorId", list2.get( j ).getId() );
+											e.setAttribute( "sourceAuthorIsAdded", a.isAdded() );
+											e.setAttribute( "targetAuthorIsAdded", list2.get( j ).isAdded() );
 											undirectedGraph.addEdge( e );
-											System.out.println( "or here" );
+
 											Node mainNode1 = graphModel.factory().newNode( authorList.get( i - 1 ).getName() );
 											Node mainNode2 = graphModel.factory().newNode( authorList.get( i ).getName() );
 											int index1 = nodes.indexOf( mainNode1 );
@@ -401,9 +415,17 @@ public class GraphFeatureImpl implements GraphFeature
 
 											e = graphModel.factory().newEdge( nodes.get( index1 ), nodes.get( indexn ), 0, 1, false );
 											edges.add( e );
+											e.setAttribute( "sourceAuthorId", authorList.get( i - 1 ).getId() );
+											e.setAttribute( "targetAuthorId", a.getId() );
+											e.setAttribute( "sourceAuthorIsAdded", authorList.get( i - 1 ).isAdded() );
+											e.setAttribute( "targetAuthorIsAdded", a.isAdded() );
 											undirectedGraph.addEdge( e );
 
 											e = graphModel.factory().newEdge( nodes.get( index2 ), nodes.get( indexn2 ), 0, 1, false );
+											e.setAttribute( "sourceAuthorId", authorList.get( i ).getId() );
+											e.setAttribute( "targetAuthorId", list2.get( j ).getId() );
+											e.setAttribute( "sourceAuthorIsAdded", authorList.get( i ).isAdded() );
+											e.setAttribute( "targetAuthorIsAdded", list2.get( j ).isAdded() );
 											edges.add( e );
 											undirectedGraph.addEdge( e );
 
