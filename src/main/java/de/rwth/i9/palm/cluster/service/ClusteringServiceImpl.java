@@ -1,12 +1,8 @@
 package de.rwth.i9.palm.cluster.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,11 +16,9 @@ import de.rwth.i9.palm.analytics.algorithm.clustering.WekaDBSCAN;
 import de.rwth.i9.palm.analytics.algorithm.clustering.WekaEM;
 import de.rwth.i9.palm.analytics.algorithm.clustering.WekaHierarchichal;
 import de.rwth.i9.palm.analytics.algorithm.clustering.WekaXMeans;
-import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
-import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.EventInterest;
@@ -63,7 +57,6 @@ public class ClusteringServiceImpl implements ClusteringService
 	@Override
 	public Map<String, Integer> clusterAuthors( String algorithm, List<Author> authorList, Set<Publication> authorPublications )
 	{
-		similarAuthors( authorList );
 		long startTime = System.currentTimeMillis();
 		Map<String, Integer> resultMap = new HashMap<String, Integer>();
 
@@ -441,190 +434,4 @@ public class ClusteringServiceImpl implements ClusteringService
 		return resultMap;
 	}
 
-	public Map<String, Integer> similarAuthors( List<Author> authorList )
-	{
-		System.out.println( "in similar authors" );
-		// all authors in PALM
-		List<DataMiningAuthor> authors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
-
-		List<DataMiningAuthor> mainAuthors = new ArrayList<DataMiningAuthor>();
-		
-		List<String> interests = new ArrayList<String>();
-		
-		Map<String, Double> othersInterests = new HashMap<String, Double>();
-		if ( authorList.size() == 1 )
-		{
-			// author(s) under consideration
-			DataMiningAuthor mainAuthor = new DataMiningAuthor();
-
-			Map<String, Double> authorInterests = new HashMap<String, Double>();
-
-			for ( DataMiningAuthor dma : authors )
-			{
-				if ( dma.getName().equals( authorList.get( 0 ).getName() ) )
-				{
-					mainAuthors.add( dma );
-					authorInterests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
-				}
-			}
-			
-			interests = new ArrayList<String>(authorInterests.keySet());
-		}
-
-		else
-		{
-			
-			List<Integer> count = new ArrayList<Integer>();
-			for ( DataMiningAuthor dma : authors )
-			{
-				for ( Author a : authorList )
-				{
-					if ( dma.getName().equals( a.getName() ) )
-					{
-						mainAuthors.add( dma );
-						Map<String, Double> tempInterests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
-
-						List<String> keys = new ArrayList<String>( tempInterests.keySet() );
-						for ( int i = 0; i < tempInterests.size(); i++ )
-						{
-							if ( !interests.contains( keys.get( i ) ) )
-							{
-								interests.add( keys.get( i ) );
-								count.add( 1 );
-							}
-							else
-							{
-								Integer index = interests.indexOf( keys.get( i ) );
-								Integer prevVal = count.get( index );
-								count.set( index, prevVal + 1 );
-
-							}
-						}
-					}
-				}
-			}
-
-			System.out.println( count.toString() );
-			
-			for(int i=0; i< count.size();i++){
-				if(count.get(i)!=authorList.size()){
-					count.remove(i);
-					interests.remove(i);
-					i--;
-				}
-			}
-			
-		}
-		
-		Map<DataMiningAuthor, Double> scoreMap = new HashMap<DataMiningAuthor, Double>();
-		for ( DataMiningAuthor a : authors )
-		{
-			if ( !mainAuthors.contains(a) )
-			{
-				othersInterests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
-				for ( int i = 0; i < interests.size(); i++ )
-				{
-					String term = interests.get( i );
-
-					if ( othersInterests.containsKey( term ) )
-					{
-						if ( scoreMap.containsKey( a ) )
-						{
-							Double val = scoreMap.get( a );
-							scoreMap.remove( a );
-							scoreMap.put( a, val + othersInterests.get( term ) );
-						}
-						else
-							scoreMap.put( a, othersInterests.get( term ) );
-					}
-				}
-			}
-
-		}
-
-		Map<DataMiningAuthor, Double> sortedScoreMap = sortByOtherValue( scoreMap );
-
-		List<DataMiningAuthor> sortedAuthors = new ArrayList<DataMiningAuthor>( sortedScoreMap.keySet() );
-		List<Double> sortedInterestScores = new ArrayList<Double>( sortedScoreMap.values() );
-		// take the 20 top matches
-		for ( int i = 0; i < 20; i++ )
-		{
-			System.out.println( sortedAuthors.get( i ).getName() + sortedInterestScores.get( i ) );
-		}
-
-		// **** find a score for all authors for the interests of the author
-		// then,sort the score and pick the top ones
-		// ***//
-
-		return null;
-
-	}
-
-	// SOURCE: www.mkyong.com
-	private static Map<String, Double> sortByValue( Map<String, Double> unsortMap )
-	{
-
-		// 1. Convert Map to List of Map
-		List<Map.Entry<String, Double>> list = new LinkedList<Map.Entry<String, Double>>( unsortMap.entrySet() );
-
-		// 2. Sort list with Collections.sort(), provide a custom Comparator
-		// Try switch the o1 o2 position for a different order
-		Collections.sort( list, new Comparator<Map.Entry<String, Double>>()
-		{
-			public int compare( Map.Entry<String, Double> o1, Map.Entry<String, Double> o2 )
-			{
-				return ( o2.getValue() ).compareTo( o1.getValue() );
-			}
-		} );
-
-		// 3. Loop the sorted list and put it into a new insertion order Map
-		// LinkedHashMap
-		Map<String, Double> sortedMap = new LinkedHashMap<String, Double>();
-		for ( Map.Entry<String, Double> entry : list )
-		{
-			sortedMap.put( entry.getKey(), entry.getValue() );
-		}
-
-		/*
-		 * //classic iterator example for (Iterator<Map.Entry<String, Integer>>
-		 * it = list.iterator(); it.hasNext(); ) { Map.Entry<String, Integer>
-		 * entry = it.next(); sortedMap.put(entry.getKey(), entry.getValue()); }
-		 */
-
-		return sortedMap;
-	}
-
-	// SOURCE: www.mkyong.com
-	private static Map<DataMiningAuthor, Double> sortByOtherValue( Map<DataMiningAuthor, Double> unsortMap )
-	{
-
-		// 1. Convert Map to List of Map
-		List<Map.Entry<DataMiningAuthor, Double>> list = new LinkedList<Map.Entry<DataMiningAuthor, Double>>( unsortMap.entrySet() );
-
-		// 2. Sort list with Collections.sort(), provide a custom Comparator
-		// Try switch the o1 o2 position for a different order
-		Collections.sort( list, new Comparator<Map.Entry<DataMiningAuthor, Double>>()
-		{
-			public int compare( Map.Entry<DataMiningAuthor, Double> o1, Map.Entry<DataMiningAuthor, Double> o2 )
-			{
-				return ( o2.getValue() ).compareTo( o1.getValue() );
-			}
-		} );
-
-		// 3. Loop the sorted list and put it into a new insertion order Map
-		// LinkedHashMap
-		Map<DataMiningAuthor, Double> sortedMap = new LinkedHashMap<DataMiningAuthor, Double>();
-		for ( Map.Entry<DataMiningAuthor, Double> entry : list )
-		{
-			sortedMap.put( entry.getKey(), entry.getValue() );
-		}
-
-		/*
-		 * //classic iterator example for (Iterator<Map.Entry<String, Integer>>
-		 * it = list.iterator(); it.hasNext(); ) { Map.Entry<String, Integer>
-		 * entry = it.next(); sortedMap.put(entry.getKey(), entry.getValue()); }
-		 */
-
-		return sortedMap;
-	}
 }

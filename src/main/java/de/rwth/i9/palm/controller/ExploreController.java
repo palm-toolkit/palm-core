@@ -416,13 +416,15 @@ public class ExploreController
 
 	@Transactional
 	@RequestMapping( value = "/setupStage", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> setupStage( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "type", required = false ) String type, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	public @ResponseBody Map<String, Object> setupStage( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "type", required = false ) String type, @RequestParam( value = "replace", required = false ) String replace, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 		/* == Set Default Values== */
 		if ( id == null )
 			id = "";
 		if ( type == null )
 			type = "name";
+		if ( replace == null )
+			replace = "";
 
 		String name = "";
 		if ( type.equals( "researcher" ) )
@@ -454,6 +456,7 @@ public class ExploreController
 		responseMap.put( "name", name );
 		responseMap.put( "type", type );
 		responseMap.put( "id", id );
+		responseMap.put( "replace", replace );
 		return responseMap;
 	}
 
