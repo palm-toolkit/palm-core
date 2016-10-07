@@ -501,7 +501,7 @@ public class ExploreController
 		if ( authoridForCoAuthors == null )
 			authoridForCoAuthors = "";
 
-		System.out.println( "at 1: " + authoridForCoAuthors );
+		// System.out.println( "at 1: " + authoridForCoAuthors );
 		List<String> namesList = new ArrayList<String>();
 		List<String> idsList = new ArrayList<String>();
 		List<String> pubFilterList = new ArrayList<String>();
@@ -555,7 +555,7 @@ public class ExploreController
 			responseMap.put( "yearFilterPresent", yearFilterPresent );
 			responseMap.put( "deleteFlag", deleteFlag );
 			responseMap.put( "authoridForCoAuthors", authoridForCoAuthors );
-			System.out.println( "at 2: " + authoridForCoAuthors );
+			// System.out.println( "at 2: " + authoridForCoAuthors );
 
 			if ( checkedPubValues != "" )
 			{
@@ -585,7 +585,7 @@ public class ExploreController
 		}
 		else
 		{
-			System.out.println( "at 3: " + authoridForCoAuthors );
+			// System.out.println( "at 3: " + authoridForCoAuthors );
 			if ( visTab == "" || visTab.equals( "" ) )
 			{
 				if ( visType.equals( "researchers" ) )
@@ -680,7 +680,7 @@ public class ExploreController
 			// System.out.println( "Authors list: " + authors );
 			Set<Publication> publications = exploreFilter.getFilteredPublications( type, authors, eventGroupList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
 
-			System.out.println( "vis tab: " + visTab );
+			// System.out.println( "vis tab: " + visTab );
 
 			visMap = visSwitch( type, idsList, visTab, visType, authors, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
 
@@ -841,7 +841,7 @@ public class ExploreController
 			break;
 		}
 		case "Similar": {
-			System.out.println( "in similar" );
+			// System.out.println( "in similar" );
 			visMap = exploreVis.visualizeSimilar( type, visType, authors, idsList );
 			break;
 		}

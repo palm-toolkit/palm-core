@@ -53,7 +53,7 @@ public class GraphFeatureImpl implements GraphFeature
 	@Override
 	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, List<Author> eventGroupAuthors, Author authorForCoAuthors )
 	{
-		System.out.println( "at 4: " + authorForCoAuthors );
+		// System.out.println( "at 4: " + authorForCoAuthors );
 		// Create Thread Pool for parallel layout
 		ExecutorService executor = Executors.newFixedThreadPool( 1 );
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -90,7 +90,7 @@ public class GraphFeatureImpl implements GraphFeature
 			@Override
 			public void run()
 			{
-				System.out.println( "out HREER: " + authorForCoAuthors );
+				// System.out.println( "out HREER: " + authorForCoAuthors );
 				Random rand = new Random();
 
 				int max = 100;
@@ -135,14 +135,15 @@ public class GraphFeatureImpl implements GraphFeature
 				// iterating over all publications of the authors
 				for ( Publication publication : authorPublications )
 				{
-					System.out.println( "Pub name: " + publication.getTitle() );
+					// System.out.println( "Pub name: " + publication.getTitle()
+					// );
 					List<Author> publicationAuthors = publication.getAuthors();
 					List<Author> tempPubAuthors = new ArrayList<Author>();
 
 					// iterating over authors of those publications
 					for ( Author publicationAuthor : publicationAuthors )
 					{
-						System.out.println( publicationAuthor.getName() );
+						// System.out.println( publicationAuthor.getName() );
 						if ( type.equals( "researcher" ) )
 						{
 							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
@@ -154,7 +155,7 @@ public class GraphFeatureImpl implements GraphFeature
 								nodes.add( n );
 								n.setLabel( publicationAuthor.getName() );
 								if ( pubs.contains( publication ) )
-									n.setSize( 0.3f );
+									n.setSize( 0.5f );
 								else
 									n.setSize( 0.1f );
 								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
@@ -166,7 +167,8 @@ public class GraphFeatureImpl implements GraphFeature
 							for ( int i = 0; i < tempPubAuthors.size(); i++ )
 							{
 								Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
-								System.out.println( "pub node: " + publicationAuthor.getName() );
+								// System.out.println( "pub node: " +
+								// publicationAuthor.getName() );
 								if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
 								{
 									Node tempAuthorNode = graphModel.factory().newNode( tempPubAuthors.get( i ).getName() );
@@ -213,7 +215,7 @@ public class GraphFeatureImpl implements GraphFeature
 									n.setAttribute( "authorId", publicationAuthor.getId() );
 									n.setLabel( publicationAuthor.getName() );
 									if ( pubs.contains( publication ) )
-										n.setSize( 0.3f );
+										n.setSize( 0.5f );
 									else
 										n.setSize( 0.1f );
 									n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
@@ -222,7 +224,8 @@ public class GraphFeatureImpl implements GraphFeature
 								for ( int i = 0; i < tempPubAuthors.size(); i++ )
 								{
 									Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
-									System.out.println( "pub node: " + publicationAuthor.getName() );
+									// System.out.println( "pub node: " +
+									// publicationAuthor.getName() );
 									if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
 									{
 										Node tempAuthorNode = graphModel.factory().newNode( tempPubAuthors.get( i ).getName() );
@@ -322,7 +325,8 @@ public class GraphFeatureImpl implements GraphFeature
 						}
 					}
 
-					System.out.println( "hai koi common? " + commonAuthors.size() );
+					// System.out.println( "common author count " +
+					// commonAuthors.size() );
 					for ( int i = 0; i < commonAuthors.size(); i++ )
 					{
 						Node n = graphModel.factory().newNode( commonAuthors.get( i ).getName() );
@@ -361,14 +365,16 @@ public class GraphFeatureImpl implements GraphFeature
 							List<Author> list2 = coAuthorsList.get( i );
 							for ( int j = 0; j < list2.size(); j++ )
 							{
-								System.out.println( "1:" + list2.get( j ).getName() );
+								// System.out.println( "1:" + list2.get( j
+								// ).getName() );
 								for ( Publication p : list2.get( j ).getPublications() )
 								{
 									for ( Author a : p.getAuthors() )
 									{
 										if ( list1.contains( a ) )
 										{
-											System.out.println( "2:" + a.getName() );
+											// System.out.println( "2:" +
+											// a.getName() );
 											Node n = graphModel.factory().newNode( a.getName() );
 
 											if ( !nodes.contains( n ) )

@@ -91,7 +91,8 @@ public class ExploreVisualization
 						}
 					}
 				}
-				System.out.println( "event authors size: " + eventAuthors.size() );
+				// System.out.println( "event authors size: " +
+				// eventAuthors.size() );
 				for ( Author a : eventAuthors )
 				{
 					if ( !eventGroupAuthors.contains( a ) )
@@ -105,8 +106,9 @@ public class ExploreVisualization
 					}
 				}
 			}
-			System.out.println( count.size() + " " + count.toString() );
-			System.out.println( eventGroupAuthors.size() + "  " + eventGroupAuthors.toString() );
+			// System.out.println( count.size() + " " + count.toString() );
+			// System.out.println( eventGroupAuthors.size() + " " +
+			// eventGroupAuthors.toString() );
 
 			for ( int i = 0; i < eventGroupAuthors.size(); i++ )
 			{
@@ -116,8 +118,8 @@ public class ExploreVisualization
 					eventGroupAuthors.remove( i );
 					i--;
 				}
-				else
-					System.out.println( eventGroupAuthors.get( i ).getName() );
+				// else
+				// System.out.println( eventGroupAuthors.get( i ).getName() );
 			}
 		}
 		Author authorForCoAuthors = new Author();
@@ -125,9 +127,10 @@ public class ExploreVisualization
 		{
 			authorForCoAuthors = persistenceStrategy.getAuthorDAO().getById( authoridForCoAuthors );
 		}
-		System.out.println( "event group size " + eventGroupAuthors.size() );
+		// System.out.println( "event group size " + eventGroupAuthors.size() );
 		visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, eventGroupAuthors, authorForCoAuthors ).get( "graphFile" ) );
-		System.out.println( "response map for data transfer: " + visMap.toString() );
+		// System.out.println( "response map for data transfer: " +
+		// visMap.toString() );
 		return visMap;
 	}
 
@@ -148,7 +151,9 @@ public class ExploreVisualization
 			List<Object> listEvents = new ArrayList<Object>();
 			for ( int i = 0; i < idsList.size(); i++ )
 			{
-				System.out.println( " name in vis: " + eventFeature.getEventMining().fetchEventGroupData( idsList.get( i ), null, null ).get( "name" ) );
+				// System.out.println( " name in vis: " +
+				// eventFeature.getEventMining().fetchEventGroupData(
+				// idsList.get( i ), null, null ).get( "name" ) );
 				@SuppressWarnings( "unchecked" )
 				List<Object> innerList = (List<Object>) eventFeature.getEventMining().fetchEventGroupData( idsList.get( i ), null, null ).get( "events" );
 				for ( int j = 0; j < innerList.size(); j++ )
@@ -186,7 +191,7 @@ public class ExploreVisualization
 							}
 
 						}
-						System.out.println( interestStrings );
+						// System.out.println( interestStrings );
 
 						if ( interestStrings.containsAll( filteredTopic ) )
 						{
@@ -195,7 +200,7 @@ public class ExploreVisualization
 						else
 							valid = false;
 
-						System.out.println( "\nvalid: " + valid );
+						// System.out.println( "\nvalid: " + valid );
 					}
 
 					if ( valid )
@@ -203,7 +208,7 @@ public class ExploreVisualization
 				}
 			}
 			visMap.put( "events", listEvents );
-			System.out.println( "VISMAP: " + visMap.toString() );
+			// System.out.println( "VISMAP: " + visMap.toString() );
 
 		}
 
@@ -874,14 +879,15 @@ public class ExploreVisualization
 
 			visMap.put( "list", listObjects );
 			
-			System.out.println( "time lapse: " + ( System.currentTimeMillis() - startTime ) / 1000 );
+			// System.out.println( "time lapse: " + ( System.currentTimeMillis()
+			// - startTime ) / 1000 );
 		}
 		return visMap;
 	}
 
 	public Map<String, Object> visualizeList( String type, String visType, List<Author> authorList, Set<Publication> publications, String startYear, String endYear, List<String> idsList, List<String> filteredTopic )
 	{
-		System.out.println( "visType:  " + visType );
+		// System.out.println( "visType: " + visType );
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		if ( visType.equals( "researchers" ) )
 			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( authorList, publications ) );
@@ -939,7 +945,7 @@ public class ExploreVisualization
 									}
 
 								}
-								System.out.println( interestStrings );
+								// System.out.println( interestStrings );
 
 								if ( interestStrings.containsAll( filteredTopic ) )
 								{
@@ -971,7 +977,8 @@ public class ExploreVisualization
 			for ( Publication pub : publicationsList )
 			{
 				Map<String, Object> pubDetails = new LinkedHashMap<String, Object>();
-				System.out.println( pub.getPublicationDate() + " " + pub.getTitle() );
+				// System.out.println( pub.getPublicationDate() + " " +
+				// pub.getTitle() );
 				pubDetails.put( "id", pub.getId() );
 				pubDetails.put( "title", pub.getTitle() );
 				pubDetails.put( "year", pub.getYear() );
@@ -1366,7 +1373,8 @@ public class ExploreVisualization
 							}
 						}
 					}
-					System.out.println( "size of pubs: " + eventGroupPubs.size() );
+					// System.out.println( "size of pubs: " +
+					// eventGroupPubs.size() );
 					// Set<Publication> authorPublications = authorList.get( i
 					// ).getPublications();
 					List<Author> publicationAuthors = new ArrayList<Author>();
@@ -1422,7 +1430,8 @@ public class ExploreVisualization
 							List<Author> previousAuthorCoAuthors = previousAuthorLists.get( k );
 							EventGroup previousEventGroup = previousEventGroups.get( k );
 
-							System.out.println( previousEventGroup.getName() );
+							// System.out.println( previousEventGroup.getName()
+							// );
 
 							if ( !previousEventGroup.equals( eg ) )
 							{
@@ -1441,7 +1450,9 @@ public class ExploreVisualization
 								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
 								List<Integer> sets = new ArrayList<Integer>();
 								sets.add( i );
-								System.out.println( "index: " + eventGroupTempList.indexOf( previousEventGroup ) );
+								// System.out.println( "index: " +
+								// eventGroupTempList.indexOf(
+								// previousEventGroup ) );
 								sets.add( eventGroupTempList.indexOf( previousEventGroup ) ); // to-do
 								mapValuesForPairs.put( "sets", sets );
 								mapValuesForPairs.put( "size", temp.size() );
@@ -1456,7 +1467,7 @@ public class ExploreVisualization
 				// common to all
 				if ( authorList.size() > 2 )
 				{
-					System.out.println( "coming here" );
+					// System.out.println( "coming here" );
 					List<Author> allAuthors = new ArrayList<Author>();
 					List<String> allAuthorNames = new ArrayList<String>();
 					List<Integer> count = new ArrayList<Integer>();
@@ -2001,16 +2012,23 @@ public class ExploreVisualization
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		if ( visType.equals( "researchers" ) )
 		{
-			Map<DataMiningAuthor, Double> map = similarityService.similarAuthors( authorList );
+			Map<String, Object> map = similarityService.similarAuthors( authorList );
 			if ( map != null )
 			{
-				System.out.println( map.toString() );
-				List<Double> similarityValues = new ArrayList<Double>( map.values() );
-				List<DataMiningAuthor> similarAuthors = new ArrayList<DataMiningAuthor>( map.keySet() );
+
+				@SuppressWarnings( "unchecked" )
+				Map<DataMiningAuthor, Map<String, Double>> interestMap = (Map<DataMiningAuthor, Map<String, Double>>) map.get( "interestMap" );
+
+				@SuppressWarnings( "unchecked" )
+				Map<DataMiningAuthor, Double> scoreMap = (Map<DataMiningAuthor, Double>) map.get( "scoreMap" );
+
+				List<Double> similarityValues = new ArrayList<Double>( scoreMap.values() );
+				List<DataMiningAuthor> similarAuthors = new ArrayList<DataMiningAuthor>( scoreMap.keySet() );
 
 				List<Double> truncSimilarityValues = new ArrayList<Double>();
 				List<String> authorNames = new ArrayList<String>();
 				List<String> authorIds = new ArrayList<String>();
+				List<Map<String, Double>> truncInterests = new ArrayList<Map<String, Double>>();
 
 				int count = 0;
 				if ( map.size() > 20 )
@@ -2020,15 +2038,16 @@ public class ExploreVisualization
 
 				for ( int i = 0; i < count; i++ )
 				{
-					System.out.println( similarityValues.get( i ) + " : " + similarAuthors.get( i ).getName() );
 					truncSimilarityValues.add( similarityValues.get( i ) );
 					authorNames.add( similarAuthors.get( i ).getName() );
 					authorIds.add( similarAuthors.get( i ).getId() );
+					truncInterests.add( interestMap.get( similarAuthors.get( i ) ) );
 				}
 
 				visMap.put( "authorNames", authorNames );
 				visMap.put( "authorIds", authorIds );
 				visMap.put( "similarity", truncSimilarityValues );
+				visMap.put( "interests", truncInterests );
 				return visMap;
 			}
 			else
@@ -2039,7 +2058,7 @@ public class ExploreVisualization
 			Map<DataMiningEventGroup, Double> map = similarityService.similarConferences( idsList );
 			if ( map != null )
 			{
-				System.out.println( map.toString() );
+				// System.out.println( map.toString() );
 				List<Double> similarityValues = new ArrayList<Double>( map.values() );
 				List<DataMiningEventGroup> similarConferences = new ArrayList<DataMiningEventGroup>( map.keySet() );
 
@@ -2055,7 +2074,8 @@ public class ExploreVisualization
 
 				for ( int i = 0; i < count; i++ )
 				{
-					System.out.println( similarityValues.get( i ) + " : " + similarConferences.get( i ).getName() );
+					// System.out.println( similarityValues.get( i ) + " : " +
+					// similarConferences.get( i ).getName() );
 					truncSimilarityValues.add( similarityValues.get( i ) );
 					conferenceNames.add( similarConferences.get( i ).getName() );
 					conferenceIds.add( similarConferences.get( i ).getId() );

@@ -33,7 +33,7 @@ public class SimilarityServiceImpl implements SimilarityService
 	@Autowired
 	private AcademicEventFeature eventFeature;
 
-	public Map<DataMiningAuthor, Double> similarAuthors( List<Author> authorList )
+	public Map<String, Object> similarAuthors( List<Author> authorList )
 	{
 		System.out.println( "in similar authors" );
 		// all authors in PALM
@@ -93,7 +93,7 @@ public class SimilarityServiceImpl implements SimilarityService
 				}
 			}
 
-			System.out.println( count.toString() );
+			// System.out.println( count.toString() );
 
 			for ( int i = 0; i < count.size(); i++ )
 			{
@@ -108,10 +108,13 @@ public class SimilarityServiceImpl implements SimilarityService
 		}
 
 		Map<DataMiningAuthor, Double> scoreMap = new HashMap<DataMiningAuthor, Double>();
+
+		Map<DataMiningAuthor, Map<String, Double>> interestMap = new HashMap<DataMiningAuthor, Map<String, Double>>();
 		for ( DataMiningAuthor a : authors )
 		{
 			if ( !mainAuthors.contains( a ) )
 			{
+				System.out.println( "\nAuthor: " + a.getName() );
 				othersInterests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
 				for ( int i = 0; i < interests.size(); i++ )
 				{
@@ -119,21 +122,53 @@ public class SimilarityServiceImpl implements SimilarityService
 
 					if ( othersInterests.containsKey( term ) )
 					{
+						System.out.println( "interest : " + term );
+
 						if ( scoreMap.containsKey( a ) )
 						{
 							Double val = scoreMap.get( a );
 							scoreMap.remove( a );
-							scoreMap.put( a, val + othersInterests.get( term ) );
+
+							// to score as per number of interests
+							scoreMap.put( a, val + 0.3 );
+							Map<String, Double> interest = interestMap.get( a );
+							interest.put( term, othersInterests.get( term ) );
+							interestMap.put( a, interest );
+
+							// to score as per weights
+							// scoreMap.put( a, val + othersInterests.get( term
+							// ) );
 						}
 						else
-							scoreMap.put( a, othersInterests.get( term ) );
+						{
+							// to score as per number of interests
+							scoreMap.put( a, 0.3 );
+							Map<String, Double> interest = new HashMap<String, Double>();
+							interest.put( term, othersInterests.get( term ) );
+							interestMap.put( a, interest );
+
+							// to score as per weights
+							// scoreMap.put( a, othersInterests.get( term ) );
+						}
 					}
 				}
+				System.out.println( scoreMap.get( a ) );
 			}
 
 		}
 
 		Map<DataMiningAuthor, Double> sortedScoreMap = sortByAuthor( scoreMap );
+
+		Map<DataMiningAuthor, Map<String, Double>> sortedInterestMap = new HashMap<DataMiningAuthor, Map<String, Double>>();
+		for ( int i = 0; i < interestMap.size(); i++ )
+		{
+			sortedInterestMap.put( new ArrayList<DataMiningAuthor>( interestMap.keySet() ).get( i ), sortByTerm( new ArrayList<Map<String, Double>>( interestMap.values() ).get( i ) ) );
+		}
+
+
+		Map<String, Object> finalMap = new HashMap<String, Object>();
+		finalMap.put( "scoreMap", sortedScoreMap );
+		finalMap.put( "interestMap", sortedInterestMap );
 
 		// List<DataMiningAuthor> sortedAuthors = new
 		// ArrayList<DataMiningAuthor>( sortedScoreMap.keySet() );
@@ -146,7 +181,7 @@ public class SimilarityServiceImpl implements SimilarityService
 		// sortedInterestScores.get( i ) );
 		// }
 
-		return sortedScoreMap;
+		return finalMap;
 
 	}
 
@@ -190,7 +225,7 @@ public class SimilarityServiceImpl implements SimilarityService
 					String mainEvent = (String) eventGroupMap.get( "name" );
 					if ( dmeg.getName().equals( mainEvent ) )
 					{
-						System.out.println( "BLAH BLAH: " + dmeg.getName() );
+						// System.out.println( "BLAH BLAH: " + dmeg.getName() );
 						mainEventGroups.add( dmeg );
 						Map<String, Double> tempInterests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
 
@@ -214,7 +249,7 @@ public class SimilarityServiceImpl implements SimilarityService
 				}
 			}
 
-			System.out.println( count.toString() );
+			// System.out.println( count.toString() );
 
 			for ( int i = 0; i < count.size(); i++ )
 			{
@@ -259,10 +294,11 @@ public class SimilarityServiceImpl implements SimilarityService
 		List<DataMiningEventGroup> sortedAuthors = new ArrayList<DataMiningEventGroup>( sortedScoreMap.keySet() );
 		List<Double> sortedInterestScores = new ArrayList<Double>( sortedScoreMap.values() );
 		// take the 20 top matches
-		for ( int i = 0; i < 20; i++ )
-		{
-			System.out.println( sortedAuthors.get( i ).getName() + sortedInterestScores.get( i ) );
-		}
+		// for ( int i = 0; i < 20; i++ )
+		// {
+		// System.out.println( sortedAuthors.get( i ).getName() +
+		// sortedInterestScores.get( i ) );
+		// }
 
 		return sortedScoreMap;
 		// return null;
@@ -322,6 +358,39 @@ public class SimilarityServiceImpl implements SimilarityService
 		// LinkedHashMap
 		Map<DataMiningEventGroup, Double> sortedMap = new LinkedHashMap<DataMiningEventGroup, Double>();
 		for ( Map.Entry<DataMiningEventGroup, Double> entry : list )
+		{
+			sortedMap.put( entry.getKey(), entry.getValue() );
+		}
+
+		/*
+		 * //classic iterator example for (Iterator<Map.Entry<String, Integer>>
+		 * it = list.iterator(); it.hasNext(); ) { Map.Entry<String, Integer>
+		 * entry = it.next(); sortedMap.put(entry.getKey(), entry.getValue()); }
+		 */
+
+		return sortedMap;
+	}
+
+	public Map<String, Double> sortByTerm( Map<String, Double> unsortMap )
+	{
+
+		// 1. Convert Map to List of Map
+		List<Map.Entry<String, Double>> list = new LinkedList<Map.Entry<String, Double>>( unsortMap.entrySet() );
+
+		// 2. Sort list with Collections.sort(), provide a custom Comparator
+		// Try switch the o1 o2 position for a different order
+		Collections.sort( list, new Comparator<Map.Entry<String, Double>>()
+		{
+			public int compare( Map.Entry<String, Double> o1, Map.Entry<String, Double> o2 )
+			{
+				return ( o2.getValue() ).compareTo( o1.getValue() );
+			}
+		} );
+
+		// 3. Loop the sorted list and put it into a new insertion order Map
+		// LinkedHashMap
+		Map<String, Double> sortedMap = new LinkedHashMap<String, Double>();
+		for ( Map.Entry<String, Double> entry : list )
 		{
 			sortedMap.put( entry.getKey(), entry.getValue() );
 		}
