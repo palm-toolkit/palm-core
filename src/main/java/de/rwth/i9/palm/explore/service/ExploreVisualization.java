@@ -2030,11 +2030,13 @@ public class ExploreVisualization
 				List<String> authorIds = new ArrayList<String>();
 				List<Map<String, Double>> truncInterests = new ArrayList<Map<String, Double>>();
 
+				System.out.println( map.size() + " : maz size" );
+
 				int count = 0;
-				if ( map.size() > 20 )
+				if ( interestMap.size() > 20 )
 					count = 20;
 				else
-					count = map.size();
+					count = interestMap.size();
 
 				for ( int i = 0; i < count; i++ )
 				{

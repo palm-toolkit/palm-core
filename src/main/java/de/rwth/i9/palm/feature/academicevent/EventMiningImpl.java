@@ -331,6 +331,7 @@ public class EventMiningImpl implements EventMining
 					eventMap.put( "location", location );
 			}
 			eventMap.put( "eventGroupName", eventGroup.getName() );
+			eventMap.put( "eventGroupId", eventGroup.getId() );
 			eventMap.put( "isAdded", event.isAdded() );
 
 			eventList.add( eventMap );

@@ -165,7 +165,6 @@ public class SimilarityServiceImpl implements SimilarityService
 			sortedInterestMap.put( new ArrayList<DataMiningAuthor>( interestMap.keySet() ).get( i ), sortByTerm( new ArrayList<Map<String, Double>>( interestMap.values() ).get( i ) ) );
 		}
 
-
 		Map<String, Object> finalMap = new HashMap<String, Object>();
 		finalMap.put( "scoreMap", sortedScoreMap );
 		finalMap.put( "interestMap", sortedInterestMap );
