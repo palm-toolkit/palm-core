@@ -95,10 +95,10 @@ public class ExploreController
 			searchWidget.setTitle( "Search" );
 			searchWidget.setUniqueName( "explore_search" );
 			searchWidget.setWidgetType( WidgetType.EXPLORE );
-			searchWidget.setWidgetGroup( "content" );
+			searchWidget.setWidgetGroup( "sidebar" );
 			searchWidget.setWidgetSource( WidgetSource.INCLUDE );
 			searchWidget.setSourcePath( "../../explore/widget/search.ftl" );
-			searchWidget.setWidgetWidth( WidgetWidth.QUARTER );
+			searchWidget.setWidgetWidth( WidgetWidth.LARGE );
 			searchWidget.setColor( Color.YELLOW );
 			searchWidget.setInformation( "Visual Analytics widget for searching any item" );
 			searchWidget.setCloseEnabled( false );
@@ -117,15 +117,15 @@ public class ExploreController
 			visualizationWidget.setWidgetGroup( "content" );
 			visualizationWidget.setWidgetSource( WidgetSource.INCLUDE );
 			visualizationWidget.setSourcePath( "../../explore/widget/visualize.ftl" );
-			visualizationWidget.setWidgetWidth( WidgetWidth.HALF );
+			visualizationWidget.setWidgetWidth( WidgetWidth.MEDIUM );
 			visualizationWidget.setColor( Color.GREEN );
 			visualizationWidget.setInformation( "Visual Analytics widget for all visualizations" );
 			visualizationWidget.setCloseEnabled( false );
 			visualizationWidget.setMinimizeEnabled( true );
 			visualizationWidget.setMoveableEnabled( true );
-			visualizationWidget.setHeaderVisible( false );
+			visualizationWidget.setHeaderVisible( true );
 			visualizationWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			visualizationWidget.setPosition( 0 );
+			visualizationWidget.setPosition( 3 );
 			persistenceStrategy.getWidgetDAO().persist( visualizationWidget );
 
 			// create Filter Widget in Explore
@@ -136,7 +136,7 @@ public class ExploreController
 			filterWidget.setWidgetGroup( "content" );
 			filterWidget.setWidgetSource( WidgetSource.INCLUDE );
 			filterWidget.setSourcePath( "../../explore/widget/filter.ftl" );
-			filterWidget.setWidgetWidth( WidgetWidth.QUARTER );
+			filterWidget.setWidgetWidth( WidgetWidth.SMALL );
 			filterWidget.setColor( Color.BLUE );
 			filterWidget.setInformation( "Visual Analytics widget for filters" );
 			filterWidget.setCloseEnabled( false );
@@ -144,7 +144,7 @@ public class ExploreController
 			filterWidget.setMoveableEnabled( true );
 			filterWidget.setHeaderVisible( true );
 			filterWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			filterWidget.setPosition( 0 );
+			filterWidget.setPosition( 9 );
 			persistenceStrategy.getWidgetDAO().persist( filterWidget );
 
 			// create Setup Widget in Explore
@@ -155,7 +155,7 @@ public class ExploreController
 			setupWidget.setWidgetGroup( "content" );
 			setupWidget.setWidgetSource( WidgetSource.INCLUDE );
 			setupWidget.setSourcePath( "../../explore/widget/setup.ftl" );
-			setupWidget.setWidgetWidth( WidgetWidth.THREE4TH );
+			setupWidget.setWidgetWidth( WidgetWidth.LARGE );
 			setupWidget.setColor( Color.RED );
 			setupWidget.setInformation( "Visual Analytics widget for basic setup" );
 			setupWidget.setCloseEnabled( false );
@@ -163,7 +163,7 @@ public class ExploreController
 			setupWidget.setMoveableEnabled( false );
 			setupWidget.setHeaderVisible( false );
 			setupWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			setupWidget.setPosition( 0 );
+			setupWidget.setPosition( 3 );
 			persistenceStrategy.getWidgetDAO().persist( setupWidget );
 
 		}
