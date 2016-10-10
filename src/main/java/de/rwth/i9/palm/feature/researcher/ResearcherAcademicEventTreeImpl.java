@@ -210,7 +210,8 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 						eventDetail.put( "location", publications.get( i ).getEvent().getLocation() );
 						eventDetail.put( "year", publications.get( i ).getEvent().getYear() );
 						eventDetail.put( "eventGroupId", publications.get( i ).getEvent().getEventGroup().getId() );
-
+						eventDetail.put( "isAdded", publications.get( i ).getEvent().getEventGroup().isAdded() );
+						eventDetail.put( "id", publications.get( i ).getEvent().getEventGroup().getId() );
 						if ( locations )
 						{
 							if ( publications.get( i ).getEvent().getLocation() != null )
