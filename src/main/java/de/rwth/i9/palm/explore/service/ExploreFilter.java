@@ -155,7 +155,6 @@ public class ExploreFilter
 			for ( Publication pub : publications )
 			{
 
-
 				Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
 				for ( PublicationTopic pubTopic : publicationTopics )
 				{
@@ -482,16 +481,21 @@ public class ExploreFilter
 					tempPubList = new ArrayList<Publication>( authorList.get( i ).getPublications() );
 					for ( int j = 0; j < tempPubList.size(); j++ )
 					{
-						if ( !authorPublicationsList.contains( tempPubList.get( j ) ) && ( tempPubList.get( j ).getYear() != null || tempPubList.get( j ).getPublicationDate() != null ) )
+						if ( tempPubList.get( j ).getYear() != null || tempPubList.get( j ).getPublicationDate() != null )
 						{
-							authorPublicationsList.add( tempPubList.get( j ) );
-							count.add( 0 );
+							if ( !authorPublicationsList.contains( tempPubList.get( j ) ) )
+							{
+
+								authorPublicationsList.add( tempPubList.get( j ) );
+								count.add( 0 );
+							}
+							else
+							{
+								int index = authorPublicationsList.indexOf( tempPubList.get( j ) );
+								count.set( index, count.get( index ) + 1 );
+							}
 						}
-						else
-						{
-							int index = authorPublicationsList.indexOf( tempPubList.get( j ) );
-							count.set( index, count.get( index ) + 1 );
-						}
+
 					}
 				}
 				for ( int i = 0; i < count.size(); i++ )
@@ -523,6 +527,7 @@ public class ExploreFilter
 			}
 		}
 		if ( type.equals( "conference" ) )
+
 		{
 			// if there are more than one authors in consideration
 			if ( eventGroupList.size() > 1 )

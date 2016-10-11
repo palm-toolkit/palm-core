@@ -102,7 +102,7 @@ public class ExploreController
 			searchWidget.setColor( Color.YELLOW );
 			searchWidget.setInformation( "Visual Analytics widget for searching any item" );
 			searchWidget.setCloseEnabled( false );
-			searchWidget.setMinimizeEnabled( true );
+			searchWidget.setMinimizeEnabled( false );
 			searchWidget.setMoveableEnabled( true );
 			searchWidget.setHeaderVisible( true );
 			searchWidget.setWidgetStatus( WidgetStatus.DEFAULT );
