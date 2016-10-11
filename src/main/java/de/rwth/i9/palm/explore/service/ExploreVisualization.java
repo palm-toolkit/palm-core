@@ -143,73 +143,82 @@ public class ExploreVisualization
 
 		if ( type.equals( "conference" ) )
 		{
-			Boolean valid = false;
-			if ( startYear.equals( "" ) || startYear.equals( "0" ) )
-			{
-				valid = true;
-			}
-			List<Object> listEvents = new ArrayList<Object>();
-			for ( int i = 0; i < idsList.size(); i++ )
-			{
-				// System.out.println( " name in vis: " +
-				// eventFeature.getEventMining().fetchEventGroupData(
-				// idsList.get( i ), null, null ).get( "name" ) );
-				@SuppressWarnings( "unchecked" )
-				List<Object> innerList = (List<Object>) eventFeature.getEventMining().fetchEventGroupData( idsList.get( i ), null, null ).get( "events" );
-				for ( int j = 0; j < innerList.size(); j++ )
-				{
-					@SuppressWarnings( "unchecked" )
-					Map<String, Object> innerListMap = (Map<String, Object>) innerList.get( j );
-
-					if ( !startYear.equals( "" ) && !startYear.equals( "0" ) )
-						if ( Integer.parseInt( startYear ) <= Integer.parseInt( innerListMap.get( "year" ).toString() ) && Integer.parseInt( endYear ) >= Integer.parseInt( innerListMap.get( "year" ).toString() ) )
-							valid = true;
-						else
-							valid = false;
-
-					if ( !filteredTopic.isEmpty() && valid )
-					{
-						Event e = persistenceStrategy.getEventDAO().getById( innerListMap.get( "id" ).toString() );
-						Set<EventInterestProfile> eips = e.getEventInterestProfiles();
-						List<String> interestStrings = new ArrayList<String>();
-
-						for ( EventInterestProfile eip : eips )
-						{
-							Set<EventInterest> eventInterests = eip.getEventInterests();
-							for ( EventInterest ei : eventInterests )
-							{
-								Map<Interest, Double> termWeights = ei.getTermWeights();
-								List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
-								// List<Double> weights = new
-								// ArrayList<Double>(termWeights.values());
-								for ( Interest interest : interests )
-								{
-									if ( !interestStrings.contains( interest.getTerm() ) )
-										interestStrings.add( interest.getTerm() );
-								}
-
-							}
-
-						}
-						// System.out.println( interestStrings );
-
-						if ( interestStrings.containsAll( filteredTopic ) )
-						{
-							valid = true;
-						}
-						else
-							valid = false;
-
-						// System.out.println( "\nvalid: " + valid );
-					}
-
-					if ( valid )
-						listEvents.add( innerList.get( j ) );
-				}
-			}
-			visMap.put( "events", listEvents );
-			// System.out.println( "VISMAP: " + visMap.toString() );
-
+			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, true ) );
+			// Boolean valid = false;
+			// if ( startYear.equals( "" ) || startYear.equals( "0" ) )
+			// {
+			// valid = true;
+			// }
+			// List<Object> listEvents = new ArrayList<Object>();
+			// for ( int i = 0; i < idsList.size(); i++ )
+			// {
+			// // System.out.println( " name in vis: " +
+			// // eventFeature.getEventMining().fetchEventGroupData(
+			// // idsList.get( i ), null, null ).get( "name" ) );
+			// @SuppressWarnings( "unchecked" )
+			// List<Object> innerList = (List<Object>)
+			// eventFeature.getEventMining().fetchEventGroupData( idsList.get( i
+			// ), null, null ).get( "events" );
+			// for ( int j = 0; j < innerList.size(); j++ )
+			// {
+			// @SuppressWarnings( "unchecked" )
+			// Map<String, Object> innerListMap = (Map<String, Object>)
+			// innerList.get( j );
+			//
+			// if ( !startYear.equals( "" ) && !startYear.equals( "0" ) )
+			// if ( Integer.parseInt( startYear ) <= Integer.parseInt(
+			// innerListMap.get( "year" ).toString() ) && Integer.parseInt(
+			// endYear ) >= Integer.parseInt( innerListMap.get( "year"
+			// ).toString() ) )
+			// valid = true;
+			// else
+			// valid = false;
+			//
+			// if ( !filteredTopic.isEmpty() && valid )
+			// {
+			// Event e = persistenceStrategy.getEventDAO().getById(
+			// innerListMap.get( "id" ).toString() );
+			// Set<EventInterestProfile> eips = e.getEventInterestProfiles();
+			// List<String> interestStrings = new ArrayList<String>();
+			//
+			// for ( EventInterestProfile eip : eips )
+			// {
+			// Set<EventInterest> eventInterests = eip.getEventInterests();
+			// for ( EventInterest ei : eventInterests )
+			// {
+			// Map<Interest, Double> termWeights = ei.getTermWeights();
+			// List<Interest> interests = new ArrayList<Interest>(
+			// termWeights.keySet() );
+			// // List<Double> weights = new
+			// // ArrayList<Double>(termWeights.values());
+			// for ( Interest interest : interests )
+			// {
+			// if ( !interestStrings.contains( interest.getTerm() ) )
+			// interestStrings.add( interest.getTerm() );
+			// }
+			//
+			// }
+			//
+			// }
+			// // System.out.println( interestStrings );
+			//
+			// if ( interestStrings.containsAll( filteredTopic ) )
+			// {
+			// valid = true;
+			// }
+			// else
+			// valid = false;
+			//
+			// // System.out.println( "\nvalid: " + valid );
+			// }
+			//
+			// if ( valid )
+			// listEvents.add( innerList.get( j ) );
+			// }
+			// }
+			// visMap.put( "events", listEvents );
+			// // System.out.println( "VISMAP: " + visMap.toString() );
+			//
 		}
 
 		return visMap;
@@ -898,68 +907,83 @@ public class ExploreVisualization
 
 			if ( type.equals( "conference" ) )
 			{
-				Boolean valid = false;
-				if ( startYear.equals( "" ) || startYear.equals( "0" ) )
-				{
-					valid = true;
-				}
-				List<Object> listEvents = new ArrayList<Object>();
-				for ( int i = 0; i < idsList.size(); i++ )
-				{
-					@SuppressWarnings( "unchecked" )
-					List<Object> innerList = (List<Object>) eventFeature.getEventMining().fetchEventGroupData( idsList.get( i ), null, null ).get( "events" );
-					for ( int j = 0; j < innerList.size(); j++ )
-					{
-						@SuppressWarnings( "unchecked" )
-						Map<String, Object> innerListMap = (Map<String, Object>) innerList.get( j );
-
-						if ( !startYear.equals( "" ) && !startYear.equals( "0" ) )
-							if ( Integer.parseInt( startYear ) <= Integer.parseInt( innerListMap.get( "year" ).toString() ) && Integer.parseInt( endYear ) >= Integer.parseInt( innerListMap.get( "year" ).toString() ) )
-								valid = true;
-							else
-								valid = false;
-
-						if ( !filteredTopic.isEmpty() && valid )
-						{
-							Event e = persistenceStrategy.getEventDAO().getById( innerListMap.get( "id" ).toString() );
-							Set<EventInterestProfile> eips = e.getEventInterestProfiles();
-							List<String> interestStrings = new ArrayList<String>();
-
-							for ( EventInterestProfile eip : eips )
-							{
-								Set<EventInterest> eventInterests = eip.getEventInterests();
-								for ( EventInterest ei : eventInterests )
-								{
-									Map<Interest, Double> termWeights = ei.getTermWeights();
-									List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
-									// List<Double> weights = new
-									// ArrayList<Double>(termWeights.values());
-									for ( Interest interest : interests )
-									{
-										if ( !interestStrings.contains( interest.getTerm() ) )
-											interestStrings.add( interest.getTerm() );
-									}
-
-								}
-
-							}
-							// System.out.println( interestStrings );
-
-							if ( interestStrings.containsAll( filteredTopic ) )
-							{
-								valid = true;
-							}
-							else
-								valid = false;
-
-						}
-
-						if ( valid )
-							listEvents.add( innerList.get( j ) );
-					}
-				}
-				visMap.put( "events", listEvents );
-
+				visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, false ) );
+				// {
+				// Boolean valid = false;
+				// if ( startYear.equals( "" ) || startYear.equals( "0" ) )
+				// {
+				// valid = true;
+				// }
+				// List<Object> listEvents = new ArrayList<Object>();
+				// for ( int i = 0; i < idsList.size(); i++ )
+				// {
+				// @SuppressWarnings( "unchecked" )
+				// List<Object> innerList = (List<Object>)
+				// eventFeature.getEventMining().fetchEventGroupData(
+				// idsList.get( i ), null, null ).get( "events" );
+				// for ( int j = 0; j < innerList.size(); j++ )
+				// {
+				// @SuppressWarnings( "unchecked" )
+				// Map<String, Object> innerListMap = (Map<String, Object>)
+				// innerList.get( j );
+				//
+				// if ( !startYear.equals( "" ) && !startYear.equals( "0" ) )
+				// if ( Integer.parseInt( startYear ) <= Integer.parseInt(
+				// innerListMap.get( "year" ).toString() ) && Integer.parseInt(
+				// endYear ) >= Integer.parseInt( innerListMap.get( "year"
+				// ).toString() ) )
+				// valid = true;
+				// else
+				// valid = false;
+				//
+				// if ( !filteredTopic.isEmpty() && valid )
+				// {
+				// Event e = persistenceStrategy.getEventDAO().getById(
+				// innerListMap.get( "id" ).toString() );
+				//
+				// System.out.println( "PUBLICATIONS IN CONFERNECSE: " +
+				// publications.size() );
+				// Set<EventInterestProfile> eips =
+				// e.getEventInterestProfiles();
+				// List<String> interestStrings = new ArrayList<String>();
+				//
+				// for ( EventInterestProfile eip : eips )
+				// {
+				// Set<EventInterest> eventInterests = eip.getEventInterests();
+				// for ( EventInterest ei : eventInterests )
+				// {
+				// Map<Interest, Double> termWeights = ei.getTermWeights();
+				// List<Interest> interests = new ArrayList<Interest>(
+				// termWeights.keySet() );
+				// // List<Double> weights = new
+				// // ArrayList<Double>(termWeights.values());
+				// for ( Interest interest : interests )
+				// {
+				// if ( !interestStrings.contains( interest.getTerm() ) )
+				// interestStrings.add( interest.getTerm() );
+				// }
+				//
+				// }
+				//
+				// }
+				// // System.out.println( interestStrings );
+				//
+				// if ( interestStrings.containsAll( filteredTopic ) )
+				// {
+				// valid = true;
+				// }
+				// else
+				// valid = false;
+				//
+				// }
+				//
+				// if ( valid )
+				// listEvents.add( innerList.get( j ) );
+				// }
+				// }
+				// visMap.put( "events", listEvents );
+				//
+				// }
 			}
 		}
 		if ( visType.equals( "publications" ) )

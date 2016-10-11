@@ -191,13 +191,13 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 		Map<String, Object> eventsMap = new HashMap<String, Object>();
 
 		List<Publication> publications = new ArrayList<Publication>( authorPublications );
-
+		System.out.println( "pub size in all events: " + authorPublications.size() );
 		ArrayList<Map<String, Object>> eventDetailsList = new ArrayList<Map<String, Object>>();
 		List<String> tempIds = new ArrayList<String>();
 
 		for ( int i = 0; i < publications.size(); i++ )
 		{
-
+			// set of conditions!!
 			if ( publications.get( i ).getEvent() != null )
 			{
 				if ( publications.get( i ).getEvent().getEventGroup() != null )
@@ -205,12 +205,13 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 					if ( !tempIds.contains( publications.get( i ).getEvent().getId() ) )
 					{
 						Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
-						tempIds.add( publications.get( i ).getEvent().getEventGroup().getId() );
-						eventDetail.put( "name", publications.get( i ).getEvent().getEventGroup().getName() );
+						tempIds.add( publications.get( i ).getEvent().getId() );
+						eventDetail.put( "name", publications.get( i ).getEvent().getName() );
+						eventDetail.put( "groupName", publications.get( i ).getEvent().getEventGroup().getName() );
 						eventDetail.put( "location", publications.get( i ).getEvent().getLocation() );
 						eventDetail.put( "year", publications.get( i ).getEvent().getYear() );
 						eventDetail.put( "eventGroupId", publications.get( i ).getEvent().getEventGroup().getId() );
-						eventDetail.put( "isAdded", publications.get( i ).getEvent().getEventGroup().isAdded() );
+						eventDetail.put( "isAdded", publications.get( i ).getEvent().isAdded() );
 						eventDetail.put( "id", publications.get( i ).getEvent().getEventGroup().getId() );
 						if ( locations )
 						{
@@ -221,8 +222,40 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 							eventDetailsList.add( eventDetail );
 					}
 				}
+				else
+				{
+					Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
+					eventDetail.put( "name", "Event Group name unknown" );
+					eventDetail.put( "location", publications.get( i ).getEvent().getLocation() );
+					eventDetail.put( "year", publications.get( i ).getEvent().getYear() );
+					eventDetail.put( "eventGroupId", "event group id unknown" );
+					eventDetail.put( "isAdded", "is added unknown" );
+					eventDetail.put( "id", "id unknown" );
+					if ( locations )
+					{
+					}
+					else
+						eventDetailsList.add( eventDetail );
+				}
+			}
+			else
+			{
+				Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
+				eventDetail.put( "name", "Event Group unknown" );
+				eventDetail.put( "location", "Location unknown" );
+				eventDetail.put( "year", "Event unknown" );
+				eventDetail.put( "eventGroupId", "Event Group id unknown" );
+				eventDetail.put( "isAdded", "unknown" );
+				eventDetail.put( "id", "event group id unknown" );
+				if ( locations )
+				{
+				}
+				else
+					eventDetailsList.add( eventDetail );
 			}
 		}
+
+		System.out.println( "pub size in all events: " + eventDetailsList.size() );
 
 		eventsMap.put( "events", eventDetailsList );
 

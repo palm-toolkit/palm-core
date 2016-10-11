@@ -501,6 +501,7 @@ public class ExploreController
 		if ( authoridForCoAuthors == null )
 			authoridForCoAuthors = "";
 
+		System.out.println( "year filter present!! " + yearFilterPresent );
 		// System.out.println( "at 1: " + authoridForCoAuthors );
 		List<String> namesList = new ArrayList<String>();
 		List<String> idsList = new ArrayList<String>();
@@ -679,7 +680,7 @@ public class ExploreController
 			eventGroupList = exploreFilter.getConferencesFromIds( idsList );
 			// System.out.println( "Authors list: " + authors );
 			Set<Publication> publications = exploreFilter.getFilteredPublications( type, authors, eventGroupList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
-
+			System.out.println( "pub size: " + publications.size() );
 			// System.out.println( "vis tab: " + visTab );
 
 			visMap = visSwitch( type, idsList, visTab, visType, authors, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
