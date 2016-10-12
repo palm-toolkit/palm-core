@@ -14,9 +14,14 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.AuthorInterest;
+import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.EventInterest;
+import de.rwth.i9.palm.model.EventInterestProfile;
+import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -149,7 +154,41 @@ public class ExploreFilter
 		{
 			List<Publication> publications = getPublicationsForFilter( idsList, type );
 			ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
-			System.out.println( "\n\n" + "FILTER" );
+
+			List<String> allAuthorInterests = new ArrayList<String>();
+			List<String> allAuthorInterestIds = new ArrayList<String>();
+
+			List<Author> authorList = new ArrayList<Author>();
+			authorList = getAuthorsFromIds( idsList );
+			for ( Author a : authorList )
+			{
+				Set<AuthorInterestProfile> authorInterestProfiles = a.getAuthorInterestProfiles();
+				for ( AuthorInterestProfile aip : authorInterestProfiles )
+				{
+					List<AuthorInterest> authorInterests = new ArrayList<AuthorInterest>( aip.getAuthorInterests() );
+					for ( AuthorInterest ai : authorInterests )
+					{
+						Map<Interest, Double> termWeights = ai.getTermWeights();
+						List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
+						// List<Double> weights = new ArrayList<Double>(
+						// termWeights.values() );
+						for ( int j = 0; j < termWeights.size(); j++ )
+						{
+							if ( !allAuthorInterests.contains( interests.get( j ).getTerm() ) ) // &&
+																								// weights.get(
+																								// j
+																								// )
+																								// >
+																								// 0.5
+																								// )
+							{
+								allAuthorInterests.add( interests.get( j ).getTerm() );
+								allAuthorInterestIds.add( interests.get( j ).getId() );
+							}
+						}
+					}
+				}
+			}
 
 			List<String> allTopics = new ArrayList<String>();
 			for ( Publication pub : publications )
@@ -166,18 +205,14 @@ public class ExploreFilter
 						for ( int j = 0; j < termValues.size(); j++ )
 						{
 							Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
-							if ( termValues.get( j ).equals( "populrer open" ) )
+							if ( !allTopics.contains( termValues.get( j ) ) && allAuthorInterests.contains( termValues.get( j ) ) )
 							{
-								System.out.println( "\n" + pub.getTitle() );
-								System.out.println( "filet: " + termValues.get( j ) );
-							}
-							if ( !allTopics.contains( termValues.get( j ) ) )
-							{
+								int index = allAuthorInterests.indexOf( termValues.get( j ) );
 								allTopics.add( termValues.get( j ) );
-								topicDetail.put( "id", pubTopic.getId() );
+								topicDetail.put( "id", allAuthorInterestIds.get( index ) );
 								topicDetail.put( "title", termValues.get( j ) );
+								topicDetailsList.add( topicDetail );
 							}
-							topicDetailsList.add( topicDetail );
 						}
 
 					}
@@ -193,52 +228,53 @@ public class ExploreFilter
 			System.out.println( "PUBLICATIONS Of CONFERENCE: " + publications.size() );
 			List<String> interestStrings = new ArrayList<String>();
 			ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
+			List<String> allConferenceInterests = new ArrayList<String>();
+			List<String> allConferenceInterestIds = new ArrayList<String>();
 
-			// for ( int i = 0; i < idsList.size(); i++ )
-			// {
-			// @SuppressWarnings( "unchecked" )
-			// List<Object> innerList = (List<Object>)
-			// eventFeature.getEventMining().fetchEventGroupData( idsList.get( i
-			// ), null, null ).get( "events" );
-			// for ( int j = 0; j < innerList.size(); j++ )
-			// {
-			// @SuppressWarnings( "unchecked" )
-			// Map<String, Object> innerListMap = (Map<String, Object>)
-			// innerList.get( j );
-			//
-			// Event e = persistenceStrategy.getEventDAO().getById(
-			// innerListMap.get( "id" ).toString() );
-			// Set<EventInterestProfile> eips = e.getEventInterestProfiles();
-			//
-			// for ( EventInterestProfile eip : eips )
-			// {
-			// Set<EventInterest> eventInterests = eip.getEventInterests();
-			// for ( EventInterest ei : eventInterests )
-			// {
-			//
-			// Map<Interest, Double> termWeights = ei.getTermWeights();
-			// List<Interest> interests = new ArrayList<Interest>(
-			// termWeights.keySet() );
-			// for ( Interest interest : interests )
-			// {
-			// Map<String, Object> topicDetail = new LinkedHashMap<String,
-			// Object>();
-			//
-			// if ( !interestStrings.contains( interest.getTerm() ) )
-			// {
-			// interestStrings.add( interest.getTerm() );
-			// topicDetail.put( "id", interest.getId() );
-			// topicDetail.put( "title", interest.getTerm() );
-			// }
-			// topicDetailsList.add( topicDetail );
-			// }
-			//
-			// }
-			//
-			// }
-			//
-			// }
-			// }
+			for ( int i = 0; i < idsList.size(); i++ )
+			{
+				@SuppressWarnings( "unchecked" )
+				List<Object> innerList = (List<Object>) eventFeature.getEventMining().fetchEventGroupData( idsList.get( i ), null, null ).get( "events" );
+				for ( int j = 0; j < innerList.size(); j++ )
+				{
+					@SuppressWarnings( "unchecked" )
+					Map<String, Object> innerListMap = (Map<String, Object>) innerList.get( j );
+
+					Event e = persistenceStrategy.getEventDAO().getById( innerListMap.get( "id" ).toString() );
+					Set<EventInterestProfile> eips = e.getEventInterestProfiles();
+
+					for ( EventInterestProfile eip : eips )
+					{
+						Set<EventInterest> eventInterests = eip.getEventInterests();
+						for ( EventInterest ei : eventInterests )
+						{
+
+							Map<Interest, Double> termWeights = ei.getTermWeights();
+							List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
+							for ( Interest interest : interests )
+							{
+								Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
+
+								if ( !interestStrings.contains( interest.getTerm() ) )
+								{
+									allConferenceInterests.add( interest.getTerm() );
+									allConferenceInterestIds.add( interest.getId() );
+									// interestStrings.add( interest.getTerm()
+									// );
+									// topicDetail.put( "id", interest.getId()
+									// );
+									// topicDetail.put( "title",
+									// interest.getTerm() );
+								}
+								// topi/cDetailsList.add( topicDetail );
+							}
+
+						}
+
+					}
+
+				}
+			}
 			List<String> allTopics = new ArrayList<String>();
 			for ( Publication pub : publications )
 			{
@@ -259,13 +295,15 @@ public class ExploreFilter
 								System.out.println( "\n" + pub.getTitle() );
 								System.out.println( "filet: " + termValues.get( j ) );
 							}
-							if ( !allTopics.contains( termValues.get( j ) ) )
+							if ( !allTopics.contains( termValues.get( j ) ) && allConferenceInterests.contains( termValues.get( j ) ) )
 							{
+								int index = allConferenceInterests.indexOf( termValues.get( j ) );
 								allTopics.add( termValues.get( j ) );
-								topicDetail.put( "id", pubTopic.getId() );
+								topicDetail.put( "id", allConferenceInterestIds.get( index ) );
 								topicDetail.put( "title", termValues.get( j ) );
+								topicDetailsList.add( topicDetail );
 							}
-							topicDetailsList.add( topicDetail );
+
 						}
 
 					}
@@ -313,7 +351,7 @@ public class ExploreFilter
 	}
 
 	// application of filters
-	public Set<Publication> getFilteredPublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<String> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear )
+	public Set<Publication> getFilteredPublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear )
 	{
 		Set<Publication> authorPublications = new HashSet<Publication>();
 
@@ -414,21 +452,16 @@ public class ExploreFilter
 				{
 					Map<String, Double> termValues = pt.getTermValues();
 					List<String> terms = new ArrayList<String>( termValues.keySet() );
-					System.out.println( terms.toString() );
-					for ( String term : terms )
+					List<String> interests = new ArrayList<String>();
+					for ( Interest interest : filteredTopic )
 					{
-						if ( term.equals( "Übungsblätter gestellt" ) )
-						{
-							System.out.println( term );
-
-							System.out.println( filteredTopic.toString() );
-						}
+						interests.add( interest.getTerm() );
 					}
-					if ( terms.containsAll( filteredTopic ) )
-					{
+					if ( terms.containsAll( interests ) )
+						{
 						System.out.println( "true" );
 						topicPublications.add( authorPublication );
-					}
+						}
 				}
 			}
 			authorPublications = topicPublications;
@@ -461,6 +494,10 @@ public class ExploreFilter
 			authorPublications = new HashSet<Publication>( tempPubList );
 		}
 
+		for ( Publication p : authorPublications )
+		{
+			System.out.println( "short: " + p.getTitle() );
+		}
 		return authorPublications;
 	}
 

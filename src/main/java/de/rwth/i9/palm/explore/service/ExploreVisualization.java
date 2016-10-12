@@ -134,7 +134,7 @@ public class ExploreVisualization
 		return visMap;
 	}
 
-	public Map<String, Object> visualizeLocations( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, List<String> filteredTopic )
+	public Map<String, Object> visualizeLocations( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, List<Interest> filteredTopic )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
@@ -192,8 +192,13 @@ public class ExploreVisualization
 
 						}
 						// System.out.println( interestStrings );
+						List<String> interests = new ArrayList<String>();
+						for ( Interest interest : filteredTopic )
+						{
+							interests.add( interest.getTerm() );
+						}
 
-						if ( interestStrings.containsAll( filteredTopic ) )
+						if ( interestStrings.containsAll( interests ) )
 						{
 							valid = true;
 						}
@@ -885,7 +890,7 @@ public class ExploreVisualization
 		return visMap;
 	}
 
-	public Map<String, Object> visualizeList( String type, String visType, List<Author> authorList, Set<Publication> publications, String startYear, String endYear, List<String> idsList, List<String> filteredTopic )
+	public Map<String, Object> visualizeList( String type, String visType, List<Author> authorList, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
 	{
 		// System.out.println( "visType: " + visType );
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();

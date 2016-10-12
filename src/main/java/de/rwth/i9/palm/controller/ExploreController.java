@@ -33,6 +33,7 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.Color;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserWidget;
@@ -519,7 +520,7 @@ public class ExploreController
 																			// from
 																			// the
 																			// filter
-		List<String> filteredTopic = new ArrayList<String>(); // topics
+		List<Interest> filteredTopic = new ArrayList<Interest>(); // topics
 																// selected
 																// from
 																// the
@@ -643,7 +644,7 @@ public class ExploreController
 				topFilterList = new ArrayList<String>( Arrays.asList( checkedTopValues.split( "," ) ) );
 				for ( int i = 0; i < topFilterList.size(); i++ )
 				{
-					filteredTopic.add( topFilterList.get( i ) );
+					filteredTopic.add( persistenceStrategy.getInterestDAO().getById( topFilterList.get( i ) ) );
 				}
 			}
 			if ( checkedCirValues.equals( "" ) )
@@ -803,7 +804,7 @@ public class ExploreController
 		return responseMap;
 	}
 
-	public Map<String, Object> visSwitch( String type, List<String> idsList, String visTab, String visType, List<Author> authors, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<String> filteredTopic, String authoridForCoAuthors )
+	public Map<String, Object> visSwitch( String type, List<String> idsList, String visTab, String visType, List<Author> authors, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic, String authoridForCoAuthors )
 	{
 
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
@@ -834,7 +835,7 @@ public class ExploreController
 			break;
 		}
 		case "List": {
-			visMap = exploreVis.visualizeList( type, visType, authors, publications, startYear, endYear, idsList, filteredTopic );
+			visMap = exploreVis.visualizeList( type, visType, authors, publications, startYear, endYear, idsList );
 			break;
 		}
 		case "Comparison": {
