@@ -1023,7 +1023,10 @@ public class ExploreVisualization
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		if ( visType.equals( "researchers" ) )
 		{
-			Map<String, Integer> mapClusterAuthor = clusteringService.clusterAuthors( "xmeans", authorList, publications );
+			Map<String, Object> resultMap = clusteringService.clusterAuthors( "xmeans", authorList, publications );
+			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) resultMap.get( "clusterTerms" );
+
+			Map<String, Integer> mapClusterAuthor = (Map<String, Integer>) resultMap.get( "clusterMap" );
 			if ( mapClusterAuthor != null )
 			{
 				Iterator<Integer> clusterIterator = mapClusterAuthor.values().iterator();
@@ -1056,8 +1059,9 @@ public class ExploreVisualization
 					Iterator<String> iterator = mapValues.values().iterator();
 					while ( iterator.hasNext() )
 					{
-						names.add( iterator.next() );
 						ids.add( iterator.next() );
+						names.add( iterator.next() );
+
 					}
 				}
 				Map<String, Object> responseMapTest = new LinkedHashMap<String, Object>();
@@ -1068,6 +1072,9 @@ public class ExploreVisualization
 					responseMapTemp.put( "id", ids.get( i ) );
 					responseMapTemp.put( "name", names.get( i ) );
 					responseMapTemp.put( "cluster", clusters.get( i ) );
+					// System.out.println( i + " " + clusters.get( i ) + " " +
+					// clusterTerms.get( clusters.get( i ) ) );
+					responseMapTemp.put( "clusterTerms", clusterTerms.get( clusters.get( i ) ) );
 					authors.add( responseMapTemp );
 				}
 				responseMapTest.put( "coauthors", authors );
@@ -2164,7 +2171,8 @@ public class ExploreVisualization
 						}
 					}
 
-					System.out.println( "all interests size: " + allAuthorInterests.size() );
+					// System.out.println( "all interests size: " +
+					// allAuthorInterests.size() );
 
 					Set<Publication> authorPublications = authorList.get( i ).getPublications();
 					List<String> interestTopicNames = new ArrayList<String>();
@@ -2193,8 +2201,9 @@ public class ExploreVisualization
 							List<PublicationTopic> topics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
 							for ( PublicationTopic pt : topics )
 							{
-								System.out.println( "pt term string: " + pt.getTermString() );
-								System.out.println( "pt id" + pt.getId() );
+								// System.out.println( "pt term string: " +
+								// pt.getTermString() );
+								// System.out.println( "pt id" + pt.getId() );
 								Map<String, Double> termValues = pt.getTermValues();
 								List<String> terms = new ArrayList<String>( termValues.keySet() );
 								// List<Double> weights = new ArrayList<Double>(
@@ -2325,7 +2334,8 @@ public class ExploreVisualization
 							}
 						}
 
-						System.out.println( "all interests size: " + allAuthorInterests.size() );
+						// System.out.println( "all interests size: " +
+						// allAuthorInterests.size() );
 
 						Set<Publication> authorPublications = authorList.get( i ).getPublications();
 						List<String> interestTopicNames = new ArrayList<String>();
@@ -2354,8 +2364,10 @@ public class ExploreVisualization
 								List<PublicationTopic> topics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
 								for ( PublicationTopic pt : topics )
 								{
-									System.out.println( "pt term string: " + pt.getTermString() );
-									System.out.println( "pt id" + pt.getId() );
+									// System.out.println( "pt term string: " +
+									// pt.getTermString() );
+									// System.out.println( "pt id" + pt.getId()
+									// );
 									Map<String, Double> termValues = pt.getTermValues();
 									List<String> terms = new ArrayList<String>( termValues.keySet() );
 									// List<Double> weights = new
@@ -2803,7 +2815,7 @@ public class ExploreVisualization
 				List<String> authorIds = new ArrayList<String>();
 				List<Map<String, Double>> truncInterests = new ArrayList<Map<String, Double>>();
 
-				System.out.println( map.size() + " : maz size" );
+				// System.out.println( map.size() + " : maz size" );
 
 				int count = 0;
 				if ( interestMap.size() > 20 )

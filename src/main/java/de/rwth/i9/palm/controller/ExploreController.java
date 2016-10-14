@@ -502,7 +502,7 @@ public class ExploreController
 		if ( authoridForCoAuthors == null )
 			authoridForCoAuthors = "";
 
-		System.out.println( "year filter present!! " + yearFilterPresent );
+		// System.out.println( "year filter present!! " + yearFilterPresent );
 		// System.out.println( "at 1: " + authoridForCoAuthors );
 		List<String> namesList = new ArrayList<String>();
 		List<String> idsList = new ArrayList<String>();
@@ -521,10 +521,10 @@ public class ExploreController
 																			// the
 																			// filter
 		List<Interest> filteredTopic = new ArrayList<Interest>(); // topics
-																// selected
-																// from
-																// the
-																// filter
+																	// selected
+																	// from
+																	// the
+																	// filter
 		List<Circle> filteredCircle = new ArrayList<Circle>(); // circles
 		// selected
 		// from
@@ -677,11 +677,13 @@ public class ExploreController
 
 			List<Author> authors = new ArrayList<Author>();
 			List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
-			authors = exploreFilter.getAuthorsFromIds( idsList );
-			eventGroupList = exploreFilter.getConferencesFromIds( idsList );
+			if ( type.equals( "researcher" ) )
+				authors = exploreFilter.getAuthorsFromIds( idsList );
+			if ( type.equals( "conference" ) )
+				eventGroupList = exploreFilter.getConferencesFromIds( idsList );
 			// System.out.println( "Authors list: " + authors );
 			Set<Publication> publications = exploreFilter.getFilteredPublications( type, authors, eventGroupList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
-			System.out.println( "pub size: " + publications.size() );
+			// System.out.println( "pub size: " + publications.size() );
 			// System.out.println( "vis tab: " + visTab );
 
 			visMap = visSwitch( type, idsList, visTab, visType, authors, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
