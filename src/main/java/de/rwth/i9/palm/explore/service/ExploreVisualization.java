@@ -1085,7 +1085,10 @@ public class ExploreVisualization
 		}
 		if ( visType.equals( "conferences" ) )
 		{
-			Map<String, Integer> mapClusterConference = clusteringService.clusterConferences( "xmeans", authorList, publications );
+			Map<String, Object> resultMap = clusteringService.clusterConferences( "xmeans", authorList, publications );
+			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) resultMap.get( "clusterTerms" );
+
+			Map<String, Integer> mapClusterConference = (Map<String, Integer>) resultMap.get( "clusterMap" );
 			if ( mapClusterConference != null )
 			{
 				Iterator<Integer> clusterIterator = mapClusterConference.values().iterator();
@@ -1133,6 +1136,7 @@ public class ExploreVisualization
 					responseMapTemp.put( "name", names.get( i ) );
 					responseMapTemp.put( "abr", abrs.get( i ) );
 					responseMapTemp.put( "cluster", clusters.get( i ) );
+					responseMapTemp.put( "clusterTerms", clusterTerms.get( clusters.get( i ) ) );
 					conferences.add( responseMapTemp );
 				}
 				responseMapTest.put( "conferences", conferences );
@@ -1143,7 +1147,10 @@ public class ExploreVisualization
 		}
 		if ( visType.equals( "publications" ) )
 		{
-			Map<String, Integer> mapClusterPublication = clusteringService.clusterPublications( "xmeans", publications );
+			Map<String, Object> resultMap = clusteringService.clusterPublications( "xmeans", publications );
+			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) resultMap.get( "clusterTerms" );
+
+			Map<String, Integer> mapClusterPublication = (Map<String, Integer>) resultMap.get( "clusterMap" );
 			if ( mapClusterPublication != null )
 			{
 				Iterator<Integer> clusterIterator = mapClusterPublication.values().iterator();
@@ -1188,8 +1195,10 @@ public class ExploreVisualization
 					responseMapTemp.put( "id", ids.get( i ) );
 					responseMapTemp.put( "name", names.get( i ) );
 					responseMapTemp.put( "cluster", clusters.get( i ) );
+					responseMapTemp.put( "clusterTerms", clusterTerms.get( clusters.get( i ) ) );
 					publicationsList.add( responseMapTemp );
 				}
+				System.out.println( publicationsList.toString() );
 				responseMapTest.put( "publications", publicationsList );
 				return responseMapTest;
 			}

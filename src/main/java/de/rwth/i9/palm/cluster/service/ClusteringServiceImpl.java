@@ -59,9 +59,9 @@ public class ClusteringServiceImpl implements ClusteringService
 	{
 		long startTime = System.currentTimeMillis();
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
-		Map<String, Integer> clusterTermsMap = new HashMap<String, Integer>();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
+
 		// Now find coauthors from these publications
 		List<Author> coAuthorList = new ArrayList<Author>();
 
@@ -213,10 +213,10 @@ public class ClusteringServiceImpl implements ClusteringService
 				{
 					// System.out.println( "\n" );
 					// System.out.println( result );
-//					System.out.println( coAuthors.get( ind ).getName() + ":" + result.clusterInstance( data.get( ind ) ) );
+					// System.out.println( coAuthors.get( ind ).getName() + ":"
+					// + result.clusterInstance( data.get( ind ) ) );
 					clusterMap.put( mapper.writeValueAsString( coAuthors.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
 				}
-
 
 				Instances instances = result.getClusterCenters();
 				for ( int instanceCounter = 0; instanceCounter < instances.size(); instanceCounter++ )
@@ -251,9 +251,10 @@ public class ClusteringServiceImpl implements ClusteringService
 					}
 
 					clusterTerms.put( instanceCounter, terms );
-//					for ( int i = 0; i < 4; i++ )
-//						System.out.println( max.get( i ) + " : " + instances.get( instanceCounter ).attribute( maxIndex.get( i ) ) );
-//					System.out.println( "\n" );
+					// for ( int i = 0; i < 4; i++ )
+					// System.out.println( max.get( i ) + " : " + instances.get(
+					// instanceCounter ).attribute( maxIndex.get( i ) ) );
+					// System.out.println( "\n" );
 				}
 
 			}
@@ -303,9 +304,11 @@ public class ClusteringServiceImpl implements ClusteringService
 	}
 
 	@Override
-	public Map<String, Integer> clusterConferences( String algorithm, List<Author> authorList, Set<Publication> publications )
+	public Map<String, Object> clusterConferences( String algorithm, List<Author> authorList, Set<Publication> publications )
 	{
-		Map<String, Integer> resultMap = new HashMap<String, Integer>();
+		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
 
 		// Find topics from publications - This will govern clustering
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
@@ -428,8 +431,48 @@ public class ClusteringServiceImpl implements ClusteringService
 
 				for ( int ind = 0; ind < data.size(); ind++ )
 				{
-					resultMap.put( mapper.writeValueAsString( eventGroups.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					clusterMap.put( mapper.writeValueAsString( eventGroups.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
 				}
+
+				Instances instances = result.getClusterCenters();
+				for ( int instanceCounter = 0; instanceCounter < instances.size(); instanceCounter++ )
+				{
+					List<Double> max = new ArrayList<Double>();
+					List<Integer> maxIndex = new ArrayList<Integer>();
+					List<String> terms = new ArrayList<String>();
+					Integer numAttr = instances.get( instanceCounter ).numAttributes();
+					for ( int i = 0; i < numAttr; i++ )
+					{
+
+						if ( max.size() < 4 )
+						{
+							max.add( instances.get( instanceCounter ).value( i ) );
+							maxIndex.add( i );
+							terms.add( instances.get( instanceCounter ).attribute( maxIndex.get( i ) ).name() );
+
+						}
+						else
+						{
+							for ( int j = 0; j < max.size(); j++ )
+							{
+								if ( instances.get( instanceCounter ).value( i ) > max.get( j ) )
+								{
+									max.set( j, instances.get( instanceCounter ).value( i ) );
+									maxIndex.set( j, i );
+									terms.set( j, instances.get( instanceCounter ).attribute( i ).name() );
+									break;
+								}
+							}
+						}
+					}
+
+					clusterTerms.put( instanceCounter, terms );
+					// for ( int i = 0; i < 4; i++ )
+					// System.out.println( max.get( i ) + " : " + instances.get(
+					// instanceCounter ).attribute( maxIndex.get( i ) ) );
+					// System.out.println( "\n" );
+				}
+
 			}
 			// applying the clustering algorithm
 			if ( algorithm.equals( "DBSCAN" ) )
@@ -470,13 +513,19 @@ public class ClusteringServiceImpl implements ClusteringService
 			System.out.println( e );
 		}
 
+		resultMap.put( "clusterMap", clusterMap );
+		resultMap.put( "clusterTerms", clusterTerms );
+
 		return resultMap;
 	}
 
-	public Map<String, Integer> clusterPublications( String algorithm, Set<Publication> publications )
+	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications )
 	{
 		List<Publication> publicationsList = new ArrayList<Publication>( publications );
-		Map<String, Integer> resultMap = new HashMap<String, Integer>();
+
+		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
 
 		// Find topics from publications - This will govern clustering
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
@@ -540,12 +589,53 @@ public class ClusteringServiceImpl implements ClusteringService
 			// applying the clustering algorithm
 			if ( algorithm.equals( "xmeans" ) )
 			{
+				System.out.println( "in xmeans" );
 				XMeans result = WekaXMeans.run( 2, data );
 
 				for ( int ind = 0; ind < data.size(); ind++ )
 				{
-					resultMap.put( mapper.writeValueAsString( publicationsList.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					clusterMap.put( mapper.writeValueAsString( publicationsList.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
 				}
+
+				Instances instances = result.getClusterCenters();
+				for ( int instanceCounter = 0; instanceCounter < instances.size(); instanceCounter++ )
+				{
+					List<Double> max = new ArrayList<Double>();
+					List<Integer> maxIndex = new ArrayList<Integer>();
+					List<String> terms = new ArrayList<String>();
+					Integer numAttr = instances.get( instanceCounter ).numAttributes();
+					for ( int i = 0; i < numAttr; i++ )
+					{
+
+						if ( max.size() < 4 )
+						{
+							max.add( instances.get( instanceCounter ).value( i ) );
+							maxIndex.add( i );
+							terms.add( instances.get( instanceCounter ).attribute( maxIndex.get( i ) ).name() );
+
+						}
+						else
+						{
+							for ( int j = 0; j < max.size(); j++ )
+							{
+								if ( instances.get( instanceCounter ).value( i ) > max.get( j ) )
+								{
+									max.set( j, instances.get( instanceCounter ).value( i ) );
+									maxIndex.set( j, i );
+									terms.set( j, instances.get( instanceCounter ).attribute( i ).name() );
+									break;
+								}
+							}
+						}
+					}
+
+					clusterTerms.put( instanceCounter, terms );
+					// for ( int i = 0; i < 4; i++ )
+					// System.out.println( max.get( i ) + " : " + instances.get(
+					// instanceCounter ).attribute( maxIndex.get( i ) ) );
+					// System.out.println( "\n" );
+				}
+
 			}
 			// applying the clustering algorithm
 			if ( algorithm.equals( "DBSCAN" ) )
@@ -584,6 +674,10 @@ public class ClusteringServiceImpl implements ClusteringService
 		{
 			System.out.println( e );
 		}
+
+		System.out.println( clusterMap.size() + " .. " + clusterMap.size() );
+		resultMap.put( "clusterMap", clusterMap );
+		resultMap.put( "clusterTerms", clusterTerms );
 
 		return resultMap;
 	}
