@@ -138,7 +138,7 @@ public class ExploreVisualization
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
-		if ( type.equals( "researcher" ) )
+		if ( type.equals( "researcher" ) || type.equals( "publication" ) )
 			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, true ) );
 
 		if ( type.equals( "conference" ) )
@@ -217,6 +217,7 @@ public class ExploreVisualization
 
 		}
 
+		System.out.println( visMap.toString() );
 		return visMap;
 	}
 
@@ -896,9 +897,10 @@ public class ExploreVisualization
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		if ( visType.equals( "researchers" ) )
 			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( authorList, publications ) );
+
 		if ( visType.equals( "conferences" ) )
 		{
-			if ( type.equals( "researcher" ) )
+			if ( type.equals( "researcher" ) || type.equals( "publication" ) )
 				visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, false ) );
 
 			if ( type.equals( "conference" ) )

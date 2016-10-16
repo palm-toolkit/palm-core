@@ -90,6 +90,7 @@ public class GraphFeatureImpl implements GraphFeature
 			@Override
 			public void run()
 			{
+				System.out.println( "pu list: " + authorPublications );
 				// System.out.println( "out HREER: " + authorForCoAuthors );
 				Random rand = new Random();
 
@@ -260,7 +261,65 @@ public class GraphFeatureImpl implements GraphFeature
 								tempPubAuthors.add( publicationAuthor );
 							}
 						}
+						if ( type.equals( "publication" ) )
+						{
+							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
 
+							if ( !nodes.contains( n ) )
+							{
+								nodes.add( n );
+								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
+								n.setAttribute( "authorId", publicationAuthor.getId() );
+								n.setLabel( publicationAuthor.getName() );
+								if ( pubs.contains( publication ) )
+									n.setSize( 0.5f );
+								else
+									n.setSize( 0.1f );
+								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
+								undirectedGraph.addNode( n );
+							}
+							System.out.println( tempPubAuthors.size() );
+							for ( int i = 0; i < tempPubAuthors.size(); i++ )
+							{
+								System.out.println( "inside 0" );
+								Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
+								// System.out.println( "pub node: " +
+								// publicationAuthor.getName() );
+								if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
+								{
+									Node tempAuthorNode = graphModel.factory().newNode( tempPubAuthors.get( i ).getName() );
+									int indexTempNode = nodes.indexOf( tempAuthorNode );
+									int indexPubNode = nodes.indexOf( pubAuthorNode );
+									Boolean flag = false;
+									System.out.println( "inside 1" );
+									// check if an edge already exists
+									// between the 2 nodes
+									for ( Edge eTest : edges )
+									{
+										if ( ( eTest.getSource().equals( nodes.get( indexTempNode ) ) && eTest.getTarget().equals( nodes.get( indexPubNode ) ) ) || ( eTest.getSource().equals( nodes.get( indexPubNode ) ) && eTest.getTarget().equals( nodes.get( indexTempNode ) ) ) )
+										{
+											flag = true;
+											eTest.setWeight( eTest.getWeight() + 0.1 );
+										}
+									}
+									if ( !flag )
+									{
+										System.out.println( "inside 2" );
+										Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
+										edges.add( e );
+										e.setWeight( 0.1 );
+										e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
+										e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
+										e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i ).isAdded() );
+										e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
+										undirectedGraph.addEdge( e );
+									}
+
+								}
+							}
+							tempPubAuthors.add( publicationAuthor );
+
+						}
 					}
 				}
 

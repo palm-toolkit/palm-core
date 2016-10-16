@@ -44,11 +44,16 @@ public class ExploreFilter
 
 		List<Author> authors = new ArrayList<Author>();
 		List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
-		authors = getAuthorsFromIds( idsList );
-		eventGroupList = getConferencesFromIds( idsList );
+		List<Publication> publicationsList = new ArrayList<Publication>();
+		if ( type.equals( "researcher" ) )
+			authors = getAuthorsFromIds( idsList );
+		if ( type.equals( "conference" ) )
+			eventGroupList = getConferencesFromIds( idsList );
+		if ( type.equals( "publication" ) )
+			publicationsList = getPublicationsFromIds( idsList );
 
 		// if there are more than one authors in consideration
-		publications = new ArrayList<Publication>( typeWisePublications( type, authors, eventGroupList ) );
+		publications = new ArrayList<Publication>( typeWisePublications( type, authors, eventGroupList, publicationsList ) );
 
 		// System.out.println( "publications for filter: " + publications.size()
 		// );
@@ -355,7 +360,7 @@ public class ExploreFilter
 	}
 
 	// application of filters
-	public Set<Publication> getFilteredPublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear )
+	public Set<Publication> getFilteredPublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear )
 	{
 		Set<Publication> authorPublications = new HashSet<Publication>();
 
@@ -365,7 +370,7 @@ public class ExploreFilter
 		}
 		else
 		{
-			authorPublications = typeWisePublications( type, authorList, eventGroupList );
+			authorPublications = typeWisePublications( type, authorList, eventGroupList, publicationList );
 			// System.out.println( "filtered publications: " +
 			// authorPublications.size() );
 		}
@@ -470,10 +475,10 @@ public class ExploreFilter
 						interests.add( interest.getTerm() );
 					}
 					if ( terms.containsAll( interests ) )
-						{
+					{
 						// System.out.println( "true" );
 						topicPublications.add( authorPublication );
-						}
+					}
 				}
 			}
 			authorPublications = topicPublications;
@@ -508,7 +513,7 @@ public class ExploreFilter
 		return authorPublications;
 	}
 
-	public Set<Publication> typeWisePublications( String type, List<Author> authorList, List<EventGroup> eventGroupList )
+	public Set<Publication> typeWisePublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationsList )
 	{
 		Set<Publication> authorPublications = new HashSet<Publication>();
 
@@ -623,7 +628,7 @@ public class ExploreFilter
 		}
 		if ( type.equals( "publication" ) )
 		{
-
+			authorPublications = new HashSet<Publication>( publicationsList );
 		}
 		if ( type.equals( "topic" ) )
 		{
@@ -657,6 +662,18 @@ public class ExploreFilter
 			eventGroupList.add( persistenceStrategy.getEventGroupDAO().getById( idsList.get( itemIndex ) ) );
 		}
 		return eventGroupList;
+
+	}
+
+	public List<Publication> getPublicationsFromIds( List<String> idsList )
+	{
+		// get Event List
+		List<Publication> publicationList = new ArrayList<Publication>();
+		for ( int itemIndex = 0; itemIndex < idsList.size(); itemIndex++ )
+		{
+			publicationList.add( persistenceStrategy.getPublicationDAO().getById( idsList.get( itemIndex ) ) );
+		}
+		return publicationList;
 
 	}
 }

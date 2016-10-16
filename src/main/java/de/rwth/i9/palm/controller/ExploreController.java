@@ -675,18 +675,22 @@ public class ExploreController
 			// System.out.println( "start year: " + startYear + ": " + "end year
 			// " + endYear + " year filter: " + yearFilterPresent );
 
-			List<Author> authors = new ArrayList<Author>();
+			List<Author> authorList = new ArrayList<Author>();
 			List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
+			List<Publication> publicationList = new ArrayList<Publication>();
 			if ( type.equals( "researcher" ) )
-				authors = exploreFilter.getAuthorsFromIds( idsList );
+				authorList = exploreFilter.getAuthorsFromIds( idsList );
 			if ( type.equals( "conference" ) )
 				eventGroupList = exploreFilter.getConferencesFromIds( idsList );
+			if ( type.equals( "publication" ) )
+				publicationList = exploreFilter.getPublicationsFromIds( idsList );
+
 			// System.out.println( "Authors list: " + authors );
-			Set<Publication> publications = exploreFilter.getFilteredPublications( type, authors, eventGroupList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
+			Set<Publication> publications = exploreFilter.getFilteredPublications( type, authorList, eventGroupList, publicationList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
 			// System.out.println( "pub size: " + publications.size() );
 			// System.out.println( "vis tab: " + visTab );
 
-			visMap = visSwitch( type, idsList, visTab, visType, authors, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
+			visMap = visSwitch( type, idsList, visTab, visType, authorList, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
 
 			responseMap.put( "type", type );
 			responseMap.put( "visType", visType );
