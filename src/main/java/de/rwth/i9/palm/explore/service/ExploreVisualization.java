@@ -25,6 +25,7 @@ import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.DataMiningEventGroup;
+import de.rwth.i9.palm.model.DataMiningPublication;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.EventInterest;
@@ -1226,6 +1227,9 @@ public class ExploreVisualization
 		// altLabel is alternative label for discrimination
 		List<Map<String, Object>> listOfMaps = new ArrayList<Map<String, Object>>();
 
+		System.out.println( "visType: " + visType );
+		System.out.println( "object type: " + type );
+
 		if ( visType.equals( "researchers" ) )
 		{
 			// object type
@@ -1711,6 +1715,228 @@ public class ExploreVisualization
 					mapValuesForAll.put( "weight", 1000 );
 					listOfMaps.add( mapValuesForAll );
 				}
+			}
+			if ( type.equals( "publication" ) )
+			{
+				Map<Publication, List<Author>> mapAuthors = new HashMap<Publication, List<Author>>();
+				List<Publication> publicationTempList = new ArrayList<Publication>();
+
+				for ( int i = 0; i < idsList.size(); i++ )
+				{
+					Map<String, Object> mapValues = new HashMap<String, Object>();
+					List<Integer> index = new ArrayList<Integer>();
+					index.add( i );
+
+					Publication p = persistenceStrategy.getPublicationDAO().getById( idsList.get( i ) );
+					publicationTempList.add( p );
+					List<Author> publicationAuthors = new ArrayList<Author>();
+					List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+					Boolean flag = false;
+					if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+					{
+						flag = true;
+					}
+					else
+					{
+						if ( p.getYear() != null )
+						{
+							if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+							{
+								flag = true;
+							}
+						}
+					}
+					if ( flag )
+					{
+						List<Author> authors = p.getAuthors();
+						for ( Author a : authors )
+						{
+							if ( !publicationAuthors.contains( a ) )
+							{
+
+								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
+								Map<String, Object> name = new HashMap<String, Object>();
+								Map<String, Object> id = new HashMap<String, Object>();
+								Map<String, Object> isAdded = new HashMap<String, Object>();
+								isAdded.put( "isAdded", a.isAdded() );
+								publicationAuthors.add( a );
+								name.put( "name", a.getName() );
+								id.put( "id", a.getId() );
+								items.add( name );
+								items.add( id );
+								items.add( isAdded );
+								listItems.add( items );
+							}
+						}
+					}
+					mapAuthors.put( p, publicationAuthors );
+
+					// single values to venn diagram
+					mapValues.put( "sets", index );
+					mapValues.put( "label", p.getTitle() );
+					mapValues.put( "size", publicationAuthors.size() );
+					mapValues.put( "altLabel", idsList.get( i ) );
+					mapValues.put( "list", listItems );
+
+					listOfMaps.add( mapValues );
+
+					if ( mapAuthors.size() > 1 )
+					{
+						// publications of authors added before current author
+						for ( int k = 0; k < mapAuthors.size(); k++ )
+						{
+
+							List<Publication> previousPublications = new ArrayList<Publication>( mapAuthors.keySet() );
+							List<List<Author>> previousAuthorLists = new ArrayList<List<Author>>( mapAuthors.values() );
+							List<Author> previousAuthorCoAuthors = previousAuthorLists.get( k );
+							Publication previousPublication = previousPublications.get( k );
+							List<List<Map<String, Object>>> tempListItems = new ArrayList<List<Map<String, Object>>>();
+
+							String label = "";
+
+							for ( Author co : previousAuthorCoAuthors )
+								System.out.println( co.getName() );
+							if ( !previousPublication.equals( p ) )
+							{
+								List<Author> temp = new ArrayList<Author>();
+
+								// find common authors
+								for ( Author a : previousAuthorCoAuthors )
+								{
+									if ( publicationAuthors.contains( a ) )
+									{
+										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
+										Map<String, Object> name = new HashMap<String, Object>();
+										Map<String, Object> id = new HashMap<String, Object>();
+										Map<String, Object> isAdded = new HashMap<String, Object>();
+										isAdded.put( "isAdded", a.isAdded() );
+										temp.add( a );
+										name.put( "name", a.getName() );
+										id.put( "id", a.getId() );
+										items.add( name );
+										items.add( id );
+										items.add( isAdded );
+										tempListItems.add( items );
+									}
+								}
+								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
+								List<Integer> sets = new ArrayList<Integer>();
+								sets.add( i );
+
+								label = label + idsList.get( i ) + "-" + previousPublication.getTitle();
+								sets.add( publicationTempList.indexOf( previousPublication ) ); // to-do
+								mapValuesForPairs.put( "sets", sets );
+								mapValuesForPairs.put( "size", tempListItems.size() );
+								mapValuesForPairs.put( "list", tempListItems );
+								mapValuesForPairs.put( "altLabel", label );
+
+								listOfMaps.add( mapValuesForPairs );
+							}
+						}
+					}
+				}
+
+				// common to all
+				if ( idsList.size() > 2 )
+				{
+					// System.out.println( "coming here" );
+					List<Author> allAuthors = new ArrayList<Author>();
+					List<Integer> count = new ArrayList<Integer>();
+					List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+					for ( int i = 0; i < idsList.size(); i++ )
+					{
+						List<Author> allCoAuthors = new ArrayList<Author>();
+
+						Publication p = persistenceStrategy.getPublicationDAO().getById( idsList.get( i ) );
+						publicationTempList.add( p );
+						Boolean flag = false;
+						if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+						{
+							flag = true;
+						}
+						else
+						{
+							if ( p.getYear() != null )
+							{
+								if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+								{
+									flag = true;
+								}
+							}
+						}
+						if ( flag )
+						{
+							List<Author> coAuthors = p.getAuthors();
+							for ( int j = 0; j < coAuthors.size(); j++ )
+							{
+								if ( !authorList.contains( coAuthors.get( j ) ) )
+								{
+									if ( !allCoAuthors.contains( coAuthors.get( j ) ) )
+									{
+										allCoAuthors.add( coAuthors.get( j ) );
+									}
+								}
+							}
+						}
+
+						for ( int k = 0; k < allCoAuthors.size(); k++ )
+						{
+							if ( !allAuthors.contains( allCoAuthors.get( k ) ) )
+							{
+								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
+								Map<String, Object> name = new HashMap<String, Object>();
+								Map<String, Object> id = new HashMap<String, Object>();
+								Map<String, Object> isAdded = new HashMap<String, Object>();
+								isAdded.put( "isAdded", allCoAuthors.get( k ).isAdded() );
+								allAuthors.add( allCoAuthors.get( k ) );
+								name.put( "name", allCoAuthors.get( k ).getName() );
+								id.put( "id", allCoAuthors.get( k ).getId() );
+								items.add( name );
+								items.add( id );
+								items.add( isAdded );
+								combinedlistItems.add( items );
+
+								count.add( 0 );
+							}
+							else
+								count.set( allAuthors.indexOf( allCoAuthors.get( k ) ), count.get( allAuthors.indexOf( allCoAuthors.get( k ) ) ) + 1 );
+						}
+
+					}
+
+					for ( int i = 0; i < allAuthors.size(); i++ )
+					{
+						if ( count.get( i ) < idsList.size() - 1 )
+						{
+							count.remove( i );
+							allAuthors.remove( i );
+							combinedlistItems.remove( i );
+							i--;
+						}
+					}
+
+					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
+					List<Integer> sets = new ArrayList<Integer>();
+					for ( int i = 0; i < idsList.size(); i++ )
+					{
+						sets.add( i );
+					}
+
+					mapValuesForAll.put( "sets", sets );
+					mapValuesForAll.put( "size", count.size() );
+					mapValuesForAll.put( "list", combinedlistItems );
+
+					String label = "";
+					for ( int i = 0; i < idsList.size(); i++ )
+					{
+						label = label + idsList.get( i );
+					}
+
+					mapValuesForAll.put( "altLabel", label );
+					mapValuesForAll.put( "weight", 1000 );
+					listOfMaps.add( mapValuesForAll );
+				}
+
 			}
 		}
 		if ( visType.equals( "conferences" ) )
@@ -2793,6 +3019,372 @@ public class ExploreVisualization
 
 				}
 			}
+			if ( type.equals( "publication" ) )
+			{
+				Map<Publication, List<String>> mapTopics = new HashMap<Publication, List<String>>();
+				List<Publication> publicationTempList = new ArrayList<Publication>();
+				List<Interest> allInterestsInDB = persistenceStrategy.getInterestDAO().allTerms();
+
+				for ( int i = 0; i < idsList.size(); i++ )
+				{
+					Map<String, Object> mapValues = new HashMap<String, Object>();
+					List<Integer> index = new ArrayList<Integer>();
+					index.add( i );
+
+					List<String> allPublicationInterests = new ArrayList<String>();
+					List<String> allPublicationInterestIds = new ArrayList<String>();
+					// List<Publication> eventGroupPubs = new
+					// ArrayList<Publication>();
+					Publication p = persistenceStrategy.getPublicationDAO().getById( idsList.get( i ) );
+					publicationTempList.add( p );
+					for ( Interest interest : allInterestsInDB )
+					{
+						if ( !allPublicationInterests.contains( interest.getTerm() ) )
+						{
+							allPublicationInterests.add( interest.getTerm() );
+							allPublicationInterestIds.add( interest.getId() );
+						}
+					}
+
+					// List<Event> events = eg.getEvents();
+					// for ( Event e : events )
+					// {/
+					// Set<EventInterestProfile> eventInterestProfiles =
+					// e.getEventInterestProfiles();
+					// for ( EventInterestProfile eip : eventInterestProfiles )
+					// {
+					// List<EventInterest> eventInterests = new
+					// ArrayList<EventInterest>( eip.getEventInterests() );
+					// for ( EventInterest ei : eventInterests )
+					// {
+					// Map<Interest, Double> termWeights = ei.getTermWeights();
+					// List<Interest> interests = new ArrayList<Interest>(
+					// termWeights.keySet() );
+					// List<Double> weights = new ArrayList<Double>(
+					// termWeights.values() );
+					// for ( int j = 0; j < termWeights.size(); j++ )
+					// {
+					// if ( !allConferenceInterests.contains( interests.get( j
+					// ).getTerm() ) )// &&
+					// // weights.get(
+					// // j
+					// // )
+					// // >
+					// // 0.5
+					// // )
+					// {
+					// allConferenceInterests.add( interests.get( j ).getTerm()
+					// );
+					// allConferenceInterestIds.add( interests.get( j ).getId()
+					// );
+					// }
+					// }
+					// }
+					// }
+					//
+					// List<Publication> eventPubs = e.getPublications();
+					// for ( Publication pub : eventPubs )
+					// {
+					// if ( !eventGroupPubs.contains( pub ) )
+					// {
+					// eventGroupPubs.add( pub );
+					// }
+					// }
+					// }
+
+					List<String> interestTopicNames = new ArrayList<String>();
+					List<String> interestTopicIds = new ArrayList<String>();
+					List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+
+					// for ( Publication p : eventGroupPubs )
+					// {
+					Boolean flag = false;
+					if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+					{
+						flag = true;
+					}
+					else
+					{
+						if ( p.getYear() != null )
+						{
+							if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+							{
+								flag = true;
+							}
+						}
+					}
+
+					if ( flag )
+					{
+						List<PublicationTopic> topics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
+						for ( PublicationTopic pt : topics )
+						{
+							Map<String, Double> termValues = pt.getTermValues();
+							List<String> terms = new ArrayList<String>( termValues.keySet() );
+							List<Double> weights = new ArrayList<Double>( termValues.values() );
+							for ( int k = 0; k < terms.size(); k++ )
+							{
+								if ( !interestTopicNames.contains( terms.get( k ) ) && allPublicationInterests.contains( terms.get( k ) ) && weights.get( k ) > 0.5 )
+								{
+									interestTopicNames.add( terms.get( k ) );
+									int pos = allPublicationInterests.indexOf( terms.get( k ) );
+									interestTopicIds.add( allPublicationInterestIds.get( pos ) );
+
+									List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
+									Map<String, Object> name = new HashMap<String, Object>();
+									Map<String, Object> id = new HashMap<String, Object>();
+
+									name.put( "name", terms.get( k ) );
+									id.put( "id", allPublicationInterestIds.get( pos ) );
+									items.add( name );
+									items.add( id );
+									listItems.add( items );
+								}
+							}
+						}
+
+						// }
+					}
+					mapTopics.put( p, interestTopicNames );
+
+					// single values to venn diagram
+					mapValues.put( "sets", index );
+					mapValues.put( "label", p.getTitle() );
+					mapValues.put( "size", interestTopicNames.size() );
+					mapValues.put( "altLabel", idsList.get( i ) );
+					mapValues.put( "list", listItems );
+					listOfMaps.add( mapValues );
+
+					if ( mapTopics.size() > 1 )
+					{
+						// publications of authors added before current author
+						for ( int k = 0; k < mapTopics.size(); k++ )
+						{
+							List<Publication> previousPublications = new ArrayList<Publication>( mapTopics.keySet() );
+							List<List<String>> previousAuthorLists = new ArrayList<List<String>>( mapTopics.values() );
+							List<String> previousAuthorTopics = previousAuthorLists.get( k );
+							Publication previousPublication = previousPublications.get( k );
+							List<List<Map<String, Object>>> tempListItems = new ArrayList<List<Map<String, Object>>>();
+							String label = "";
+							if ( !previousPublication.equals( p ) )
+							{
+								List<PublicationTopic> temp = new ArrayList<PublicationTopic>();
+								List<String> tempNames = new ArrayList<String>();
+
+								// find common topics
+								for ( String pat : previousAuthorTopics )
+								{
+									if ( interestTopicNames.contains( pat ) )
+									{
+										tempNames.add( pat );
+										int pos = interestTopicNames.indexOf( pat );
+
+										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
+										Map<String, Object> name = new HashMap<String, Object>();
+										Map<String, Object> id = new HashMap<String, Object>();
+
+										name.put( "name", pat );
+										id.put( "id", interestTopicIds.get( pos ) );
+										items.add( name );
+										items.add( id );
+										tempListItems.add( items );
+									}
+								}
+
+								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
+								List<Integer> sets = new ArrayList<Integer>();
+								sets.add( i );
+								sets.add( publicationTempList.indexOf( previousPublication ) );
+								label = label + idsList.get( i ) + "-" + previousPublication.getTitle();
+								mapValuesForPairs.put( "sets", sets );
+								mapValuesForPairs.put( "size", tempNames.size() );
+								mapValuesForPairs.put( "list", tempListItems );
+								mapValuesForPairs.put( "altLabel", label );
+								listOfMaps.add( mapValuesForPairs );
+							}
+						}
+					}
+
+				}
+				if ( idsList.size() > 2 )
+				{
+					List<String> allInterests = new ArrayList<String>();
+					// List<String> allInterestIds = new ArrayList<String>();
+					List<Integer> count = new ArrayList<Integer>();
+					List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+
+					for ( int i = 0; i < idsList.size(); i++ )
+					{
+						List<String> allPublicationInterests = new ArrayList<String>();
+						List<String> allPublicationInterestIds = new ArrayList<String>();
+						// List<Publication> eventGroupPubs = new
+						// ArrayList<Publication>();
+						Publication p = persistenceStrategy.getPublicationDAO().getById( idsList.get( i ) );
+						publicationTempList.add( p );
+						for ( Interest interest : allInterestsInDB )
+						{
+							if ( !allPublicationInterests.contains( interest.getTerm() ) )
+							{
+								allPublicationInterests.add( interest.getTerm() );
+								allPublicationInterestIds.add( interest.getId() );
+
+							}
+						}
+						// List<Event> events = eg.getEvents();
+						// for ( Event e : events )
+						// {
+						// Set<EventInterestProfile> eventInterestProfiles =
+						// e.getEventInterestProfiles();
+						// for ( EventInterestProfile eip :
+						// eventInterestProfiles )
+						// {
+						// List<EventInterest> eventInterests = new
+						// ArrayList<EventInterest>( eip.getEventInterests() );
+						// for ( EventInterest ei : eventInterests )
+						// {
+						// Map<Interest, Double> termWeights =
+						// ei.getTermWeights();
+						// List<Interest> interests = new ArrayList<Interest>(
+						// termWeights.keySet() );
+						// List<Double> weights = new ArrayList<Double>(
+						// termWeights.values() );
+						// for ( int j = 0; j < termWeights.size(); j++ )
+						// {
+						// if ( !allConferenceInterests.contains( interests.get(
+						// j ).getTerm() ) && weights.get( j ) > 0.5 )
+						// {
+						// allConferenceInterests.add( interests.get( j
+						// ).getTerm() );
+						// allConferenceInterestIds.add( interests.get( j
+						// ).getId() );
+						// }
+						// }
+						// }
+						// }
+						//
+						// List<Publication> eventPubs = e.getPublications();
+						// for ( Publication pub : eventPubs )
+						// {
+						// if ( !eventGroupPubs.contains( pub ) )
+						// {
+						// eventGroupPubs.add( pub );
+						// }
+						// }
+						// }
+
+						List<String> interestTopicNames = new ArrayList<String>();
+						List<String> interestTopicIds = new ArrayList<String>();
+						List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+
+						// for ( Publication p : eventGroupPubs )
+						// {
+						Boolean flag = false;
+						if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+						{
+							flag = true;
+						}
+						else
+						{
+							if ( p.getYear() != null )
+							{
+								if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+								{
+									flag = true;
+								}
+							}
+						}
+
+						if ( flag )
+						{
+							List<PublicationTopic> topics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
+							for ( PublicationTopic pt : topics )
+							{
+								Map<String, Double> termValues = pt.getTermValues();
+								List<String> terms = new ArrayList<String>( termValues.keySet() );
+								List<Double> weights = new ArrayList<Double>( termValues.values() );
+								for ( int k = 0; k < terms.size(); k++ )
+								{
+									if ( !interestTopicNames.contains( terms.get( k ) ) && allPublicationInterests.contains( terms.get( k ) ) )
+									{
+										System.out.println( terms.get( k ) );
+										interestTopicNames.add( terms.get( k ) );
+										int pos = allPublicationInterests.indexOf( terms.get( k ) );
+										interestTopicIds.add( allPublicationInterestIds.get( pos ) );
+
+										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
+										Map<String, Object> name = new HashMap<String, Object>();
+										Map<String, Object> id = new HashMap<String, Object>();
+
+										name.put( "name", terms.get( k ) );
+										id.put( "id", allPublicationInterestIds.get( pos ) );
+										items.add( name );
+										items.add( id );
+										listItems.add( items );
+									}
+								}
+							}
+
+							// }
+						}
+
+						for ( int k = 0; k < interestTopicNames.size(); k++ )
+						{
+							if ( !allInterests.contains( interestTopicNames.get( k ) ) )
+							{
+								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
+								Map<String, Object> name = new HashMap<String, Object>();
+								Map<String, Object> id = new HashMap<String, Object>();
+								allInterests.add( interestTopicNames.get( k ) );
+								name.put( "name", interestTopicNames.get( k ) );
+								id.put( "id", interestTopicIds.get( k ) );
+								items.add( name );
+								items.add( id );
+								combinedlistItems.add( items );
+
+								count.add( 0 );
+
+							}
+							else
+								count.set( allInterests.indexOf( interestTopicNames.get( k ) ), count.get( allInterests.indexOf( interestTopicNames.get( k ) ) ) + 1 );
+						}
+
+					}
+
+					for ( int i = 0; i < allInterests.size(); i++ )
+					{
+						if ( count.get( i ) < idsList.size() - 1 )
+						{
+							count.remove( i );
+							allInterests.remove( i );
+							combinedlistItems.remove( i );
+							i--;
+						}
+					}
+
+					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
+					List<Integer> sets = new ArrayList<Integer>();
+					for ( int i = 0; i < idsList.size(); i++ )
+					{
+						sets.add( i );
+					}
+
+					mapValuesForAll.put( "sets", sets );
+					mapValuesForAll.put( "size", count.size() );
+					mapValuesForAll.put( "list", combinedlistItems );
+
+					String label = "";
+					for ( int i = 0; i < idsList.size(); i++ )
+					{
+						label = label + idsList.get( i );
+					}
+
+					mapValuesForAll.put( "altLabel", label );
+					mapValuesForAll.put( "weight", 1000 );
+					listOfMaps.add( mapValuesForAll );
+
+				}
+
+			}
 
 		}
 
@@ -2853,22 +3445,29 @@ public class ExploreVisualization
 		}
 		if ( visType.equals( "conferences" ) )
 		{
-			Map<DataMiningEventGroup, Double> map = similarityService.similarConferences( idsList );
+			Map<String, Object> map = similarityService.similarConferences( idsList );
 			if ( map != null )
 			{
+				@SuppressWarnings( "unchecked" )
+				Map<DataMiningPublication, Map<String, Double>> interestMap = (Map<DataMiningPublication, Map<String, Double>>) map.get( "interestMap" );
+
+				@SuppressWarnings( "unchecked" )
+				Map<DataMiningEventGroup, Double> scoreMap = (Map<DataMiningEventGroup, Double>) map.get( "scoreMap" );
+
 				// System.out.println( map.toString() );
-				List<Double> similarityValues = new ArrayList<Double>( map.values() );
-				List<DataMiningEventGroup> similarConferences = new ArrayList<DataMiningEventGroup>( map.keySet() );
+				List<Double> similarityValues = new ArrayList<Double>( scoreMap.values() );
+				List<DataMiningEventGroup> similarConferences = new ArrayList<DataMiningEventGroup>( scoreMap.keySet() );
 
 				List<Double> truncSimilarityValues = new ArrayList<Double>();
 				List<String> conferenceNames = new ArrayList<String>();
 				List<String> conferenceIds = new ArrayList<String>();
+				List<Map<String, Double>> truncInterests = new ArrayList<Map<String, Double>>();
 
 				int count = 0;
-				if ( map.size() > 20 )
+				if ( interestMap.size() > 20 )
 					count = 20;
 				else
-					count = map.size();
+					count = interestMap.size();
 
 				for ( int i = 0; i < count; i++ )
 				{
@@ -2877,11 +3476,58 @@ public class ExploreVisualization
 					truncSimilarityValues.add( similarityValues.get( i ) );
 					conferenceNames.add( similarConferences.get( i ).getName() );
 					conferenceIds.add( similarConferences.get( i ).getId() );
+					truncInterests.add( interestMap.get( similarConferences.get( i ) ) );
 				}
 
 				visMap.put( "authorNames", conferenceNames );
 				visMap.put( "authorIds", conferenceIds );
 				visMap.put( "similarity", truncSimilarityValues );
+				visMap.put( "interests", truncInterests );
+				return visMap;
+			}
+			else
+				return (Map<String, Object>) visMap.put( "coauthors", "none" );
+
+		}
+		if ( visType.equals( "publications" ) )
+		{
+			Map<String, Object> map = similarityService.similarPublications( idsList );
+			if ( map != null )
+			{
+				@SuppressWarnings( "unchecked" )
+				Map<DataMiningPublication, Map<String, Double>> interestMap = (Map<DataMiningPublication, Map<String, Double>>) map.get( "interestMap" );
+
+				@SuppressWarnings( "unchecked" )
+				Map<DataMiningPublication, Double> scoreMap = (Map<DataMiningPublication, Double>) map.get( "scoreMap" );
+
+				List<Double> similarityValues = new ArrayList<Double>( scoreMap.values() );
+				List<DataMiningPublication> similarPublications = new ArrayList<DataMiningPublication>( scoreMap.keySet() );
+
+				List<Double> truncSimilarityValues = new ArrayList<Double>();
+				List<String> publicationNames = new ArrayList<String>();
+				List<String> publicationsIds = new ArrayList<String>();
+				List<Map<String, Double>> truncInterests = new ArrayList<Map<String, Double>>();
+
+				// System.out.println( map.size() + " : maz size" );
+
+				int count = 0;
+				if ( interestMap.size() > 20 )
+					count = 20;
+				else
+					count = interestMap.size();
+
+				for ( int i = 0; i < count; i++ )
+				{
+					truncSimilarityValues.add( similarityValues.get( i ) );
+					publicationNames.add( similarPublications.get( i ).getTitle() );
+					publicationsIds.add( similarPublications.get( i ).getId() );
+					truncInterests.add( interestMap.get( similarPublications.get( i ) ) );
+				}
+
+				visMap.put( "authorNames", publicationNames );
+				visMap.put( "authorIds", publicationsIds );
+				visMap.put( "similarity", truncSimilarityValues );
+				visMap.put( "interests", truncInterests );
 				return visMap;
 			}
 			else

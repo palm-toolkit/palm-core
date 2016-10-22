@@ -260,7 +260,6 @@ public class EventMiningImpl implements EventMining
 		// put event group map to json
 		Map<String, Object> eventGroupMap = new LinkedHashMap<String, Object>();
 		eventGroupMap.put( "id", eventGroup.getId() );
-		System.out.println( eventGroup.getName() + " in mining" );
 		eventGroupMap.put( "name", WordUtils.capitalize( eventGroup.getName() ) );
 		if ( eventGroup.getNotation() != null )
 			eventGroupMap.put( "abbr", eventGroup.getNotation() );

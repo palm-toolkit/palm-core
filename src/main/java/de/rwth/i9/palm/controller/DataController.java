@@ -23,12 +23,15 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestFlat;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
+import de.rwth.i9.palm.model.DataMiningPublication;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.EventGroupInterestFlat;
 import de.rwth.i9.palm.model.EventInterest;
 import de.rwth.i9.palm.model.EventInterestProfile;
 import de.rwth.i9.palm.model.Interest;
+import de.rwth.i9.palm.model.PublicationTopic;
+import de.rwth.i9.palm.model.PublicationTopicFlat;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Controller
@@ -253,6 +256,41 @@ public class DataController
 		}
 
 		return "Updated flat event group table.";
+	}
+
+	@Transactional
+	@RequestMapping( value = "/updateflattables/publications", method = RequestMethod.GET )
+	public @ResponseBody String updateFlatPublication()
+	{
+		List<DataMiningPublication> publications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
+		int j = 1;
+		for ( DataMiningPublication publication : publications )
+		{
+			// if (
+			// persistenceStrategy.getPublicationTopicFlatDAO().publicationIdExists(
+			// publication.getId() ) )
+			// continue;
+			Map<String, Double> publicationTopics = new HashMap<String, Double>();
+			for ( PublicationTopic pt : publication.getPublicationTopics() )
+			{
+				for ( String term : pt.getTermValues().keySet() )
+				{
+					Double value = publicationTopics.containsKey( term ) ? publicationTopics.get( term ) : 0;
+					publicationTopics.put( term.replaceAll( "=", "" ), value + pt.getTermValues().get( term ) );
+				}
+			}
+			Map<String, Double> sortedMap = sortByValue( publicationTopics );
+			PublicationTopicFlat ptf = new PublicationTopicFlat();
+			ptf.setPublication_id( publication.getId() );
+			// System.out.println( sortedMap.toString().replaceAll( "[\\{\\}]",
+			// "" ) );
+			ptf.setTopics( sortedMap.toString().replaceAll( "[\\{\\}]", "" ) );
+			persistenceStrategy.getPublicationTopicFlatDAO().persist( ptf );
+			// System.out.println( "Added no " + j );
+			j++;
+		}
+
+		return "Updated flat publication tables";
 	}
 
 	// SOURCE: www.mkyong.com
