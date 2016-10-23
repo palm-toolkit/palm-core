@@ -1,11 +1,7 @@
 package de.rwth.i9.palm.similarity.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
+import de.rwth.i9.palm.helper.MapSorter;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.DataMiningEventGroup;
@@ -132,7 +129,7 @@ public class SimilarityServiceImpl implements SimilarityService
 							scoreMap.remove( a );
 
 							// to score as per number of interests
-							scoreMap.put( a, val + 0.3 );
+							scoreMap.put( a, val + 1.0 );
 							Map<String, Double> interest = interestMap.get( a );
 							interest.put( term, othersInterests.get( term ) );
 							interestMap.put( a, interest );
@@ -144,7 +141,7 @@ public class SimilarityServiceImpl implements SimilarityService
 						else
 						{
 							// to score as per number of interests
-							scoreMap.put( a, 0.3 );
+							scoreMap.put( a, 1.0 );
 							Map<String, Double> interest = new HashMap<String, Double>();
 							interest.put( term, othersInterests.get( term ) );
 							interestMap.put( a, interest );
@@ -159,28 +156,17 @@ public class SimilarityServiceImpl implements SimilarityService
 
 		}
 
-		Map<DataMiningAuthor, Double> sortedScoreMap = sortByAuthor( scoreMap );
+		Map<DataMiningAuthor, Double> sortedScoreMap = MapSorter.sortByAuthor( scoreMap );
 
 		Map<DataMiningAuthor, Map<String, Double>> sortedInterestMap = new HashMap<DataMiningAuthor, Map<String, Double>>();
 		for ( int i = 0; i < interestMap.size(); i++ )
 		{
-			sortedInterestMap.put( new ArrayList<DataMiningAuthor>( interestMap.keySet() ).get( i ), sortByTerm( new ArrayList<Map<String, Double>>( interestMap.values() ).get( i ) ) );
+			sortedInterestMap.put( new ArrayList<DataMiningAuthor>( interestMap.keySet() ).get( i ), MapSorter.sortByTerm( new ArrayList<Map<String, Double>>( interestMap.values() ).get( i ) ) );
 		}
 
 		Map<String, Object> finalMap = new HashMap<String, Object>();
 		finalMap.put( "scoreMap", sortedScoreMap );
 		finalMap.put( "interestMap", sortedInterestMap );
-
-		// List<DataMiningAuthor> sortedAuthors = new
-		// ArrayList<DataMiningAuthor>( sortedScoreMap.keySet() );
-		// List<Double> sortedInterestScores = new ArrayList<Double>(
-		// sortedScoreMap.values() );
-		// // take the 20 top matches
-		// for ( int i = 0; i < 20; i++ )
-		// {
-		// System.out.println( sortedAuthors.get( i ).getName() +
-		// sortedInterestScores.get( i ) );
-		// }
 
 		return finalMap;
 
@@ -287,7 +273,7 @@ public class SimilarityServiceImpl implements SimilarityService
 							scoreMap.remove( eg );
 
 							// to score as per number of interests
-							scoreMap.put( eg, val + 0.3 );
+							scoreMap.put( eg, val + 1.0 );
 							Map<String, Double> interest = interestMap.get( eg );
 							interest.put( term, othersInterests.get( term ) );
 							interestMap.put( eg, interest );
@@ -299,7 +285,7 @@ public class SimilarityServiceImpl implements SimilarityService
 						else
 						{
 							// to score as per number of interests
-							scoreMap.put( eg, 0.3 );
+							scoreMap.put( eg, 1.0 );
 							Map<String, Double> interest = new HashMap<String, Double>();
 							interest.put( term, othersInterests.get( term ) );
 							interestMap.put( eg, interest );
@@ -314,12 +300,12 @@ public class SimilarityServiceImpl implements SimilarityService
 
 		}
 
-		Map<DataMiningEventGroup, Double> sortedScoreMap = sortByEventGroup( scoreMap );
+		Map<DataMiningEventGroup, Double> sortedScoreMap = MapSorter.sortByEventGroup( scoreMap );
 
 		Map<DataMiningEventGroup, Map<String, Double>> sortedInterestMap = new HashMap<DataMiningEventGroup, Map<String, Double>>();
 		for ( int i = 0; i < interestMap.size(); i++ )
 		{
-			sortedInterestMap.put( new ArrayList<DataMiningEventGroup>( interestMap.keySet() ).get( i ), sortByTerm( new ArrayList<Map<String, Double>>( interestMap.values() ).get( i ) ) );
+			sortedInterestMap.put( new ArrayList<DataMiningEventGroup>( interestMap.keySet() ).get( i ), MapSorter.sortByTerm( new ArrayList<Map<String, Double>>( interestMap.values() ).get( i ) ) );
 		}
 
 		Map<String, Object> finalMap = new HashMap<String, Object>();
@@ -433,7 +419,7 @@ public class SimilarityServiceImpl implements SimilarityService
 							scoreMap.remove( p );
 
 							// to score as per number of interests
-							scoreMap.put( p, val + 0.3 );
+							scoreMap.put( p, val + 1.0 );
 							Map<String, Double> interest = topicMap.get( p );
 							interest.put( term, othersTopics.get( term ) );
 							topicMap.put( p, interest );
@@ -445,7 +431,7 @@ public class SimilarityServiceImpl implements SimilarityService
 						else
 						{
 							// to score as per number of interests
-							scoreMap.put( p, 0.3 );
+							scoreMap.put( p, 1.0 );
 							Map<String, Double> interest = new HashMap<String, Double>();
 							interest.put( term, othersTopics.get( term ) );
 							topicMap.put( p, interest );
@@ -460,164 +446,21 @@ public class SimilarityServiceImpl implements SimilarityService
 
 		}
 
-		Map<DataMiningPublication, Double> sortedScoreMap = sortByPublication( scoreMap );
+		Map<DataMiningPublication, Double> sortedScoreMap = MapSorter.sortByPublication( scoreMap );
 
 		Map<DataMiningPublication, Map<String, Double>> sortedInterestMap = new HashMap<DataMiningPublication, Map<String, Double>>();
 		for ( int i = 0; i < topicMap.size(); i++ )
 		{
-			sortedInterestMap.put( new ArrayList<DataMiningPublication>( topicMap.keySet() ).get( i ), sortByTerm( new ArrayList<Map<String, Double>>( topicMap.values() ).get( i ) ) );
+			sortedInterestMap.put( new ArrayList<DataMiningPublication>( topicMap.keySet() ).get( i ), MapSorter.sortByTerm( new ArrayList<Map<String, Double>>( topicMap.values() ).get( i ) ) );
 		}
 
 		Map<String, Object> finalMap = new HashMap<String, Object>();
 		finalMap.put( "scoreMap", sortedScoreMap );
 		finalMap.put( "interestMap", sortedInterestMap );
 
-		// List<DataMiningAuthor> sortedAuthors = new
-		// ArrayList<DataMiningAuthor>( sortedScoreMap.keySet() );
-		// List<Double> sortedInterestScores = new ArrayList<Double>(
-		// sortedScoreMap.values() );
-		// // take the 20 top matches
-		// for ( int i = 0; i < 20; i++ )
-		// {
-		// System.out.println( sortedAuthors.get( i ).getName() +
-		// sortedInterestScores.get( i ) );
-		// }
-
 		return finalMap;
 
 	}
 
-	// SOURCE: www.mkyong.com
-	private static Map<DataMiningAuthor, Double> sortByAuthor( Map<DataMiningAuthor, Double> unsortMap )
-	{
-
-		// 1. Convert Map to List of Map
-		List<Map.Entry<DataMiningAuthor, Double>> list = new LinkedList<Map.Entry<DataMiningAuthor, Double>>( unsortMap.entrySet() );
-
-		// 2. Sort list with Collections.sort(), provide a custom Comparator
-		// Try switch the o1 o2 position for a different order
-		Collections.sort( list, new Comparator<Map.Entry<DataMiningAuthor, Double>>()
-		{
-			public int compare( Map.Entry<DataMiningAuthor, Double> o1, Map.Entry<DataMiningAuthor, Double> o2 )
-			{
-				return ( o2.getValue() ).compareTo( o1.getValue() );
-			}
-		} );
-
-		// 3. Loop the sorted list and put it into a new insertion order Map
-		// LinkedHashMap
-		Map<DataMiningAuthor, Double> sortedMap = new LinkedHashMap<DataMiningAuthor, Double>();
-		for ( Map.Entry<DataMiningAuthor, Double> entry : list )
-		{
-			sortedMap.put( entry.getKey(), entry.getValue() );
-		}
-
-		/*
-		 * //classic iterator example for (Iterator<Map.Entry<String, Integer>>
-		 * it = list.iterator(); it.hasNext(); ) { Map.Entry<String, Integer>
-		 * entry = it.next(); sortedMap.put(entry.getKey(), entry.getValue()); }
-		 */
-
-		return sortedMap;
-	}
-
-	private static Map<DataMiningEventGroup, Double> sortByEventGroup( Map<DataMiningEventGroup, Double> unsortMap )
-	{
-
-		// 1. Convert Map to List of Map
-		List<Map.Entry<DataMiningEventGroup, Double>> list = new LinkedList<Map.Entry<DataMiningEventGroup, Double>>( unsortMap.entrySet() );
-
-		// 2. Sort list with Collections.sort(), provide a custom Comparator
-		// Try switch the o1 o2 position for a different order
-		Collections.sort( list, new Comparator<Map.Entry<DataMiningEventGroup, Double>>()
-		{
-			public int compare( Map.Entry<DataMiningEventGroup, Double> o1, Map.Entry<DataMiningEventGroup, Double> o2 )
-			{
-				return ( o2.getValue() ).compareTo( o1.getValue() );
-			}
-		} );
-
-		// 3. Loop the sorted list and put it into a new insertion order Map
-		// LinkedHashMap
-		Map<DataMiningEventGroup, Double> sortedMap = new LinkedHashMap<DataMiningEventGroup, Double>();
-		for ( Map.Entry<DataMiningEventGroup, Double> entry : list )
-		{
-			sortedMap.put( entry.getKey(), entry.getValue() );
-		}
-
-		/*
-		 * //classic iterator example for (Iterator<Map.Entry<String, Integer>>
-		 * it = list.iterator(); it.hasNext(); ) { Map.Entry<String, Integer>
-		 * entry = it.next(); sortedMap.put(entry.getKey(), entry.getValue()); }
-		 */
-
-		return sortedMap;
-	}
-
-	private static Map<DataMiningPublication, Double> sortByPublication( Map<DataMiningPublication, Double> unsortMap )
-	{
-
-		// 1. Convert Map to List of Map
-		List<Map.Entry<DataMiningPublication, Double>> list = new LinkedList<Map.Entry<DataMiningPublication, Double>>( unsortMap.entrySet() );
-
-		// 2. Sort list with Collections.sort(), provide a custom Comparator
-		// Try switch the o1 o2 position for a different order
-		Collections.sort( list, new Comparator<Map.Entry<DataMiningPublication, Double>>()
-		{
-			public int compare( Map.Entry<DataMiningPublication, Double> o1, Map.Entry<DataMiningPublication, Double> o2 )
-			{
-				return ( o2.getValue() ).compareTo( o1.getValue() );
-			}
-		} );
-
-		// 3. Loop the sorted list and put it into a new insertion order Map
-		// LinkedHashMap
-		Map<DataMiningPublication, Double> sortedMap = new LinkedHashMap<DataMiningPublication, Double>();
-		for ( Map.Entry<DataMiningPublication, Double> entry : list )
-		{
-			sortedMap.put( entry.getKey(), entry.getValue() );
-		}
-
-		/*
-		 * //classic iterator example for (Iterator<Map.Entry<String, Integer>>
-		 * it = list.iterator(); it.hasNext(); ) { Map.Entry<String, Integer>
-		 * entry = it.next(); sortedMap.put(entry.getKey(), entry.getValue()); }
-		 */
-
-		return sortedMap;
-	}
-
-	public Map<String, Double> sortByTerm( Map<String, Double> unsortMap )
-	{
-
-		// 1. Convert Map to List of Map
-		List<Map.Entry<String, Double>> list = new LinkedList<Map.Entry<String, Double>>( unsortMap.entrySet() );
-
-		// 2. Sort list with Collections.sort(), provide a custom Comparator
-		// Try switch the o1 o2 position for a different order
-		Collections.sort( list, new Comparator<Map.Entry<String, Double>>()
-		{
-			public int compare( Map.Entry<String, Double> o1, Map.Entry<String, Double> o2 )
-			{
-				return ( o2.getValue() ).compareTo( o1.getValue() );
-			}
-		} );
-
-		// 3. Loop the sorted list and put it into a new insertion order Map
-		// LinkedHashMap
-		Map<String, Double> sortedMap = new LinkedHashMap<String, Double>();
-		for ( Map.Entry<String, Double> entry : list )
-		{
-			sortedMap.put( entry.getKey(), entry.getValue() );
-		}
-
-		/*
-		 * //classic iterator example for (Iterator<Map.Entry<String, Integer>>
-		 * it = list.iterator(); it.hasNext(); ) { Map.Entry<String, Integer>
-		 * entry = it.next(); sortedMap.put(entry.getKey(), entry.getValue()); }
-		 */
-
-		return sortedMap;
-	}
 
 }

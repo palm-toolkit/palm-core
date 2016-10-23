@@ -17,6 +17,7 @@ import de.rwth.i9.palm.analytics.algorithm.clustering.WekaEM;
 import de.rwth.i9.palm.analytics.algorithm.clustering.WekaHierarchichal;
 import de.rwth.i9.palm.analytics.algorithm.clustering.WekaXMeans;
 import de.rwth.i9.palm.analytics.util.InterestParser;
+import de.rwth.i9.palm.helper.MapSorter;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.Event;
@@ -61,6 +62,7 @@ public class ClusteringServiceImpl implements ClusteringService
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
+		Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
 
 		// Now find coauthors from these publications
 		List<Author> coAuthorList = new ArrayList<Author>();
@@ -84,31 +86,6 @@ public class ClusteringServiceImpl implements ClusteringService
 
 		Long midTime = ( System.currentTimeMillis() - startTime ) / 1000;
 		System.out.println( "Step 1: " + midTime );
-		// Find topics from publications - This will govern clustering
-		// ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		// List<String> allTopics = new ArrayList<String>();
-		// for ( Publication pub : authorPublications )
-		// {
-		// Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
-		// for ( PublicationTopic pubTopic : publicationTopics )
-		// {
-		// // List<Double> topicWeights = new ArrayList<Double>(
-		// // pubTopic.getTermValues().values() );
-		// List<String> topics = new ArrayList<String>(
-		// pubTopic.getTermValues().keySet() );
-		// for ( int i = 0; i < topics.size(); i++ )
-		// {
-		// if ( !allTopics.contains( topics.get( i ) ) )// &&
-		// // topicWeights.get(
-		// // i ) > 0.2
-		// // )
-		// {
-		// allTopics.add( topics.get( i ) );
-		// attributes.add( new Attribute( topics.get( i ) ) );
-		// }
-		// }
-		// }
-		// }
 
 		List<DataMiningAuthor> authors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
 		List<DataMiningAuthor> mainAuthors = new ArrayList<DataMiningAuthor>();
@@ -149,32 +126,43 @@ public class ClusteringServiceImpl implements ClusteringService
 
 		System.out.println( " All interests: " + allInterests.size() );
 		midTime = ( System.currentTimeMillis() - startTime ) / 1000;
-		System.out.println( "Step 2: " + midTime );
+
 		// Assign interests of authors to topics of publications..
 		Instances data = new Instances( "authors", attributes, coAuthors.size() );
 
 		System.out.println( "size of coauth: " + coAuthors.size() );
 		for ( DataMiningAuthor a : coAuthors )
 		{
+			System.out.println( "\n " + a.getName() );
 			Instance i = new DenseInstance( attributes.size() );
 			List<String> authorInterests = new ArrayList<String>();
 			List<Double> authorInterestWeights = new ArrayList<Double>();
 			Map<String, Double> interests = new HashMap<String, Double>();
 			interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
+			interests = MapSorter.sortByValue( interests );
 
+			System.out.println( interests.toString() );
+
+			int count = 0;
+			List<String> authorTopInterests = new ArrayList<String>();
 			Iterator<String> interestTerm = interests.keySet().iterator();
 			Iterator<Double> interestTermWeight = interests.values().iterator();
 			while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 			{
 				String interest = ( interestTerm.next() );
 				Double weight = interestTermWeight.next();
-
 				if ( !authorInterests.contains( interest ) )
 				{
 					authorInterests.add( interest );
 					authorInterestWeights.add( weight );
+					if ( count < 8 )
+						authorTopInterests.add( interest );
+					count++;
 				}
+
 			}
+
+			nodeTerms.put( a.getId(), authorTopInterests );
 
 			// check if author interests are present in the topic list, if
 			// yes,
@@ -193,15 +181,10 @@ public class ClusteringServiceImpl implements ClusteringService
 			data.add( i );
 		}
 
+		System.out.println( " NODE TERMS:  " + nodeTerms.size() );
 		System.out.println( "size of data: " + data.size() );
 		midTime = ( System.currentTimeMillis() - startTime ) / 1000;
 		System.out.println( "Step 3: " + midTime );
-
-		// for ( int i = 0; i < coAuthorList.size(); i++ )
-		// {
-		// System.out.println( coAuthorList.get( i ).getName() + " " +
-		// coAuthors.get( i ).getName() );
-		// }
 
 		try
 		{
@@ -211,10 +194,6 @@ public class ClusteringServiceImpl implements ClusteringService
 				XMeans result = WekaXMeans.run( 2, data );
 				for ( int ind = 0; ind < data.size(); ind++ )
 				{
-					// System.out.println( "\n" );
-					// System.out.println( result );
-					// System.out.println( coAuthors.get( ind ).getName() + ":"
-					// + result.clusterInstance( data.get( ind ) ) );
 					clusterMap.put( mapper.writeValueAsString( coAuthors.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
 				}
 
@@ -227,7 +206,6 @@ public class ClusteringServiceImpl implements ClusteringService
 					Integer numAttr = instances.get( instanceCounter ).numAttributes();
 					for ( int i = 0; i < numAttr; i++ )
 					{
-
 						if ( max.size() < 4 )
 						{
 							max.add( instances.get( instanceCounter ).value( i ) );
@@ -251,10 +229,6 @@ public class ClusteringServiceImpl implements ClusteringService
 					}
 
 					clusterTerms.put( instanceCounter, terms );
-					// for ( int i = 0; i < 4; i++ )
-					// System.out.println( max.get( i ) + " : " + instances.get(
-					// instanceCounter ).attribute( maxIndex.get( i ) ) );
-					// System.out.println( "\n" );
 				}
 
 			}
@@ -300,16 +274,19 @@ public class ClusteringServiceImpl implements ClusteringService
 		}
 		resultMap.put( "clusterMap", clusterMap );
 		resultMap.put( "clusterTerms", clusterTerms );
+		resultMap.put( "nodeTerms", nodeTerms );
 		return resultMap;
 	}
 
+	// CLUSTER AS PER DATA MINING OBJECT PENDING!!!!!
 	@Override
 	public Map<String, Object> clusterConferences( String algorithm, List<Author> authorList, Set<Publication> publications )
 	{
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
-
+		Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
+		
 		// Find topics from publications - This will govern clustering
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> allTopics = new ArrayList<String>();
@@ -406,10 +383,6 @@ public class ClusteringServiceImpl implements ClusteringService
 			{
 				if ( eventGroupInterests.get( g ).contains( allTopics.get( s ) ) )
 				{
-					// i.setValue( attributes.get( s ),
-					// eventGroupInterestWeights.get( g ).get(
-					// eventGroupInterests.get( g ).indexOf( allTopics.get( s )
-					// ) ) );
 					i.setValue( attributes.get( s ), 1 );
 				}
 				else
@@ -515,10 +488,11 @@ public class ClusteringServiceImpl implements ClusteringService
 
 		resultMap.put( "clusterMap", clusterMap );
 		resultMap.put( "clusterTerms", clusterTerms );
-
+		resultMap.put( "nodeTerms", nodeTerms );
 		return resultMap;
 	}
 
+	// CLUSTER AS PER DATA MINING OBJECT PENDING!!!!!
 	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications )
 	{
 		List<Publication> publicationsList = new ArrayList<Publication>( publications );
@@ -526,7 +500,7 @@ public class ClusteringServiceImpl implements ClusteringService
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
-
+		Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
 		// Find topics from publications - This will govern clustering
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> allTopics = new ArrayList<String>();
@@ -678,6 +652,7 @@ public class ClusteringServiceImpl implements ClusteringService
 		System.out.println( clusterMap.size() + " .. " + clusterMap.size() );
 		resultMap.put( "clusterMap", clusterMap );
 		resultMap.put( "clusterTerms", clusterTerms );
+		resultMap.put( "nodeTerms", nodeTerms );
 
 		return resultMap;
 	}

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
+import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
@@ -37,6 +38,9 @@ public class ExploreFilter
 
 	@Autowired
 	private AcademicEventFeature eventFeature;
+
+	@Autowired
+	private ResearcherFeature researcherFeature;
 
 	public List<Publication> getPublicationsForFilter( List<String> idsList, String type )
 	{
@@ -195,11 +199,11 @@ public class ExploreFilter
 					}
 				}
 			}
+			System.out.println( "all interests size in FILTER: " + allAuthorInterests.size() );
 
 			List<String> allTopics = new ArrayList<String>();
 			for ( Publication pub : publications )
 			{
-
 				Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
 				for ( PublicationTopic pubTopic : publicationTopics )
 				{
@@ -211,13 +215,26 @@ public class ExploreFilter
 						for ( int j = 0; j < termValues.size(); j++ )
 						{
 							Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
-							if ( !allTopics.contains( termValues.get( j ) ) && allAuthorInterests.contains( termValues.get( j ) ) )
+							if ( !allTopics.contains( termValues.get( j ) ) )
 							{
-								int index = allAuthorInterests.indexOf( termValues.get( j ) );
-								allTopics.add( termValues.get( j ) );
-								topicDetail.put( "id", allAuthorInterestIds.get( index ) );
-								topicDetail.put( "title", termValues.get( j ) );
-								topicDetailsList.add( topicDetail );
+								int index = 0;
+								if ( allAuthorInterests.contains( termValues.get( j ) ) )
+								{
+									index = allAuthorInterests.indexOf( termValues.get( j ) );
+									allTopics.add( termValues.get( j ) );
+									topicDetail.put( "id", allAuthorInterestIds.get( index ) );
+									topicDetail.put( "title", termValues.get( j ) );
+									topicDetailsList.add( topicDetail );
+								}
+								if ( allAuthorInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
+								{
+									index = allAuthorInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									allTopics.add( termValues.get( j ) );
+									topicDetail.put( "id", allAuthorInterestIds.get( index ) );
+									topicDetail.put( "title", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									topicDetailsList.add( topicDetail );
+								}
+
 							}
 						}
 
@@ -375,7 +392,7 @@ public class ExploreFilter
 			// authorPublications.size() );
 		}
 
-		// System.out.println( "start year: " + startYear );
+		System.out.println( "start year: " + startYear );
 		List<Publication> publicationsTemp = new ArrayList<Publication>( authorPublications );
 		if ( !startYear.equals( "" ) && !startYear.equals( "0" ) && startYear != null )
 		{
@@ -418,8 +435,7 @@ public class ExploreFilter
 			}
 		}
 		authorPublications = new HashSet<Publication>( publicationsTemp );
-		// System.out.println( "after year filter: " + authorPublications.size()
-		// );
+		System.out.println( "after year filter: " + authorPublications.size() );
 		// conference filter
 		List<Publication> conferencePublications = new ArrayList<Publication>();
 		if ( !filteredConference.isEmpty() )
@@ -450,8 +466,7 @@ public class ExploreFilter
 			}
 			authorPublications = new HashSet<Publication>( tempPubList );
 		}
-		// System.out.println( "after conference filter: " +
-		// authorPublications.size() );
+		System.out.println( "after conference filter: " + authorPublications.size() );
 		// topic filter
 		if ( !filteredTopic.isEmpty() )
 		{
@@ -459,12 +474,15 @@ public class ExploreFilter
 			// );
 			Set<Publication> topicPublications = new HashSet<Publication>();
 			// System.out.println( "filteringggggggggg" );
+
+
 			for ( Publication authorPublication : authorPublications )
 			{
 				// if ( authorPublication.getTitle().equals( "Social Software
 				// for Professional Learning" ) )
 				// System.out.println( "\n" + authorPublication.getTitle() );
 				List<PublicationTopic> pubTopics = new ArrayList<PublicationTopic>( authorPublication.getPublicationTopics() );
+
 				for ( PublicationTopic pt : pubTopics )
 				{
 					Map<String, Double> termValues = pt.getTermValues();
@@ -472,9 +490,16 @@ public class ExploreFilter
 					List<String> interests = new ArrayList<String>();
 					for ( Interest interest : filteredTopic )
 					{
-						interests.add( interest.getTerm() );
+						System.out.println( interest.getTerm() + " : " + interest.getTerm() + "s" );
+						if ( terms.contains( interest.getTerm() ) )
+							interests.add( interest.getTerm() );
+						if ( terms.contains( interest.getTerm() + "s" ) )
+						{
+							System.out.println( "s wala: " + interest.getTerm() );
+							interests.add( interest.getTerm() + "s" );
+						}
 					}
-					if ( terms.containsAll( interests ) )
+					if ( interests.size() == filteredTopic.size() )
 					{
 						// System.out.println( "true" );
 						topicPublications.add( authorPublication );
@@ -484,6 +509,7 @@ public class ExploreFilter
 			authorPublications = topicPublications;
 		}
 
+		System.out.println( "after topic filter: " + authorPublications.size() );
 		// circle filter
 		if ( !filteredCircle.isEmpty() )
 		{

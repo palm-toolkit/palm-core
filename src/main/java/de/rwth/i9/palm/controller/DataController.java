@@ -1,11 +1,7 @@
 package de.rwth.i9.palm.controller;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
+import de.rwth.i9.palm.helper.MapSorter;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestFlat;
@@ -181,7 +178,7 @@ public class DataController
 				}
 			}
 
-			Map<String, Double> sortedMap = sortByValue( authorInterests );
+			Map<String, Double> sortedMap = MapSorter.sortByValue( authorInterests );
 			AuthorInterestFlat aif = new AuthorInterestFlat();
 			aif.setAuthor_id( author.getId() );
 			aif.setInterests( sortedMap.toString().replaceAll( "[\\{\\}]", "" ) );
@@ -245,7 +242,7 @@ public class DataController
 
 				}
 			}
-			Map<String, Double> sortedMap = sortByValue( eventGroupTopics );
+			Map<String, Double> sortedMap = MapSorter.sortByValue( eventGroupTopics );
 			EventGroupInterestFlat eif = new EventGroupInterestFlat();
 			eif.setEventGroup_id( eg.getId() );
 			eif.setInterests( sortedMap.toString().replaceAll( "[\\{\\}]", "" ) );
@@ -266,10 +263,8 @@ public class DataController
 		int j = 1;
 		for ( DataMiningPublication publication : publications )
 		{
-			// if (
-			// persistenceStrategy.getPublicationTopicFlatDAO().publicationIdExists(
-			// publication.getId() ) )
-			// continue;
+			if ( persistenceStrategy.getPublicationTopicFlatDAO().publicationIdExists( publication.getId() ) )
+				continue;
 			Map<String, Double> publicationTopics = new HashMap<String, Double>();
 			for ( PublicationTopic pt : publication.getPublicationTopics() )
 			{
@@ -279,7 +274,7 @@ public class DataController
 					publicationTopics.put( term.replaceAll( "=", "" ), value + pt.getTermValues().get( term ) );
 				}
 			}
-			Map<String, Double> sortedMap = sortByValue( publicationTopics );
+			Map<String, Double> sortedMap = MapSorter.sortByValue( publicationTopics );
 			PublicationTopicFlat ptf = new PublicationTopicFlat();
 			ptf.setPublication_id( publication.getId() );
 			// System.out.println( sortedMap.toString().replaceAll( "[\\{\\}]",
@@ -293,37 +288,4 @@ public class DataController
 		return "Updated flat publication tables";
 	}
 
-	// SOURCE: www.mkyong.com
-	private static Map<String, Double> sortByValue( Map<String, Double> unsortMap )
-	{
-
-		// 1. Convert Map to List of Map
-		List<Map.Entry<String, Double>> list = new LinkedList<Map.Entry<String, Double>>( unsortMap.entrySet() );
-
-		// 2. Sort list with Collections.sort(), provide a custom Comparator
-		// Try switch the o1 o2 position for a different order
-		Collections.sort( list, new Comparator<Map.Entry<String, Double>>()
-		{
-			public int compare( Map.Entry<String, Double> o1, Map.Entry<String, Double> o2 )
-			{
-				return ( o2.getValue() ).compareTo( o1.getValue() );
-			}
-		} );
-
-		// 3. Loop the sorted list and put it into a new insertion order Map
-		// LinkedHashMap
-		Map<String, Double> sortedMap = new LinkedHashMap<String, Double>();
-		for ( Map.Entry<String, Double> entry : list )
-		{
-			sortedMap.put( entry.getKey(), entry.getValue() );
-		}
-
-		/*
-		 * //classic iterator example for (Iterator<Map.Entry<String, Integer>>
-		 * it = list.iterator(); it.hasNext(); ) { Map.Entry<String, Integer>
-		 * entry = it.next(); sortedMap.put(entry.getKey(), entry.getValue()); }
-		 */
-
-		return sortedMap;
-	}
 }
