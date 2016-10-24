@@ -257,6 +257,7 @@ public class ExploreVisualization
 	public Map<String, Object> visualizeEvolution( String type, List<String> idsList, List<Author> authorList, Set<Publication> publications, String startYear, String endYear )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
+		Map<String, String> topicIdMap = new HashMap<String, String>();
 
 		List<String> allTopics = new ArrayList<String>();
 		for ( Publication pub : publications )
@@ -280,12 +281,38 @@ public class ExploreVisualization
 
 		if ( type.equals( "researcher" ) )
 		{
-			List<String> authorInterests = new ArrayList<String>();
+			// If there are no common publications!
+			if ( allTopics.size() == 0 )
+			{
+				for ( Author a : authorList )
+				{
+					List<Publication> pubs = new ArrayList<Publication>( a.getPublications() );
+					for ( Publication p : pubs )
+					{
+						Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+						for ( PublicationTopic pubTopic : publicationTopics )
+						{
+							List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+							for ( int i = 0; i < topics.size(); i++ )
+							{
+								if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.2 )
+								{
+									allTopics.add( topics.get( i ) );
+								}
+							}
+						}
+					}
+				}
+			}
+			List<Interest> authorInterests = new ArrayList<Interest>();
 			List<Double> authorInterestWeights = new ArrayList<Double>();
+
+			System.out.println( " all topics size: " + allTopics.size() );
 
 			for ( Author a : authorList )
 			{
-				Map<String, List<String>> yearWiseInterests = new HashMap<String, List<String>>();
+				Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
 				Set<AuthorInterestProfile> authorInterestProfiles = a.getAuthorInterestProfiles();
 				for ( AuthorInterestProfile aip : authorInterestProfiles )
@@ -298,7 +325,8 @@ public class ExploreVisualization
 						Iterator<Double> interestTermWeight = interests.values().iterator();
 						while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 						{
-							String interest = ( interestTerm.next().getTerm() );
+							Interest actualInterest = interestTerm.next();
+							String interest = actualInterest.getTerm();
 							Double weight = interestTermWeight.next();
 
 							if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
@@ -321,49 +349,51 @@ public class ExploreVisualization
 								if ( validYear )
 								{
 									List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
-									List<List<String>> yWIVal = new ArrayList<List<String>>( yearWiseInterests.values() );
+									List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
 									if ( yWI.contains( year ) )
 									{
 										int index = yWI.indexOf( year );
-										if ( !yWIVal.get( index ).contains( interest ) )
+										if ( !yWIVal.get( index ).contains( actualInterest ) )
 										{
-											yWIVal.get( index ).add( interest );
-											if ( !authorInterests.contains( interest ) )
+											yWIVal.get( index ).add( actualInterest );
+											if ( !authorInterests.contains( actualInterest ) )
 											{
-												authorInterests.add( interest );
+												authorInterests.add( actualInterest );
 												authorInterestWeights.add( weight );
 											}
 											else
 											{
-												int ind = authorInterests.indexOf( interest );
+												int ind = authorInterests.indexOf( actualInterest );
 												authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
 											}
 											Map<String, Object> values = new HashMap<String, Object>();
-
+											System.out.println( actualInterest.getTerm() + " : " + actualInterest.getId() );
 											values.put( "Author", a.getName() );
-											values.put( "Topic", interest );
+											values.put( "Topic", actualInterest.getTerm() );
+											values.put( "TopicId", actualInterest.getId() );
 											values.put( "Year", year );
 											values.put( "Weight", weight );
 											mapList.add( values );
+											topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 										}
 										else
 										{
-											int ind = authorInterests.indexOf( interest );
+											int ind = authorInterests.indexOf( actualInterest );
 											authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
 										}
 									}
 									else
 									{
-										List<String> newInterestList = new ArrayList<String>();
-										newInterestList.add( interest );
-										if ( !authorInterests.contains( interest ) )
+										List<Interest> newInterestList = new ArrayList<Interest>();
+										newInterestList.add( actualInterest );
+										if ( !authorInterests.contains( actualInterest ) )
 										{
-											authorInterests.add( interest );
+											authorInterests.add( actualInterest );
 											authorInterestWeights.add( weight );
 										}
 										else
 										{
-											int ind = authorInterests.indexOf( interest );
+											int ind = authorInterests.indexOf( actualInterest );
 											authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
 										}
 										yearWiseInterests.put( year, newInterestList );
@@ -371,21 +401,20 @@ public class ExploreVisualization
 										Map<String, Object> values = new HashMap<String, Object>();
 
 										values.put( "Author", a.getName() );
-										values.put( "Topic", interest );
+										values.put( "Topic", actualInterest.getTerm() );
+										values.put( "TopicId", actualInterest.getId() );
 										values.put( "Year", year );
 										values.put( "Weight", weight );
 										mapList.add( values );
+										topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 									}
 								}
-
 							}
 						}
-
 					}
 				}
-
 			}
-
+			System.out.println( "map list size: " + mapList.size() );
 			double threshold = 3.0;
 			if ( authorList.size() > 1 )
 			{
@@ -403,24 +432,63 @@ public class ExploreVisualization
 			}
 			for ( int i = 0; i < mapList.size(); i++ )
 			{
-				if ( !authorInterests.contains( mapList.get( i ).get( "Topic" ).toString() ) )
+				Boolean flag = false;
+				for ( Interest interest : authorInterests )
+				{
+					if ( interest.getTerm().equals( mapList.get( i ).get( "Topic" ).toString() ) )
+						flag = true;
+				}
+				if ( !flag )
 				{
 					mapList.remove( i );
 					i--;
 				}
 			}
 
+			System.out.println( "ma lst: " + mapList.size() );
+
 			visMap.put( "list", mapList );
+			visMap.put( "topicIdMap", topicIdMap );
 		}
 		if ( type.equals( "conference" ) )
 		{
-			List<String> conferenceInterests = new ArrayList<String>();
+			// If there are no common publications!
+			if ( allTopics.size() == 0 )
+			{
+				for ( String id : idsList )
+				{
+					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
+					List<Event> events = eg.getEvents();
+					for ( Event e : events )
+					{
+						List<Publication> pubs = new ArrayList<Publication>( e.getPublications() );
+						for ( Publication p : pubs )
+						{
+							Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+							for ( PublicationTopic pubTopic : publicationTopics )
+							{
+								List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+								List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+								for ( int i = 0; i < topics.size(); i++ )
+								{
+									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.2 )
+									{
+										allTopics.add( topics.get( i ) );
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			List<Interest> conferenceInterests = new ArrayList<Interest>();
 			List<Double> conferenceInterestWeights = new ArrayList<Double>();
 
 			for ( String id : idsList )
 			{
 				EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
-				Map<String, List<String>> yearWiseInterests = new HashMap<String, List<String>>();
+				Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
 				List<Event> events = eg.getEvents();
 				for ( Event e : events )
@@ -436,7 +504,8 @@ public class ExploreVisualization
 							Iterator<Double> interestTermWeight = interests.values().iterator();
 							while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 							{
-								String interest = ( interestTerm.next().getTerm() );
+								Interest actualInterest = interestTerm.next();
+								String interest = actualInterest.getTerm();
 								Double weight = interestTermWeight.next();
 
 								if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
@@ -459,49 +528,51 @@ public class ExploreVisualization
 									if ( validYear )
 									{
 										List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
-										List<List<String>> yWIVal = new ArrayList<List<String>>( yearWiseInterests.values() );
+										List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
 										if ( yWI.contains( year ) )
 										{
 											int index = yWI.indexOf( year );
-											if ( !yWIVal.get( index ).contains( interest ) )
+											if ( !yWIVal.get( index ).contains( actualInterest ) )
 											{
-												yWIVal.get( index ).add( interest );
-												if ( !conferenceInterests.contains( interest ) )
+												yWIVal.get( index ).add( actualInterest );
+												if ( !conferenceInterests.contains( actualInterest ) )
 												{
-													conferenceInterests.add( interest );
+													conferenceInterests.add( actualInterest );
 													conferenceInterestWeights.add( weight );
 												}
 												else
 												{
-													int ind = conferenceInterests.indexOf( interest );
+													int ind = conferenceInterests.indexOf( actualInterest );
 													conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
 												}
 												Map<String, Object> values = new HashMap<String, Object>();
 
 												values.put( "Author", eg.getName() );
-												values.put( "Topic", interest );
+												values.put( "Topic", actualInterest.getTerm() );
+												values.put( "TopicId", actualInterest.getId() );
 												values.put( "Year", year );
 												values.put( "Weight", weight );
 												mapList.add( values );
+												topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 											}
 											else
 											{
-												int ind = conferenceInterests.indexOf( interest );
+												int ind = conferenceInterests.indexOf( actualInterest );
 												conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
 											}
 										}
 										else
 										{
-											List<String> newInterestList = new ArrayList<String>();
-											newInterestList.add( interest );
-											if ( !conferenceInterests.contains( interest ) )
+											List<Interest> newInterestList = new ArrayList<Interest>();
+											newInterestList.add( actualInterest );
+											if ( !conferenceInterests.contains( actualInterest ) )
 											{
-												conferenceInterests.add( interest );
+												conferenceInterests.add( actualInterest );
 												conferenceInterestWeights.add( weight );
 											}
 											else
 											{
-												int ind = conferenceInterests.indexOf( interest );
+												int ind = conferenceInterests.indexOf( actualInterest );
 												conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
 											}
 											yearWiseInterests.put( year, newInterestList );
@@ -509,10 +580,12 @@ public class ExploreVisualization
 											Map<String, Object> values = new HashMap<String, Object>();
 
 											values.put( "Author", eg.getName() );
-											values.put( "Topic", interest );
+											values.put( "Topic", actualInterest.getTerm() );
+											values.put( "TopicId", actualInterest.getId() );
 											values.put( "Year", year );
 											values.put( "Weight", weight );
 											mapList.add( values );
+											topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 										}
 									}
 
@@ -541,7 +614,13 @@ public class ExploreVisualization
 			}
 			for ( int i = 0; i < mapList.size(); i++ )
 			{
-				if ( !conferenceInterests.contains( mapList.get( i ).get( "Topic" ).toString() ) )
+				Boolean flag = false;
+				for ( Interest interest : conferenceInterests )
+				{
+					if ( interest.getTerm().equals( mapList.get( i ).get( "Topic" ).toString() ) )
+						flag = true;
+				}
+				if ( !flag )
 				{
 					mapList.remove( i );
 					i--;
@@ -579,14 +658,38 @@ public class ExploreVisualization
 
 		if ( type.equals( "researcher" ) )
 		{
-			List<String> authorInterests = new ArrayList<String>();
+			// If there are no common publications!
+			if ( allTopics.size() == 0 )
+			{
+				for ( Author a : authorList )
+				{
+					List<Publication> pubs = new ArrayList<Publication>( a.getPublications() );
+					for ( Publication p : pubs )
+					{
+						Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+						for ( PublicationTopic pubTopic : publicationTopics )
+						{
+							List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+							for ( int i = 0; i < topics.size(); i++ )
+							{
+								if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.2 )
+								{
+									allTopics.add( topics.get( i ) );
+								}
+							}
+						}
+					}
+				}
+			}
+			List<Interest> authorInterests = new ArrayList<Interest>();
 			List<Double> authorInterestWeights = new ArrayList<Double>();
-			List<Map<String, Double>> authorInterestList = new ArrayList<Map<String, Double>>();
+			List<Map<Interest, Double>> authorInterestList = new ArrayList<Map<Interest, Double>>();
 			for ( Author a : authorList )
 			{
-				Map<String, List<String>> yearWiseInterests = new HashMap<String, List<String>>();
+				Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
-				Map<String, Double> interestWeightMap = new HashMap<String, Double>();
+				Map<Interest, Double> interestWeightMap = new HashMap<Interest, Double>();
 				Set<AuthorInterestProfile> authorInterestProfiles = a.getAuthorInterestProfiles();
 				for ( AuthorInterestProfile aip : authorInterestProfiles )
 				{
@@ -598,7 +701,8 @@ public class ExploreVisualization
 						Iterator<Double> interestTermWeight = interests.values().iterator();
 						while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 						{
-							String interest = ( interestTerm.next().getTerm() );
+							Interest actualInterest = interestTerm.next();
+							String interest = ( actualInterest.getTerm() );
 							Double weight = interestTermWeight.next();
 
 							if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
@@ -622,61 +726,61 @@ public class ExploreVisualization
 								{
 
 									List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
-									List<List<String>> yWIVal = new ArrayList<List<String>>( yearWiseInterests.values() );
+									List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
 									if ( yWI.contains( year ) )
 									{
 										int index = yWI.indexOf( year );
-										if ( !yWIVal.get( index ).contains( interest ) )
+										if ( !yWIVal.get( index ).contains( actualInterest ) )
 										{
-											yWIVal.get( index ).add( interest );
-											if ( !authorInterests.contains( interest ) )
+											yWIVal.get( index ).add( actualInterest );
+											if ( !authorInterests.contains( actualInterest ) )
 											{
-												authorInterests.add( interest );
+												authorInterests.add( actualInterest );
 												authorInterestWeights.add( weight );
 											}
 											else
 											{
-												int ind = authorInterests.indexOf( interest );
+												int ind = authorInterests.indexOf( actualInterest );
 												authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
 											}
-											if ( interestWeightMap.containsKey( interest ) )
+											if ( interestWeightMap.containsKey( actualInterest ) )
 											{
-												double w = interestWeightMap.get( interest );
-												interestWeightMap.remove( interest );
-												interestWeightMap.put( interest, w + 1.0 );
+												double w = interestWeightMap.get( actualInterest );
+												interestWeightMap.remove( actualInterest );
+												interestWeightMap.put( actualInterest, w + 1.0 );
 											}
 											else
-												interestWeightMap.put( interest, 1.0 );
+												interestWeightMap.put( actualInterest, 1.0 );
 										}
 										else
 										{
-											int ind = authorInterests.indexOf( interest );
+											int ind = authorInterests.indexOf( actualInterest );
 											authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
 										}
 									}
 									else
 									{
-										List<String> newInterestList = new ArrayList<String>();
-										newInterestList.add( interest );
-										if ( !authorInterests.contains( interest ) )
+										List<Interest> newInterestList = new ArrayList<Interest>();
+										newInterestList.add( actualInterest );
+										if ( !authorInterests.contains( actualInterest ) )
 										{
-											authorInterests.add( interest );
+											authorInterests.add( actualInterest );
 											authorInterestWeights.add( weight );
 										}
 										else
 										{
-											int ind = authorInterests.indexOf( interest );
+											int ind = authorInterests.indexOf( actualInterest );
 											authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
 										}
 										yearWiseInterests.put( year, newInterestList );
-										if ( interestWeightMap.containsKey( interest ) )
+										if ( interestWeightMap.containsKey( actualInterest ) )
 										{
-											double w = interestWeightMap.get( interest );
-											interestWeightMap.remove( interest );
-											interestWeightMap.put( interest, w + 1.0 );
+											double w = interestWeightMap.get( actualInterest );
+											interestWeightMap.remove( actualInterest );
+											interestWeightMap.put( actualInterest, w + 1.0 );
 										}
 										else
-											interestWeightMap.put( interest, 1.0 );
+											interestWeightMap.put( actualInterest, 1.0 );
 									}
 
 								}
@@ -688,13 +792,13 @@ public class ExploreVisualization
 				authorInterestList.add( interestWeightMap );
 			}
 
-			Map<String, Object> finalMap = new HashMap<String, Object>();
+			Map<Interest, Object> finalMap = new HashMap<Interest, Object>();
 
-			double threshold = 3.0;
-			if ( authorList.size() > 1 )
-			{
-				threshold = 2.0;
-			}
+			double threshold = 0.0;
+			// if ( authorList.size() > 1 )
+			// {
+			// threshold = 0.0;
+			// }
 
 			List<Object[]> listObjects = new ArrayList<Object[]>();
 			for ( int i = 0; i < authorInterests.size(); i++ )
@@ -705,8 +809,8 @@ public class ExploreVisualization
 
 					for ( int j = 0; j < authorInterestList.size(); j++ )
 					{
-						Map<String, Double> inWei = authorInterestList.get( j );
-						List<String> in = new ArrayList<String>( inWei.keySet() );
+						Map<Interest, Double> inWei = authorInterestList.get( j );
+						List<Interest> in = new ArrayList<Interest>( inWei.keySet() );
 						List<Double> wei = new ArrayList<Double>( inWei.values() );
 
 						if ( in.contains( authorInterests.get( i ) ) )
@@ -718,27 +822,58 @@ public class ExploreVisualization
 							interestList.add( 0.0 );
 					}
 					finalMap.put( authorInterests.get( i ), interestList );
-					Object[] randArray = new Object[2];
-					randArray[0] = authorInterests.get( i );
+					Object[] randArray = new Object[3];
+					randArray[0] = authorInterests.get( i ).getTerm();
 					randArray[1] = interestList;
+					randArray[2] = authorInterests.get( i ).getId();
+					System.out.println( authorInterests.get( i ).getTerm() + " : " + authorInterests.get( i ).getId() );
 					listObjects.add( randArray );
 				}
-
 			}
 
 			visMap.put( "list", listObjects );
 		}
 		if ( type.equals( "conference" ) )
 		{
-			List<String> conferenceInterests = new ArrayList<String>();
+			// If there are no common publications!
+			if ( allTopics.size() == 0 )
+			{
+				for ( String id : idsList )
+				{
+					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
+					List<Event> events = eg.getEvents();
+					for ( Event e : events )
+					{
+						List<Publication> pubs = new ArrayList<Publication>( e.getPublications() );
+						for ( Publication p : pubs )
+						{
+							Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+							for ( PublicationTopic pubTopic : publicationTopics )
+							{
+								List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+								List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+								for ( int i = 0; i < topics.size(); i++ )
+								{
+									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.2 )
+									{
+										allTopics.add( topics.get( i ) );
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			List<Interest> conferenceInterests = new ArrayList<Interest>();
 			List<Double> conferenceInterestWeights = new ArrayList<Double>();
-			List<Map<String, Double>> conferenceInterestList = new ArrayList<Map<String, Double>>();
+			List<Map<Interest, Double>> conferenceInterestList = new ArrayList<Map<Interest, Double>>();
 			for ( String id : idsList )
 			{
 				EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
-				Map<String, List<String>> yearWiseInterests = new HashMap<String, List<String>>();
+				Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
-				Map<String, Double> interestWeightMap = new HashMap<String, Double>();
+				Map<Interest, Double> interestWeightMap = new HashMap<Interest, Double>();
 				List<Event> events = eg.getEvents();
 				for ( Event e : events )
 				{
@@ -754,7 +889,8 @@ public class ExploreVisualization
 
 							while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 							{
-								String interest = ( interestTerm.next().getTerm() );
+								Interest actualInterest = interestTerm.next();
+								String interest = ( actualInterest.getTerm() );
 								Double weight = interestTermWeight.next();
 
 								if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
@@ -778,81 +914,78 @@ public class ExploreVisualization
 									{
 
 										List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
-										List<List<String>> yWIVal = new ArrayList<List<String>>( yearWiseInterests.values() );
+										List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
 										if ( yWI.contains( year ) )
 										{
 											int index = yWI.indexOf( year );
-											if ( !yWIVal.get( index ).contains( interest ) )
+											if ( !yWIVal.get( index ).contains( actualInterest ) )
 											{
-												yWIVal.get( index ).add( interest );
-												if ( !conferenceInterests.contains( interest ) )
+												yWIVal.get( index ).add( actualInterest );
+												if ( !conferenceInterests.contains( actualInterest ) )
 												{
-													conferenceInterests.add( interest );
+													conferenceInterests.add( actualInterest );
 													conferenceInterestWeights.add( weight );
 												}
 												else
 												{
-													int ind = conferenceInterests.indexOf( interest );
+													int ind = conferenceInterests.indexOf( actualInterest );
 													conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
 												}
-												if ( interestWeightMap.containsKey( interest ) )
+												if ( interestWeightMap.containsKey( actualInterest ) )
 												{
-													double w = interestWeightMap.get( interest );
-													interestWeightMap.remove( interest );
-													interestWeightMap.put( interest, w + 1.0 );
+													double w = interestWeightMap.get( actualInterest );
+													interestWeightMap.remove( actualInterest );
+													interestWeightMap.put( actualInterest, w + 1.0 );
 												}
 												else
-													interestWeightMap.put( interest, 1.0 );
+													interestWeightMap.put( actualInterest, 1.0 );
 											}
 											else
 											{
-												int ind = conferenceInterests.indexOf( interest );
+												int ind = conferenceInterests.indexOf( actualInterest );
 												conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
 											}
 										}
 										else
 										{
-											List<String> newInterestList = new ArrayList<String>();
-											newInterestList.add( interest );
-											if ( !conferenceInterests.contains( interest ) )
+											List<Interest> newInterestList = new ArrayList<Interest>();
+											newInterestList.add( actualInterest );
+											if ( !conferenceInterests.contains( actualInterest ) )
 											{
-												conferenceInterests.add( interest );
+												conferenceInterests.add( actualInterest );
 												conferenceInterestWeights.add( weight );
 											}
 											else
 											{
-												int ind = conferenceInterests.indexOf( interest );
+												int ind = conferenceInterests.indexOf( actualInterest );
 												conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
 											}
 											yearWiseInterests.put( year, newInterestList );
-											if ( interestWeightMap.containsKey( interest ) )
+											if ( interestWeightMap.containsKey( actualInterest ) )
 											{
-												double w = interestWeightMap.get( interest );
-												interestWeightMap.remove( interest );
-												interestWeightMap.put( interest, w + 1.0 );
+												double w = interestWeightMap.get( actualInterest );
+												interestWeightMap.remove( actualInterest );
+												interestWeightMap.put( actualInterest, w + 1.0 );
 											}
 											else
-												interestWeightMap.put( interest, 1.0 );
+												interestWeightMap.put( actualInterest, 1.0 );
 										}
-
 									}
 								}
-
 							}
 						}
 					}
 				}
-
 				conferenceInterestList.add( interestWeightMap );
 			}
 
-			Map<String, Object> finalMap = new HashMap<String, Object>();
+			Map<Interest, Object> finalMap = new HashMap<Interest, Object>();
 
-			double threshold = 1.0;
-			if ( idsList.size() > 1 )
-			{
-				threshold = 3.0;
-			}
+			double threshold = 0.0;
+			// if ( idsList.size() > 1 )
+			// {
+			// threshold = 3.0;
+			// }
 
 			List<Object[]> listObjects = new ArrayList<Object[]>();
 			for ( int i = 0; i < conferenceInterests.size(); i++ )
@@ -863,8 +996,8 @@ public class ExploreVisualization
 
 					for ( int j = 0; j < conferenceInterestList.size(); j++ )
 					{
-						Map<String, Double> inWei = conferenceInterestList.get( j );
-						List<String> in = new ArrayList<String>( inWei.keySet() );
+						Map<Interest, Double> inWei = conferenceInterestList.get( j );
+						List<Interest> in = new ArrayList<Interest>( inWei.keySet() );
 						List<Double> wei = new ArrayList<Double>( inWei.values() );
 
 						if ( in.contains( conferenceInterests.get( i ) ) )
@@ -876,18 +1009,180 @@ public class ExploreVisualization
 							interestList.add( 0.0 );
 					}
 					finalMap.put( conferenceInterests.get( i ), interestList );
-					Object[] randArray = new Object[2];
-					randArray[0] = conferenceInterests.get( i );
+					Object[] randArray = new Object[3];
+					randArray[0] = conferenceInterests.get( i ).getTerm();
 					randArray[1] = interestList;
+					randArray[2] = conferenceInterests.get( i ).getId();
 					listObjects.add( randArray );
+				}
+			}
+			visMap.put( "list", listObjects );
+		}
+
+		if ( type.equals( "publication" ) )
+		{
+
+			List<String> publicationTopics = new ArrayList<String>();
+			List<Double> publicationTopicWeights = new ArrayList<Double>();
+			List<Map<String, Double>> publicationTopicList = new ArrayList<Map<String, Double>>();
+			for ( String id : idsList )
+			{
+				Map<String, List<String>> yearWiseInterests = new HashMap<String, List<String>>();
+				Publication p = persistenceStrategy.getPublicationDAO().getById( id );
+				Map<String, Double> topicWeightMap = new HashMap<String, Double>();
+
+				List<PublicationTopic> pubTopics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
+				for ( PublicationTopic pt : pubTopics )
+				{
+					Map<String, Double> termValues = pt.getTermValues();
+					List<String> terms = new ArrayList<String>( termValues.keySet() );
+					List<Double> weights = new ArrayList<Double>( termValues.values() );
+					for ( int i = 0; i < terms.size(); i++ )
+					{
+						if ( allTopics.contains( terms.get( i ) ) || allTopics.contains( terms.get( i ) + "s" ) )
+						{
+							Boolean validYear = true;
+							String year = p.getYear();
+							if ( startYear.equals( "0" ) || startYear.equals( "" ) )
+							{
+								validYear = true;
+							}
+							else
+							{
+								if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+								{
+									validYear = false;
+								}
+							}
+							if ( validYear )
+							{
+
+								List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
+								List<List<String>> yWIVal = new ArrayList<List<String>>( yearWiseInterests.values() );
+								if ( yWI.contains( year ) )
+								{
+									int index = yWI.indexOf( year );
+									if ( !yWIVal.get( index ).contains( terms.get( i ) ) )
+									{
+										yWIVal.get( index ).add( terms.get( i ) );
+										if ( !publicationTopics.contains( terms.get( i ) ) )
+										{
+											publicationTopics.add( terms.get( i ) );
+											publicationTopicWeights.add( weights.get( i ) );
+										}
+										else
+										{
+											int ind = publicationTopics.indexOf( terms.get( i ) );
+											publicationTopicWeights.set( ind, publicationTopicWeights.get( ind ) + weights.get( i ) );
+										}
+										if ( topicWeightMap.containsKey( terms.get( i ) ) )
+										{
+											double w = topicWeightMap.get( terms.get( i ) );
+											topicWeightMap.remove( terms.get( i ) );
+											topicWeightMap.put( terms.get( i ), w + 1.0 );
+										}
+										else
+											topicWeightMap.put( terms.get( i ), 1.0 );
+									}
+									else
+									{
+										int ind = publicationTopics.indexOf( terms.get( i ) );
+										publicationTopicWeights.set( ind, publicationTopicWeights.get( ind ) + weights.get( i ) );
+									}
+								}
+								else
+								{
+									List<String> newInterestList = new ArrayList<String>();
+									newInterestList.add( terms.get( i ) );
+									if ( !publicationTopics.contains( terms.get( i ) ) )
+									{
+										publicationTopics.add( terms.get( i ) );
+										publicationTopicWeights.add( weights.get( i ) );
+									}
+									else
+									{
+										int ind = publicationTopics.indexOf( terms.get( i ) );
+										publicationTopicWeights.set( ind, publicationTopicWeights.get( ind ) + weights.get( i ) );
+									}
+									yearWiseInterests.put( year, newInterestList );
+									if ( topicWeightMap.containsKey( terms.get( i ) ) )
+									{
+										double w = topicWeightMap.get( terms.get( i ) );
+										topicWeightMap.remove( terms.get( i ) );
+										topicWeightMap.put( terms.get( i ), w + 1.0 );
+									}
+									else
+										topicWeightMap.put( terms.get( i ), 1.0 );
+								}
+							}
+						}
+					}
+				}
+				publicationTopicList.add( topicWeightMap );
+			}
+
+			Map<String, Object> finalMap = new HashMap<String, Object>();
+
+			double threshold = 0.0;
+			if ( authorList.size() > 1 )
+			{
+				threshold = 0.0;
+			}
+
+			List<Object[]> listObjects = new ArrayList<Object[]>();
+			for ( int i = 0; i < publicationTopics.size(); i++ )
+			{
+				if ( publicationTopicWeights.get( i ) > threshold )
+				{
+					List<Double> interestList = new ArrayList<Double>();
+
+					for ( int j = 0; j < publicationTopicList.size(); j++ )
+					{
+						Map<String, Double> inWei = publicationTopicList.get( j );
+						List<String> in = new ArrayList<String>( inWei.keySet() );
+						List<Double> wei = new ArrayList<Double>( inWei.values() );
+
+						if ( in.contains( publicationTopics.get( i ) ) )
+						{
+							int index = in.indexOf( publicationTopics.get( i ) );
+							interestList.add( wei.get( index ) );
+						}
+						else
+							interestList.add( 0.0 );
+					}
+					finalMap.put( publicationTopics.get( i ), interestList );
+
+					System.out.println( publicationTopics.get( i ) );
+
+					Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( publicationTopics.get( i ) );
+					if ( interest != null )
+					{
+						System.out.println( "1" );
+						Object[] randArray = new Object[3];
+						randArray[0] = interest.getTerm();
+						randArray[1] = interestList;
+						randArray[2] = interest.getId();
+						listObjects.add( randArray );
+					}
+					else
+					{
+						interest = persistenceStrategy.getInterestDAO().getInterestByTerm( publicationTopics.get( i ).substring( 0, publicationTopics.get( i ).length() - 1 ) );
+						if ( interest != null )
+						{
+							System.out.println( "2" );
+							Object[] randArray = new Object[3];
+							randArray[0] = interest.getTerm();
+							randArray[1] = interestList;
+							randArray[2] = interest.getId();
+							listObjects.add( randArray );
+						}
+					}
 				}
 
 			}
 
 			visMap.put( "list", listObjects );
 
-			// System.out.println( "time lapse: " + ( System.currentTimeMillis()
-			// - startTime ) / 1000 );
 		}
 		return visMap;
 	}
@@ -897,7 +1192,7 @@ public class ExploreVisualization
 		// System.out.println( "visType: " + visType );
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		if ( visType.equals( "researchers" ) )
-			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( authorList, publications ) );
+			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( authorList, publications, type ) );
 
 		if ( visType.equals( "conferences" ) )
 		{
@@ -905,85 +1200,7 @@ public class ExploreVisualization
 				visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, false ) );
 
 			if ( type.equals( "conference" ) )
-			{
 				visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, false ) );
-				// {
-				// Boolean valid = false;
-				// if ( startYear.equals( "" ) || startYear.equals( "0" ) )
-				// {
-				// valid = true;
-				// }
-				// List<Object> listEvents = new ArrayList<Object>();
-				// for ( int i = 0; i < idsList.size(); i++ )
-				// {
-				// @SuppressWarnings( "unchecked" )
-				// List<Object> innerList = (List<Object>)
-				// eventFeature.getEventMining().fetchEventGroupData(
-				// idsList.get( i ), null, null ).get( "events" );
-				// for ( int j = 0; j < innerList.size(); j++ )
-				// {
-				// @SuppressWarnings( "unchecked" )
-				// Map<String, Object> innerListMap = (Map<String, Object>)
-				// innerList.get( j );
-				//
-				// if ( !startYear.equals( "" ) && !startYear.equals( "0" ) )
-				// if ( Integer.parseInt( startYear ) <= Integer.parseInt(
-				// innerListMap.get( "year" ).toString() ) && Integer.parseInt(
-				// endYear ) >= Integer.parseInt( innerListMap.get( "year"
-				// ).toString() ) )
-				// valid = true;
-				// else
-				// valid = false;
-				//
-				// if ( !filteredTopic.isEmpty() && valid )
-				// {
-				// Event e = persistenceStrategy.getEventDAO().getById(
-				// innerListMap.get( "id" ).toString() );
-				//
-				// System.out.println( "PUBLICATIONS IN CONFERNECSE: " +
-				// publications.size() );
-				// Set<EventInterestProfile> eips =
-				// e.getEventInterestProfiles();
-				// List<String> interestStrings = new ArrayList<String>();
-				//
-				// for ( EventInterestProfile eip : eips )
-				// {
-				// Set<EventInterest> eventInterests = eip.getEventInterests();
-				// for ( EventInterest ei : eventInterests )
-				// {
-				// Map<Interest, Double> termWeights = ei.getTermWeights();
-				// List<Interest> interests = new ArrayList<Interest>(
-				// termWeights.keySet() );
-				// // List<Double> weights = new
-				// // ArrayList<Double>(termWeights.values());
-				// for ( Interest interest : interests )
-				// {
-				// if ( !interestStrings.contains( interest.getTerm() ) )
-				// interestStrings.add( interest.getTerm() );
-				// }
-				//
-				// }
-				//
-				// }
-				// // System.out.println( interestStrings );
-				//
-				// if ( interestStrings.containsAll( filteredTopic ) )
-				// {
-				// valid = true;
-				// }
-				// else
-				// valid = false;
-				//
-				// }
-				//
-				// if ( valid )
-				// listEvents.add( innerList.get( j ) );
-				// }
-				// }
-				// visMap.put( "events", listEvents );
-				//
-				// }
-			}
 		}
 		if ( visType.equals( "publications" ) )
 		{
@@ -1021,12 +1238,12 @@ public class ExploreVisualization
 	}
 
 	@SuppressWarnings( "unchecked" )
-	public Map<String, Object> visualizeGroup( String visType, List<Author> authorList, Set<Publication> publications )
+	public Map<String, Object> visualizeGroup( String type, String visType, List<Author> authorList, Set<Publication> publications )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		if ( visType.equals( "researchers" ) )
 		{
-			Map<String, Object> resultMap = clusteringService.clusterAuthors( "xmeans", authorList, publications );
+			Map<String, Object> resultMap = clusteringService.clusterAuthors( "xmeans", authorList, publications, type );
 			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) resultMap.get( "clusterTerms" );
 			Map<String, List<String>> nodeTerms = (Map<String, List<String>>) resultMap.get( "nodeTerms" );
 			Map<String, Integer> mapClusterAuthor = (Map<String, Integer>) resultMap.get( "clusterMap" );
@@ -1246,7 +1463,7 @@ public class ExploreVisualization
 
 					Set<Publication> authorPublications = authorList.get( i ).getPublications();
 					List<Author> publicationAuthors = new ArrayList<Author>();
-					List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 					for ( Publication p : authorPublications )
 					{
 						Boolean flag = false;
@@ -1271,17 +1488,11 @@ public class ExploreVisualization
 							{
 								if ( !publicationAuthors.contains( a ) && !a.equals( authorList.get( i ) ) )
 								{
-									List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-									Map<String, Object> name = new HashMap<String, Object>();
-									Map<String, Object> id = new HashMap<String, Object>();
-									Map<String, Object> isAdded = new HashMap<String, Object>();
-									isAdded.put( "isAdded", a.isAdded() );
 									publicationAuthors.add( a );
-									name.put( "name", a.getName() );
-									id.put( "id", a.getId() );
-									items.add( name );
-									items.add( id );
-									items.add( isAdded );
+									Map<String, Object> items = new HashMap<String, Object>();
+									items.put( "name", a.getName() );
+									items.put( "id", a.getId() );
+									items.put( "isAdded", a.isAdded() );
 									listItems.add( items );
 								}
 							}
@@ -1305,7 +1516,7 @@ public class ExploreVisualization
 							List<Author> previousAuthors = new ArrayList<Author>( mapAuthors.keySet() );
 							List<List<Author>> previousAuthorLists = new ArrayList<List<Author>>( mapAuthors.values() );
 							List<Author> previousAuthorCoAuthors = previousAuthorLists.get( k );
-							List<List<Map<String, Object>>> tempListItems = new ArrayList<List<Map<String, Object>>>();
+							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
 							String label = "";
 
 							Author previousAuthor = previousAuthors.get( k );
@@ -1319,17 +1530,11 @@ public class ExploreVisualization
 								{
 									if ( publicationAuthors.contains( a ) )
 									{
-										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-										Map<String, Object> name = new HashMap<String, Object>();
-										Map<String, Object> id = new HashMap<String, Object>();
-										Map<String, Object> isAdded = new HashMap<String, Object>();
-										isAdded.put( "isAdded", a.isAdded() );
 										temp.add( a );
-										name.put( "name", a.getName() );
-										id.put( "id", a.getId() );
-										items.add( name );
-										items.add( id );
-										items.add( isAdded );
+										Map<String, Object> items = new HashMap<String, Object>();
+										items.put( "name", a.getName() );
+										items.put( "id", a.getId() );
+										items.put( "isAdded", a.isAdded() );
 										tempListItems.add( items );
 									}
 								}
@@ -1346,16 +1551,14 @@ public class ExploreVisualization
 								listOfMaps.add( mapValuesForPairs );
 							}
 						}
-
 					}
-
 				}
 				// common to all
 				if ( authorList.size() > 2 )
 				{
 					List<Author> allAuthors = new ArrayList<Author>();
 					List<Integer> count = new ArrayList<Integer>();
-					List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 
 					for ( int i = 0; i < authorList.size(); i++ )
 					{
@@ -1398,27 +1601,17 @@ public class ExploreVisualization
 						{
 							if ( !allAuthors.contains( allCoAuthors.get( k ) ) )
 							{
-
-								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-								Map<String, Object> name = new HashMap<String, Object>();
-								Map<String, Object> id = new HashMap<String, Object>();
-								Map<String, Object> isAdded = new HashMap<String, Object>();
-								isAdded.put( "isAdded", allCoAuthors.get( k ).isAdded() );
 								allAuthors.add( allCoAuthors.get( k ) );
-								name.put( "name", allCoAuthors.get( k ).getName() );
-								id.put( "id", allCoAuthors.get( k ).getId() );
-								items.add( name );
-								items.add( id );
-								items.add( isAdded );
-								combinedlistItems.add( items );
-
+								Map<String, Object> items = new HashMap<String, Object>();
+								items.put( "name", allCoAuthors.get( k ).getName() );
+								items.put( "id", allCoAuthors.get( k ).getId() );
+								items.put( "isAdded", allCoAuthors.get( k ).isAdded() );
+								combinedListItems.add( items );
 								count.add( 0 );
-
 							}
 							else
 								count.set( allAuthors.indexOf( allCoAuthors.get( k ) ), count.get( allAuthors.indexOf( allCoAuthors.get( k ) ) ) + 1 );
 						}
-
 					}
 
 					for ( int i = 0; i < allAuthors.size(); i++ )
@@ -1427,7 +1620,7 @@ public class ExploreVisualization
 						{
 							count.remove( i );
 							allAuthors.remove( i );
-							combinedlistItems.remove( i );
+							combinedListItems.remove( i );
 							i--;
 						}
 					}
@@ -1441,7 +1634,7 @@ public class ExploreVisualization
 
 					mapValuesForAll.put( "sets", sets );
 					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedlistItems );
+					mapValuesForAll.put( "list", combinedListItems );
 
 					String label = "";
 					for ( int i = 0; i < authorList.size(); i++ )
@@ -1480,12 +1673,8 @@ public class ExploreVisualization
 							}
 						}
 					}
-					// System.out.println( "size of pubs: " +
-					// eventGroupPubs.size() );
-					// Set<Publication> authorPublications = authorList.get( i
-					// ).getPublications();
 					List<Author> publicationAuthors = new ArrayList<Author>();
-					List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 					for ( Publication p : eventGroupPubs )
 					{
 						Boolean flag = false;
@@ -1510,18 +1699,11 @@ public class ExploreVisualization
 							{
 								if ( !publicationAuthors.contains( a ) )
 								{
-
-									List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-									Map<String, Object> name = new HashMap<String, Object>();
-									Map<String, Object> id = new HashMap<String, Object>();
-									Map<String, Object> isAdded = new HashMap<String, Object>();
-									isAdded.put( "isAdded", a.isAdded() );
 									publicationAuthors.add( a );
-									name.put( "name", a.getName() );
-									id.put( "id", a.getId() );
-									items.add( name );
-									items.add( id );
-									items.add( isAdded );
+									Map<String, Object> items = new HashMap<String, Object>();
+									items.put( "name", a.getName() );
+									items.put( "id", a.getId() );
+									items.put( "isAdded", a.isAdded() );
 									listItems.add( items );
 								}
 							}
@@ -1547,7 +1729,7 @@ public class ExploreVisualization
 							List<List<Author>> previousAuthorLists = new ArrayList<List<Author>>( mapAuthors.values() );
 							List<Author> previousAuthorCoAuthors = previousAuthorLists.get( k );
 							EventGroup previousEventGroup = previousEventGroups.get( k );
-							List<List<Map<String, Object>>> tempListItems = new ArrayList<List<Map<String, Object>>>();
+							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
 
 							String label = "";
 							// System.out.println( previousEventGroup.getName()
@@ -1562,27 +1744,17 @@ public class ExploreVisualization
 								{
 									if ( publicationAuthors.contains( a ) )
 									{
-
-										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-										Map<String, Object> name = new HashMap<String, Object>();
-										Map<String, Object> id = new HashMap<String, Object>();
-										Map<String, Object> isAdded = new HashMap<String, Object>();
-										isAdded.put( "isAdded", a.isAdded() );
 										temp.add( a );
-										name.put( "name", a.getName() );
-										id.put( "id", a.getId() );
-										items.add( name );
-										items.add( id );
-										items.add( isAdded );
+										Map<String, Object> items = new HashMap<String, Object>();
+										items.put( "name", a.getName() );
+										items.put( "id", a.getId() );
+										items.put( "isAdded", a.isAdded() );
 										tempListItems.add( items );
 									}
 								}
 								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
 								List<Integer> sets = new ArrayList<Integer>();
 								sets.add( i );
-								// System.out.println( "index: " +
-								// eventGroupTempList.indexOf(
-								// previousEventGroup ) );
 
 								label = label + idsList.get( i ) + "-" + previousEventGroup.getNotation();
 								sets.add( eventGroupTempList.indexOf( previousEventGroup ) ); // to-do
@@ -1605,7 +1777,7 @@ public class ExploreVisualization
 					// System.out.println( "coming here" );
 					List<Author> allAuthors = new ArrayList<Author>();
 					List<Integer> count = new ArrayList<Integer>();
-					List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
 						List<Author> allCoAuthors = new ArrayList<Author>();
@@ -1663,19 +1835,12 @@ public class ExploreVisualization
 						{
 							if ( !allAuthors.contains( allCoAuthors.get( k ) ) )
 							{
-								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-								Map<String, Object> name = new HashMap<String, Object>();
-								Map<String, Object> id = new HashMap<String, Object>();
-								Map<String, Object> isAdded = new HashMap<String, Object>();
-								isAdded.put( "isAdded", allCoAuthors.get( k ).isAdded() );
 								allAuthors.add( allCoAuthors.get( k ) );
-								name.put( "name", allCoAuthors.get( k ).getName() );
-								id.put( "id", allCoAuthors.get( k ).getId() );
-								items.add( name );
-								items.add( id );
-								items.add( isAdded );
-								combinedlistItems.add( items );
-
+								Map<String, Object> items = new HashMap<String, Object>();
+								items.put( "name", allCoAuthors.get( k ).getName() );
+								items.put( "id", allCoAuthors.get( k ).getId() );
+								items.put( "isAdded", allCoAuthors.get( k ).isAdded() );
+								combinedListItems.add( items );
 								count.add( 0 );
 							}
 							else
@@ -1690,7 +1855,7 @@ public class ExploreVisualization
 						{
 							count.remove( i );
 							allAuthors.remove( i );
-							combinedlistItems.remove( i );
+							combinedListItems.remove( i );
 							i--;
 						}
 					}
@@ -1704,7 +1869,7 @@ public class ExploreVisualization
 
 					mapValuesForAll.put( "sets", sets );
 					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedlistItems );
+					mapValuesForAll.put( "list", combinedListItems );
 
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
@@ -1731,7 +1896,7 @@ public class ExploreVisualization
 					Publication p = persistenceStrategy.getPublicationDAO().getById( idsList.get( i ) );
 					publicationTempList.add( p );
 					List<Author> publicationAuthors = new ArrayList<Author>();
-					List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 					Boolean flag = false;
 					if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
 					{
@@ -1754,18 +1919,11 @@ public class ExploreVisualization
 						{
 							if ( !publicationAuthors.contains( a ) )
 							{
-
-								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-								Map<String, Object> name = new HashMap<String, Object>();
-								Map<String, Object> id = new HashMap<String, Object>();
-								Map<String, Object> isAdded = new HashMap<String, Object>();
-								isAdded.put( "isAdded", a.isAdded() );
 								publicationAuthors.add( a );
-								name.put( "name", a.getName() );
-								id.put( "id", a.getId() );
-								items.add( name );
-								items.add( id );
-								items.add( isAdded );
+								Map<String, Object> items = new HashMap<String, Object>();
+								items.put( "name", a.getName() );
+								items.put( "id", a.getId() );
+								items.put( "isAdded", a.isAdded() );
 								listItems.add( items );
 							}
 						}
@@ -1791,7 +1949,7 @@ public class ExploreVisualization
 							List<List<Author>> previousAuthorLists = new ArrayList<List<Author>>( mapAuthors.values() );
 							List<Author> previousAuthorCoAuthors = previousAuthorLists.get( k );
 							Publication previousPublication = previousPublications.get( k );
-							List<List<Map<String, Object>>> tempListItems = new ArrayList<List<Map<String, Object>>>();
+							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
 
 							String label = "";
 
@@ -1806,17 +1964,11 @@ public class ExploreVisualization
 								{
 									if ( publicationAuthors.contains( a ) )
 									{
-										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-										Map<String, Object> name = new HashMap<String, Object>();
-										Map<String, Object> id = new HashMap<String, Object>();
-										Map<String, Object> isAdded = new HashMap<String, Object>();
-										isAdded.put( "isAdded", a.isAdded() );
 										temp.add( a );
-										name.put( "name", a.getName() );
-										id.put( "id", a.getId() );
-										items.add( name );
-										items.add( id );
-										items.add( isAdded );
+										Map<String, Object> items = new HashMap<String, Object>();
+										items.put( "name", a.getName() );
+										items.put( "id", a.getId() );
+										items.put( "isAdded", a.isAdded() );
 										tempListItems.add( items );
 									}
 								}
@@ -1843,7 +1995,7 @@ public class ExploreVisualization
 					// System.out.println( "coming here" );
 					List<Author> allAuthors = new ArrayList<Author>();
 					List<Integer> count = new ArrayList<Integer>();
-					List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
 						List<Author> allCoAuthors = new ArrayList<Author>();
@@ -1884,19 +2036,12 @@ public class ExploreVisualization
 						{
 							if ( !allAuthors.contains( allCoAuthors.get( k ) ) )
 							{
-								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-								Map<String, Object> name = new HashMap<String, Object>();
-								Map<String, Object> id = new HashMap<String, Object>();
-								Map<String, Object> isAdded = new HashMap<String, Object>();
-								isAdded.put( "isAdded", allCoAuthors.get( k ).isAdded() );
 								allAuthors.add( allCoAuthors.get( k ) );
-								name.put( "name", allCoAuthors.get( k ).getName() );
-								id.put( "id", allCoAuthors.get( k ).getId() );
-								items.add( name );
-								items.add( id );
-								items.add( isAdded );
-								combinedlistItems.add( items );
-
+								Map<String, Object> items = new HashMap<String, Object>();
+								items.put( "name", allCoAuthors.get( k ).getName() );
+								items.put( "id", allCoAuthors.get( k ).getId() );
+								items.put( "isAdded", allCoAuthors.get( k ).isAdded() );
+								combinedListItems.add( items );
 								count.add( 0 );
 							}
 							else
@@ -1911,7 +2056,7 @@ public class ExploreVisualization
 						{
 							count.remove( i );
 							allAuthors.remove( i );
-							combinedlistItems.remove( i );
+							combinedListItems.remove( i );
 							i--;
 						}
 					}
@@ -1925,7 +2070,7 @@ public class ExploreVisualization
 
 					mapValuesForAll.put( "sets", sets );
 					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedlistItems );
+					mapValuesForAll.put( "list", combinedListItems );
 
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
@@ -1943,10 +2088,6 @@ public class ExploreVisualization
 		if ( visType.equals( "conferences" ) )
 		{
 			Map<Author, List<EventGroup>> mapConferences = new HashMap<Author, List<EventGroup>>();
-			// List<List<Author>> combinedListCommonAuthors = new
-			// ArrayList<List<Author>>();
-			// List<List<Integer>> combinedListIndexes = new
-			// ArrayList<List<Integer>>();
 
 			for ( int i = 0; i < authorList.size(); i++ )
 			{
@@ -1956,7 +2097,7 @@ public class ExploreVisualization
 
 				Set<Publication> authorPublications = authorList.get( i ).getPublications();
 				List<EventGroup> authorEvents = new ArrayList<EventGroup>();
-				List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+				List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 				for ( Publication p : authorPublications )
 				{
 					Boolean flag = false;
@@ -1985,23 +2126,15 @@ public class ExploreVisualization
 								EventGroup eventGroup = p.getEvent().getEventGroup();
 								if ( !authorEvents.contains( eventGroup ) )
 								{
-									List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-									Map<String, Object> name = new HashMap<String, Object>();
-									Map<String, Object> id = new HashMap<String, Object>();
-									Map<String, Object> isAdded = new HashMap<String, Object>();
-									isAdded.put( "isAdded", eventGroup.isAdded() );
 									authorEvents.add( eventGroup );
-									name.put( "name", eventGroup.getName() );
-									id.put( "id", eventGroup.getId() );
-									items.add( name );
-									items.add( id );
-									items.add( isAdded );
+									Map<String, Object> items = new HashMap<String, Object>();
+									items.put( "name", eventGroup.getName() );
+									items.put( "id", eventGroup.getId() );
+									items.put( "isAdded", eventGroup.isAdded() );
 									listItems.add( items );
-
 								}
 							}
 						}
-
 					}
 				}
 				mapConferences.put( authorList.get( i ), authorEvents );
@@ -2023,7 +2156,7 @@ public class ExploreVisualization
 						List<List<EventGroup>> previousAuthorLists = new ArrayList<List<EventGroup>>( mapConferences.values() );
 						List<EventGroup> previousAuthorEvents = previousAuthorLists.get( k );
 						Author previousAuthor = previousAuthors.get( k );
-						List<List<Map<String, Object>>> tempListItems = new ArrayList<List<Map<String, Object>>>();
+						List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
 						String label = "";
 						if ( !previousAuthor.equals( authorList.get( i ) ) )
 						{
@@ -2035,17 +2168,11 @@ public class ExploreVisualization
 							{
 								if ( authorEvents.contains( eg ) )
 								{
-									List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-									Map<String, Object> name = new HashMap<String, Object>();
-									Map<String, Object> id = new HashMap<String, Object>();
-									Map<String, Object> isAdded = new HashMap<String, Object>();
-									isAdded.put( "isAdded", eg.isAdded() );
 									temp.add( eg );
-									name.put( "name", eg.getName() );
-									id.put( "id", eg.getId() );
-									items.add( name );
-									items.add( id );
-									items.add( isAdded );
+									Map<String, Object> items = new HashMap<String, Object>();
+									items.put( "name", eg.getName() );
+									items.put( "id", eg.getId() );
+									items.put( "isAdded", eg.isAdded() );
 									tempListItems.add( items );
 								}
 							}
@@ -2069,7 +2196,7 @@ public class ExploreVisualization
 			{
 				List<EventGroup> allEventGroups = new ArrayList<EventGroup>();
 				List<Integer> count = new ArrayList<Integer>();
-				List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+				List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 
 				for ( int i = 0; i < authorList.size(); i++ )
 				{
@@ -2112,19 +2239,12 @@ public class ExploreVisualization
 					{
 						if ( !allEventGroups.contains( authorEventGroups.get( k ) ) )
 						{
-							List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-							Map<String, Object> name = new HashMap<String, Object>();
-							Map<String, Object> id = new HashMap<String, Object>();
-							Map<String, Object> isAdded = new HashMap<String, Object>();
-							isAdded.put( "isAdded", authorEventGroups.get( k ).isAdded() );
 							allEventGroups.add( authorEventGroups.get( k ) );
-							name.put( "name", authorEventGroups.get( k ).getName() );
-							id.put( "id", authorEventGroups.get( k ).getId() );
-							items.add( name );
-							items.add( id );
-							items.add( isAdded );
-							combinedlistItems.add( items );
-
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", authorEventGroups.get( k ).getName() );
+							items.put( "id", authorEventGroups.get( k ).getId() );
+							items.put( "isAdded", authorEventGroups.get( k ).isAdded() );
+							combinedListItems.add( items );
 							count.add( 0 );
 
 						}
@@ -2140,7 +2260,7 @@ public class ExploreVisualization
 					{
 						count.remove( i );
 						allEventGroups.remove( i );
-						combinedlistItems.remove( i );
+						combinedListItems.remove( i );
 						i--;
 					}
 				}
@@ -2154,7 +2274,7 @@ public class ExploreVisualization
 
 				mapValuesForAll.put( "sets", sets );
 				mapValuesForAll.put( "size", count.size() );
-				mapValuesForAll.put( "list", combinedlistItems );
+				mapValuesForAll.put( "list", combinedListItems );
 
 				String label = "";
 				for ( int i = 0; i < authorList.size(); i++ )
@@ -2171,10 +2291,6 @@ public class ExploreVisualization
 		if ( visType.equals( "publications" ) )
 		{
 			Map<Author, List<Publication>> mapPublications = new HashMap<Author, List<Publication>>();
-			// List<List<Author>> combinedListCommonAuthors = new
-			// ArrayList<List<Author>>();
-			// List<List<Integer>> combinedListIndexes = new
-			// ArrayList<List<Integer>>();
 
 			for ( int i = 0; i < authorList.size(); i++ )
 			{
@@ -2184,7 +2300,7 @@ public class ExploreVisualization
 
 				Set<Publication> authorPublications = authorList.get( i ).getPublications();
 				List<Publication> allPublications = new ArrayList<Publication>();
-				List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+				List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 
 				for ( Publication p : authorPublications )
 				{
@@ -2208,15 +2324,10 @@ public class ExploreVisualization
 					{
 						if ( !allPublications.contains( p ) )
 						{
-							List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-							Map<String, Object> name = new HashMap<String, Object>();
-							Map<String, Object> id = new HashMap<String, Object>();
-
 							allPublications.add( p );
-							name.put( "name", p.getTitle() );
-							id.put( "id", p.getId() );
-							items.add( name );
-							items.add( id );
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", p.getTitle() );
+							items.put( "id", p.getId() );
 							listItems.add( items );
 						}
 					}
@@ -2240,7 +2351,7 @@ public class ExploreVisualization
 						List<List<Publication>> previousAuthorLists = new ArrayList<List<Publication>>( mapPublications.values() );
 						List<Publication> previousAuthorPublications = previousAuthorLists.get( k );
 						Author previousAuthor = previousAuthors.get( k );
-						List<List<Map<String, Object>>> tempListItems = new ArrayList<List<Map<String, Object>>>();
+						List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
 						String label = "";
 
 						if ( !previousAuthor.equals( authorList.get( i ) ) )
@@ -2252,18 +2363,11 @@ public class ExploreVisualization
 							{
 								if ( allPublications.contains( p ) )
 								{
-									List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-									Map<String, Object> name = new HashMap<String, Object>();
-									Map<String, Object> id = new HashMap<String, Object>();
-
 									temp.add( p );
-									name.put( "name", p.getTitle() );
-									id.put( "id", p.getId() );
-									items.add( name );
-									items.add( id );
+									Map<String, Object> items = new HashMap<String, Object>();
+									items.put( "name", p.getTitle() );
+									items.put( "id", p.getId() );
 									tempListItems.add( items );
-
-									temp.add( p );
 								}
 							}
 
@@ -2286,7 +2390,7 @@ public class ExploreVisualization
 			{
 				List<Publication> allPublications = new ArrayList<Publication>();
 				List<Integer> count = new ArrayList<Integer>();
-				List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+				List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 
 				for ( int i = 0; i < authorList.size(); i++ )
 				{
@@ -2314,16 +2418,11 @@ public class ExploreVisualization
 
 							if ( !allPublications.contains( authorPublications.get( k ) ) )
 							{
-								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-								Map<String, Object> name = new HashMap<String, Object>();
-								Map<String, Object> id = new HashMap<String, Object>();
 								allPublications.add( authorPublications.get( k ) );
-								name.put( "name", authorPublications.get( k ).getTitle() );
-								id.put( "id", authorPublications.get( k ).getId() );
-								items.add( name );
-								items.add( id );
-								combinedlistItems.add( items );
-
+								Map<String, Object> items = new HashMap<String, Object>();
+								items.put( "name", authorPublications.get( k ).getTitle() );
+								items.put( "id", authorPublications.get( k ).getId() );
+								combinedListItems.add( items );
 								count.add( 0 );
 
 							}
@@ -2340,7 +2439,7 @@ public class ExploreVisualization
 					{
 						count.remove( i );
 						allPublications.remove( i );
-						combinedlistItems.remove( i );
+						combinedListItems.remove( i );
 						i--;
 					}
 				}
@@ -2354,7 +2453,7 @@ public class ExploreVisualization
 
 				mapValuesForAll.put( "sets", sets );
 				mapValuesForAll.put( "size", count.size() );
-				mapValuesForAll.put( "list", combinedlistItems );
+				mapValuesForAll.put( "list", combinedListItems );
 
 				String label = "";
 				for ( int i = 0; i < authorList.size(); i++ )
@@ -2394,13 +2493,7 @@ public class ExploreVisualization
 							// termWeights.values() );
 							for ( int j = 0; j < termWeights.size(); j++ )
 							{
-								if ( !allAuthorInterests.contains( interests.get( j ).getTerm() ) ) // &&
-																									// weights.get(
-																									// j
-																									// )
-																									// >
-																									// 0.5
-																									// )
+								if ( !allAuthorInterests.contains( interests.get( j ).getTerm() ) )
 								{
 									allAuthorInterests.add( interests.get( j ).getTerm() );
 									allAuthorInterestIds.add( interests.get( j ).getId() );
@@ -2414,7 +2507,7 @@ public class ExploreVisualization
 					Set<Publication> authorPublications = authorList.get( i ).getPublications();
 					List<String> interestTopicNames = new ArrayList<String>();
 					List<String> interestTopicIds = new ArrayList<String>();
-					List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 					for ( Publication p : authorPublications )
 					{
 						Boolean flag = false;
@@ -2438,13 +2531,8 @@ public class ExploreVisualization
 							List<PublicationTopic> topics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
 							for ( PublicationTopic pt : topics )
 							{
-								// System.out.println( "pt term string: " +
-								// pt.getTermString() );
-								// System.out.println( "pt id" + pt.getId() );
 								Map<String, Double> termValues = pt.getTermValues();
 								List<String> terms = new ArrayList<String>( termValues.keySet() );
-								// List<Double> weights = new ArrayList<Double>(
-								// termValues.values() );
 								for ( int k = 0; k < terms.size(); k++ )
 								{
 									if ( !interestTopicNames.contains( terms.get( k ) ) )// &&
@@ -2455,14 +2543,9 @@ public class ExploreVisualization
 											int pos = allAuthorInterests.indexOf( terms.get( k ) );
 											interestTopicIds.add( allAuthorInterestIds.get( pos ) );
 
-											List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-											Map<String, Object> name = new HashMap<String, Object>();
-											Map<String, Object> id = new HashMap<String, Object>();
-
-											name.put( "name", terms.get( k ) );
-											id.put( "id", allAuthorInterestIds.get( pos ) );
-											items.add( name );
-											items.add( id );
+											Map<String, Object> items = new HashMap<String, Object>();
+											items.put( "name", terms.get( k ) );
+											items.put( "id", allAuthorInterestIds.get( pos ) );
 											listItems.add( items );
 										}
 									}
@@ -2474,14 +2557,9 @@ public class ExploreVisualization
 											int pos = allAuthorInterests.indexOf( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 											interestTopicIds.add( allAuthorInterestIds.get( pos ) );
 
-											List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-											Map<String, Object> name = new HashMap<String, Object>();
-											Map<String, Object> id = new HashMap<String, Object>();
-
-											name.put( "name", terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
-											id.put( "id", allAuthorInterestIds.get( pos ) );
-											items.add( name );
-											items.add( id );
+											Map<String, Object> items = new HashMap<String, Object>();
+											items.put( "name", terms.get( k ) );
+											items.put( "id", allAuthorInterestIds.get( pos ) );
 											listItems.add( items );
 										}
 									}
@@ -2509,13 +2587,11 @@ public class ExploreVisualization
 							List<List<String>> previousAuthorLists = new ArrayList<List<String>>( mapTopics.values() );
 							List<String> previousAuthorTopics = previousAuthorLists.get( k );
 							Author previousAuthor = previousAuthors.get( k );
-							List<List<Map<String, Object>>> tempListItems = new ArrayList<List<Map<String, Object>>>();
+							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
 							String label = "";
 
 							if ( !previousAuthor.equals( authorList.get( i ) ) )
 							{
-								// List<PublicationTopic> temp = new
-								// ArrayList<PublicationTopic>();
 								List<String> tempNames = new ArrayList<String>();
 
 								// find common topics
@@ -2526,16 +2602,10 @@ public class ExploreVisualization
 										tempNames.add( pat );
 										int pos = interestTopicNames.indexOf( pat );
 
-										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-										Map<String, Object> name = new HashMap<String, Object>();
-										Map<String, Object> id = new HashMap<String, Object>();
-
-										name.put( "name", pat );
-										id.put( "id", interestTopicIds.get( pos ) );
-										items.add( name );
-										items.add( id );
+										Map<String, Object> items = new HashMap<String, Object>();
+										items.put( "name", pat );
+										items.put( "id", interestTopicIds.get( pos ) );
 										tempListItems.add( items );
-
 									}
 								}
 
@@ -2559,7 +2629,7 @@ public class ExploreVisualization
 					List<String> allInterests = new ArrayList<String>();
 					// List<String> allInterestIds = new ArrayList<String>();
 					List<Integer> count = new ArrayList<Integer>();
-					List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 
 					for ( int i = 0; i < authorList.size(); i++ )
 					{
@@ -2577,13 +2647,7 @@ public class ExploreVisualization
 								// termWeights.values() );
 								for ( int j = 0; j < termWeights.size(); j++ )
 								{
-									if ( !allAuthorInterests.contains( interests.get( j ).getTerm() ) ) // &&
-																										// weights.get(
-																										// j
-																										// )
-																										// >
-																										// 0.5
-																										// )
+									if ( !allAuthorInterests.contains( interests.get( j ).getTerm() ) )
 									{
 										allAuthorInterests.add( interests.get( j ).getTerm() );
 										allAuthorInterestIds.add( interests.get( j ).getId() );
@@ -2592,13 +2656,10 @@ public class ExploreVisualization
 							}
 						}
 
-						// System.out.println( "all interests size: " +
-						// allAuthorInterests.size() );
-
 						Set<Publication> authorPublications = authorList.get( i ).getPublications();
 						List<String> interestTopicNames = new ArrayList<String>();
 						List<String> interestTopicIds = new ArrayList<String>();
-						List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+						List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 						for ( Publication p : authorPublications )
 						{
 							Boolean flag = false;
@@ -2622,15 +2683,8 @@ public class ExploreVisualization
 								List<PublicationTopic> topics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
 								for ( PublicationTopic pt : topics )
 								{
-									// System.out.println( "pt term string: " +
-									// pt.getTermString() );
-									// System.out.println( "pt id" + pt.getId()
-									// );
 									Map<String, Double> termValues = pt.getTermValues();
 									List<String> terms = new ArrayList<String>( termValues.keySet() );
-									// List<Double> weights = new
-									// ArrayList<Double>(
-									// termValues.values() );
 									for ( int k = 0; k < terms.size(); k++ )
 									{
 										if ( !interestTopicNames.contains( terms.get( k ) ) )// &&
@@ -2641,14 +2695,9 @@ public class ExploreVisualization
 												int pos = allAuthorInterests.indexOf( terms.get( k ) );
 												interestTopicIds.add( allAuthorInterestIds.get( pos ) );
 
-												List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-												Map<String, Object> name = new HashMap<String, Object>();
-												Map<String, Object> id = new HashMap<String, Object>();
-
-												name.put( "name", terms.get( k ) );
-												id.put( "id", allAuthorInterestIds.get( pos ) );
-												items.add( name );
-												items.add( id );
+												Map<String, Object> items = new HashMap<String, Object>();
+												items.put( "name", terms.get( k ) );
+												items.put( "id", allAuthorInterestIds.get( pos ) );
 												listItems.add( items );
 											}
 										}
@@ -2660,14 +2709,9 @@ public class ExploreVisualization
 												int pos = allAuthorInterests.indexOf( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 												interestTopicIds.add( allAuthorInterestIds.get( pos ) );
 
-												List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-												Map<String, Object> name = new HashMap<String, Object>();
-												Map<String, Object> id = new HashMap<String, Object>();
-
-												name.put( "name", terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
-												id.put( "id", allAuthorInterestIds.get( pos ) );
-												items.add( name );
-												items.add( id );
+												Map<String, Object> items = new HashMap<String, Object>();
+												items.put( "name", terms.get( k ) );
+												items.put( "id", allAuthorInterestIds.get( pos ) );
 												listItems.add( items );
 											}
 										}
@@ -2681,16 +2725,11 @@ public class ExploreVisualization
 						{
 							if ( !allInterests.contains( interestTopicNames.get( k ) ) )
 							{
-								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-								Map<String, Object> name = new HashMap<String, Object>();
-								Map<String, Object> id = new HashMap<String, Object>();
 								allInterests.add( interestTopicNames.get( k ) );
-								name.put( "name", interestTopicNames.get( k ) );
-								id.put( "id", interestTopicIds.get( k ) );
-								items.add( name );
-								items.add( id );
-								combinedlistItems.add( items );
-
+								Map<String, Object> items = new HashMap<String, Object>();
+								items.put( "name", interestTopicNames.get( k ) );
+								items.put( "id", interestTopicIds.get( k ) );
+								combinedListItems.add( items );
 								count.add( 0 );
 
 							}
@@ -2706,7 +2745,7 @@ public class ExploreVisualization
 						{
 							count.remove( i );
 							allInterests.remove( i );
-							combinedlistItems.remove( i );
+							combinedListItems.remove( i );
 							i--;
 						}
 					}
@@ -2720,7 +2759,7 @@ public class ExploreVisualization
 
 					mapValuesForAll.put( "sets", sets );
 					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedlistItems );
+					mapValuesForAll.put( "list", combinedListItems );
 
 					String label = "";
 					for ( int i = 0; i < authorList.size(); i++ )
@@ -2791,7 +2830,7 @@ public class ExploreVisualization
 
 					List<String> interestTopicNames = new ArrayList<String>();
 					List<String> interestTopicIds = new ArrayList<String>();
-					List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 
 					for ( Publication p : eventGroupPubs )
 					{
@@ -2829,15 +2868,11 @@ public class ExploreVisualization
 											int pos = allConferenceInterests.indexOf( terms.get( k ) );
 											interestTopicIds.add( allConferenceInterestIds.get( pos ) );
 
-											List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-											Map<String, Object> name = new HashMap<String, Object>();
-											Map<String, Object> id = new HashMap<String, Object>();
-
-											name.put( "name", terms.get( k ) );
-											id.put( "id", allConferenceInterestIds.get( pos ) );
-											items.add( name );
-											items.add( id );
+											Map<String, Object> items = new HashMap<String, Object>();
+											items.put( "name", terms.get( k ) );
+											items.put( "id", allConferenceInterestIds.get( pos ) );
 											listItems.add( items );
+
 										}
 									}
 									if ( terms.get( k ).length() > 0 )
@@ -2850,14 +2885,9 @@ public class ExploreVisualization
 												int pos = allConferenceInterests.indexOf( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 												interestTopicIds.add( allConferenceInterestIds.get( pos ) );
 
-												List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-												Map<String, Object> name = new HashMap<String, Object>();
-												Map<String, Object> id = new HashMap<String, Object>();
-
-												name.put( "name", terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
-												id.put( "id", allConferenceInterestIds.get( pos ) );
-												items.add( name );
-												items.add( id );
+												Map<String, Object> items = new HashMap<String, Object>();
+												items.put( "name", terms.get( k ) );
+												items.put( "id", allConferenceInterestIds.get( pos ) );
 												listItems.add( items );
 											}
 										}
@@ -2902,15 +2932,10 @@ public class ExploreVisualization
 										tempNames.add( pat );
 										int pos = interestTopicNames.indexOf( pat );
 
-										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-										Map<String, Object> name = new HashMap<String, Object>();
-										Map<String, Object> id = new HashMap<String, Object>();
-
-										name.put( "name", pat );
-										id.put( "id", interestTopicIds.get( pos ) );
-										items.add( name );
-										items.add( id );
-										tempListItems.add( items );
+										Map<String, Object> items = new HashMap<String, Object>();
+										items.put( "name", pat );
+										items.put( "id", interestTopicIds.get( pos ) );
+										listItems.add( items );
 									}
 								}
 
@@ -2934,7 +2959,7 @@ public class ExploreVisualization
 					List<String> allInterests = new ArrayList<String>();
 					// List<String> allInterestIds = new ArrayList<String>();
 					List<Integer> count = new ArrayList<Integer>();
-					List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
@@ -2978,7 +3003,7 @@ public class ExploreVisualization
 
 						List<String> interestTopicNames = new ArrayList<String>();
 						List<String> interestTopicIds = new ArrayList<String>();
-						List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+						List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 
 						for ( Publication p : eventGroupPubs )
 						{
@@ -3016,14 +3041,9 @@ public class ExploreVisualization
 												int pos = allConferenceInterests.indexOf( terms.get( k ) );
 												interestTopicIds.add( allConferenceInterestIds.get( pos ) );
 
-												List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-												Map<String, Object> name = new HashMap<String, Object>();
-												Map<String, Object> id = new HashMap<String, Object>();
-
-												name.put( "name", terms.get( k ) );
-												id.put( "id", allConferenceInterestIds.get( pos ) );
-												items.add( name );
-												items.add( id );
+												Map<String, Object> items = new HashMap<String, Object>();
+												items.put( "name", terms.get( k ) );
+												items.put( "id", allConferenceInterestIds.get( pos ) );
 												listItems.add( items );
 											}
 										}
@@ -3037,14 +3057,9 @@ public class ExploreVisualization
 													int pos = allConferenceInterests.indexOf( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 													interestTopicIds.add( allConferenceInterestIds.get( pos ) );
 
-													List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-													Map<String, Object> name = new HashMap<String, Object>();
-													Map<String, Object> id = new HashMap<String, Object>();
-
-													name.put( "name", terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
-													id.put( "id", allConferenceInterestIds.get( pos ) );
-													items.add( name );
-													items.add( id );
+													Map<String, Object> items = new HashMap<String, Object>();
+													items.put( "name", terms.get( k ) );
+													items.put( "id", allConferenceInterestIds.get( pos ) );
 													listItems.add( items );
 												}
 											}
@@ -3059,15 +3074,11 @@ public class ExploreVisualization
 						{
 							if ( !allInterests.contains( interestTopicNames.get( k ) ) )
 							{
-								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-								Map<String, Object> name = new HashMap<String, Object>();
-								Map<String, Object> id = new HashMap<String, Object>();
 								allInterests.add( interestTopicNames.get( k ) );
-								name.put( "name", interestTopicNames.get( k ) );
-								id.put( "id", interestTopicIds.get( k ) );
-								items.add( name );
-								items.add( id );
-								combinedlistItems.add( items );
+								Map<String, Object> items = new HashMap<String, Object>();
+								items.put( "name", interestTopicNames.get( k ) );
+								items.put( "id", interestTopicIds.get( k ) );
+								combinedListItems.add( items );
 
 								count.add( 0 );
 
@@ -3084,7 +3095,7 @@ public class ExploreVisualization
 						{
 							count.remove( i );
 							allInterests.remove( i );
-							combinedlistItems.remove( i );
+							combinedListItems.remove( i );
 							i--;
 						}
 					}
@@ -3098,7 +3109,7 @@ public class ExploreVisualization
 
 					mapValuesForAll.put( "sets", sets );
 					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedlistItems );
+					mapValuesForAll.put( "list", combinedListItems );
 
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
@@ -3187,7 +3198,7 @@ public class ExploreVisualization
 
 					List<String> interestTopicNames = new ArrayList<String>();
 					List<String> interestTopicIds = new ArrayList<String>();
-					List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 
 					// for ( Publication p : eventGroupPubs )
 					// {
@@ -3225,14 +3236,9 @@ public class ExploreVisualization
 										int pos = allPublicationInterests.indexOf( terms.get( k ) );
 										interestTopicIds.add( allPublicationInterestIds.get( pos ) );
 
-										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-										Map<String, Object> name = new HashMap<String, Object>();
-										Map<String, Object> id = new HashMap<String, Object>();
-
-										name.put( "name", terms.get( k ) );
-										id.put( "id", allPublicationInterestIds.get( pos ) );
-										items.add( name );
-										items.add( id );
+										Map<String, Object> items = new HashMap<String, Object>();
+										items.put( "name", terms.get( k ) );
+										items.put( "id", allPublicationInterestIds.get( pos ) );
 										listItems.add( items );
 									}
 								}
@@ -3244,14 +3250,9 @@ public class ExploreVisualization
 										int pos = allPublicationInterests.indexOf( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 										interestTopicIds.add( allPublicationInterestIds.get( pos ) );
 
-										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-										Map<String, Object> name = new HashMap<String, Object>();
-										Map<String, Object> id = new HashMap<String, Object>();
-
-										name.put( "name", terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
-										id.put( "id", allPublicationInterestIds.get( pos ) );
-										items.add( name );
-										items.add( id );
+										Map<String, Object> items = new HashMap<String, Object>();
+										items.put( "name", terms.get( k ) );
+										items.put( "id", allPublicationInterestIds.get( pos ) );
 										listItems.add( items );
 									}
 								}
@@ -3280,7 +3281,7 @@ public class ExploreVisualization
 							List<List<String>> previousAuthorLists = new ArrayList<List<String>>( mapTopics.values() );
 							List<String> previousAuthorTopics = previousAuthorLists.get( k );
 							Publication previousPublication = previousPublications.get( k );
-							List<List<Map<String, Object>>> tempListItems = new ArrayList<List<Map<String, Object>>>();
+							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
 							String label = "";
 							if ( !previousPublication.equals( p ) )
 							{
@@ -3295,15 +3296,10 @@ public class ExploreVisualization
 										tempNames.add( pat );
 										int pos = interestTopicNames.indexOf( pat );
 
-										List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-										Map<String, Object> name = new HashMap<String, Object>();
-										Map<String, Object> id = new HashMap<String, Object>();
-
-										name.put( "name", pat );
-										id.put( "id", interestTopicIds.get( pos ) );
-										items.add( name );
-										items.add( id );
-										tempListItems.add( items );
+										Map<String, Object> items = new HashMap<String, Object>();
+										items.put( "name", pat );
+										items.put( "id", interestTopicIds.get( pos ) );
+										listItems.add( items );
 									}
 								}
 
@@ -3325,16 +3321,13 @@ public class ExploreVisualization
 				if ( idsList.size() > 2 )
 				{
 					List<String> allInterests = new ArrayList<String>();
-					// List<String> allInterestIds = new ArrayList<String>();
 					List<Integer> count = new ArrayList<Integer>();
-					List<List<Map<String, Object>>> combinedlistItems = new ArrayList<List<Map<String, Object>>>();
+					List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
 						List<String> allPublicationInterests = new ArrayList<String>();
 						List<String> allPublicationInterestIds = new ArrayList<String>();
-						// List<Publication> eventGroupPubs = new
-						// ArrayList<Publication>();
 						Publication p = persistenceStrategy.getPublicationDAO().getById( idsList.get( i ) );
 						publicationTempList.add( p );
 						for ( Interest interest : allInterestsInDB )
@@ -3346,54 +3339,11 @@ public class ExploreVisualization
 
 							}
 						}
-						// List<Event> events = eg.getEvents();
-						// for ( Event e : events )
-						// {
-						// Set<EventInterestProfile> eventInterestProfiles =
-						// e.getEventInterestProfiles();
-						// for ( EventInterestProfile eip :
-						// eventInterestProfiles )
-						// {
-						// List<EventInterest> eventInterests = new
-						// ArrayList<EventInterest>( eip.getEventInterests() );
-						// for ( EventInterest ei : eventInterests )
-						// {
-						// Map<Interest, Double> termWeights =
-						// ei.getTermWeights();
-						// List<Interest> interests = new ArrayList<Interest>(
-						// termWeights.keySet() );
-						// List<Double> weights = new ArrayList<Double>(
-						// termWeights.values() );
-						// for ( int j = 0; j < termWeights.size(); j++ )
-						// {
-						// if ( !allConferenceInterests.contains( interests.get(
-						// j ).getTerm() ) && weights.get( j ) > 0.5 )
-						// {
-						// allConferenceInterests.add( interests.get( j
-						// ).getTerm() );
-						// allConferenceInterestIds.add( interests.get( j
-						// ).getId() );
-						// }
-						// }
-						// }
-						// }
-						//
-						// List<Publication> eventPubs = e.getPublications();
-						// for ( Publication pub : eventPubs )
-						// {
-						// if ( !eventGroupPubs.contains( pub ) )
-						// {
-						// eventGroupPubs.add( pub );
-						// }
-						// }
-						// }
 
 						List<String> interestTopicNames = new ArrayList<String>();
 						List<String> interestTopicIds = new ArrayList<String>();
-						List<List<Map<String, Object>>> listItems = new ArrayList<List<Map<String, Object>>>();
+						List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 
-						// for ( Publication p : eventGroupPubs )
-						// {
 						Boolean flag = false;
 						if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
 						{
@@ -3428,14 +3378,9 @@ public class ExploreVisualization
 											int pos = allPublicationInterests.indexOf( terms.get( k ) );
 											interestTopicIds.add( allPublicationInterestIds.get( pos ) );
 
-											List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-											Map<String, Object> name = new HashMap<String, Object>();
-											Map<String, Object> id = new HashMap<String, Object>();
-
-											name.put( "name", terms.get( k ) );
-											id.put( "id", allPublicationInterestIds.get( pos ) );
-											items.add( name );
-											items.add( id );
+											Map<String, Object> items = new HashMap<String, Object>();
+											items.put( "name", terms.get( k ) );
+											items.put( "id", allPublicationInterestIds.get( pos ) );
 											listItems.add( items );
 										}
 									}
@@ -3447,36 +3392,25 @@ public class ExploreVisualization
 											int pos = allPublicationInterests.indexOf( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 											interestTopicIds.add( allPublicationInterestIds.get( pos ) );
 
-											List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-											Map<String, Object> name = new HashMap<String, Object>();
-											Map<String, Object> id = new HashMap<String, Object>();
-
-											name.put( "name", terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
-											id.put( "id", allPublicationInterestIds.get( pos ) );
-											items.add( name );
-											items.add( id );
+											Map<String, Object> items = new HashMap<String, Object>();
+											items.put( "name", terms.get( k ) );
+											items.put( "id", allPublicationInterestIds.get( pos ) );
 											listItems.add( items );
 										}
 									}
 								}
 							}
-
-							// }
 						}
 
 						for ( int k = 0; k < interestTopicNames.size(); k++ )
 						{
 							if ( !allInterests.contains( interestTopicNames.get( k ) ) )
 							{
-								List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-								Map<String, Object> name = new HashMap<String, Object>();
-								Map<String, Object> id = new HashMap<String, Object>();
 								allInterests.add( interestTopicNames.get( k ) );
-								name.put( "name", interestTopicNames.get( k ) );
-								id.put( "id", interestTopicIds.get( k ) );
-								items.add( name );
-								items.add( id );
-								combinedlistItems.add( items );
+								Map<String, Object> items = new HashMap<String, Object>();
+								items.put( "name", interestTopicNames.get( k ) );
+								items.put( "id", interestTopicIds.get( k ) );
+								combinedListItems.add( items );
 
 								count.add( 0 );
 
@@ -3493,7 +3427,7 @@ public class ExploreVisualization
 						{
 							count.remove( i );
 							allInterests.remove( i );
-							combinedlistItems.remove( i );
+							combinedListItems.remove( i );
 							i--;
 						}
 					}
@@ -3507,7 +3441,7 @@ public class ExploreVisualization
 
 					mapValuesForAll.put( "sets", sets );
 					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedlistItems );
+					mapValuesForAll.put( "list", combinedListItems );
 
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )

@@ -56,7 +56,7 @@ public class ClusteringServiceImpl implements ClusteringService
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public Map<String, Object> clusterAuthors( String algorithm, List<Author> authorList, Set<Publication> authorPublications )
+	public Map<String, Object> clusterAuthors( String algorithm, List<Author> authorList, Set<Publication> authorPublications, String type )
 	{
 		long startTime = System.currentTimeMillis();
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
@@ -67,19 +67,53 @@ public class ClusteringServiceImpl implements ClusteringService
 		// Now find coauthors from these publications
 		List<Author> coAuthorList = new ArrayList<Author>();
 
-		// number of collaboration
 		for ( Publication publication : authorPublications )
 		{
-			for ( Author a : publication.getAuthors() )
+			if ( type.equals( "publication" ) )
 			{
-				if ( a.isAdded() )
+				List<Author> commonAuthors = new ArrayList<Author>();
+				List<Integer> count = new ArrayList<Integer>();
+				for ( Publication p : authorPublications )
 				{
-					// just skip if its one of the authors in consideration
-					if ( authorList.contains( a ) )
-						continue;
+					for ( Author a : p.getAuthors() )
+					{
+						if ( !commonAuthors.contains( a ) )
+						{
+							commonAuthors.add( a );
+							count.add( 1 );
+						}
+						else
+						{
+							int index = commonAuthors.indexOf( a );
+							count.set( index, count.get( index ) + 1 );
+						}
+					}
+				}
 
-					if ( !coAuthorList.contains( a ) )
-						coAuthorList.add( a );
+				for ( int i = 0; i < count.size(); i++ )
+				{
+					if ( count.get( i ) < authorPublications.size() )
+					{
+						count.remove( i );
+						commonAuthors.remove( i );
+						i--;
+					}
+				}
+				coAuthorList = commonAuthors;
+			}
+			else
+			{
+				for ( Author a : publication.getAuthors() )
+				{
+					if ( a.isAdded() )
+					{
+						// just skip if its one of the authors in consideration
+						if ( authorList.contains( a ) )
+							continue;
+
+						if ( !coAuthorList.contains( a ) )
+							coAuthorList.add( a );
+					}
 				}
 			}
 		}
@@ -87,7 +121,10 @@ public class ClusteringServiceImpl implements ClusteringService
 		Long midTime = ( System.currentTimeMillis() - startTime ) / 1000;
 		System.out.println( "Step 1: " + midTime );
 
-		List<DataMiningAuthor> authors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
+		List<DataMiningAuthor> authors = persistenceStrategy.getAuthorDAO().getDataMiningObjects(); // all
+																									// authors
+																									// in
+																									// database
 		List<DataMiningAuthor> mainAuthors = new ArrayList<DataMiningAuthor>();
 		List<DataMiningAuthor> coAuthors = new ArrayList<DataMiningAuthor>();
 		for ( DataMiningAuthor dma : authors )
@@ -286,7 +323,7 @@ public class ClusteringServiceImpl implements ClusteringService
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
 		Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
-		
+
 		// Find topics from publications - This will govern clustering
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> allTopics = new ArrayList<String>();

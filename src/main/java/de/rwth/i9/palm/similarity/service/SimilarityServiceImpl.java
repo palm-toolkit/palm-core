@@ -392,6 +392,8 @@ public class SimilarityServiceImpl implements SimilarityService
 
 		}
 
+		System.out.println( "topics size: " + topics.size() );
+
 		Map<DataMiningPublication, Double> scoreMap = new HashMap<DataMiningPublication, Double>();
 
 		Map<DataMiningPublication, Map<String, Double>> topicMap = new HashMap<DataMiningPublication, Map<String, Double>>();
@@ -399,11 +401,13 @@ public class SimilarityServiceImpl implements SimilarityService
 		{
 			if ( !mainPublications.contains( p ) )
 			{
-				System.out.println( "\nAuthor: " + p.getTitle() );
-				if ( !p.getPublication_topic_flat().getTopics().isEmpty() )
-					othersTopics = InterestParser.parseInterestString( p.getPublication_topic_flat().getTopics() );
-				else
-					othersTopics = new HashMap<String, Double>();
+				System.out.println( "Pub: " + p.getTitle() );
+
+				if ( p.getPublication_topic_flat() != null )
+					if ( p.getPublication_topic_flat().getTopics() != null )
+						othersTopics = InterestParser.parseInterestString( p.getPublication_topic_flat().getTopics() );
+					else
+						othersTopics = new HashMap<String, Double>();
 
 				for ( int i = 0; i < topics.size(); i++ )
 				{
@@ -441,7 +445,7 @@ public class SimilarityServiceImpl implements SimilarityService
 						}
 					}
 				}
-				System.out.println( scoreMap.get( p ) );
+				System.out.println( "scoreMap: " + scoreMap.get( p ) + "\n" );
 			}
 
 		}
@@ -461,6 +465,5 @@ public class SimilarityServiceImpl implements SimilarityService
 		return finalMap;
 
 	}
-
 
 }

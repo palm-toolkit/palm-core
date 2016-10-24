@@ -837,7 +837,7 @@ public class ExploreController
 			break;
 		}
 		case "Group": {
-			visMap = exploreVis.visualizeGroup( visType, authors, publications );
+			visMap = exploreVis.visualizeGroup( type, visType, authors, publications );
 			break;
 		}
 		case "List": {

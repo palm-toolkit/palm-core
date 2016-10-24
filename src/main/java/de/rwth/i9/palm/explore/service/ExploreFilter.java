@@ -59,8 +59,6 @@ public class ExploreFilter
 		// if there are more than one authors in consideration
 		publications = new ArrayList<Publication>( typeWisePublications( type, authors, eventGroupList, publicationsList ) );
 
-		// System.out.println( "publications for filter: " + publications.size()
-		// );
 		return publications;
 
 	}
@@ -180,17 +178,9 @@ public class ExploreFilter
 					{
 						Map<Interest, Double> termWeights = ai.getTermWeights();
 						List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
-						// List<Double> weights = new ArrayList<Double>(
-						// termWeights.values() );
 						for ( int j = 0; j < termWeights.size(); j++ )
 						{
-							if ( !allAuthorInterests.contains( interests.get( j ).getTerm() ) ) // &&
-																								// weights.get(
-																								// j
-																								// )
-																								// >
-																								// 0.5
-																								// )
+							if ( !allAuthorInterests.contains( interests.get( j ).getTerm() ) )
 							{
 								allAuthorInterests.add( interests.get( j ).getTerm() );
 								allAuthorInterestIds.add( interests.get( j ).getId() );
@@ -199,7 +189,6 @@ public class ExploreFilter
 					}
 				}
 			}
-			System.out.println( "all interests size in FILTER: " + allAuthorInterests.size() );
 
 			List<String> allTopics = new ArrayList<String>();
 			for ( Publication pub : publications )
@@ -248,8 +237,6 @@ public class ExploreFilter
 		if ( type.equals( "conference" ) )
 		{
 			List<Publication> publications = getPublicationsForFilter( idsList, type );
-			// System.out.println( "PUBLICATIONS Of CONFERENCE: " +
-			// publications.size() );
 			List<String> interestStrings = new ArrayList<String>();
 			ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
 			List<String> allConferenceInterests = new ArrayList<String>();
@@ -314,13 +301,6 @@ public class ExploreFilter
 						for ( int j = 0; j < termValues.size(); j++ )
 						{
 							Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
-							// if ( termValues.get( j ).equals( "populrer open"
-							// ) )
-							// {
-							// System.out.println( "\n" + pub.getTitle() );
-							// System.out.println( "filet: " + termValues.get( j
-							// ) );
-							// }
 							if ( !allTopics.contains( termValues.get( j ) ) && allConferenceInterests.contains( termValues.get( j ) ) )
 							{
 								int index = allConferenceInterests.indexOf( termValues.get( j ) );
@@ -369,8 +349,6 @@ public class ExploreFilter
 					startYear = year;
 			}
 		}
-		// System.out.println( "start: " + startYear + " end: " + endYear );
-
 		timeMap.put( "startYear", startYear );
 		timeMap.put( "endYear", endYear );
 		return timeMap;
@@ -388,11 +366,8 @@ public class ExploreFilter
 		else
 		{
 			authorPublications = typeWisePublications( type, authorList, eventGroupList, publicationList );
-			// System.out.println( "filtered publications: " +
-			// authorPublications.size() );
 		}
 
-		System.out.println( "start year: " + startYear );
 		List<Publication> publicationsTemp = new ArrayList<Publication>( authorPublications );
 		if ( !startYear.equals( "" ) && !startYear.equals( "0" ) && startYear != null )
 		{
@@ -402,26 +377,17 @@ public class ExploreFilter
 				{
 					if ( Integer.parseInt( publicationsTemp.get( i ).getYear() ) < Integer.parseInt( startYear ) || Integer.parseInt( publicationsTemp.get( i ).getYear() ) > Integer.parseInt( endYear ) )
 					{
-						// System.out.println( publicationsTemp.get( i
-						// ).getTitle() + " " + publicationsTemp.get( i
-						// ).getYear() );
 						publicationsTemp.remove( i );
 						i--;
 					}
 				}
 				else
 				{
-					// System.out.println( "null " + publicationsTemp.get( i
-					// ).getTitle() + " " + publicationsTemp.get( i ).getYear()
-					// );
-
 					if ( publicationsTemp.get( i ).getPublicationDate() != null )
 					{
 						String year = publicationsTemp.get( i ).getPublicationDate().toString().substring( 0, 4 );
-						// System.out.println( year + " year" );
 						if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
 						{
-							System.out.println( publicationsTemp.get( i ).getTitle() + " " + publicationsTemp.get( i ).getYear() );
 							publicationsTemp.remove( i );
 							i--;
 						}
@@ -435,7 +401,7 @@ public class ExploreFilter
 			}
 		}
 		authorPublications = new HashSet<Publication>( publicationsTemp );
-		System.out.println( "after year filter: " + authorPublications.size() );
+	
 		// conference filter
 		List<Publication> conferencePublications = new ArrayList<Publication>();
 		if ( !filteredConference.isEmpty() )
@@ -466,21 +432,14 @@ public class ExploreFilter
 			}
 			authorPublications = new HashSet<Publication>( tempPubList );
 		}
-		System.out.println( "after conference filter: " + authorPublications.size() );
+
 		// topic filter
 		if ( !filteredTopic.isEmpty() )
 		{
-			// System.out.println( "filtered topic: " + filteredTopic.toString()
-			// );
 			Set<Publication> topicPublications = new HashSet<Publication>();
-			// System.out.println( "filteringggggggggg" );
-
 
 			for ( Publication authorPublication : authorPublications )
 			{
-				// if ( authorPublication.getTitle().equals( "Social Software
-				// for Professional Learning" ) )
-				// System.out.println( "\n" + authorPublication.getTitle() );
 				List<PublicationTopic> pubTopics = new ArrayList<PublicationTopic>( authorPublication.getPublicationTopics() );
 
 				for ( PublicationTopic pt : pubTopics )
@@ -490,18 +449,15 @@ public class ExploreFilter
 					List<String> interests = new ArrayList<String>();
 					for ( Interest interest : filteredTopic )
 					{
-						System.out.println( interest.getTerm() + " : " + interest.getTerm() + "s" );
 						if ( terms.contains( interest.getTerm() ) )
 							interests.add( interest.getTerm() );
 						if ( terms.contains( interest.getTerm() + "s" ) )
 						{
-							System.out.println( "s wala: " + interest.getTerm() );
 							interests.add( interest.getTerm() + "s" );
 						}
 					}
 					if ( interests.size() == filteredTopic.size() )
 					{
-						// System.out.println( "true" );
 						topicPublications.add( authorPublication );
 					}
 				}
@@ -509,7 +465,6 @@ public class ExploreFilter
 			authorPublications = topicPublications;
 		}
 
-		System.out.println( "after topic filter: " + authorPublications.size() );
 		// circle filter
 		if ( !filteredCircle.isEmpty() )
 		{

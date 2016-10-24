@@ -263,66 +263,99 @@ public class GraphFeatureImpl implements GraphFeature
 						}
 						if ( type.equals( "publication" ) )
 						{
-							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
-
-							if ( !nodes.contains( n ) )
-							{
-								nodes.add( n );
-								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
-								n.setAttribute( "authorId", publicationAuthor.getId() );
-								n.setLabel( publicationAuthor.getName() );
-								if ( pubs.contains( publication ) )
-									n.setSize( 0.5f );
-								else
-									n.setSize( 0.1f );
-								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
-								undirectedGraph.addNode( n );
-							}
-							System.out.println( tempPubAuthors.size() );
-							for ( int i = 0; i < tempPubAuthors.size(); i++ )
-							{
-								System.out.println( "inside 0" );
-								Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
-								// System.out.println( "pub node: " +
-								// publicationAuthor.getName() );
-								if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
-								{
-									Node tempAuthorNode = graphModel.factory().newNode( tempPubAuthors.get( i ).getName() );
-									int indexTempNode = nodes.indexOf( tempAuthorNode );
-									int indexPubNode = nodes.indexOf( pubAuthorNode );
-									Boolean flag = false;
-									System.out.println( "inside 1" );
-									// check if an edge already exists
-									// between the 2 nodes
-									for ( Edge eTest : edges )
-									{
-										if ( ( eTest.getSource().equals( nodes.get( indexTempNode ) ) && eTest.getTarget().equals( nodes.get( indexPubNode ) ) ) || ( eTest.getSource().equals( nodes.get( indexPubNode ) ) && eTest.getTarget().equals( nodes.get( indexTempNode ) ) ) )
-										{
-											flag = true;
-											eTest.setWeight( eTest.getWeight() + 0.1 );
-										}
-									}
-									if ( !flag )
-									{
-										System.out.println( "inside 2" );
-										Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
-										edges.add( e );
-										e.setWeight( 0.1 );
-										e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
-										e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
-										e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i ).isAdded() );
-										e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
-										undirectedGraph.addEdge( e );
-									}
-
-								}
-							}
-							tempPubAuthors.add( publicationAuthor );
-
 						}
 					}
 				}
 
+				// in case of publications, explicitly find common authors
+				if ( type.equals( "publication" ) )
+				{
+					List<Author> commonAuthors = new ArrayList<Author>();
+					List<Integer> count = new ArrayList<Integer>();
+					for ( Publication p : authorPublications )
+					{
+						for ( Author a : p.getAuthors() )
+						{
+							if ( !commonAuthors.contains( a ) )
+							{
+								commonAuthors.add( a );
+								count.add( 1 );
+							}
+							else
+							{
+								int index = commonAuthors.indexOf( a );
+								count.set( index, count.get( index ) + 1 );
+							}
+						}
+					}
+
+					for ( int i = 0; i < count.size(); i++ )
+					{
+						if ( count.get( i ) < authorPublications.size() )
+						{
+							count.remove( i );
+							commonAuthors.remove( i );
+							i--;
+						}
+					}
+
+					List<Author> publicationAuthors = commonAuthors;
+					List<Author> tempPubAuthors = new ArrayList<Author>();
+
+					// iterating over authors of those publications
+					for ( Author publicationAuthor : publicationAuthors )
+					{
+						Node n = graphModel.factory().newNode( publicationAuthor.getName() );
+
+						if ( !nodes.contains( n ) )
+						{
+							nodes.add( n );
+							n.setAttribute( "isAdded", publicationAuthor.isAdded() );
+							n.setAttribute( "authorId", publicationAuthor.getId() );
+							n.setLabel( publicationAuthor.getName() );
+							n.setSize( 0.1f );
+							n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
+							undirectedGraph.addNode( n );
+						}
+						System.out.println( tempPubAuthors.size() );
+						for ( int i = 0; i < tempPubAuthors.size(); i++ )
+						{
+							Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
+							if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
+							{
+								Node tempAuthorNode = graphModel.factory().newNode( tempPubAuthors.get( i ).getName() );
+								int indexTempNode = nodes.indexOf( tempAuthorNode );
+								int indexPubNode = nodes.indexOf( pubAuthorNode );
+								Boolean flag = false;
+								// check if an edge already exists
+								// between the 2 nodes
+								for ( Edge eTest : edges )
+								{
+									if ( ( eTest.getSource().equals( nodes.get( indexTempNode ) ) && eTest.getTarget().equals( nodes.get( indexPubNode ) ) ) || ( eTest.getSource().equals( nodes.get( indexPubNode ) ) && eTest.getTarget().equals( nodes.get( indexTempNode ) ) ) )
+									{
+										flag = true;
+										eTest.setWeight( eTest.getWeight() + 0.1 );
+									}
+								}
+								if ( !flag )
+								{
+									Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
+									edges.add( e );
+									e.setWeight( 0.1 );
+									e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
+									e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
+									e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i ).isAdded() );
+									e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
+									undirectedGraph.addEdge( e );
+								}
+							}
+						}
+						tempPubAuthors.add( publicationAuthor );
+					}
+				}
+
+				// find associations upto 2 levels, if authors are not
+				// co-authors
 				if ( authorPublications.isEmpty() && type.equals( "researcher" ) && authorList.size() > 1 )
 				{
 					// add nodes for main authors
@@ -384,8 +417,6 @@ public class GraphFeatureImpl implements GraphFeature
 						}
 					}
 
-					// System.out.println( "common author count " +
-					// commonAuthors.size() );
 					for ( int i = 0; i < commonAuthors.size(); i++ )
 					{
 						Node n = graphModel.factory().newNode( commonAuthors.get( i ).getName() );
@@ -413,35 +444,27 @@ public class GraphFeatureImpl implements GraphFeature
 								undirectedGraph.addEdge( e );
 							}
 						}
-
 					}
 					if ( commonAuthors.isEmpty() )
 					{
-
 						for ( int i = 1; i < coAuthorsList.size(); i++ )
 						{
 							List<Author> list1 = coAuthorsList.get( i - 1 );
 							List<Author> list2 = coAuthorsList.get( i );
 							for ( int j = 0; j < list2.size(); j++ )
 							{
-								// System.out.println( "1:" + list2.get( j
-								// ).getName() );
 								for ( Publication p : list2.get( j ).getPublications() )
 								{
 									for ( Author a : p.getAuthors() )
 									{
 										if ( list1.contains( a ) )
 										{
-											// System.out.println( "2:" +
-											// a.getName() );
 											Node n = graphModel.factory().newNode( a.getName() );
-
 											if ( !nodes.contains( n ) )
 											{
 												nodes.add( n );
 												n.setAttribute( "isAdded", a.isAdded() );
 												n.setAttribute( "authorId", a.getId() );
-
 												n.setLabel( a.getName() );
 												n.setSize( 0.1f );
 												n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
@@ -455,7 +478,6 @@ public class GraphFeatureImpl implements GraphFeature
 												nodes.add( n2 );
 												n2.setAttribute( "isAdded", list2.get( j ).isAdded() );
 												n2.setAttribute( "authorId", list2.get( j ).getId() );
-
 												n2.setLabel( list2.get( j ).getName() );
 												n2.setSize( 0.1f );
 												n2.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
@@ -493,12 +515,10 @@ public class GraphFeatureImpl implements GraphFeature
 											e.setAttribute( "targetAuthorIsAdded", list2.get( j ).isAdded() );
 											edges.add( e );
 											undirectedGraph.addEdge( e );
-
 										}
 									}
 								}
 							}
-
 						}
 					}
 				}

@@ -104,7 +104,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> getResearcherCoAuthorMapByPublication( List<Author> authorList, Set<Publication> publications )
+	public Map<String, Object> getResearcherCoAuthorMapByPublication( List<Author> authorList, Set<Publication> publications, String type )
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -113,10 +113,38 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		Map<String, Integer> coAuthorCollaborationCountMap = new HashMap<String, Integer>();
 		// Prepare set of coauthor HashSet;
 		Set<Author> coauthorSet = new HashSet<Author>();
-		// number of collaboration
-		for ( Publication publication : publications )
+
+		if ( type.equals( "publication" ) )
 		{
-			for ( Author coAuthor : publication.getAuthors() )
+			List<Author> commonAuthors = new ArrayList<Author>();
+			List<Integer> count = new ArrayList<Integer>();
+			for ( Publication p : publications )
+			{
+				for ( Author a : p.getAuthors() )
+				{
+					if ( !commonAuthors.contains( a ) )
+					{
+						commonAuthors.add( a );
+						count.add( 1 );
+					}
+					else
+					{
+						int index = commonAuthors.indexOf( a );
+						count.set( index, count.get( index ) + 1 );
+					}
+				}
+			}
+
+			for ( int i = 0; i < count.size(); i++ )
+			{
+				if ( count.get( i ) < publications.size() )
+				{
+					count.remove( i );
+					commonAuthors.remove( i );
+					i--;
+				}
+			}
+			for ( Author coAuthor : commonAuthors )
 			{
 				// just skip if its one of the authors in consideration
 				if ( authorList.contains( coAuthor ) )
@@ -130,7 +158,27 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 					coAuthorCollaborationCountMap.put( coAuthor.getId(), coAuthorCollaborationCountMap.get( coAuthor.getId() ) + 1 );
 			}
 		}
+		else
+		{
 
+			// number of collaboration
+			for ( Publication publication : publications )
+			{
+				for ( Author coAuthor : publication.getAuthors() )
+				{
+					// just skip if its one of the authors in consideration
+					if ( authorList.contains( coAuthor ) )
+						continue;
+
+					coauthorSet.add( coAuthor );
+
+					if ( coAuthorCollaborationCountMap.get( coAuthor.getId() ) == null )
+						coAuthorCollaborationCountMap.put( coAuthor.getId(), 1 );
+					else
+						coAuthorCollaborationCountMap.put( coAuthor.getId(), coAuthorCollaborationCountMap.get( coAuthor.getId() ) + 1 );
+				}
+			}
+		}
 		// prepare list of object map containing coAuthor details
 		List<Map<String, Object>> coAuthorList = new ArrayList<Map<String, Object>>();
 
@@ -156,18 +204,11 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		// prepare list of object map containing coAuthor details
 		List<Map<String, Object>> coAuthorListPaging = new ArrayList<Map<String, Object>>();
 
-		int position = 0;
-		int startPage = 0;
-		int maxresult = 30;
 		for ( Map<String, Object> coAuthor : coAuthorList )
 		{
-			if ( position >= startPage && coAuthorListPaging.size() < maxresult )
-			{
 				coAuthorListPaging.add( coAuthor );
-			}
 		}
 
-		// remove unnecessary result
 
 		// put coauthor to responseMap
 		responseMap.put( "countTotal", coAuthorList.size() );
