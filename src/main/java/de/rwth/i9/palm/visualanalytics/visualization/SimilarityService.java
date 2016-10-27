@@ -1,4 +1,4 @@
-package de.rwth.i9.palm.similarity.service;
+package de.rwth.i9.palm.visualanalytics.visualization;
 
 import java.util.List;
 import java.util.Map;

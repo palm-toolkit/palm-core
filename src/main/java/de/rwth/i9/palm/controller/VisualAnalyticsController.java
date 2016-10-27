@@ -23,8 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import de.rwth.i9.palm.explore.service.ExploreFilter;
-import de.rwth.i9.palm.explore.service.ExploreVisualization;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
@@ -44,10 +42,12 @@ import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.model.WidgetWidth;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
+import de.rwth.i9.palm.visualanalytics.service.FilterFeature;
+import de.rwth.i9.palm.visualanalytics.service.VisualizationFeature;
 
 @Controller
 @RequestMapping( value = "/explore" )
-public class ExploreController
+public class VisualAnalyticsController
 {
 
 	private static final String LINK_NAME = "explore";
@@ -68,10 +68,10 @@ public class ExploreController
 	private AcademicEventFeature academicEventFeature;
 
 	@Autowired
-	private ExploreFilter exploreFilter;
+	private FilterFeature filterFeature;
 
 	@Autowired
-	private ExploreVisualization exploreVis;
+	private VisualizationFeature visualizationFeature;
 
 	// Use explore/createVAWidgets to create Visual Analytics Widgets
 	@Transactional
@@ -471,7 +471,6 @@ public class ExploreController
 	@RequestMapping( value = "/visualize", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> visualize( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "type", required = false ) String type, @RequestParam( value = "visType", required = false ) String visType, @RequestParam( value = "deleteFlag", required = false ) String deleteFlag, @RequestParam( value = "startYear", required = false ) String startYear, @RequestParam( value = "endYear", required = false ) String endYear, @RequestParam( value = "visTab", required = false ) String visTab, @RequestParam( value = "dataList", required = false ) String dataList, @RequestParam( value = "idList", required = false ) String idList, @RequestParam( value = "dataTransfer", required = false ) String dataTransfer, @RequestParam( value = "checkedPubValues", required = false ) String checkedPubValues, @RequestParam( value = "checkedConfValues", required = false ) String checkedConfValues, @RequestParam( value = "checkedTopValues", required = false ) String checkedTopValues, @RequestParam( value = "checkedCirValues", required = false ) String checkedCirValues, @RequestParam( value = "yearFilterPresent", required = false ) String yearFilterPresent, @RequestParam( value = "authoridForCoAuthors", required = false ) String authoridForCoAuthors, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-
 		/* == Set Default Values== */
 		if ( id == null )
 			id = "";
@@ -502,8 +501,6 @@ public class ExploreController
 		if ( authoridForCoAuthors == null )
 			authoridForCoAuthors = "";
 
-		// System.out.println( "year filter present!! " + yearFilterPresent );
-		// System.out.println( "at 1: " + authoridForCoAuthors );
 		List<String> namesList = new ArrayList<String>();
 		List<String> idsList = new ArrayList<String>();
 		List<String> pubFilterList = new ArrayList<String>();
@@ -557,7 +554,6 @@ public class ExploreController
 			responseMap.put( "yearFilterPresent", yearFilterPresent );
 			responseMap.put( "deleteFlag", deleteFlag );
 			responseMap.put( "authoridForCoAuthors", authoridForCoAuthors );
-			// System.out.println( "at 2: " + authoridForCoAuthors );
 
 			if ( checkedPubValues != "" )
 			{
@@ -581,13 +577,10 @@ public class ExploreController
 				responseMap.put( "startYear", startYear );
 				responseMap.put( "endYear", endYear );
 			}
-			// System.out.println( "response map for data transfer: " +
-			// responseMap.toString() );
 
 		}
 		else
 		{
-			// System.out.println( "at 3: " + authoridForCoAuthors );
 			if ( visTab == "" || visTab.equals( "" ) )
 			{
 				if ( visType.equals( "researchers" ) )
@@ -605,10 +598,6 @@ public class ExploreController
 				if ( visType.equals( "topics" ) )
 				{
 					visTab = "Bubbles";
-				}
-				if ( visType.equals( "circles" ) )
-				{
-					visTab = "TBD";
 				}
 			}
 
@@ -663,32 +652,27 @@ public class ExploreController
 			{
 				if ( !yearFilterPresent.equals( "true" ) && idList.length() != 0 )
 				{
-					startYear = exploreFilter.timeResPubFilter( idsList, type ).get( "startYear" ).toString();
-					endYear = exploreFilter.timeResPubFilter( idsList, type ).get( "endYear" ).toString();
+					startYear = filterFeature.getDataForFilter().timeFilter( idsList, type ).get( "startYear" ).toString();
+					endYear = filterFeature.getDataForFilter().timeFilter( idsList, type ).get( "endYear" ).toString();
 				}
 			}
 			else
 			{
-				startYear = exploreFilter.timeResPubFilter( idsList, type ).get( "startYear" ).toString();
-				endYear = exploreFilter.timeResPubFilter( idsList, type ).get( "endYear" ).toString();
+				startYear = filterFeature.getDataForFilter().timeFilter( idsList, type ).get( "startYear" ).toString();
+				endYear = filterFeature.getDataForFilter().timeFilter( idsList, type ).get( "endYear" ).toString();
 			}
-			// System.out.println( "start year: " + startYear + ": " + "end year
-			// " + endYear + " year filter: " + yearFilterPresent );
 
 			List<Author> authorList = new ArrayList<Author>();
 			List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
 			List<Publication> publicationList = new ArrayList<Publication>();
 			if ( type.equals( "researcher" ) )
-				authorList = exploreFilter.getAuthorsFromIds( idsList );
+				authorList = filterFeature.getFilterHelper().getAuthorsFromIds( idsList );
 			if ( type.equals( "conference" ) )
-				eventGroupList = exploreFilter.getConferencesFromIds( idsList );
+				eventGroupList = filterFeature.getFilterHelper().getConferencesFromIds( idsList );
 			if ( type.equals( "publication" ) )
-				publicationList = exploreFilter.getPublicationsFromIds( idsList );
+				publicationList = filterFeature.getFilterHelper().getPublicationsFromIds( idsList );
 
-			// System.out.println( "Authors list: " + authors );
-			Set<Publication> publications = exploreFilter.getFilteredPublications( type, authorList, eventGroupList, publicationList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
-			// System.out.println( "pub size: " + publications.size() );
-			// System.out.println( "vis tab: " + visTab );
+			Set<Publication> publications = filterFeature.getFilteredData().getFilteredPublications( type, authorList, eventGroupList, publicationList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
 
 			visMap = visSwitch( type, idsList, visTab, visType, authorList, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
 
@@ -697,9 +681,6 @@ public class ExploreController
 			responseMap.put( "dataList", dataList );
 			responseMap.put( "idsList", idsList );
 			responseMap.put( "map", visMap );
-			// System.out.println( "response map for 2nd run: " +
-			// responseMap.toString() );
-
 		}
 
 		return responseMap;
@@ -780,33 +761,31 @@ public class ExploreController
 
 					if ( filters.get( i ).equals( "Time" ) )
 					{
-						responseMap.put( "TimeFilter", exploreFilter.timeResPubFilter( idsList, type ) );
+						responseMap.put( "TimeFilter", filterFeature.getDataForFilter().timeFilter( idsList, type ) );
 					}
 					if ( filters.get( i ).equals( "Publications" ) )
 					{
-						responseMap.put( "publicationFilter", exploreFilter.publicationFilter( idsList, type ) );
+						responseMap.put( "publicationFilter", filterFeature.getDataForFilter().publicationFilter( idsList, type ) );
 					}
 					if ( filters.get( i ).equals( "Conferences" ) )
 					{
-						responseMap.put( "conferenceFilter", exploreFilter.conferenceFilter( idsList, type ) );
+						responseMap.put( "conferenceFilter", filterFeature.getDataForFilter().conferenceFilter( idsList, type ) );
 					}
 					if ( filters.get( i ).equals( "Circles" ) )
 					{
-						responseMap.put( "circleFilter", exploreFilter.circleFilter( idsList, type ) );
+						responseMap.put( "circleFilter", filterFeature.getDataForFilter().circleFilter( idsList, type ) );
 					}
 					if ( filters.get( i ).equals( "Researchers" ) )
 					{
 					}
 					if ( filters.get( i ).equals( "Topics" ) )
 					{
-						responseMap.put( "topicFilter", exploreFilter.topicFilter( idsList, type ) );
+						responseMap.put( "topicFilter", filterFeature.getDataForFilter().topicFilter( idsList, type ) );
 					}
 				}
 			}
 
 		}
-		// System.out.println( "response map for filter: " +
-		// responseMap.toString() );
 		return responseMap;
 	}
 
@@ -817,42 +796,103 @@ public class ExploreController
 
 		switch ( visTab ) {
 		case "Network": {
-			visMap = exploreVis.visualizeNetwork( type, authors, publications, idsList, startYear, endYear, authoridForCoAuthors );
+			visMap = visualizationFeature.getVisNetwork().visualizeNetwork( type, authors, publications, idsList, startYear, endYear, authoridForCoAuthors );
 			break;
-		}
+			}
 		case "Locations": {
-			visMap = exploreVis.visualizeLocations( type, publications, idsList, startYear, endYear, filteredTopic );
+			visMap = visualizationFeature.getVisLocations().visualizeLocations( type, publications, idsList, startYear, endYear, filteredTopic );
 			break;
-		}
+			}
 		case "Timeline": {
-			visMap = exploreVis.visualizeTimeline( publications );
+			visMap = visualizationFeature.getVisTimeline().visualizeTimeline( publications );
 			break;
-		}
+			}
 		case "Evolution": {
-			visMap = exploreVis.visualizeEvolution( type, idsList, authors, publications, startYear, endYear );
+			visMap = visualizationFeature.getVisEvolution().visualizeEvolution( type, idsList, authors, publications, startYear, endYear );
 			break;
-		}
+			}
 		case "Bubbles": {
-			visMap = exploreVis.visualizeBubbles( type, idsList, authors, publications, startYear, endYear );
+			visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, authors, publications, startYear, endYear );
 			break;
-		}
+			}
 		case "Group": {
-			visMap = exploreVis.visualizeGroup( type, visType, authors, publications );
+			if ( visType.equals( "researchers" ) )
+			{
+				visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, authors, publications );
+			}
+			if ( visType.equals( "conferences" ) )
+			{
+				visMap = visualizationFeature.getVisGroup().visualizeConferencesGroup( type, authors, publications );
+			}
+			if ( visType.equals( "publications" ) )
+			{
+				visMap = visualizationFeature.getVisGroup().visualizePublicationsGroup( type, authors, publications );
+			}
+			if ( visType.equals( "topics" ) )
+			{
+				visMap = visualizationFeature.getVisGroup().visualizeTopicsGroup( type, authors, publications );
+			}
 			break;
-		}
+			}
 		case "List": {
-			visMap = exploreVis.visualizeList( type, visType, authors, publications, startYear, endYear, idsList );
+
+			if ( visType.equals( "researchers" ) )
+			{
+				visMap = visualizationFeature.getVisList().visualizeResearchersList( type, authors, publications, startYear, endYear, idsList );
+			}
+			if ( visType.equals( "conferences" ) )
+			{
+				visMap = visualizationFeature.getVisList().visualizeConferencesList( type, authors, publications, startYear, endYear, idsList );
+			}
+			if ( visType.equals( "publications" ) )
+			{
+				visMap = visualizationFeature.getVisList().visualizePublicationsList( type, authors, publications, startYear, endYear, idsList );
+			}
+			if ( visType.equals( "topics" ) )
+			{
+				visMap = visualizationFeature.getVisList().visualizeTopicsList( type, authors, publications, startYear, endYear, idsList );
+			}
 			break;
-		}
+			}
 		case "Comparison": {
-			visMap = exploreVis.visualizeComparison( type, idsList, visType, authors, publications, startYear, endYear, yearFilterPresent );
+			if ( visType.equals( "researchers" ) )
+			{
+				visMap = visualizationFeature.getVisComparison().visualizeResearchersComparison( type, idsList, authors, publications, startYear, endYear, yearFilterPresent );
+			}
+			if ( visType.equals( "conferences" ) )
+			{
+				visMap = visualizationFeature.getVisComparison().visualizeConferencesComparison( type, idsList, authors, publications, startYear, endYear, yearFilterPresent );
+			}
+			if ( visType.equals( "publications" ) )
+			{
+				visMap = visualizationFeature.getVisComparison().visualizePublicationsComparison( type, idsList, authors, publications, startYear, endYear, yearFilterPresent );
+			}
+			if ( visType.equals( "topics" ) )
+			{
+				visMap = visualizationFeature.getVisComparison().visualizeTopicsComparison( type, idsList, authors, publications, startYear, endYear, yearFilterPresent );
+			}
 			break;
-		}
+			}
 		case "Similar": {
-			// System.out.println( "in similar" );
-			visMap = exploreVis.visualizeSimilar( type, visType, authors, idsList );
+			if ( visType.equals( "researchers" ) )
+			{
+				visMap = visualizationFeature.getVisSimilar().visualizeSimilarResearchers( type, authors, idsList );
+			}
+			if ( visType.equals( "conferences" ) )
+			{
+				visMap = visualizationFeature.getVisSimilar().visualizeSimilarConferences( type, authors, idsList );
+			}
+			if ( visType.equals( "publications" ) )
+			{
+				visMap = visualizationFeature.getVisSimilar().visualizeSimilarPublications( type, authors, idsList );
+			}
+			if ( visType.equals( "topics" ) )
+			{
+				visMap = visualizationFeature.getVisSimilar().visualizeSimilarTopics( type, authors, idsList );
+			}
+
 			break;
-		}
+			}
 		}
 		return visMap;
 	}

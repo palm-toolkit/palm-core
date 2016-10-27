@@ -1,4 +1,4 @@
-package de.rwth.i9.palm.graph.feature;
+package de.rwth.i9.palm.visualanalytics.visualization;
 
 import java.awt.Color;
 import java.io.File;
@@ -53,16 +53,9 @@ public class GraphFeatureImpl implements GraphFeature
 	@Override
 	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, List<Author> eventGroupAuthors, Author authorForCoAuthors )
 	{
-		// System.out.println( "at 4: " + authorForCoAuthors );
 		// Create Thread Pool for parallel layout
 		ExecutorService executor = Executors.newFixedThreadPool( 1 );
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-
-		// if ( authorPublications == null || authorPublications.isEmpty() )
-		// {
-		// responseMap.put( "count", 0 );
-		// return responseMap;
-		// }
 
 		Future<?> f = executor.submit( createRunnable( type, authorList, authorPublications, idsList, eventGroupAuthors, authorForCoAuthors ) );
 		try
@@ -77,8 +70,6 @@ public class GraphFeatureImpl implements GraphFeature
 		executor.shutdown();
 
 		responseMap.put( "graphFile", graphFile );
-		// System.out.println( "response map for gephi: " +
-		// responseMap.toString() );
 		return responseMap;
 
 	}

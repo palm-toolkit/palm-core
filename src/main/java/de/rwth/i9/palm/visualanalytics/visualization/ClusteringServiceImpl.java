@@ -1,4 +1,4 @@
-package de.rwth.i9.palm.cluster.service;
+package de.rwth.i9.palm.visualanalytics.visualization;
 
 import java.util.ArrayList;
 import java.util.HashMap;
