@@ -20,13 +20,12 @@ import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.helper.MapSorter;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.DataMiningAuthor;
+import de.rwth.i9.palm.model.DataMiningEventGroup;
+import de.rwth.i9.palm.model.DataMiningPublication;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
-import de.rwth.i9.palm.model.EventInterest;
-import de.rwth.i9.palm.model.EventInterestProfile;
-import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
-import de.rwth.i9.palm.model.PublicationTopic;
+import de.rwth.i9.palm.model.PublicationTopicFlat;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import weka.clusterers.DBSCAN;
 import weka.clusterers.EM;
@@ -167,10 +166,10 @@ public class ClusteringServiceImpl implements ClusteringService
 		// Assign interests of authors to topics of publications..
 		Instances data = new Instances( "authors", attributes, coAuthors.size() );
 
-		System.out.println( "size of coauth: " + coAuthors.size() );
+		// System.out.println( "size of coauth: " + coAuthors.size() );
 		for ( DataMiningAuthor a : coAuthors )
 		{
-			System.out.println( "\n " + a.getName() );
+			// System.out.println( "\n " + a.getName() );
 			Instance i = new DenseInstance( attributes.size() );
 			List<String> authorInterests = new ArrayList<String>();
 			List<Double> authorInterestWeights = new ArrayList<Double>();
@@ -178,7 +177,7 @@ public class ClusteringServiceImpl implements ClusteringService
 			interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
 			interests = MapSorter.sortByValue( interests );
 
-			System.out.println( interests.toString() );
+			// System.out.println( interests.toString() );
 
 			int count = 0;
 			List<String> authorTopInterests = new ArrayList<String>();
@@ -218,10 +217,10 @@ public class ClusteringServiceImpl implements ClusteringService
 			data.add( i );
 		}
 
-		System.out.println( " NODE TERMS:  " + nodeTerms.size() );
-		System.out.println( "size of data: " + data.size() );
+		// System.out.println( " NODE TERMS: " + nodeTerms.size() );
+		// System.out.println( "size of data: " + data.size() );
 		midTime = ( System.currentTimeMillis() - startTime ) / 1000;
-		System.out.println( "Step 3: " + midTime );
+		// System.out.println( "Step 3: " + midTime );
 
 		try
 		{
@@ -315,7 +314,6 @@ public class ClusteringServiceImpl implements ClusteringService
 		return resultMap;
 	}
 
-	// CLUSTER AS PER DATA MINING OBJECT PENDING!!!!!
 	@Override
 	public Map<String, Object> clusterConferences( String algorithm, List<Author> authorList, Set<Publication> publications )
 	{
@@ -324,112 +322,114 @@ public class ClusteringServiceImpl implements ClusteringService
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
 		Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
 
-		// Find topics from publications - This will govern clustering
-		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		List<String> allTopics = new ArrayList<String>();
-		for ( Publication pub : publications )
+		List<DataMiningEventGroup> allConferences = persistenceStrategy.getEventGroupDAO().getDataMiningObjects();
+		List<DataMiningEventGroup> conferencesFromSelection = new ArrayList<DataMiningEventGroup>();
+
+		List<Publication> publicationsList = new ArrayList<Publication>( publications );
+		List<EventGroup> eventGroups = new ArrayList<EventGroup>();
+		// List<Event> events = new ArrayList<Event>();
+
+		for ( int i = 0; i < publicationsList.size(); i++ )
 		{
-			Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
-			for ( PublicationTopic pubTopic : publicationTopics )
+			Event e = publicationsList.get( i ).getEvent();
+			if ( e != null )
 			{
-				List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
-				List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
-				for ( int i = 0; i < topics.size(); i++ )
+				EventGroup eventGroup = e.getEventGroup();
+				// System.out.println( eventGroup.getName() );
+				if ( eventGroup != null )
 				{
-					if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.2 )
+					if ( !eventGroups.contains( eventGroup ) )
 					{
-						allTopics.add( topics.get( i ) );
-						attributes.add( new Attribute( topics.get( i ) ) );
+						eventGroups.add( eventGroup );
 					}
 				}
 			}
 		}
 
-		List<Publication> publicationsList = new ArrayList<Publication>( publications );
-
-		List<Event> events = new ArrayList<Event>();
-
-		for ( int i = 0; i < publicationsList.size(); i++ )
+		// Find DataMiningEvent Groups corresponding to the subset of
+		// conferences
+		for ( DataMiningEventGroup dmc : allConferences )
 		{
-			Event event = publicationsList.get( i ).getEvent();
-
-			if ( event != null )
+			for ( EventGroup eg : eventGroups )
 			{
-				if ( !events.contains( event ) )
+				if ( dmc.getName().equals( eg.getName() ) )
+					conferencesFromSelection.add( dmc );
+			}
+		}
+
+		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+		List<String> allInterests = new ArrayList<String>();
+
+		for ( DataMiningEventGroup dmeg : conferencesFromSelection )
+		{
+			Map<String, Double> interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
+
+			Iterator<String> interestTerm = interests.keySet().iterator();
+			Iterator<Double> interestTermWeight = interests.values().iterator();
+			while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+			{
+				String interest = ( interestTerm.next() );
+				if ( !allInterests.contains( interest ) )
 				{
-					events.add( event );
+					allInterests.add( interest );
+					attributes.add( new Attribute( interest ) );
 				}
 			}
 		}
 
 		// Assign interests of authors to topics of publications..
-		Instances data = new Instances( "authors", attributes, events.size() );
-		List<EventGroup> eventGroups = new ArrayList<EventGroup>();
-		List<List<String>> eventGroupInterests = new ArrayList<List<String>>();
-		List<List<Double>> eventGroupInterestWeights = new ArrayList<List<Double>>();
+		Instances data = new Instances( "eventGroups", attributes, conferencesFromSelection.size() );
 
-		for ( Event e : events )
+		for ( DataMiningEventGroup eg : conferencesFromSelection )
 		{
-			Set<EventInterestProfile> eventInterestProfiles = e.getEventInterestProfiles();
-			EventGroup eventGroup = e.getEventGroup();
-			if ( !eventGroups.contains( eventGroup ) )
-			{
-				eventGroups.add( eventGroup );
-				eventGroupInterests.add( new ArrayList<String>() );
-				eventGroupInterestWeights.add( new ArrayList<Double>() );
-			}
-			for ( EventInterestProfile eip : eventInterestProfiles )
-			{
-				Set<EventInterest> eis = eip.getEventInterests();
-				for ( EventInterest ei : eis )
-				{
-					Map<Interest, Double> interests = ei.getTermWeights();
-					Iterator<Interest> interestTerm = interests.keySet().iterator();
-					Iterator<Double> interestTermWeight = interests.values().iterator();
-
-					while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
-					{
-						String interest = ( interestTerm.next().getTerm() );
-						Double weight = interestTermWeight.next();
-						Map<String, Double> temp = new HashMap<String, Double>();
-						temp.put( interest, weight );
-
-						int groupIndex = eventGroups.indexOf( eventGroup );
-						List<String> groupInterests = eventGroupInterests.get( groupIndex );
-						List<Double> groupInterestWeights = eventGroupInterestWeights.get( groupIndex );
-
-						if ( !groupInterests.contains( interest ) )
-						{
-							groupInterests.add( interest );
-							groupInterestWeights.add( weight );
-						}
-						else
-							groupInterestWeights.add( groupInterests.indexOf( interest ), groupInterestWeights.get( groupInterests.indexOf( interest ) ) + weight );
-					}
-
-				}
-			}
-		}
-		for ( int g = 0; g < eventGroups.size(); g++ )
-		{
+			// System.out.println( "\n " + eg.getName() );
 			Instance i = new DenseInstance( attributes.size() );
+			List<String> eventGroupInterests = new ArrayList<String>();
+			List<Double> eventGroupInterestWeights = new ArrayList<Double>();
+			Map<String, Double> interests = new HashMap<String, Double>();
+			interests = InterestParser.parseInterestString( eg.getEventGroup_interest_flat().getInterests() );
+			interests = MapSorter.sortByValue( interests );
 
-			// check if author interests are present in the topic list, if yes,
-			// their weights are taken into account for clustering
-			for ( int s = 0; s < allTopics.size(); s++ )
+			// System.out.println( interests.toString() );
+
+			int count = 0;
+			List<String> eventGroupTopInterests = new ArrayList<String>();
+			Iterator<String> interestTerm = interests.keySet().iterator();
+			Iterator<Double> interestTermWeight = interests.values().iterator();
+			while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 			{
-				if ( eventGroupInterests.get( g ).contains( allTopics.get( s ) ) )
+				String interest = ( interestTerm.next() );
+				Double weight = interestTermWeight.next();
+				if ( !eventGroupInterests.contains( interest ) )
 				{
-					i.setValue( attributes.get( s ), 1 );
+					eventGroupInterests.add( interest );
+					eventGroupInterestWeights.add( weight );
+					if ( count < 8 )
+						eventGroupTopInterests.add( interest );
+					count++;
+				}
+
+			}
+
+			// System.out.println( eg.getName() + " " + eventGroupTopInterests
+			// );
+			nodeTerms.put( eg.getId(), eventGroupTopInterests );
+
+			// check if author interests are present in the topic list, if
+			// yes,
+			// their weights are taken into account for clustering
+			for ( int s = 0; s < allInterests.size(); s++ )
+			{
+				if ( eventGroupInterests.contains( allInterests.get( s ) ) )
+				{
+					i.setValue( attributes.get( s ), eventGroupInterestWeights.get( eventGroupInterests.indexOf( allInterests.get( s ) ) ) );
 				}
 				else
 				{
 					i.setValue( attributes.get( s ), 0 );
 				}
 			}
-
 			data.add( i );
-
 		}
 
 		try
@@ -441,7 +441,7 @@ public class ClusteringServiceImpl implements ClusteringService
 
 				for ( int ind = 0; ind < data.size(); ind++ )
 				{
-					clusterMap.put( mapper.writeValueAsString( eventGroups.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					clusterMap.put( mapper.writeValueAsString( conferencesFromSelection.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
 				}
 
 				Instances instances = result.getClusterCenters();
@@ -529,7 +529,6 @@ public class ClusteringServiceImpl implements ClusteringService
 		return resultMap;
 	}
 
-	// CLUSTER AS PER DATA MINING OBJECT PENDING!!!!!
 	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications )
 	{
 		List<Publication> publicationsList = new ArrayList<Publication>( publications );
@@ -538,74 +537,115 @@ public class ClusteringServiceImpl implements ClusteringService
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
 		Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
-		// Find topics from publications - This will govern clustering
+
+		List<DataMiningPublication> allPublications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
+		List<DataMiningPublication> publicationsFromSelection = new ArrayList<DataMiningPublication>();
+
+		// Find DataMiningEvent Groups corresponding to the subset of
+		// conferences
+		for ( DataMiningPublication dmp : allPublications )
+		{
+			for ( Publication p : publications )
+			{
+				if ( dmp.getTitle().equals( p.getTitle() ) )
+					publicationsFromSelection.add( dmp );
+			}
+		}
+
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> allTopics = new ArrayList<String>();
-		for ( Publication pub : publications )
+
+		for ( DataMiningPublication dmp : publicationsFromSelection )
 		{
-			Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
-			for ( PublicationTopic pubTopic : publicationTopics )
+			PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
+			if ( ptf != null )
 			{
-				List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
-				List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
-				for ( int i = 0; i < topics.size(); i++ )
+				Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
+
+				Iterator<String> term = topics.keySet().iterator();
+				Iterator<Double> termWeight = topics.values().iterator();
+				while ( term.hasNext() && termWeight.hasNext() )
 				{
-					if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.2 )
+					String topic = ( term.next() );
+					if ( !allTopics.contains( topic ) )
 					{
-						allTopics.add( topics.get( i ) );
-						attributes.add( new Attribute( topics.get( i ) ) );
+						allTopics.add( topic );
+						attributes.add( new Attribute( topic ) );
 					}
 				}
 			}
 		}
-		// Assign interests of authors to topics of publications..
-		Instances data = new Instances( "publications", attributes, publications.size() );
 
-		for ( Publication p : publications )
+		// Assign interests of authors to topics of publications..
+		Instances data = new Instances( "publications", attributes, publicationsFromSelection.size() );
+
+		for ( DataMiningPublication p : publicationsFromSelection )
 		{
+			// System.out.println( "\n " + eg.getName() );
+			Instance i = new DenseInstance( attributes.size() );
 			List<String> publicationTopics = new ArrayList<String>();
 			List<Double> publicationTopicWeights = new ArrayList<Double>();
-			Instance i = new DenseInstance( attributes.size() );
-			Set<PublicationTopic> authorInterestProfiles = p.getPublicationTopics();
-			for ( PublicationTopic pt : authorInterestProfiles )
+			Map<String, Double> topics = new HashMap<String, Double>();
+			PublicationTopicFlat ptf = p.getPublication_topic_flat();
+			if ( ptf != null )
 			{
-				List<Double> topicWeights = new ArrayList<Double>( pt.getTermValues().values() );
-				List<String> topics = new ArrayList<String>( pt.getTermValues().keySet() );
-				for ( int j = 0; j < topics.size(); j++ )
+				topics = InterestParser.parseInterestString( ptf.getTopics() );
+				topics = MapSorter.sortByValue( topics );
+
+				// System.out.println( interests.toString() );
+
+				int count = 0;
+				List<String> publicationTopTopics = new ArrayList<String>();
+				Iterator<String> term = topics.keySet().iterator();
+				Iterator<Double> termWeight = topics.values().iterator();
+				while ( term.hasNext() && termWeight.hasNext() )
 				{
-					if ( !publicationTopics.contains( topics.get( j ) ) )
+					String interest = ( term.next() );
+					Double weight = termWeight.next();
+					if ( !publicationTopics.contains( interest ) )
 					{
-						publicationTopics.add( topics.get( j ) );
-						publicationTopicWeights.add( topicWeights.get( j ) );
+						publicationTopics.add( interest );
+						publicationTopicWeights.add( weight );
+						if ( count < 8 )
+							publicationTopTopics.add( interest );
+						count++;
+					}
+
+				}
+
+				// System.out.println( p.getTitle() + " " + publicationTopTopics
+				// );
+				nodeTerms.put( p.getId(), publicationTopTopics );
+
+				// check if author interests are present in the topic list, if
+				// yes,
+				// their weights are taken into account for clustering
+				for ( int s = 0; s < allTopics.size(); s++ )
+				{
+					if ( publicationTopics.contains( allTopics.get( s ) ) )
+					{
+						i.setValue( attributes.get( s ), publicationTopicWeights.get( publicationTopics.indexOf( allTopics.get( s ) ) ) );
+					}
+					else
+					{
+						i.setValue( attributes.get( s ), 0 );
 					}
 				}
+				data.add( i );
 			}
-			// check if author interests are present in the topic list, if yes,
-			// their weights are taken into account for clustering
-			for ( int s = 0; s < allTopics.size(); s++ )
-			{
-				if ( publicationTopics.contains( allTopics.get( s ) ) )
-				{
-					i.setValue( attributes.get( s ), publicationTopicWeights.get( publicationTopics.indexOf( allTopics.get( s ) ) ) );
-				}
-				else
-				{
-					i.setValue( attributes.get( s ), 0 );
-				}
-			}
-			data.add( i );
 		}
+
 		try
 		{
 			// applying the clustering algorithm
 			if ( algorithm.equals( "xmeans" ) )
 			{
-				System.out.println( "in xmeans" );
+				// System.out.println( "in xmeans" );
 				XMeans result = WekaXMeans.run( 2, data );
 
 				for ( int ind = 0; ind < data.size(); ind++ )
 				{
-					clusterMap.put( mapper.writeValueAsString( publicationsList.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					clusterMap.put( mapper.writeValueAsString( publicationsFromSelection.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
 				}
 
 				Instances instances = result.getClusterCenters();
@@ -686,7 +726,7 @@ public class ClusteringServiceImpl implements ClusteringService
 			System.out.println( e );
 		}
 
-		System.out.println( clusterMap.size() + " .. " + clusterMap.size() );
+		// System.out.println( clusterMap.size() + " .. " + clusterMap.size() );
 		resultMap.put( "clusterMap", clusterMap );
 		resultMap.put( "clusterTerms", clusterTerms );
 		resultMap.put( "nodeTerms", nodeTerms );

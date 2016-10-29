@@ -95,6 +95,7 @@ public class GroupVisualizationImpl implements GroupVisualization
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		Map<String, Object> clusteringResultMap = clusteringService.clusterPublications( "xmeans", publications );
 		Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
+		Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
 		Map<String, Integer> mapClusterPublication = (Map<String, Integer>) clusteringResultMap.get( "clusterMap" );
 		if ( mapClusterPublication != null )
 		{
@@ -128,8 +129,8 @@ public class GroupVisualizationImpl implements GroupVisualization
 				Iterator<String> iterator = mapValues.values().iterator();
 				while ( iterator.hasNext() )
 				{
-					names.add( iterator.next() );
 					ids.add( iterator.next() );
+					names.add( iterator.next() );
 				}
 			}
 
@@ -140,6 +141,7 @@ public class GroupVisualizationImpl implements GroupVisualization
 				responseMapTemp.put( "id", ids.get( i ) );
 				responseMapTemp.put( "name", names.get( i ) );
 				responseMapTemp.put( "cluster", clusters.get( i ) );
+				responseMapTemp.put( "nodeTerms", nodeTerms.get( ids.get( i ) ) );
 				responseMapTemp.put( "clusterTerms", clusterTerms.get( clusters.get( i ) ) );
 				publicationsList.add( responseMapTemp );
 			}
@@ -192,10 +194,11 @@ public class GroupVisualizationImpl implements GroupVisualization
 					e.printStackTrace();
 				}
 				Iterator<String> iterator = mapValues.values().iterator();
+				System.out.println( mapValues.values().toString() );
 				while ( iterator.hasNext() )
 				{
-					names.add( iterator.next() );
 					ids.add( iterator.next() );
+					names.add( iterator.next() );
 					abrs.add( iterator.next() );
 				}
 			}

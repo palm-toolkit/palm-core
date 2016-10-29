@@ -8,8 +8,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.helper.MapSorter;
@@ -24,7 +22,6 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 public class SimilarityServiceImpl implements SimilarityService
 {
 	long startTime = System.currentTimeMillis();
-	private ObjectMapper mapper = new ObjectMapper();
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -34,7 +31,6 @@ public class SimilarityServiceImpl implements SimilarityService
 
 	public Map<String, Object> similarAuthors( List<Author> authorList )
 	{
-		System.out.println( "in similar authors" );
 		// all authors in PALM
 		List<DataMiningAuthor> authors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
 
@@ -92,8 +88,6 @@ public class SimilarityServiceImpl implements SimilarityService
 				}
 			}
 
-			// System.out.println( count.toString() );
-
 			for ( int i = 0; i < count.size(); i++ )
 			{
 				if ( count.get( i ) != authorList.size() )
@@ -113,7 +107,6 @@ public class SimilarityServiceImpl implements SimilarityService
 		{
 			if ( !mainAuthors.contains( a ) )
 			{
-				System.out.println( "\nAuthor: " + a.getName() );
 				othersInterests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
 				for ( int i = 0; i < interests.size(); i++ )
 				{
@@ -121,8 +114,6 @@ public class SimilarityServiceImpl implements SimilarityService
 
 					if ( othersInterests.containsKey( term ) )
 					{
-						System.out.println( "interest : " + term );
-
 						if ( scoreMap.containsKey( a ) )
 						{
 							Double val = scoreMap.get( a );
@@ -151,7 +142,6 @@ public class SimilarityServiceImpl implements SimilarityService
 						}
 					}
 				}
-				System.out.println( scoreMap.get( a ) );
 			}
 
 		}
@@ -214,7 +204,6 @@ public class SimilarityServiceImpl implements SimilarityService
 						mainEventGroups.add( dmeg );
 
 						Map<String, Double> tempInterests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
-						System.out.println( tempInterests.toString() );
 						List<String> keys = new ArrayList<String>( tempInterests.keySet() );
 						for ( int i = 0; i < tempInterests.size(); i++ )
 						{
@@ -253,7 +242,6 @@ public class SimilarityServiceImpl implements SimilarityService
 		{
 			if ( !mainEventGroups.contains( eg ) )
 			{
-				System.out.println( "\nAuthor: " + eg.getName() );
 				if ( !eg.getEventGroup_interest_flat().getInterests().isEmpty() )
 					othersInterests = InterestParser.parseInterestString( eg.getEventGroup_interest_flat().getInterests() );
 				else
@@ -265,8 +253,6 @@ public class SimilarityServiceImpl implements SimilarityService
 
 					if ( othersInterests.containsKey( term ) )
 					{
-						System.out.println( "interest : " + term );
-
 						if ( scoreMap.containsKey( eg ) )
 						{
 							Double val = scoreMap.get( eg );
@@ -295,7 +281,6 @@ public class SimilarityServiceImpl implements SimilarityService
 						}
 					}
 				}
-				System.out.println( scoreMap.get( eg ) );
 			}
 
 		}
@@ -335,7 +320,6 @@ public class SimilarityServiceImpl implements SimilarityService
 			{
 				if ( dmp.getTitle().equals( p.getTitle() ) )
 				{
-					System.out.println( "indide 1st check" );
 					mainPublications.add( dmp );
 					publicationTopics = InterestParser.parseInterestString( dmp.getPublication_topic_flat().getTopics() );
 				}
