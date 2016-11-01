@@ -172,6 +172,10 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		return visMap;
+
+		// attributes from the interest table
+		// set data from the conf_flat and author_flat tables
+		// apply apriori
 	}
 
 }

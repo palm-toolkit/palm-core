@@ -3,6 +3,7 @@ package de.rwth.i9.palm.controller;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
@@ -72,6 +74,9 @@ public class VisualAnalyticsController
 
 	@Autowired
 	private VisualizationFeature visualizationFeature;
+
+	@Autowired
+	private PalmAnalytics palmAnalytics;
 
 	// Use explore/createVAWidgets to create Visual Analytics Widgets
 	@Transactional
@@ -416,6 +421,64 @@ public class VisualAnalyticsController
 		}
 	}
 
+	@SuppressWarnings( "unchecked" )
+	@Transactional
+	@RequestMapping( value = "/searchTopics", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> getTopicList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "publicationType", required = false ) String publicationType, @RequestParam( value = "authorId", required = false ) String authorId, @RequestParam( value = "eventId", required = false ) String eventId, @RequestParam( value = "page", required = false ) Integer page, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "year", required = false ) String year, @RequestParam( value = "orderBy", required = false ) String orderBy, final HttpServletResponse response )
+	{
+		/* == Set Default Values== */
+		if ( query == null )
+			query = "";
+		if ( publicationType == null )
+			publicationType = "all";
+		if ( page == null )
+			page = 0;
+		if ( maxresult == null )
+			maxresult = 50;
+		if ( fulltextSearch == null || ( fulltextSearch != null && fulltextSearch.equals( "yes" ) ) )
+			fulltextSearch = "yes";
+		else
+			fulltextSearch = "no";
+		if ( year == null || year.isEmpty() )
+			year = "all";
+		if ( orderBy == null )
+			orderBy = "citation";
+		// Currently, system only provides query on internal database
+		source = "internal";
+
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		List<Map<String, Object>> mapList = new ArrayList<Map<String, Object>>();
+		Map<String, Object> interestMap = persistenceStrategy.getInterestDAO().allTermsByPaging( query, page, maxresult );
+		List<Interest> interests = (List<Interest>) interestMap.get( "interests" );
+		List<String> allTopics = persistenceStrategy.getPublicationTopicDAO().allTopics();
+
+		// intersection of topics and interests
+		List<Interest> combinedInterests = new ArrayList<Interest>();
+		for ( int i = 0; i < allTopics.size(); i++ )
+		{
+			for ( int j = 0; j < interests.size(); j++ )
+			{
+				float dist= palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( allTopics.get( i ), interests.get( j ).getTerm());
+
+				if ( dist > 0.9f && !combinedInterests.contains( interests.get( j ) ) )
+				{
+					Map<String, Object> interestMapTemp = new HashMap<String, Object>();
+
+					combinedInterests.add( interests.get( j ) );
+					interestMapTemp.put( "id", interests.get( j ).getId() );
+					interestMapTemp.put( "name", interests.get( j ).getTerm() );
+
+					mapList.add( interestMapTemp );
+				}
+			}
+		}
+
+		responseMap.put( "topicsList", mapList );
+		return responseMap;
+	}
+
 	@Transactional
 	@RequestMapping( value = "/setupStage", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> setupStage( @RequestParam( value = "id", required = false ) String id, @RequestParam( value = "type", required = false ) String type, @RequestParam( value = "replace", required = false ) String replace, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
@@ -451,7 +514,8 @@ public class VisualAnalyticsController
 			}
 			if ( type.equals( "topic" ) )
 			{
-
+				Interest interest = persistenceStrategy.getInterestDAO().getById( i );
+				namesList.add( interest.getTerm() );
 			}
 			if ( type.equals( "circle" ) )
 			{
@@ -780,6 +844,7 @@ public class VisualAnalyticsController
 					}
 					if ( filters.get( i ).equals( "Topics" ) )
 					{
+						System.out.println( "topic filter there!" );
 						responseMap.put( "topicFilter", filterFeature.getDataForFilter().topicFilter( idsList, type ) );
 					}
 				}

@@ -385,8 +385,6 @@ public class SimilarityServiceImpl implements SimilarityService
 		{
 			if ( !mainPublications.contains( p ) )
 			{
-				System.out.println( "Pub: " + p.getTitle() );
-
 				if ( p.getPublication_topic_flat() != null )
 					if ( p.getPublication_topic_flat().getTopics() != null )
 						othersTopics = InterestParser.parseInterestString( p.getPublication_topic_flat().getTopics() );
@@ -399,7 +397,6 @@ public class SimilarityServiceImpl implements SimilarityService
 
 					if ( othersTopics.containsKey( term ) )
 					{
-						System.out.println( "interest : " + term );
 
 						if ( scoreMap.containsKey( p ) )
 						{
@@ -429,7 +426,6 @@ public class SimilarityServiceImpl implements SimilarityService
 						}
 					}
 				}
-				System.out.println( "scoreMap: " + scoreMap.get( p ) + "\n" );
 			}
 
 		}

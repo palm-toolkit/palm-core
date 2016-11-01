@@ -131,7 +131,7 @@ public class DataForFilterImpl implements DataForFilter
 	public Map<String, Object> topicFilter( List<String> idsList, String type )
 	{
 		Map<String, Object> topicsMap = new HashMap<String, Object>();
-
+		System.out.println( "type: " + type );
 		if ( type.equals( "researcher" ) )
 		{
 			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type );
@@ -262,13 +262,101 @@ public class DataForFilterImpl implements DataForFilter
 						for ( int j = 0; j < termValues.size(); j++ )
 						{
 							Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
-							if ( !allTopics.contains( termValues.get( j ) ) && allConferenceInterests.contains( termValues.get( j ) ) )
+							if ( !allTopics.contains( termValues.get( j ) ) )
 							{
-								int index = allConferenceInterests.indexOf( termValues.get( j ) );
-								allTopics.add( termValues.get( j ) );
-								topicDetail.put( "id", allConferenceInterestIds.get( index ) );
-								topicDetail.put( "title", termValues.get( j ) );
-								topicDetailsList.add( topicDetail );
+								int index = 0;// allConferenceInterests.indexOf(
+												// termValues.get( j ) );
+								// allTopics.add( termValues.get( j ) );
+								// topicDetail.put( "id",
+								// allConferenceInterestIds.get( index ) );
+								// topicDetail.put( "title", termValues.get( j )
+								// );
+								// topicDetailsList.add( topicDetail );
+
+								if ( allConferenceInterests.contains( termValues.get( j ) ) )
+								{
+									index = allConferenceInterests.indexOf( termValues.get( j ) );
+									allTopics.add( termValues.get( j ) );
+									topicDetail.put( "id", allConferenceInterestIds.get( index ) );
+									topicDetail.put( "title", termValues.get( j ) );
+									topicDetailsList.add( topicDetail );
+								}
+								else if ( allConferenceInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
+								{
+									index = allConferenceInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									allTopics.add( termValues.get( j ) );
+									topicDetail.put( "id", allConferenceInterestIds.get( index ) );
+									topicDetail.put( "title", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									topicDetailsList.add( topicDetail );
+								}
+							}
+						}
+					}
+				}
+			}
+			topicsMap.put( "topicDetailsList", topicDetailsList );
+
+		}
+		if ( type.equals( "publication" ) )
+		{
+			System.out.println( "1" );
+			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type );
+
+			List<Interest> allInterestsInDB = persistenceStrategy.getInterestDAO().allTerms();
+
+			List<String> allPublicationInterests = new ArrayList<String>();
+			List<String> allPublicationInterestIds = new ArrayList<String>();
+			for ( Interest interest : allInterestsInDB )
+			{
+				if ( !allPublicationInterests.contains( interest.getTerm() ) )
+				{
+					allPublicationInterests.add( interest.getTerm() );
+					allPublicationInterestIds.add( interest.getId() );
+				}
+			}
+
+			ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
+			List<String> allTopics = new ArrayList<String>();
+			for ( Publication pub : publications )
+			{
+				Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
+				for ( PublicationTopic pubTopic : publicationTopics )
+				{
+
+					for ( int i = 0; i < pubTopic.getTermValues().size(); i++ )
+					{
+
+						List<String> termValues = new ArrayList<>( pubTopic.getTermValues().keySet() );
+						for ( int j = 0; j < termValues.size(); j++ )
+						{
+							// System.out.println( termValues.get( j ) );
+							Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
+							if ( !allTopics.contains( termValues.get( j ) ) )
+							{
+								int index = 0; // allPublicationInterests.indexOf(
+												// termValues.get( j ) );
+								// allTopics.add( termValues.get( j ) );
+								// topicDetail.put( "id",
+								// allPublicationInterestIds.get( index ) );
+								// topicDetail.put( "title", termValues.get( j )
+								// );
+								// topicDetailsList.add( topicDetail );
+								if ( allPublicationInterests.contains( termValues.get( j ) ) )
+								{
+									index = allPublicationInterests.indexOf( termValues.get( j ) );
+									allTopics.add( termValues.get( j ) );
+									topicDetail.put( "id", allPublicationInterestIds.get( index ) );
+									topicDetail.put( "title", termValues.get( j ) );
+									topicDetailsList.add( topicDetail );
+								}
+								else if ( allPublicationInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
+								{
+									index = allPublicationInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									allTopics.add( termValues.get( j ) );
+									topicDetail.put( "id", allPublicationInterestIds.get( index ) );
+									topicDetail.put( "title", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									topicDetailsList.add( topicDetail );
+								}
 							}
 						}
 					}

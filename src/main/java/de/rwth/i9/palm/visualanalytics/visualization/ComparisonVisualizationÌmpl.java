@@ -1746,6 +1746,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				// List<Publication> eventGroupPubs = new
 				// ArrayList<Publication>();
 				Publication p = persistenceStrategy.getPublicationDAO().getById( idsList.get( i ) );
+
+				System.out.println( "\n" + p.getTitle() );
 				publicationTempList.add( p );
 				for ( Interest interest : allInterestsInDB )
 				{
@@ -1836,8 +1838,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						{
 							if ( !interestTopicNames.contains( terms.get( k ) ) )// &&
 							{
-								// System.out.println( terms.get( k ) + " in
-								// 1 " );
+								System.out.println( terms.get( k ) + " in 1 " );
 								if ( allPublicationInterests.contains( terms.get( k ) ) )
 								{
 									// System.out.println( " inside 1 " );
@@ -1852,7 +1853,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 								}
 								else if ( allPublicationInterests.contains( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) ) )
 								{
-									// System.out.println( " inside 2 " );
+									System.out.println( " inside 2 " + terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 									interestTopicNames.add( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 									int pos = allPublicationInterests.indexOf( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 									interestTopicIds.add( allPublicationInterestIds.get( pos ) );
