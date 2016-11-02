@@ -34,7 +34,7 @@ public class LocationsVisualizationImpl implements LocationsVisualization
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
-		if ( type.equals( "researcher" ) || type.equals( "publication" ) )
+		if ( type.equals( "researcher" ) || type.equals( "publication" ) || type.equals( "topic" ) )
 			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, true ) );
 
 		if ( type.equals( "conference" ) )

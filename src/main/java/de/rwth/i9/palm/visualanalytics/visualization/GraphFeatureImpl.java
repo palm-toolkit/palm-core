@@ -51,13 +51,13 @@ public class GraphFeatureImpl implements GraphFeature
 	ExportController ec;
 
 	@Override
-	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, List<Author> eventGroupAuthors, Author authorForCoAuthors )
+	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, List<Author> eventGroupAuthors, Author authorForCoAuthors, List<Author> topicAuthors )
 	{
 		// Create Thread Pool for parallel layout
 		ExecutorService executor = Executors.newFixedThreadPool( 1 );
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
-		Future<?> f = executor.submit( createRunnable( type, authorList, authorPublications, idsList, eventGroupAuthors, authorForCoAuthors ) );
+		Future<?> f = executor.submit( createRunnable( type, authorList, authorPublications, idsList, eventGroupAuthors, authorForCoAuthors, topicAuthors ) );
 		try
 		{
 			f.get();
@@ -74,7 +74,7 @@ public class GraphFeatureImpl implements GraphFeature
 
 	}
 
-	private Runnable createRunnable( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final List<Author> eventGroupAuthors, final Author authorForCoAuthors )
+	private Runnable createRunnable( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final List<Author> eventGroupAuthors, final Author authorForCoAuthors, final List<Author> topicAuthors )
 	{
 		return new Runnable()
 		{
@@ -252,8 +252,68 @@ public class GraphFeatureImpl implements GraphFeature
 								tempPubAuthors.add( publicationAuthor );
 							}
 						}
-						if ( type.equals( "publication" ) )
+						if ( type.equals( "topic" ) )
 						{
+							if ( topicAuthors.contains( publicationAuthor ) )
+							{
+								Node n = graphModel.factory().newNode( publicationAuthor.getName() );
+
+								// add the authors which are not already present
+								// in
+								// the nodes table
+								if ( !nodes.contains( n ) )
+								{
+									nodes.add( n );
+									n.setLabel( publicationAuthor.getName() );
+									if ( pubs.contains( publication ) )
+										n.setSize( 0.5f );
+									else
+										n.setSize( 0.1f );
+									n.setAttribute( "isAdded", publicationAuthor.isAdded() );
+									n.setAttribute( "authorId", publicationAuthor.getId() );
+									n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
+									undirectedGraph.addNode( n );
+
+								}
+								for ( int i = 0; i < tempPubAuthors.size(); i++ )
+								{
+									Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
+									// System.out.println( "pub node: " +
+									// publicationAuthor.getName() );
+									if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
+									{
+										Node tempAuthorNode = graphModel.factory().newNode( tempPubAuthors.get( i ).getName() );
+										int indexTempNode = nodes.indexOf( tempAuthorNode );
+										int indexPubNode = nodes.indexOf( pubAuthorNode );
+										Boolean flag = false;
+
+										// check if an edge already exists
+										// between the 2 nodes
+										for ( Edge eTest : edges )
+										{
+											if ( ( eTest.getSource().equals( nodes.get( indexTempNode ) ) && eTest.getTarget().equals( nodes.get( indexPubNode ) ) ) || ( eTest.getSource().equals( nodes.get( indexPubNode ) ) && eTest.getTarget().equals( nodes.get( indexTempNode ) ) ) )
+											{
+												flag = true;
+												eTest.setWeight( eTest.getWeight() + 0.1 );
+											}
+										}
+										if ( !flag )
+										{
+											Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
+											edges.add( e );
+											e.setWeight( 0.1 );
+											e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
+											e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
+											e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i ).isAdded() );
+											e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
+											undirectedGraph.addEdge( e );
+										}
+
+									}
+								}
+								tempPubAuthors.add( publicationAuthor );
+
+							}
 						}
 					}
 				}

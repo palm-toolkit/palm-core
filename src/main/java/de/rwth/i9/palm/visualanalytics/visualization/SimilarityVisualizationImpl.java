@@ -171,6 +171,14 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 	public Map<String, Object> visualizeSimilarTopics( String type, List<Author> authorList, List<String> idsList )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
+
+		Map<String, Object> map = similarityService.similarTopics( idsList );
+
+		visMap.put( "authorNames", map.get( "authorNames" ) );
+		visMap.put( "authorIds", map.get( "authorIds" ) );
+		visMap.put( "similarity", map.get( "similarity" ) );
+		// visMap.put( "interests", map.get( "truncInterests" ) );
+
 		return visMap;
 
 		// attributes from the interest table

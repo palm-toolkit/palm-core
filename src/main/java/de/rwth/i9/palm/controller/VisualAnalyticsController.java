@@ -729,14 +729,17 @@ public class VisualAnalyticsController
 			List<Author> authorList = new ArrayList<Author>();
 			List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
 			List<Publication> publicationList = new ArrayList<Publication>();
+			List<Interest> interestList = new ArrayList<Interest>();
 			if ( type.equals( "researcher" ) )
 				authorList = filterFeature.getFilterHelper().getAuthorsFromIds( idsList );
 			if ( type.equals( "conference" ) )
 				eventGroupList = filterFeature.getFilterHelper().getConferencesFromIds( idsList );
 			if ( type.equals( "publication" ) )
 				publicationList = filterFeature.getFilterHelper().getPublicationsFromIds( idsList );
+			if ( type.equals( "topic" ) )
+				interestList = filterFeature.getFilterHelper().getInterestsFromIds( idsList );
 
-			Set<Publication> publications = filterFeature.getFilteredData().getFilteredPublications( type, authorList, eventGroupList, publicationList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
+			Set<Publication> publications = filterFeature.getFilteredData().getFilteredPublications( type, authorList, eventGroupList, publicationList, interestList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
 
 			visMap = visSwitch( type, idsList, visTab, visType, authorList, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
 
@@ -883,7 +886,7 @@ public class VisualAnalyticsController
 		case "Group": {
 			if ( visType.equals( "researchers" ) )
 			{
-				visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, authors, publications );
+				visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, authors, idsList, publications, startYear, endYear );
 			}
 			if ( visType.equals( "conferences" ) )
 			{

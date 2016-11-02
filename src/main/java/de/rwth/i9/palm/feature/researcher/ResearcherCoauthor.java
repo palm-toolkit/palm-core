@@ -11,6 +11,6 @@ public interface ResearcherCoauthor
 {
 	public Map<String, Object> getResearcherCoAuthorMap( Author author, int startPage, int maxresult );
 
-	public Map<String, Object> getResearcherCoAuthorMapByPublication( List<Author> authorList, Set<Publication> publications, String type );
+	public Map<String, Object> getResearcherCoAuthorMapByPublication( List<Author> authorList, Set<Publication> publications, String type, List<String> idsList, String startYear, String endYear );
 
 }

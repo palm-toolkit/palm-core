@@ -197,16 +197,13 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 
 		for ( int i = 0; i < publications.size(); i++ )
 		{
-			System.out.println( "1" );
 			// set of conditions!!
 			if ( publications.get( i ).getEvent() != null )
 			{
-				System.out.println( "2" );
 				if ( publications.get( i ).getEvent().getEventGroup() != null )
 				{
 					if ( !tempIds.contains( publications.get( i ).getEvent().getId() ) )
 					{
-						System.out.println( "3" );
 						Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
 						tempIds.add( publications.get( i ).getEvent().getId() );
 						eventDetail.put( "name", publications.get( i ).getEvent().getName() );
@@ -218,7 +215,6 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 						eventDetail.put( "id", publications.get( i ).getEvent().getEventGroup().getId() );
 						if ( locations )
 						{
-							System.out.println( "4" );
 							if ( publications.get( i ).getEvent().getLocation() != null )
 								eventDetailsList.add( eventDetail );
 						}
@@ -228,7 +224,6 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 				}
 				else
 				{
-					System.out.println( "5" );
 					Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
 					eventDetail.put( "name", "Event Group name unknown" );
 					eventDetail.put( "location", publications.get( i ).getEvent().getLocation() );
@@ -245,7 +240,6 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 			}
 			else
 			{
-				System.out.println( "6" );
 				Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
 				eventDetail.put( "name", "Event Group unknown" );
 				eventDetail.put( "location", "Location unknown" );

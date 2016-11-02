@@ -13,4 +13,6 @@ public interface SimilarityService
 
 	public Map<String, Object> similarPublications( List<String> idsList );
 
+	public Map<String, Object> similarTopics( List<String> idsList );
+
 }

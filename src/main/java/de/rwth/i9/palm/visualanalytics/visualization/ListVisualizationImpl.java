@@ -29,7 +29,7 @@ public class ListVisualizationImpl implements ListVisualization
 	public Map<String, Object> visualizeResearchersList( String type, List<Author> authorList, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( authorList, publications, type ) );
+		visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( authorList, publications, type, idsList, startYear, endYear ) );
 		return visMap;
 	}
 
@@ -37,9 +37,10 @@ public class ListVisualizationImpl implements ListVisualization
 	public Map<String, Object> visualizeConferencesList( String type, List<Author> authorList, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
 	{
 		System.out.println( "type: " + type );
+		System.out.println( publications.size() );
 
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		if ( type.equals( "researcher" ) || type.equals( "publication" ) )
+		if ( type.equals( "researcher" ) || type.equals( "publication" ) || type.equals( "topic" ) )
 			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, false ) );
 
 		if ( type.equals( "conference" ) )

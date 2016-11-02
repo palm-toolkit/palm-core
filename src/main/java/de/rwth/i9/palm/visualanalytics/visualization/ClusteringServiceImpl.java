@@ -24,6 +24,7 @@ import de.rwth.i9.palm.model.DataMiningEventGroup;
 import de.rwth.i9.palm.model.DataMiningPublication;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopicFlat;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -55,7 +56,7 @@ public class ClusteringServiceImpl implements ClusteringService
 	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public Map<String, Object> clusterAuthors( String algorithm, List<Author> authorList, Set<Publication> authorPublications, String type )
+	public Map<String, Object> clusterAuthors( String algorithm, List<Author> authorList, List<String> idsList, Set<Publication> authorPublications, String type, String startYear, String endYear )
 	{
 		long startTime = System.currentTimeMillis();
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
@@ -100,7 +101,7 @@ public class ClusteringServiceImpl implements ClusteringService
 				}
 				coAuthorList = commonAuthors;
 			}
-			else
+			if ( type.equals( "researcher" ) )
 			{
 				for ( Author a : publication.getAuthors() )
 				{
@@ -113,6 +114,80 @@ public class ClusteringServiceImpl implements ClusteringService
 						if ( !coAuthorList.contains( a ) )
 							coAuthorList.add( a );
 					}
+				}
+			}
+		}
+
+		if ( type.equals( "topic" ) )
+		{
+			System.out.println( "in toh hai" );
+			List<String> interestList = new ArrayList<String>();
+			for ( int i = 0; i < idsList.size(); i++ )
+			{
+				Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
+				interestList.add( interest.getTerm() );
+			}
+			System.out.println( interestList.toString() );
+			List<DataMiningAuthor> DMAuthors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
+			for ( DataMiningAuthor dma : DMAuthors )
+			{
+				Map<String, Double> interests = new HashMap<String, Double>();
+				interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
+				if ( interests.keySet().containsAll( interestList ) )
+				{
+					coAuthorList.add( persistenceStrategy.getAuthorDAO().getById( dma.getId() ) );
+				}
+			}
+		}
+
+		if ( type.equals( "conference" ) )
+		{
+			List<Integer> count = new ArrayList<Integer>();
+			for ( int i = 0; i < idsList.size(); i++ )
+			{
+				EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( idsList.get( i ) );
+				List<Author> eventAuthors = new ArrayList<Author>();
+
+				List<Event> events = eg.getEvents();
+				for ( Event e : events )
+				{
+					List<Publication> eventPublications = e.getPublications();
+					for ( Publication p : eventPublications )
+					{
+						if ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) )
+						{
+							List<Author> authors = p.getAuthors();
+							for ( Author a : authors )
+							{
+								if ( !eventAuthors.contains( a ) )
+								{
+									eventAuthors.add( a );
+								}
+							}
+						}
+					}
+				}
+				for ( Author a : eventAuthors )
+				{
+					if ( !coAuthorList.contains( a ) )
+					{
+						coAuthorList.add( a );
+						count.add( 0 );
+					}
+					else
+					{
+						count.set( coAuthorList.indexOf( a ), count.get( coAuthorList.indexOf( a ) ) + 1 );
+					}
+				}
+			}
+
+			for ( int i = 0; i < coAuthorList.size(); i++ )
+			{
+				if ( count.get( i ) != idsList.size() - 1 )
+				{
+					count.remove( i );
+					coAuthorList.remove( i );
+					i--;
 				}
 			}
 		}
