@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.DataMiningPublication;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
@@ -38,6 +39,7 @@ public class FilterHelperImpl implements FilterHelper
 		List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
 		List<Publication> publicationsList = new ArrayList<Publication>();
 		List<Interest> interestsList = new ArrayList<Interest>();
+		List<Circle> circlesList = new ArrayList<Circle>();
 		if ( type.equals( "researcher" ) )
 			authors = getAuthorsFromIds( idsList );
 		if ( type.equals( "conference" ) )
@@ -46,24 +48,26 @@ public class FilterHelperImpl implements FilterHelper
 			publicationsList = getPublicationsFromIds( idsList );
 		if ( type.equals( "topic" ) )
 			interestsList = getInterestsFromIds( idsList );
+		if ( type.equals( "circle" ) )
+			circlesList = getCirclesFromIds( idsList );
 
 		// if there are more than one authors in consideration
-		publications = new ArrayList<Publication>( typeWisePublications( type, authors, eventGroupList, publicationsList, interestsList ) );
+		publications = new ArrayList<Publication>( typeWisePublications( type, authors, eventGroupList, publicationsList, interestsList, circlesList ) );
 
 		return publications;
 
 	}
 
-	public Set<Publication> typeWisePublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationsList, List<Interest> interestList )
+	public Set<Publication> typeWisePublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationsList, List<Interest> interestList, List<Circle> circleList )
 	{
-		Set<Publication> authorPublications = new HashSet<Publication>();
+		Set<Publication> publications = new HashSet<Publication>();
 
 		if ( type.equals( "researcher" ) )
 		{
 			// if there are more than one authors in consideration
 			if ( authorList.size() > 1 )
 			{
-				List<Publication> authorPublicationsList = new ArrayList<Publication>( authorPublications );
+				List<Publication> authorPublicationsList = new ArrayList<Publication>( publications );
 				List<Publication> tempPubList = new ArrayList<Publication>();
 				List<Integer> count = new ArrayList<Integer>();
 				for ( int i = 0; i < authorList.size(); i++ )
@@ -97,7 +101,7 @@ public class FilterHelperImpl implements FilterHelper
 						i--;
 					}
 				}
-				authorPublications = new HashSet<Publication>( authorPublicationsList );
+				publications = new HashSet<Publication>( authorPublicationsList );
 			}
 			if ( authorList.size() == 1 )
 			{
@@ -109,7 +113,7 @@ public class FilterHelperImpl implements FilterHelper
 						// to not consider publication if year is null
 						if ( pubs.get( c ).getYear() != null || pubs.get( c ).getPublicationDate() != null )
 						{
-							authorPublications.add( pubs.get( c ) );
+							publications.add( pubs.get( c ) );
 						}
 					}
 
@@ -118,30 +122,30 @@ public class FilterHelperImpl implements FilterHelper
 		}
 		if ( type.equals( "conference" ) )
 		{
-			// if there are more than one authors in consideration
+			// if there are more than one conferences in consideration
 			if ( eventGroupList.size() > 1 )
 			{
-				List<Publication> eventGroupPublicationsList = new ArrayList<Publication>( authorPublications );
+				List<Publication> eventGroupPublicationsList = new ArrayList<Publication>( publications );
 				for ( int i = 0; i < eventGroupList.size(); i++ )
 				{
 					List<Event> groupEvents = eventGroupList.get( i ).getEvents();
 					for ( Event e : groupEvents )
 					{
-						List<Publication> publications = e.getPublications();
-						for ( int j = 0; j < publications.size(); j++ )
+						List<Publication> eventGroupPublications = e.getPublications();
+						for ( int j = 0; j < eventGroupPublications.size(); j++ )
 						{
-							if ( !eventGroupPublicationsList.contains( publications.get( j ) ) && ( publications.get( j ).getYear() != null || publications.get( j ).getPublicationDate() != null ) )
+							if ( !eventGroupPublicationsList.contains( eventGroupPublications.get( j ) ) && ( eventGroupPublications.get( j ).getYear() != null || eventGroupPublications.get( j ).getPublicationDate() != null ) )
 							{
-								eventGroupPublicationsList.add( publications.get( j ) );
+								eventGroupPublicationsList.add( eventGroupPublications.get( j ) );
 							}
 						}
 					}
 				}
-				authorPublications = new HashSet<Publication>( eventGroupPublicationsList );
+				publications = new HashSet<Publication>( eventGroupPublicationsList );
 			}
 			if ( eventGroupList.size() == 1 )
 			{
-				authorPublications = new HashSet<Publication>();
+				publications = new HashSet<Publication>();
 
 				// set of conditions!!
 				if ( eventGroupList.get( 0 ) != null )
@@ -150,15 +154,15 @@ public class FilterHelperImpl implements FilterHelper
 						List<Event> groupEvents = eventGroupList.get( 0 ).getEvents();
 						for ( Event e : groupEvents )
 						{
-							List<Publication> publications = e.getPublications();
-							for ( int j = 0; j < publications.size(); j++ )
+							List<Publication> eventGroupPublications = e.getPublications();
+							for ( int j = 0; j < eventGroupPublications.size(); j++ )
 							{
-								if ( !authorPublications.contains( publications.get( j ) ) && ( publications.get( j ).getYear() != null || publications.get( j ).getPublicationDate() != null ) )
+								if ( !eventGroupPublications.contains( eventGroupPublications.get( j ) ) && ( eventGroupPublications.get( j ).getYear() != null || eventGroupPublications.get( j ).getPublicationDate() != null ) )
 								{
-									if ( publications.get( j ) != null && publications.get( j ).getPublicationDate() != null )
-										publications.get( j ).setYear( publications.get( j ).getPublicationDate().toString().substring( 0, 4 ) );
+									if ( eventGroupPublications.get( j ) != null && eventGroupPublications.get( j ).getPublicationDate() != null )
+										eventGroupPublications.get( j ).setYear( eventGroupPublications.get( j ).getPublicationDate().toString().substring( 0, 4 ) );
 
-									authorPublications.add( publications.get( j ) );
+									publications.add( eventGroupPublications.get( j ) );
 								}
 							}
 						}
@@ -168,7 +172,7 @@ public class FilterHelperImpl implements FilterHelper
 		}
 		if ( type.equals( "publication" ) )
 		{
-			authorPublications = new HashSet<Publication>( publicationsList );
+			publications = new HashSet<Publication>( publicationsList );
 		}
 		if ( type.equals( "topic" ) )
 		{
@@ -222,13 +226,69 @@ public class FilterHelperImpl implements FilterHelper
 					i--;
 				}
 			}
-			authorPublications = new HashSet<Publication>( persistenceStrategy.getPublicationDAO().getPublicationByTitle( titles ) );
+			publications = new HashSet<Publication>( persistenceStrategy.getPublicationDAO().getPublicationByTitle( titles ) );
 		}
 		if ( type.equals( "circle" ) )
 		{
+			// if there are more than one circles in consideration
+			if ( circleList.size() > 1 )
+			{
+				List<Publication> circlePublicationsList = new ArrayList<Publication>( publications );
+				List<Publication> tempPubList = new ArrayList<Publication>();
+				List<Integer> count = new ArrayList<Integer>();
+				for ( int i = 0; i < circleList.size(); i++ )
+				{
+					tempPubList = new ArrayList<Publication>( circleList.get( i ).getPublications() );
+					for ( int j = 0; j < tempPubList.size(); j++ )
+					{
+						if ( tempPubList.get( j ).getYear() != null || tempPubList.get( j ).getPublicationDate() != null )
+						{
+							if ( !circlePublicationsList.contains( tempPubList.get( j ) ) )
+							{
+								circlePublicationsList.add( tempPubList.get( j ) );
+								System.out.println( tempPubList.get( j ).getTitle() );
+								count.add( 0 );
+							}
+							else
+							{
+								int index = circlePublicationsList.indexOf( tempPubList.get( j ) );
+								count.set( index, count.get( index ) + 1 );
+							}
+						}
 
+					}
+				}
+				System.out.println( "pubs before: " + count.size() );
+				for ( int i = 0; i < count.size(); i++ )
+				{
+					if ( count.get( i ) != circleList.size() - 1 )
+					{
+						circlePublicationsList.remove( i );
+						count.remove( i );
+						i--;
+					}
+				}
+				System.out.println( "pubs after: " + count.size() );
+				publications = new HashSet<Publication>( circlePublicationsList );
+			}
+			if ( circleList.size() == 1 )
+			{
+				if ( circleList.get( 0 ) != null )
+				{
+					List<Publication> pubs = new ArrayList<Publication>( circleList.get( 0 ).getPublications() );
+					for ( int c = 0; c < pubs.size(); c++ )
+					{
+						// to not consider publication if year is null
+						if ( pubs.get( c ).getYear() != null || pubs.get( c ).getPublicationDate() != null )
+						{
+							publications.add( pubs.get( c ) );
+						}
+					}
+
+				}
+			}
 		}
-		return authorPublications;
+		return publications;
 	}
 
 	public List<Author> getAuthorsFromIds( List<String> idsList )
@@ -276,6 +336,18 @@ public class FilterHelperImpl implements FilterHelper
 			interestList.add( persistenceStrategy.getInterestDAO().getById( idsList.get( itemIndex ) ) );
 		}
 		return interestList;
+
+	}
+
+	public List<Circle> getCirclesFromIds( List<String> idsList )
+	{
+		// get Circle List
+		List<Circle> circleList = new ArrayList<Circle>();
+		for ( int itemIndex = 0; itemIndex < idsList.size(); itemIndex++ )
+		{
+			circleList.add( persistenceStrategy.getCircleDAO().getById( idsList.get( itemIndex ) ) );
+		}
+		return circleList;
 
 	}
 

@@ -19,6 +19,7 @@ import de.rwth.i9.palm.analytics.algorithm.clustering.WekaXMeans;
 import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.helper.MapSorter;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.DataMiningEventGroup;
 import de.rwth.i9.palm.model.DataMiningPublication;
@@ -118,9 +119,10 @@ public class ClusteringServiceImpl implements ClusteringService
 			}
 		}
 
+		if ( type.equals( "topic" ) || type.equals( "conference" ) || type.equals( "circle" ) )
+		{
 		if ( type.equals( "topic" ) )
 		{
-			System.out.println( "in toh hai" );
 			List<String> interestList = new ArrayList<String>();
 			for ( int i = 0; i < idsList.size(); i++ )
 			{
@@ -186,6 +188,62 @@ public class ClusteringServiceImpl implements ClusteringService
 				if ( count.get( i ) != idsList.size() - 1 )
 				{
 					count.remove( i );
+					coAuthorList.remove( i );
+					i--;
+				}
+			}
+		}
+
+		// List of authors with the selected circles
+		if ( type.equals( "circle" ) )
+		{
+			List<Integer> count = new ArrayList<Integer>();
+			for ( int i = 0; i < idsList.size(); i++ )
+			{
+				Circle c = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
+				for ( Author a : c.getAuthors() )
+				{
+					if ( !coAuthorList.contains( a ) )
+					{
+						coAuthorList.add( a );
+						count.add( 0 );
+					}
+					else
+					{
+						count.set( coAuthorList.indexOf( a ), count.get( coAuthorList.indexOf( a ) ) + 1 );
+					}
+				}
+			}
+
+			for ( int i = 0; i < coAuthorList.size(); i++ )
+			{
+				if ( count.get( i ) != idsList.size() - 1 )
+				{
+					count.remove( i );
+					coAuthorList.remove( i );
+					i--;
+				}
+			}
+		}
+
+			// get authors from the publications
+			List<Author> authors = new ArrayList<Author>();
+			for ( Publication p : authorPublications )
+			{
+				for ( Author a : p.getAuthors() )
+				{
+					if ( !authors.contains( a ) )
+					{
+						authors.add( a );
+					}
+				}
+			}
+
+			// the common authors must be part of the publication authors
+			for ( int i = 0; i < coAuthorList.size(); i++ )
+			{
+				if ( !authors.contains( coAuthorList.get( i ) ) )
+				{
 					coAuthorList.remove( i );
 					i--;
 				}
@@ -392,6 +450,8 @@ public class ClusteringServiceImpl implements ClusteringService
 	@Override
 	public Map<String, Object> clusterConferences( String algorithm, List<Author> authorList, Set<Publication> publications )
 	{
+		System.out.println( "CLUSTER CONFERENCES!!!" );
+
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
@@ -606,6 +666,7 @@ public class ClusteringServiceImpl implements ClusteringService
 
 	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications )
 	{
+		System.out.println( "CLUSTER PUBLICATIONS!!!" );
 		List<Publication> publicationsList = new ArrayList<Publication>( publications );
 
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();

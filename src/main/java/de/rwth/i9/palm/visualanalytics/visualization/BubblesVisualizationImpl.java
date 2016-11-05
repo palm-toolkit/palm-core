@@ -15,6 +15,9 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
+import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.CircleInterest;
+import de.rwth.i9.palm.model.CircleInterestProfile;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.EventInterest;
@@ -96,7 +99,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 				Set<AuthorInterestProfile> authorInterestProfiles = a.getAuthorInterestProfiles();
 				for ( AuthorInterestProfile aip : authorInterestProfiles )
 				{
-					// System.out.println( aip.getName() );
 					Set<AuthorInterest> ais = aip.getAuthorInterests();
 					for ( AuthorInterest ai : ais )
 					{
@@ -671,7 +673,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 					Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( publicationTopics.get( i ) );
 					if ( interest != null )
 					{
-						// System.out.println( "1" );
 						Object[] randArray = new Object[3];
 						randArray[0] = interest.getTerm();
 						randArray[1] = interestList;
@@ -683,7 +684,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 						interest = persistenceStrategy.getInterestDAO().getInterestByTerm( publicationTopics.get( i ).substring( 0, publicationTopics.get( i ).length() - 1 ) );
 						if ( interest != null )
 						{
-							// System.out.println( "2" );
 							Object[] randArray = new Object[3];
 							randArray[0] = interest.getTerm();
 							randArray[1] = interestList;
@@ -698,6 +698,222 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 			visMap.put( "list", listObjects );
 
 		}
+		if ( type.equals( "circle" ) )
+		{
+			// If there are no common publications!
+			if ( allTopics.size() == 0 )
+			{
+				for ( String id : idsList )
+				{
+					Circle c = persistenceStrategy.getCircleDAO().getById( id );
+					List<Publication> pubs = new ArrayList<Publication>( c.getPublications() );
+					for ( Publication p : pubs )
+					{
+						Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+						for ( PublicationTopic pubTopic : publicationTopics )
+						{
+							List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+							for ( int i = 0; i < topics.size(); i++ )
+							{
+								if ( !allTopics.contains( topics.get( i ) ) )// &&
+																				// topicWeights.get(
+																				// i
+																				// )
+																				// >
+																				// 0.2
+																				// )
+								{
+									allTopics.add( topics.get( i ) );
+								}
+							}
+						}
+					}
+				}
+			}
+			List<Interest> circleInterests = new ArrayList<Interest>();
+			List<Double> circleInterestWeights = new ArrayList<Double>();
+			List<List<Circle>> interestCircles = new ArrayList<List<Circle>>();
+			List<Map<Interest, Double>> circleInterestList = new ArrayList<Map<Interest, Double>>();
+			for ( String id : idsList )
+			{
+				Circle c = persistenceStrategy.getCircleDAO().getById( id );
+				Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
+
+				Map<Interest, Double> interestWeightMap = new HashMap<Interest, Double>();
+				Set<CircleInterestProfile> circleInterestProfiles = c.getCircleInterestProfiles();
+				for ( CircleInterestProfile cip : circleInterestProfiles )
+				{
+					Set<CircleInterest> cis = cip.getCircleInterests();
+					for ( CircleInterest ci : cis )
+					{
+						Map<Interest, Double> interests = ci.getTermWeights();
+						Iterator<Interest> interestTerm = interests.keySet().iterator();
+						Iterator<Double> interestTermWeight = interests.values().iterator();
+						while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+						{
+							Interest actualInterest = interestTerm.next();
+							String interest = ( actualInterest.getTerm() );
+							Double weight = interestTermWeight.next();
+
+							if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+							{
+								Boolean validYear = true;
+								Calendar calendar = Calendar.getInstance();
+								calendar.setTime( ci.getYear() );
+								String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+								if ( startYear.equals( "0" ) || startYear.equals( "" ) )
+								{
+									validYear = true;
+								}
+								else
+								{
+									if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+									{
+										validYear = false;
+									}
+								}
+								if ( validYear )
+								{
+									List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
+									List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
+									if ( yWI.contains( year ) )
+									{
+										int index = yWI.indexOf( year );
+										if ( !yWIVal.get( index ).contains( actualInterest ) )
+										{
+											yWIVal.get( index ).add( actualInterest );
+											if ( !circleInterests.contains( actualInterest ) )
+											{
+												circleInterests.add( actualInterest );
+												circleInterestWeights.add( weight );
+												List<Circle> lc = new ArrayList<Circle>();
+												lc.add( c );
+												interestCircles.add( lc );
+											}
+											else
+											{
+												int ind = circleInterests.indexOf( actualInterest );
+												circleInterestWeights.set( ind, circleInterestWeights.get( ind ) + weight );
+												List<Circle> lc = interestCircles.get( ind );
+												if ( !lc.contains( c ) )
+												{
+													lc.add( c );
+													interestCircles.set( ind, lc );
+												}
+											}
+											if ( interestWeightMap.containsKey( actualInterest ) )
+											{
+												double w = interestWeightMap.get( actualInterest );
+												interestWeightMap.remove( actualInterest );
+												interestWeightMap.put( actualInterest, w + weight );
+											}
+											else
+												interestWeightMap.put( actualInterest, weight );
+										}
+										else
+										{
+											int ind = circleInterests.indexOf( actualInterest );
+											circleInterestWeights.set( ind, circleInterestWeights.get( ind ) + weight );
+											List<Circle> lc = interestCircles.get( ind );
+											if ( !lc.contains( c ) )
+											{
+												lc.add( c );
+												interestCircles.set( ind, lc );
+											}
+											if ( interestWeightMap.containsKey( actualInterest ) )
+											{
+												double w = interestWeightMap.get( actualInterest );
+												interestWeightMap.remove( actualInterest );
+												interestWeightMap.put( actualInterest, w + weight );
+											}
+										}
+									}
+									else
+									{
+										List<Interest> newInterestList = new ArrayList<Interest>();
+										newInterestList.add( actualInterest );
+										if ( !circleInterests.contains( actualInterest ) )
+										{
+											circleInterests.add( actualInterest );
+											circleInterestWeights.add( weight );
+											List<Circle> lc = new ArrayList<Circle>();
+											lc.add( c );
+											interestCircles.add( lc );
+										}
+										else
+										{
+											int ind = circleInterests.indexOf( actualInterest );
+											circleInterestWeights.set( ind, circleInterestWeights.get( ind ) + weight );
+											List<Circle> lc = interestCircles.get( ind );
+											if ( !lc.contains( c ) )
+											{
+												lc.add( c );
+												interestCircles.set( ind, lc );
+											}
+										}
+										yearWiseInterests.put( year, newInterestList );
+										if ( interestWeightMap.containsKey( actualInterest ) )
+										{
+											double w = interestWeightMap.get( actualInterest );
+											interestWeightMap.remove( actualInterest );
+											interestWeightMap.put( actualInterest, w + weight );
+										}
+										else
+											interestWeightMap.put( actualInterest, weight );
+									}
+
+								}
+							}
+						}
+					}
+				}
+				circleInterestList.add( interestWeightMap );
+			}
+
+			Map<Interest, Object> finalMap = new HashMap<Interest, Object>();
+
+			double threshold = 0.8;
+			// if ( authorList.size() > 1 )
+			// {
+			// threshold = 0.0;
+			// }
+
+			List<Object[]> listObjects = new ArrayList<Object[]>();
+
+			for ( int i = 0; i < circleInterests.size(); i++ )
+			{
+				if ( circleInterestWeights.get( i ) > threshold && interestCircles.get( i ).size() == idsList.size() )
+				{
+					List<Double> interestList = new ArrayList<Double>();
+
+					for ( int j = 0; j < circleInterestList.size(); j++ )
+					{
+						Map<Interest, Double> inWei = circleInterestList.get( j );
+						List<Interest> in = new ArrayList<Interest>( inWei.keySet() );
+						List<Double> wei = new ArrayList<Double>( inWei.values() );
+
+						if ( in.contains( circleInterests.get( i ) ) )
+						{
+							int index = in.indexOf( circleInterests.get( i ) );
+							interestList.add( wei.get( index ) );
+						}
+						else
+							interestList.add( 0.0 );
+					}
+					finalMap.put( circleInterests.get( i ), interestList );
+					Object[] randArray = new Object[3];
+					randArray[0] = circleInterests.get( i ).getTerm();
+					randArray[1] = interestList;
+					randArray[2] = circleInterests.get( i ).getId();
+					listObjects.add( randArray );
+				}
+			}
+
+			visMap.put( "list", listObjects );
+
+		}
+
 		return visMap;
 	}
 

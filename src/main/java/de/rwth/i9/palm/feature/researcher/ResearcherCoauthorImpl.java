@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationComparator;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
@@ -175,7 +176,6 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 			}
 			if ( type.equals( "topic" ) )
 			{
-				System.out.println( "in toh hai" );
 				List<String> interestList = new ArrayList<String>();
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
@@ -193,7 +193,6 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 						commonAuthors.add( persistenceStrategy.getAuthorDAO().getById( dma.getId() ) );
 					}
 				}
-
 			}
 			if ( type.equals( "conference" ) )
 			{
@@ -246,6 +245,59 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 					}
 				}
 			}
+			if ( type.equals( "circle" ) )
+			{
+				List<Integer> count = new ArrayList<Integer>();
+				for ( int i = 0; i < idsList.size(); i++ )
+				{
+					Circle c = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
+					for ( Author a : c.getAuthors() )
+					{
+						if ( !commonAuthors.contains( a ) )
+						{
+							commonAuthors.add( a );
+							count.add( 0 );
+						}
+						else
+						{
+							count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
+						}
+					}
+				}
+
+				for ( int i = 0; i < commonAuthors.size(); i++ )
+				{
+					if ( count.get( i ) != idsList.size() - 1 )
+					{
+						count.remove( i );
+						commonAuthors.remove( i );
+						i--;
+					}
+				}
+			}
+
+			// get authors from the publications
+			List<Author> authors = new ArrayList<Author>();
+			for ( Publication p : publications )
+			{
+				for ( Author a : p.getAuthors() )
+				{
+					if ( !authors.contains( a ) )
+					{
+						authors.add( a );
+					}
+				}
+			}
+
+			// the common authors must be part of the publication authors
+			for ( int i = 0; i < commonAuthors.size(); i++ )
+			{
+				if ( !authors.contains( commonAuthors.get( i ) ) )
+				{
+					commonAuthors.remove( i );
+					i--;
+				}
+			}
 
 			for ( Author coAuthor : commonAuthors )
 			{
@@ -289,9 +341,8 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 
 		for ( Map<String, Object> coAuthor : coAuthorList )
 		{
-				coAuthorListPaging.add( coAuthor );
+			coAuthorListPaging.add( coAuthor );
 		}
-
 
 		// put coauthor to responseMap
 		responseMap.put( "countTotal", coAuthorList.size() );

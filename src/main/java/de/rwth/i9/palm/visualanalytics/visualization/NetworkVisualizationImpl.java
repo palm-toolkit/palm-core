@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
@@ -33,8 +34,13 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 		System.out.println( "pubs: net: " + publications.size() );
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
-		List<Author> eventGroupAuthors = new ArrayList<Author>();
-		List<Author> topicAuthors = new ArrayList<Author>();
+		List<Author> selectedAuthors = new ArrayList<Author>();
+
+		Author authorForCoAuthors = new Author();
+		if ( authoridForCoAuthors != null )
+		{
+			authorForCoAuthors = persistenceStrategy.getAuthorDAO().getById( authoridForCoAuthors );
+		}
 
 		// List of authors with the selected conferences
 		if ( type.equals( "conference" ) )
@@ -66,38 +72,32 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 				}
 				for ( Author a : eventAuthors )
 				{
-					if ( !eventGroupAuthors.contains( a ) )
+					if ( !selectedAuthors.contains( a ) )
 					{
-						eventGroupAuthors.add( a );
+						selectedAuthors.add( a );
 						count.add( 0 );
 					}
 					else
 					{
-						count.set( eventGroupAuthors.indexOf( a ), count.get( eventGroupAuthors.indexOf( a ) ) + 1 );
+						count.set( selectedAuthors.indexOf( a ), count.get( selectedAuthors.indexOf( a ) ) + 1 );
 					}
 				}
 			}
 
-			for ( int i = 0; i < eventGroupAuthors.size(); i++ )
+			for ( int i = 0; i < selectedAuthors.size(); i++ )
 			{
 				if ( count.get( i ) != idsList.size() - 1 )
 				{
 					count.remove( i );
-					eventGroupAuthors.remove( i );
+					selectedAuthors.remove( i );
 					i--;
 				}
 			}
-		}
-		Author authorForCoAuthors = new Author();
-		if ( authoridForCoAuthors != null )
-		{
-			authorForCoAuthors = persistenceStrategy.getAuthorDAO().getById( authoridForCoAuthors );
 		}
 
 		// List of authors with the selected interests
 		if ( type.equals( "topic" ) )
 		{
-			System.out.println( "in toh hai" );
 			List<String> interestList = new ArrayList<String>();
 			for ( int i = 0; i < idsList.size(); i++ )
 			{
@@ -112,13 +112,45 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 				interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
 				if ( interests.keySet().containsAll( interestList ) )
 				{
-					topicAuthors.add( persistenceStrategy.getAuthorDAO().getById( dma.getId() ) );
+					selectedAuthors.add( persistenceStrategy.getAuthorDAO().getById( dma.getId() ) );
 				}
 			}
 
 		}
 
-		visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, eventGroupAuthors, authorForCoAuthors, topicAuthors ).get( "graphFile" ) );
+		// List of authors with the selected circles
+		if ( type.equals( "circle" ) )
+		{
+			List<Integer> count = new ArrayList<Integer>();
+			for ( int i = 0; i < idsList.size(); i++ )
+			{
+				Circle c = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
+				for ( Author a : c.getAuthors() )
+				{
+					if ( !selectedAuthors.contains( a ) )
+					{
+						selectedAuthors.add( a );
+						count.add( 0 );
+					}
+					else
+					{
+						count.set( selectedAuthors.indexOf( a ), count.get( selectedAuthors.indexOf( a ) ) + 1 );
+					}
+				}
+			}
+
+			for ( int i = 0; i < selectedAuthors.size(); i++ )
+			{
+				if ( count.get( i ) != idsList.size() - 1 )
+				{
+					count.remove( i );
+					selectedAuthors.remove( i );
+					i--;
+				}
+			}
+		}
+
+		visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, authorForCoAuthors, selectedAuthors ).get( "graphFile" ) );
 		return visMap;
 	}
 }

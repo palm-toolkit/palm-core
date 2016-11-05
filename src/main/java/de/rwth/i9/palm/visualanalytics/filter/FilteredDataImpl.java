@@ -23,7 +23,7 @@ public class FilteredDataImpl implements FilteredData
 	@Autowired
 	private FilterHelper filterHelper;
 
-	public Set<Publication> getFilteredPublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationList, List<Interest> interestList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear )
+	public Set<Publication> getFilteredPublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationList, List<Interest> interestList, List<Circle> circleList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear )
 	{
 		Set<Publication> authorPublications = new HashSet<Publication>();
 
@@ -33,7 +33,7 @@ public class FilteredDataImpl implements FilteredData
 		}
 		else
 		{
-			authorPublications = filterHelper.typeWisePublications( type, authorList, eventGroupList, publicationList, interestList );
+			authorPublications = filterHelper.typeWisePublications( type, authorList, eventGroupList, publicationList, interestList, circleList );
 		}
 
 		List<Publication> publicationsTemp = new ArrayList<Publication>( authorPublications );

@@ -51,13 +51,13 @@ public class GraphFeatureImpl implements GraphFeature
 	ExportController ec;
 
 	@Override
-	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, List<Author> eventGroupAuthors, Author authorForCoAuthors, List<Author> topicAuthors )
+	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, Author authorForCoAuthors, List<Author> selectedAuthors )
 	{
 		// Create Thread Pool for parallel layout
 		ExecutorService executor = Executors.newFixedThreadPool( 1 );
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
-		Future<?> f = executor.submit( createRunnable( type, authorList, authorPublications, idsList, eventGroupAuthors, authorForCoAuthors, topicAuthors ) );
+		Future<?> f = executor.submit( createRunnable( type, authorList, authorPublications, idsList, authorForCoAuthors, selectedAuthors ) );
 		try
 		{
 			f.get();
@@ -74,7 +74,7 @@ public class GraphFeatureImpl implements GraphFeature
 
 	}
 
-	private Runnable createRunnable( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final List<Author> eventGroupAuthors, final Author authorForCoAuthors, final List<Author> topicAuthors )
+	private Runnable createRunnable( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final Author authorForCoAuthors, final List<Author> selectedAuthors )
 	{
 		return new Runnable()
 		{
@@ -82,6 +82,7 @@ public class GraphFeatureImpl implements GraphFeature
 			public void run()
 			{
 				System.out.println( "pu list: " + authorPublications );
+				System.out.println( "type: " + type + " , selec Auth: " + selectedAuthors.size() );
 				// System.out.println( "out HREER: " + authorForCoAuthors );
 				Random rand = new Random();
 
@@ -196,7 +197,7 @@ public class GraphFeatureImpl implements GraphFeature
 						}
 						if ( type.equals( "conference" ) )
 						{
-							if ( eventGroupAuthors.contains( publicationAuthor ) )
+							if ( selectedAuthors.contains( publicationAuthor ) )
 							{
 								Node n = graphModel.factory().newNode( publicationAuthor.getName() );
 
@@ -252,12 +253,11 @@ public class GraphFeatureImpl implements GraphFeature
 								tempPubAuthors.add( publicationAuthor );
 							}
 						}
-						if ( type.equals( "topic" ) )
+						if ( type.equals( "topic" ) || type.equals( "circle" ) )
 						{
-							if ( topicAuthors.contains( publicationAuthor ) )
+							if ( selectedAuthors.contains( publicationAuthor ) )
 							{
 								Node n = graphModel.factory().newNode( publicationAuthor.getName() );
-
 								// add the authors which are not already present
 								// in
 								// the nodes table
@@ -308,11 +308,9 @@ public class GraphFeatureImpl implements GraphFeature
 											e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
 											undirectedGraph.addEdge( e );
 										}
-
 									}
 								}
 								tempPubAuthors.add( publicationAuthor );
-
 							}
 						}
 					}
@@ -405,167 +403,190 @@ public class GraphFeatureImpl implements GraphFeature
 					}
 				}
 
-				// find associations upto 2 levels, if authors are not
-				// co-authors
-				if ( authorPublications.isEmpty() && type.equals( "researcher" ) && authorList.size() > 1 )
+				if ( authorPublications.isEmpty() )
 				{
-					// add nodes for main authors
-					for ( int f = 0; f < authorList.size(); f++ )
+					if ( type.equals( "circle" ) && idsList.size() > 1 )
 					{
-						Node n = graphModel.factory().newNode( authorList.get( f ).getName() );
-						nodes.add( n );
-						n.setAttribute( "isAdded", authorList.get( f ).isAdded() );
-						n.setAttribute( "authorId", authorList.get( f ).getId() );
-						n.setLabel( authorList.get( f ).getName() );
-						n.setSize( 0.1f );
-						n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
-						undirectedGraph.addNode( n );
-					}
-
-					List<List<Author>> coAuthorsList = new ArrayList<List<Author>>();
-					List<Author> commonAuthors = new ArrayList<Author>();
-					List<Integer> count = new ArrayList<Integer>();
-					for ( Author a : authorList )
-					{
-						List<Author> coAuthors = new ArrayList<Author>();
-
-						for ( Publication p : a.getPublications() )
+						System.out.println( "SA:" + selectedAuthors.size() );
+						for ( Author a : selectedAuthors )
 						{
-							for ( Author coA : p.getAuthors() )
-							{
-								if ( !coAuthors.contains( coA ) )
-								{
-									coAuthors.add( coA );
-								}
+							Node n = graphModel.factory().newNode( a.getName() );
 
-							}
-						}
-
-						for ( int i = 0; i < coAuthors.size(); i++ )
-						{
-							if ( !commonAuthors.contains( coAuthors.get( i ) ) )
+							if ( !nodes.contains( n ) )
 							{
-								commonAuthors.add( coAuthors.get( i ) );
-								count.add( 1 );
+								nodes.add( n );
+								n.setAttribute( "isAdded", a.isAdded() );
+								n.setAttribute( "authorId", a.getId() );
+								n.setLabel( a.getName() );
+								n.setSize( 0.1f );
+								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
+								undirectedGraph.addNode( n );
 							}
-							else
-							{
-								int index = coAuthors.indexOf( coAuthors.get( i ) );
-								int prevVal = count.get( index );
-								count.set( index, prevVal + 1 );
-							}
-						}
-						coAuthorsList.add( coAuthors );
-					}
-
-					for ( int i = 0; i < count.size(); i++ )
-					{
-						if ( count.get( i ) < authorList.size() )
-						{
-							count.remove( i );
-							commonAuthors.remove( i );
-							i--;
 						}
 					}
 
-					for ( int i = 0; i < commonAuthors.size(); i++ )
+					// find associations upto 2 levels, if authors are not
+					// co-authors
+					if ( type.equals( "researcher" ) && authorList.size() > 1 )
 					{
-						Node n = graphModel.factory().newNode( commonAuthors.get( i ).getName() );
-
-						if ( !nodes.contains( n ) )
+						// add nodes for main authors
+						for ( int f = 0; f < authorList.size(); f++ )
 						{
+							Node n = graphModel.factory().newNode( authorList.get( f ).getName() );
 							nodes.add( n );
-							n.setAttribute( "isAdded", commonAuthors.get( i ).isAdded() );
-							n.setAttribute( "authorId", commonAuthors.get( i ).getId() );
-							n.setLabel( commonAuthors.get( i ).getName() );
+							n.setAttribute( "isAdded", authorList.get( f ).isAdded() );
+							n.setAttribute( "authorId", authorList.get( f ).getId() );
+							n.setLabel( authorList.get( f ).getName() );
 							n.setSize( 0.1f );
 							n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
 							undirectedGraph.addNode( n );
+						}
 
-							for ( int j = 0; j < authorList.size(); j++ )
+						List<List<Author>> coAuthorsList = new ArrayList<List<Author>>();
+						List<Author> commonAuthors = new ArrayList<Author>();
+						List<Integer> count = new ArrayList<Integer>();
+						for ( Author a : authorList )
+						{
+							List<Author> coAuthors = new ArrayList<Author>();
+
+							for ( Publication p : a.getPublications() )
 							{
-								Node tempAuthorNode = graphModel.factory().newNode( authorList.get( j ).getName() );
-								int indexTempNode = nodes.indexOf( tempAuthorNode );
-								Edge e = graphModel.factory().newEdge( n, nodes.get( indexTempNode ), 0, 1, false );
-								edges.add( e );
-								e.setAttribute( "sourceAuthorId", commonAuthors.get( i ).getId() );
-								e.setAttribute( "targetAuthorId", authorList.get( j ).getId() );
-								e.setAttribute( "sourceAuthorIsAdded", commonAuthors.get( i ).isAdded() );
-								e.setAttribute( "targetAuthorIsAdded", authorList.get( j ).isAdded() );
-								undirectedGraph.addEdge( e );
+								for ( Author coA : p.getAuthors() )
+								{
+									if ( !coAuthors.contains( coA ) )
+									{
+										coAuthors.add( coA );
+									}
+
+								}
+							}
+
+							for ( int i = 0; i < coAuthors.size(); i++ )
+							{
+								if ( !commonAuthors.contains( coAuthors.get( i ) ) )
+								{
+									commonAuthors.add( coAuthors.get( i ) );
+									count.add( 1 );
+								}
+								else
+								{
+									int index = coAuthors.indexOf( coAuthors.get( i ) );
+									int prevVal = count.get( index );
+									count.set( index, prevVal + 1 );
+								}
+							}
+							coAuthorsList.add( coAuthors );
+						}
+
+						for ( int i = 0; i < count.size(); i++ )
+						{
+							if ( count.get( i ) < authorList.size() )
+							{
+								count.remove( i );
+								commonAuthors.remove( i );
+								i--;
 							}
 						}
-					}
-					if ( commonAuthors.isEmpty() )
-					{
-						for ( int i = 1; i < coAuthorsList.size(); i++ )
+
+						for ( int i = 0; i < commonAuthors.size(); i++ )
 						{
-							List<Author> list1 = coAuthorsList.get( i - 1 );
-							List<Author> list2 = coAuthorsList.get( i );
-							for ( int j = 0; j < list2.size(); j++ )
+							Node n = graphModel.factory().newNode( commonAuthors.get( i ).getName() );
+
+							if ( !nodes.contains( n ) )
 							{
-								for ( Publication p : list2.get( j ).getPublications() )
+								nodes.add( n );
+								n.setAttribute( "isAdded", commonAuthors.get( i ).isAdded() );
+								n.setAttribute( "authorId", commonAuthors.get( i ).getId() );
+								n.setLabel( commonAuthors.get( i ).getName() );
+								n.setSize( 0.1f );
+								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
+								undirectedGraph.addNode( n );
+
+								for ( int j = 0; j < authorList.size(); j++ )
 								{
-									for ( Author a : p.getAuthors() )
+									Node tempAuthorNode = graphModel.factory().newNode( authorList.get( j ).getName() );
+									int indexTempNode = nodes.indexOf( tempAuthorNode );
+									Edge e = graphModel.factory().newEdge( n, nodes.get( indexTempNode ), 0, 1, false );
+									edges.add( e );
+									e.setAttribute( "sourceAuthorId", commonAuthors.get( i ).getId() );
+									e.setAttribute( "targetAuthorId", authorList.get( j ).getId() );
+									e.setAttribute( "sourceAuthorIsAdded", commonAuthors.get( i ).isAdded() );
+									e.setAttribute( "targetAuthorIsAdded", authorList.get( j ).isAdded() );
+									undirectedGraph.addEdge( e );
+								}
+							}
+						}
+						if ( commonAuthors.isEmpty() )
+						{
+							for ( int i = 1; i < coAuthorsList.size(); i++ )
+							{
+								List<Author> list1 = coAuthorsList.get( i - 1 );
+								List<Author> list2 = coAuthorsList.get( i );
+								for ( int j = 0; j < list2.size(); j++ )
+								{
+									for ( Publication p : list2.get( j ).getPublications() )
 									{
-										if ( list1.contains( a ) )
+										for ( Author a : p.getAuthors() )
 										{
-											Node n = graphModel.factory().newNode( a.getName() );
-											if ( !nodes.contains( n ) )
+											if ( list1.contains( a ) )
 											{
-												nodes.add( n );
-												n.setAttribute( "isAdded", a.isAdded() );
-												n.setAttribute( "authorId", a.getId() );
-												n.setLabel( a.getName() );
-												n.setSize( 0.1f );
-												n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
-												undirectedGraph.addNode( n );
+												Node n = graphModel.factory().newNode( a.getName() );
+												if ( !nodes.contains( n ) )
+												{
+													nodes.add( n );
+													n.setAttribute( "isAdded", a.isAdded() );
+													n.setAttribute( "authorId", a.getId() );
+													n.setLabel( a.getName() );
+													n.setSize( 0.1f );
+													n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
+													undirectedGraph.addNode( n );
+												}
+
+												Node n2 = graphModel.factory().newNode( list2.get( j ).getName() );
+
+												if ( !nodes.contains( n2 ) )
+												{
+													nodes.add( n2 );
+													n2.setAttribute( "isAdded", list2.get( j ).isAdded() );
+													n2.setAttribute( "authorId", list2.get( j ).getId() );
+													n2.setLabel( list2.get( j ).getName() );
+													n2.setSize( 0.1f );
+													n2.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
+													undirectedGraph.addNode( n2 );
+												}
+
+												int indexn = nodes.indexOf( n );
+												int indexn2 = nodes.indexOf( n2 );
+
+												Edge e = graphModel.factory().newEdge( nodes.get( indexn ), nodes.get( indexn2 ), 0, 1, false );
+												edges.add( e );
+												e.setAttribute( "sourceAuthorId", a.getId() );
+												e.setAttribute( "targetAuthorId", list2.get( j ).getId() );
+												e.setAttribute( "sourceAuthorIsAdded", a.isAdded() );
+												e.setAttribute( "targetAuthorIsAdded", list2.get( j ).isAdded() );
+												undirectedGraph.addEdge( e );
+
+												Node mainNode1 = graphModel.factory().newNode( authorList.get( i - 1 ).getName() );
+												Node mainNode2 = graphModel.factory().newNode( authorList.get( i ).getName() );
+												int index1 = nodes.indexOf( mainNode1 );
+												int index2 = nodes.indexOf( mainNode2 );
+
+												e = graphModel.factory().newEdge( nodes.get( index1 ), nodes.get( indexn ), 0, 1, false );
+												edges.add( e );
+												e.setAttribute( "sourceAuthorId", authorList.get( i - 1 ).getId() );
+												e.setAttribute( "targetAuthorId", a.getId() );
+												e.setAttribute( "sourceAuthorIsAdded", authorList.get( i - 1 ).isAdded() );
+												e.setAttribute( "targetAuthorIsAdded", a.isAdded() );
+												undirectedGraph.addEdge( e );
+
+												e = graphModel.factory().newEdge( nodes.get( index2 ), nodes.get( indexn2 ), 0, 1, false );
+												e.setAttribute( "sourceAuthorId", authorList.get( i ).getId() );
+												e.setAttribute( "targetAuthorId", list2.get( j ).getId() );
+												e.setAttribute( "sourceAuthorIsAdded", authorList.get( i ).isAdded() );
+												e.setAttribute( "targetAuthorIsAdded", list2.get( j ).isAdded() );
+												edges.add( e );
+												undirectedGraph.addEdge( e );
 											}
-
-											Node n2 = graphModel.factory().newNode( list2.get( j ).getName() );
-
-											if ( !nodes.contains( n2 ) )
-											{
-												nodes.add( n2 );
-												n2.setAttribute( "isAdded", list2.get( j ).isAdded() );
-												n2.setAttribute( "authorId", list2.get( j ).getId() );
-												n2.setLabel( list2.get( j ).getName() );
-												n2.setSize( 0.1f );
-												n2.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
-												undirectedGraph.addNode( n2 );
-											}
-
-											int indexn = nodes.indexOf( n );
-											int indexn2 = nodes.indexOf( n2 );
-
-											Edge e = graphModel.factory().newEdge( nodes.get( indexn ), nodes.get( indexn2 ), 0, 1, false );
-											edges.add( e );
-											e.setAttribute( "sourceAuthorId", a.getId() );
-											e.setAttribute( "targetAuthorId", list2.get( j ).getId() );
-											e.setAttribute( "sourceAuthorIsAdded", a.isAdded() );
-											e.setAttribute( "targetAuthorIsAdded", list2.get( j ).isAdded() );
-											undirectedGraph.addEdge( e );
-
-											Node mainNode1 = graphModel.factory().newNode( authorList.get( i - 1 ).getName() );
-											Node mainNode2 = graphModel.factory().newNode( authorList.get( i ).getName() );
-											int index1 = nodes.indexOf( mainNode1 );
-											int index2 = nodes.indexOf( mainNode2 );
-
-											e = graphModel.factory().newEdge( nodes.get( index1 ), nodes.get( indexn ), 0, 1, false );
-											edges.add( e );
-											e.setAttribute( "sourceAuthorId", authorList.get( i - 1 ).getId() );
-											e.setAttribute( "targetAuthorId", a.getId() );
-											e.setAttribute( "sourceAuthorIsAdded", authorList.get( i - 1 ).isAdded() );
-											e.setAttribute( "targetAuthorIsAdded", a.isAdded() );
-											undirectedGraph.addEdge( e );
-
-											e = graphModel.factory().newEdge( nodes.get( index2 ), nodes.get( indexn2 ), 0, 1, false );
-											e.setAttribute( "sourceAuthorId", authorList.get( i ).getId() );
-											e.setAttribute( "targetAuthorId", list2.get( j ).getId() );
-											e.setAttribute( "sourceAuthorIsAdded", authorList.get( i ).isAdded() );
-											e.setAttribute( "targetAuthorIsAdded", list2.get( j ).isAdded() );
-											edges.add( e );
-											undirectedGraph.addEdge( e );
 										}
 									}
 								}
@@ -573,7 +594,6 @@ public class GraphFeatureImpl implements GraphFeature
 						}
 					}
 				}
-
 				// Layout for 1 minute
 				AutoLayout autoLayout = new AutoLayout( 2, TimeUnit.SECONDS );
 				autoLayout.setGraphModel( graphModel );

@@ -16,6 +16,8 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.CircleInterest;
+import de.rwth.i9.palm.model.CircleInterestProfile;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventInterest;
 import de.rwth.i9.palm.model.EventInterestProfile;
@@ -132,10 +134,11 @@ public class DataForFilterImpl implements DataForFilter
 	{
 		Map<String, Object> topicsMap = new HashMap<String, Object>();
 		System.out.println( "type: " + type );
+		ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
+
 		if ( type.equals( "researcher" ) )
 		{
 			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type );
-			ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
 
 			List<String> allAuthorInterests = new ArrayList<String>();
 			List<String> allAuthorInterestIds = new ArrayList<String>();
@@ -203,13 +206,11 @@ public class DataForFilterImpl implements DataForFilter
 				}
 			}
 
-			topicsMap.put( "topicDetailsList", topicDetailsList );
 		}
 		if ( type.equals( "conference" ) )
 		{
 			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type );
 			List<String> interestStrings = new ArrayList<String>();
-			ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
 			List<String> allConferenceInterests = new ArrayList<String>();
 			List<String> allConferenceInterestIds = new ArrayList<String>();
 
@@ -250,11 +251,9 @@ public class DataForFilterImpl implements DataForFilter
 			List<String> allTopics = new ArrayList<String>();
 			for ( Publication pub : publications )
 			{
-
 				Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
 				for ( PublicationTopic pubTopic : publicationTopics )
 				{
-
 					for ( int i = 0; i < pubTopic.getTermValues().size(); i++ )
 					{
 
@@ -294,7 +293,6 @@ public class DataForFilterImpl implements DataForFilter
 					}
 				}
 			}
-			topicsMap.put( "topicDetailsList", topicDetailsList );
 
 		}
 		if ( type.equals( "publication" ) )
@@ -315,7 +313,6 @@ public class DataForFilterImpl implements DataForFilter
 				}
 			}
 
-			ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
 			List<String> allTopics = new ArrayList<String>();
 			for ( Publication pub : publications )
 			{
@@ -362,9 +359,81 @@ public class DataForFilterImpl implements DataForFilter
 					}
 				}
 			}
-			topicsMap.put( "topicDetailsList", topicDetailsList );
 
 		}
+		if ( type.equals( "circle" ) )
+		{
+
+			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type );
+
+			List<String> allCircleInterests = new ArrayList<String>();
+			List<String> allCircleInterestIds = new ArrayList<String>();
+
+			List<Circle> circleList = new ArrayList<Circle>();
+			circleList = filterHelper.getCirclesFromIds( idsList );
+			for ( Circle c : circleList )
+			{
+				Set<CircleInterestProfile> circleInterestProfiles = c.getCircleInterestProfiles();
+				for ( CircleInterestProfile cip : circleInterestProfiles )
+				{
+					List<CircleInterest> circleInterests = new ArrayList<CircleInterest>( cip.getCircleInterests() );
+					for ( CircleInterest ci : circleInterests )
+					{
+						Map<Interest, Double> termWeights = ci.getTermWeights();
+						List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
+						for ( int j = 0; j < termWeights.size(); j++ )
+						{
+							if ( !allCircleInterests.contains( interests.get( j ).getTerm() ) )
+							{
+								allCircleInterests.add( interests.get( j ).getTerm() );
+								allCircleInterestIds.add( interests.get( j ).getId() );
+							}
+						}
+					}
+				}
+			}
+
+			List<String> allTopics = new ArrayList<String>();
+			for ( Publication pub : publications )
+			{
+				Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
+				for ( PublicationTopic pubTopic : publicationTopics )
+				{
+
+					for ( int i = 0; i < pubTopic.getTermValues().size(); i++ )
+					{
+
+						List<String> termValues = new ArrayList<>( pubTopic.getTermValues().keySet() );
+						for ( int j = 0; j < termValues.size(); j++ )
+						{
+							Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
+							if ( !allTopics.contains( termValues.get( j ) ) )
+							{
+								int index = 0;
+								if ( allCircleInterests.contains( termValues.get( j ) ) )
+								{
+									index = allCircleInterests.indexOf( termValues.get( j ) );
+									allTopics.add( termValues.get( j ) );
+									topicDetail.put( "id", allCircleInterestIds.get( index ) );
+									topicDetail.put( "title", termValues.get( j ) );
+									topicDetailsList.add( topicDetail );
+								}
+								if ( allCircleInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
+								{
+									index = allCircleInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									allTopics.add( termValues.get( j ) );
+									topicDetail.put( "id", allCircleInterestIds.get( index ) );
+									topicDetail.put( "title", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									topicDetailsList.add( topicDetail );
+								}
+							}
+						}
+					}
+				}
+			}
+
+		}
+		topicsMap.put( "topicDetailsList", topicDetailsList );
 		return topicsMap;
 
 	}

@@ -32,9 +32,10 @@ public class LocationsVisualizationImpl implements LocationsVisualization
 
 	public Map<String, Object> visualizeLocations( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, List<Interest> filteredTopic )
 	{
+		System.out.println( "LOCATIONS OF CONFERENCES" );
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
-		if ( type.equals( "researcher" ) || type.equals( "publication" ) || type.equals( "topic" ) )
+		if ( type.equals( "researcher" ) || type.equals( "publication" ) || type.equals( "topic" ) || type.equals( "circle" ) )
 			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, true ) );
 
 		if ( type.equals( "conference" ) )

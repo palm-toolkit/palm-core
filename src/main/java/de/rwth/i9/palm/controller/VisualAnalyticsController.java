@@ -26,6 +26,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
+import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.feature.publication.PublicationFeature;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
@@ -65,6 +66,9 @@ public class VisualAnalyticsController
 
 	@Autowired
 	private ResearcherFeature researcherFeature;
+
+	@Autowired
+	private CircleFeature circleFeature;
 
 	@Autowired
 	private AcademicEventFeature academicEventFeature;
@@ -454,6 +458,8 @@ public class VisualAnalyticsController
 		List<Interest> interests = (List<Interest>) interestMap.get( "interests" );
 		List<String> allTopics = persistenceStrategy.getPublicationTopicDAO().allTopics();
 
+		System.out.println( "interests siz: " + interests.size() );
+
 		// intersection of topics and interests
 		List<Interest> combinedInterests = new ArrayList<Interest>();
 		for ( int i = 0; i < allTopics.size(); i++ )
@@ -477,6 +483,61 @@ public class VisualAnalyticsController
 
 		responseMap.put( "topicsList", mapList );
 		return responseMap;
+	}
+
+	@SuppressWarnings( "unchecked" )
+	@Transactional
+	@RequestMapping( value = "/searchCircles", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> getCircleList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "queryType", required = false ) String queryType, @RequestParam( value = "page", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "addedAuthor", required = false ) String addedAuthor, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "persist", required = false ) String persist, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	{
+
+		/* == Set Default Values== */
+		if ( query == null )
+			query = "";
+		if ( queryType == null )
+			queryType = "name";
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 50;
+		if ( source == null )
+			source = "internal";
+		if ( addedAuthor == null )
+			addedAuthor = "yes";
+		if ( fulltextSearch == null )
+			fulltextSearch = "no";
+		if ( persist == null )
+			persist = "no";
+
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		responseMap.put( "query", query );
+		if ( !queryType.equals( "name" ) )
+			responseMap.put( "queryType", queryType );
+		responseMap.put( "page", startPage );
+		responseMap.put( "maxresult", maxresult );
+		responseMap.put( "source", source );
+		if ( !fulltextSearch.equals( "no" ) )
+			responseMap.put( "fulltextSearch", fulltextSearch );
+		if ( !persist.equals( "no" ) )
+			responseMap.put( "persist", persist );
+		if ( addedAuthor.equals( "yes" ) )
+			responseMap.put( "addedAuthor", addedAuthor );
+
+		Map<String, Object> circlesMap = circleFeature.getCircleSearch().getCircleListByQuery( query, null, startPage, maxresult, null, "name" );
+
+		if ( circlesMap != null && (Integer) circlesMap.get( "totalCount" ) > 0 )
+		{
+			responseMap.put( "totalCount", (Integer) circlesMap.get( "totalCount" ) );
+			return circleFeature.getCircleSearch().printJsonOutput( responseMap, (List<Circle>) circlesMap.get( "circles" ) );
+		}
+		else
+		{
+			responseMap.put( "totalCount", 0 );
+			responseMap.put( "count", 0 );
+			return responseMap;
+		}
 	}
 
 	@Transactional
@@ -519,7 +580,8 @@ public class VisualAnalyticsController
 			}
 			if ( type.equals( "circle" ) )
 			{
-
+				Circle circle = persistenceStrategy.getCircleDAO().getById(i);
+				namesList.add( circle.getName() );
 			}
 		}
 		// create JSON mapper for response
@@ -730,6 +792,7 @@ public class VisualAnalyticsController
 			List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
 			List<Publication> publicationList = new ArrayList<Publication>();
 			List<Interest> interestList = new ArrayList<Interest>();
+			List<Circle> circleList = new ArrayList<Circle>();
 			if ( type.equals( "researcher" ) )
 				authorList = filterFeature.getFilterHelper().getAuthorsFromIds( idsList );
 			if ( type.equals( "conference" ) )
@@ -738,8 +801,10 @@ public class VisualAnalyticsController
 				publicationList = filterFeature.getFilterHelper().getPublicationsFromIds( idsList );
 			if ( type.equals( "topic" ) )
 				interestList = filterFeature.getFilterHelper().getInterestsFromIds( idsList );
+			if ( type.equals( "circle" ) )
+				circleList = filterFeature.getFilterHelper().getCirclesFromIds( idsList );
 
-			Set<Publication> publications = filterFeature.getFilteredData().getFilteredPublications( type, authorList, eventGroupList, publicationList, interestList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
+			Set<Publication> publications = filterFeature.getFilteredData().getFilteredPublications( type, authorList, eventGroupList, publicationList, interestList, circleList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
 
 			visMap = visSwitch( type, idsList, visTab, visType, authorList, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
 
