@@ -40,7 +40,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public Map<String, Object> visualizeEvolution( String type, List<String> idsList, List<Author> authorList, Set<Publication> publications, String startYear, String endYear )
+	public Map<String, Object> visualizeEvolution( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear )
 	{
 		// System.out.println( startYear + " : " + endYear );
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
@@ -74,8 +74,9 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			// If there are no common publications!
 			if ( allTopics.size() == 0 )
 			{
-				for ( Author a : authorList )
+				for ( String id : idsList )
 				{
+					Author a = persistenceStrategy.getAuthorDAO().getById( id );
 					List<Publication> pubs = new ArrayList<Publication>( a.getPublications() );
 					for ( Publication p : pubs )
 					{
@@ -108,8 +109,9 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			List<List<Author>> interestAuthors = new ArrayList<List<Author>>();
 			// System.out.println( " all topics size: " + allTopics.size() );
 
-			for ( Author a : authorList )
+			for ( String id : idsList )
 			{
+				Author a = persistenceStrategy.getAuthorDAO().getById( id );
 				// System.out.println( "\n" + a.getName() );
 				Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
@@ -294,7 +296,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 				// System.out.println( authorInterests.get( i ).getTerm() + "
 				// :::: " + authorInterestWeights.get( i ) );
 				// System.out.println( interestAuthors.get( i ).size() );
-				if ( authorInterestWeights.get( i ) < threshold || interestAuthors.get( i ).size() < authorList.size() )
+				if ( authorInterestWeights.get( i ) < threshold || interestAuthors.get( i ).size() < idsList.size() )
 				{
 					authorInterestWeights.remove( i );
 					authorInterests.remove( i );
@@ -854,7 +856,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 				// System.out.println( authorInterests.get( i ).getTerm() + "
 				// :::: " + authorInterestWeights.get( i ) );
 				// System.out.println( interestAuthors.get( i ).size() );
-				if ( circleInterestWeights.get( i ) < threshold || interestCircles.get( i ).size() < authorList.size() )
+				if ( circleInterestWeights.get( i ) < threshold || interestCircles.get( i ).size() < idsList.size() )
 				{
 					circleInterestWeights.remove( i );
 					circleInterests.remove( i );

@@ -180,7 +180,7 @@ public class FilterHelperImpl implements FilterHelper
 
 			List<DataMiningPublication> allDMPublications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
 			List<DataMiningPublication> selectedDMPublications = new ArrayList<DataMiningPublication>();
-			List<String> titles = new ArrayList<String>();
+			List<String> pubIds = new ArrayList<String>();
 			List<Integer> count = new ArrayList<Integer>();
 			for ( Interest i : interestList )
 			{
@@ -203,7 +203,7 @@ public class FilterHelperImpl implements FilterHelper
 								if ( !selectedDMPublications.contains( dmp ) )
 								{
 									selectedDMPublications.add( dmp );
-									titles.add( dmp.getTitle() );
+									pubIds.add( dmp.getId() );
 									count.add( 1 );
 								}
 								else
@@ -216,17 +216,17 @@ public class FilterHelperImpl implements FilterHelper
 					}
 				}
 			}
-
+			System.out.println( selectedDMPublications.size() + " selec dm" );
 			for ( int i = 0; i < count.size(); i++ )
 			{
 				if ( count.get( i ) < interestList.size() )
 				{
 					count.remove( i );
-					titles.remove( i );
+					pubIds.remove( i );
 					i--;
 				}
 			}
-			publications = new HashSet<Publication>( persistenceStrategy.getPublicationDAO().getPublicationByTitle( titles ) );
+			publications = new HashSet<Publication>( persistenceStrategy.getPublicationDAO().getPublicationByIds( pubIds ) );
 		}
 		if ( type.equals( "circle" ) )
 		{

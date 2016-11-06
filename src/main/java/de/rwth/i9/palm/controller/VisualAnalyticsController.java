@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -466,7 +467,7 @@ public class VisualAnalyticsController
 		{
 			for ( int j = 0; j < interests.size(); j++ )
 			{
-				float dist= palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( allTopics.get( i ), interests.get( j ).getTerm());
+				float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( allTopics.get( i ), interests.get( j ).getTerm() );
 
 				if ( dist > 0.9f && !combinedInterests.contains( interests.get( j ) ) )
 				{
@@ -580,7 +581,7 @@ public class VisualAnalyticsController
 			}
 			if ( type.equals( "circle" ) )
 			{
-				Circle circle = persistenceStrategy.getCircleDAO().getById(i);
+				Circle circle = persistenceStrategy.getCircleDAO().getById( i );
 				namesList.add( circle.getName() );
 			}
 		}
@@ -804,9 +805,19 @@ public class VisualAnalyticsController
 			if ( type.equals( "circle" ) )
 				circleList = filterFeature.getFilterHelper().getCirclesFromIds( idsList );
 
-			Set<Publication> publications = filterFeature.getFilteredData().getFilteredPublications( type, authorList, eventGroupList, publicationList, interestList, circleList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
+			Set<Publication> publications = new HashSet<Publication>();
 
-			visMap = visSwitch( type, idsList, visTab, visType, authorList, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
+			System.out.println( "\n\n idsLsit: " + idsList.size() + " \n" + idsList.toString() + "\n\n" );
+			
+			System.out.println( startYear + " " + endYear + " " + yearFilterPresent );
+			if ( visType.equals( "researchers" ) && !type.equals( "publication" ) && filteredPublication.isEmpty() && filteredConference.isEmpty() && filteredTopic.isEmpty() && filteredCircle.isEmpty() && yearFilterPresent.equals( "false" ) )
+			{
+				System.out.println( "publications: !! " + publications.size() );
+			}
+			else
+				publications = filterFeature.getFilteredData().getFilteredPublications( type, authorList, eventGroupList, publicationList, interestList, circleList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear );
+
+			visMap = visSwitch( type, idsList, visTab, visType, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors );
 
 			responseMap.put( "type", type );
 			responseMap.put( "visType", visType );
@@ -922,110 +933,110 @@ public class VisualAnalyticsController
 		return responseMap;
 	}
 
-	public Map<String, Object> visSwitch( String type, List<String> idsList, String visTab, String visType, List<Author> authors, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic, String authoridForCoAuthors )
+	public Map<String, Object> visSwitch( String type, List<String> idsList, String visTab, String visType, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic, String authoridForCoAuthors )
 	{
 
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
 		switch ( visTab ) {
 		case "Network": {
-			visMap = visualizationFeature.getVisNetwork().visualizeNetwork( type, authors, publications, idsList, startYear, endYear, authoridForCoAuthors );
+			visMap = visualizationFeature.getVisNetwork().visualizeNetwork( type, publications, idsList, startYear, endYear, authoridForCoAuthors );
 			break;
-			}
+		}
 		case "Locations": {
 			visMap = visualizationFeature.getVisLocations().visualizeLocations( type, publications, idsList, startYear, endYear, filteredTopic );
 			break;
-			}
+		}
 		case "Timeline": {
 			visMap = visualizationFeature.getVisTimeline().visualizeTimeline( publications );
 			break;
-			}
+		}
 		case "Evolution": {
-			visMap = visualizationFeature.getVisEvolution().visualizeEvolution( type, idsList, authors, publications, startYear, endYear );
+			visMap = visualizationFeature.getVisEvolution().visualizeEvolution( type, idsList, publications, startYear, endYear );
 			break;
-			}
+		}
 		case "Bubbles": {
-			visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, authors, publications, startYear, endYear );
+			visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear );
 			break;
-			}
+		}
 		case "Group": {
 			if ( visType.equals( "researchers" ) )
 			{
-				visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, authors, idsList, publications, startYear, endYear );
+				visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, idsList, publications, startYear, endYear );
 			}
 			if ( visType.equals( "conferences" ) )
 			{
-				visMap = visualizationFeature.getVisGroup().visualizeConferencesGroup( type, authors, publications );
+				visMap = visualizationFeature.getVisGroup().visualizeConferencesGroup( type, publications );
 			}
 			if ( visType.equals( "publications" ) )
 			{
-				visMap = visualizationFeature.getVisGroup().visualizePublicationsGroup( type, authors, publications );
+				visMap = visualizationFeature.getVisGroup().visualizePublicationsGroup( type, publications );
 			}
 			if ( visType.equals( "topics" ) )
 			{
-				visMap = visualizationFeature.getVisGroup().visualizeTopicsGroup( type, authors, publications );
+				visMap = visualizationFeature.getVisGroup().visualizeTopicsGroup( type, publications );
 			}
 			break;
-			}
+		}
 		case "List": {
 
 			if ( visType.equals( "researchers" ) )
 			{
-				visMap = visualizationFeature.getVisList().visualizeResearchersList( type, authors, publications, startYear, endYear, idsList );
+				visMap = visualizationFeature.getVisList().visualizeResearchersList( type, publications, startYear, endYear, idsList );
 			}
 			if ( visType.equals( "conferences" ) )
 			{
-				visMap = visualizationFeature.getVisList().visualizeConferencesList( type, authors, publications, startYear, endYear, idsList );
+				visMap = visualizationFeature.getVisList().visualizeConferencesList( type, publications, startYear, endYear, idsList );
 			}
 			if ( visType.equals( "publications" ) )
 			{
-				visMap = visualizationFeature.getVisList().visualizePublicationsList( type, authors, publications, startYear, endYear, idsList );
+				visMap = visualizationFeature.getVisList().visualizePublicationsList( type, publications, startYear, endYear, idsList );
 			}
 			if ( visType.equals( "topics" ) )
 			{
-				visMap = visualizationFeature.getVisList().visualizeTopicsList( type, authors, publications, startYear, endYear, idsList );
+				visMap = visualizationFeature.getVisList().visualizeTopicsList( type, publications, startYear, endYear, idsList );
 			}
 			break;
-			}
+		}
 		case "Comparison": {
 			if ( visType.equals( "researchers" ) )
 			{
-				visMap = visualizationFeature.getVisComparison().visualizeResearchersComparison( type, idsList, authors, publications, startYear, endYear, yearFilterPresent );
+				visMap = visualizationFeature.getVisComparison().visualizeResearchersComparison( type, idsList, publications, startYear, endYear, yearFilterPresent );
 			}
 			if ( visType.equals( "conferences" ) )
 			{
-				visMap = visualizationFeature.getVisComparison().visualizeConferencesComparison( type, idsList, authors, publications, startYear, endYear, yearFilterPresent );
+				visMap = visualizationFeature.getVisComparison().visualizeConferencesComparison( type, idsList, publications, startYear, endYear, yearFilterPresent );
 			}
 			if ( visType.equals( "publications" ) )
 			{
-				visMap = visualizationFeature.getVisComparison().visualizePublicationsComparison( type, idsList, authors, publications, startYear, endYear, yearFilterPresent );
+				visMap = visualizationFeature.getVisComparison().visualizePublicationsComparison( type, idsList, publications, startYear, endYear, yearFilterPresent );
 			}
 			if ( visType.equals( "topics" ) )
 			{
-				visMap = visualizationFeature.getVisComparison().visualizeTopicsComparison( type, idsList, authors, publications, startYear, endYear, yearFilterPresent );
+				visMap = visualizationFeature.getVisComparison().visualizeTopicsComparison( type, idsList, publications, startYear, endYear, yearFilterPresent );
 			}
 			break;
-			}
+		}
 		case "Similar": {
 			if ( visType.equals( "researchers" ) )
 			{
-				visMap = visualizationFeature.getVisSimilar().visualizeSimilarResearchers( type, authors, idsList );
+				visMap = visualizationFeature.getVisSimilar().visualizeSimilarResearchers( type, idsList );
 			}
 			if ( visType.equals( "conferences" ) )
 			{
-				visMap = visualizationFeature.getVisSimilar().visualizeSimilarConferences( type, authors, idsList );
+				visMap = visualizationFeature.getVisSimilar().visualizeSimilarConferences( type, idsList );
 			}
 			if ( visType.equals( "publications" ) )
 			{
-				visMap = visualizationFeature.getVisSimilar().visualizeSimilarPublications( type, authors, idsList );
+				visMap = visualizationFeature.getVisSimilar().visualizeSimilarPublications( type, idsList );
 			}
 			if ( visType.equals( "topics" ) )
 			{
-				visMap = visualizationFeature.getVisSimilar().visualizeSimilarTopics( type, authors, idsList );
+				visMap = visualizationFeature.getVisSimilar().visualizeSimilarTopics( type, idsList );
 			}
 
 			break;
-			}
+		}
 		}
 		return visMap;
 	}

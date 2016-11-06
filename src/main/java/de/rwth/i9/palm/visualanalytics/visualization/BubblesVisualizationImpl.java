@@ -33,7 +33,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	public Map<String, Object> visualizeBubbles( String type, List<String> idsList, List<Author> authorList, Set<Publication> publications, String startYear, String endYear )
+	public Map<String, Object> visualizeBubbles( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
@@ -60,8 +60,9 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 			// If there are no common publications!
 			if ( allTopics.size() == 0 )
 			{
-				for ( Author a : authorList )
+				for ( String id : idsList )
 				{
+					Author a = persistenceStrategy.getAuthorDAO().getById( id );
 					List<Publication> pubs = new ArrayList<Publication>( a.getPublications() );
 					for ( Publication p : pubs )
 					{
@@ -91,8 +92,9 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 			List<Double> authorInterestWeights = new ArrayList<Double>();
 			List<List<Author>> interestAuthors = new ArrayList<List<Author>>();
 			List<Map<Interest, Double>> authorInterestList = new ArrayList<Map<Interest, Double>>();
-			for ( Author a : authorList )
+			for ( String id : idsList )
 			{
+				Author a = persistenceStrategy.getAuthorDAO().getById( id );
 				Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
 				Map<Interest, Double> interestWeightMap = new HashMap<Interest, Double>();
@@ -239,7 +241,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 			List<Object[]> listObjects = new ArrayList<Object[]>();
 			for ( int i = 0; i < authorInterests.size(); i++ )
 			{
-				if ( authorInterestWeights.get( i ) > threshold && interestAuthors.get( i ).size() == authorList.size() )
+				if ( authorInterestWeights.get( i ) > threshold && interestAuthors.get( i ).size() == idsList.size() )
 				{
 					List<Double> interestList = new ArrayList<Double>();
 
@@ -640,7 +642,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 			Map<String, Object> finalMap = new HashMap<String, Object>();
 
 			double threshold = 0.0;
-			if ( authorList.size() > 1 )
+			if ( idsList.size() > 1 )
 			{
 				threshold = 0.0;
 			}

@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
-import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.visualanalytics.service.VisualizationFeature;
 
@@ -26,15 +25,15 @@ public class ListVisualizationImpl implements ListVisualization
 	private VisualizationFeature visualizationFeature;
 
 	@Override
-	public Map<String, Object> visualizeResearchersList( String type, List<Author> authorList, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
+	public Map<String, Object> visualizeResearchersList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( authorList, publications, type, idsList, startYear, endYear ) );
+		visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, idsList, startYear, endYear ) );
 		return visMap;
 	}
 
 	@Override
-	public Map<String, Object> visualizeConferencesList( String type, List<Author> authorList, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
+	public Map<String, Object> visualizeConferencesList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
 	{
 		System.out.println( "type: " + type );
 
@@ -53,7 +52,7 @@ public class ListVisualizationImpl implements ListVisualization
 	}
 
 	@Override
-	public Map<String, Object> visualizePublicationsList( String type, List<Author> authorList, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
+	public Map<String, Object> visualizePublicationsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
@@ -81,12 +80,12 @@ public class ListVisualizationImpl implements ListVisualization
 	}
 
 	@Override
-	public Map<String, Object> visualizeTopicsList( String type, List<Author> authorList, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
+	public Map<String, Object> visualizeTopicsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
 	{
 		System.out.println( "type: " + type );
 
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, authorList, publications, startYear, endYear );
+		visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear );
 
 		System.out.println( "vis topic list:  " + visMap.size() );
 		return visMap;

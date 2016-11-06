@@ -12,6 +12,7 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.DataMiningEventGroup;
 import de.rwth.i9.palm.model.DataMiningPublication;
+import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
 public class SimilarityVisualizationImpl implements SimilarityVisualization
@@ -19,11 +20,18 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 	@Autowired
 	private SimilarityService similarityService;
 
+	@Autowired
+	private PersistenceStrategy persistenceStrategy;
+
 	@Override
-	public Map<String, Object> visualizeSimilarResearchers( String type, List<Author> authorList, List<String> idsList )
+	public Map<String, Object> visualizeSimilarResearchers( String type, List<String> idsList )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-
+		List<Author> authorList = new ArrayList<Author>();
+		for ( String id : idsList )
+		{
+			authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
+		}
 		Map<String, Object> map = similarityService.similarAuthors( authorList );
 		if ( map != null )
 		{
@@ -69,7 +77,7 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 	}
 
 	@Override
-	public Map<String, Object> visualizeSimilarConferences( String type, List<Author> authorList, List<String> idsList )
+	public Map<String, Object> visualizeSimilarConferences( String type, List<String> idsList )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
@@ -119,7 +127,7 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 	}
 
 	@Override
-	public Map<String, Object> visualizeSimilarPublications( String type, List<Author> authorList, List<String> idsList )
+	public Map<String, Object> visualizeSimilarPublications( String type, List<String> idsList )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
@@ -168,7 +176,7 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 	}
 
 	@Override
-	public Map<String, Object> visualizeSimilarTopics( String type, List<Author> authorList, List<String> idsList )
+	public Map<String, Object> visualizeSimilarTopics( String type, List<String> idsList )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 

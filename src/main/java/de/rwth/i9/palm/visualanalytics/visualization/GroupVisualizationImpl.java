@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 
 @Component
@@ -25,10 +24,10 @@ public class GroupVisualizationImpl implements GroupVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizeResearchersGroup( String type, List<Author> authorList, List<String> idsList, Set<Publication> publications, String startYear, String endYear )
+	public Map<String, Object> visualizeResearchersGroup( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		Map<String, Object> clusteringResultMap = clusteringService.clusterAuthors( "xmeans", authorList, idsList, publications, type, startYear, endYear );
+		Map<String, Object> clusteringResultMap = clusteringService.clusterAuthors( "xmeans", idsList, publications, type, startYear, endYear );
 		Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
 		Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
 		Map<String, Integer> mapClusterAuthor = (Map<String, Integer>) clusteringResultMap.get( "clusterMap" );
@@ -90,7 +89,7 @@ public class GroupVisualizationImpl implements GroupVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizePublicationsGroup( String type, List<Author> authorList, Set<Publication> publications )
+	public Map<String, Object> visualizePublicationsGroup( String type, Set<Publication> publications )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		Map<String, Object> clusteringResultMap = clusteringService.clusterPublications( "xmeans", publications );
@@ -156,10 +155,10 @@ public class GroupVisualizationImpl implements GroupVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizeConferencesGroup( String type, List<Author> authorList, Set<Publication> publications )
+	public Map<String, Object> visualizeConferencesGroup( String type, Set<Publication> publications )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		Map<String, Object> clusteringResultMap = clusteringService.clusterConferences( "xmeans", authorList, publications );
+		Map<String, Object> clusteringResultMap = clusteringService.clusterConferences( "xmeans", publications );
 		Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
 		Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
 		Map<String, Integer> mapClusterConference = (Map<String, Integer>) clusteringResultMap.get( "clusterMap" );
@@ -224,7 +223,7 @@ public class GroupVisualizationImpl implements GroupVisualization
 	}
 
 	@Override
-	public Map<String, Object> visualizeTopicsGroup( String type, List<Author> authorList, Set<Publication> publications )
+	public Map<String, Object> visualizeTopicsGroup( String type, Set<Publication> publications )
 	{
 		// TODO Auto-generated method stub
 		return null;
