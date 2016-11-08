@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.helper;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,13 +15,20 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.AuthorInterest;
+import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.model.CircleInterest;
+import de.rwth.i9.palm.model.CircleInterestProfile;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.DataMiningPublication;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.EventInterest;
+import de.rwth.i9.palm.model.EventInterestProfile;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.model.PublicationTopicFlat;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -365,12 +373,597 @@ public class VADataFetcher
 							publications.add( pubs.get( c ) );
 						}
 					}
-
 				}
 			}
-
 		}
 
 		return publications;
+	}
+
+	public Map<String, Object> fetchTopicsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
+	{
+		List<String> allTopics = new ArrayList<String>();
+		List<Publication> pubs = new ArrayList<Publication>( author.getPublications() );
+		for ( Publication p : pubs )
+		{
+			Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+			for ( PublicationTopic pubTopic : publicationTopics )
+			{
+				List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+				List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+				for ( int j = 0; j < topics.size(); j++ )
+				{
+					if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
+					{
+						allTopics.add( topics.get( j ) );
+					}
+				}
+			}
+		}
+
+		List<String> interestTopicNames = new ArrayList<String>();
+		List<String> interestTopicIds = new ArrayList<String>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+
+		Set<AuthorInterestProfile> authorInterestProfiles = author.getAuthorInterestProfiles();
+		for ( AuthorInterestProfile aip : authorInterestProfiles )
+		{
+			Set<AuthorInterest> ais = aip.getAuthorInterests();
+			for ( AuthorInterest ai : ais )
+			{
+				Map<Interest, Double> interests = ai.getTermWeights();
+				Iterator<Interest> interestTerm = interests.keySet().iterator();
+				Iterator<Double> interestTermWeight = interests.values().iterator();
+				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+				{
+					Interest actualInterest = interestTerm.next();
+					String interest = actualInterest.getTerm();
+					Double weight = interestTermWeight.next();
+
+					if ( weight > 0.3 )
+					{
+						if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+						{
+							Boolean validYear = true;
+							Calendar calendar = Calendar.getInstance();
+							calendar.setTime( ai.getYear() );
+							String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+							if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
+							{
+								validYear = true;
+							}
+							else
+							{
+								if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+								{
+									validYear = false;
+								}
+							}
+							if ( validYear )
+							{
+								if ( !interestTopicNames.contains( interest ) )
+								{
+									interestTopicNames.add( interest );
+									interestTopicIds.add( actualInterest.getId() );
+
+									Map<String, Object> items = new HashMap<String, Object>();
+									items.put( "name", interest );
+									items.put( "id", actualInterest.getId() );
+									listItems.add( items );
+								}
+
+							}
+						}
+					}
+
+				}
+			}
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "interestTopicIds", interestTopicIds );
+		map.put( "interestTopicNames", interestTopicNames );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	public Map<String, Object> fetchCoAuthorForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
+	{
+		Set<Publication> authorPublications = author.getPublications();
+		List<Author> allCoAuthors = new ArrayList<Author>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		for ( Publication p : authorPublications )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+			if ( flag )
+			{
+				List<Author> authors = p.getAuthors();
+				for ( Author a : authors )
+				{
+					if ( !allCoAuthors.contains( a ) && !author.equals( a ) )
+					{
+						allCoAuthors.add( a );
+						Map<String, Object> items = new HashMap<String, Object>();
+						items.put( "name", a.getName() );
+						items.put( "id", a.getId() );
+						items.put( "isAdded", a.isAdded() );
+						listItems.add( items );
+					}
+				}
+			}
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "allCoAuthors", allCoAuthors );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	public Map<String, Object> fetchConferencesForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
+	{
+		Set<Publication> authorPublications = author.getPublications();
+		List<EventGroup> authorEventGroups = new ArrayList<EventGroup>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		for ( Publication p : authorPublications )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+
+			if ( flag )
+			{
+				if ( p.getEvent() != null )
+				{
+					if ( p.getEvent().getEventGroup() != null )
+					{
+
+						EventGroup eventGroup = p.getEvent().getEventGroup();
+						if ( !authorEventGroups.contains( eventGroup ) )
+						{
+							authorEventGroups.add( eventGroup );
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", eventGroup.getName() );
+							items.put( "id", eventGroup.getId() );
+							items.put( "isAdded", eventGroup.isAdded() );
+							listItems.add( items );
+						}
+					}
+				}
+			}
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "authorEventGroups", authorEventGroups );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	public Map<String, Object> fetchPublicationsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
+	{
+		Set<Publication> publications = author.getPublications();
+		List<Publication> authorPublications = new ArrayList<Publication>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+
+		for ( Publication p : publications )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+
+			if ( flag )
+			{
+				if ( !authorPublications.contains( p ) )
+				{
+					authorPublications.add( p );
+					Map<String, Object> items = new HashMap<String, Object>();
+					items.put( "name", p.getTitle() );
+					items.put( "id", p.getId() );
+					listItems.add( items );
+				}
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "authorPublications", authorPublications );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	public Map<String, Object> fetchTopicsForConferences( List<Event> events, List<String> allTopics, String startYear, String endYear, String yearFilterPresent )
+	{
+		List<String> interestTopicNames = new ArrayList<String>();
+		List<String> interestTopicIds = new ArrayList<String>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+
+		for ( Event e : events )
+		{
+			Set<EventInterestProfile> eventInterestProfiles = e.getEventInterestProfiles();
+			for ( EventInterestProfile eip : eventInterestProfiles )
+			{
+				Set<EventInterest> eventInterests = eip.getEventInterests();
+				for ( EventInterest ei : eventInterests )
+				{
+					Map<Interest, Double> interests = ei.getTermWeights();
+					Iterator<Interest> interestTerm = interests.keySet().iterator();
+					Iterator<Double> interestTermWeight = interests.values().iterator();
+
+					while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+					{
+						Interest actualInterest = interestTerm.next();
+						String interest = ( actualInterest.getTerm() );
+						Double weight = interestTermWeight.next();
+						if ( weight > 0.3 )
+						{
+							if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+							{
+								// System.out.println( "\n " + interest
+								// );
+								Boolean validYear = true;
+								Calendar calendar = Calendar.getInstance();
+								calendar.setTime( ei.getYear() );
+								String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+								if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
+								{
+									validYear = true;
+								}
+								else
+								{
+									if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+									{
+										validYear = false;
+									}
+								}
+								if ( validYear )
+								{
+									if ( !interestTopicNames.contains( interest ) )
+									{
+										interestTopicNames.add( interest );
+										interestTopicIds.add( actualInterest.getId() );
+
+										Map<String, Object> items = new HashMap<String, Object>();
+										items.put( "name", interest );
+										items.put( "id", actualInterest.getId() );
+										listItems.add( items );
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "interestTopicIds", interestTopicIds );
+		map.put( "interestTopicNames", interestTopicNames );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	public Map<String, Object> fetchResearchersForConferences( List<Event> events, String startYear, String endYear, String yearFilterPresent )
+	{
+		List<Publication> eventGroupPubs = new ArrayList<Publication>();
+
+		for ( Event e : events )
+		{
+			List<Publication> eventPublications = e.getPublications();
+			for ( Publication p : eventPublications )
+			{
+				if ( !eventGroupPubs.contains( p ) )
+				{
+					eventGroupPubs.add( p );
+				}
+			}
+		}
+		List<Author> publicationAuthors = new ArrayList<Author>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		for ( Publication p : eventGroupPubs )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+			if ( flag )
+			{
+				List<Author> authors = p.getAuthors();
+				for ( Author a : authors )
+				{
+					if ( !publicationAuthors.contains( a ) )
+					{
+						publicationAuthors.add( a );
+						Map<String, Object> items = new HashMap<String, Object>();
+						items.put( "name", a.getName() );
+						items.put( "id", a.getId() );
+						items.put( "isAdded", a.isAdded() );
+						listItems.add( items );
+					}
+				}
+			}
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "publicationAuthors", publicationAuthors );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	public Map<String, Object> fetchTopicsForPublications( List<Interest> allInterestsInDB, Publication p, String startYear, String endYear, String yearFilterPresent )
+	{
+
+		List<String> allPublicationInterests = new ArrayList<String>();
+		List<String> allPublicationInterestIds = new ArrayList<String>();
+
+		for ( Interest interest : allInterestsInDB )
+		{
+			if ( !allPublicationInterests.contains( interest.getTerm() ) )
+			{
+				allPublicationInterests.add( interest.getTerm() );
+				allPublicationInterestIds.add( interest.getId() );
+			}
+		}
+
+		List<String> interestTopicNames = new ArrayList<String>();
+		List<String> interestTopicIds = new ArrayList<String>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+
+		Boolean flag = false;
+		if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+		{
+			flag = true;
+		}
+		else
+		{
+			if ( p.getYear() != null )
+			{
+				if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+				{
+					flag = true;
+				}
+			}
+		}
+
+		if ( flag )
+		{
+			List<PublicationTopic> topics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
+			for ( PublicationTopic pt : topics )
+			{
+				Map<String, Double> termValues = pt.getTermValues();
+				List<String> terms = new ArrayList<String>( termValues.keySet() );
+				List<Double> weights = new ArrayList<Double>( termValues.values() );
+				for ( int k = 0; k < terms.size(); k++ )
+				{
+					if ( !interestTopicNames.contains( terms.get( k ) ) )// &&
+					{
+						System.out.println( terms.get( k ) + " in 1 " );
+						if ( allPublicationInterests.contains( terms.get( k ) ) )
+						{
+							interestTopicNames.add( terms.get( k ) );
+							int pos = allPublicationInterests.indexOf( terms.get( k ) );
+							interestTopicIds.add( allPublicationInterestIds.get( pos ) );
+
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", terms.get( k ) );
+							items.put( "id", allPublicationInterestIds.get( pos ) );
+							listItems.add( items );
+						}
+						else if ( allPublicationInterests.contains( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) ) )
+						{
+							System.out.println( " inside 2 " + terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
+							interestTopicNames.add( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
+							int pos = allPublicationInterests.indexOf( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
+							interestTopicIds.add( allPublicationInterestIds.get( pos ) );
+
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", terms.get( k ) );
+							items.put( "id", allPublicationInterestIds.get( pos ) );
+							listItems.add( items );
+						}
+					}
+				}
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "interestTopicIds", interestTopicIds );
+		map.put( "interestTopicNames", interestTopicNames );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	public Map<String, Object> fetchResearchersForPublications( Publication p, String startYear, String endYear, String yearFilterPresent )
+	{
+		List<Author> publicationAuthors = new ArrayList<Author>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		Boolean flag = false;
+		if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+		{
+			flag = true;
+		}
+		else
+		{
+			if ( p.getYear() != null )
+			{
+				if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+				{
+					flag = true;
+				}
+			}
+		}
+		if ( flag )
+		{
+			List<Author> authors = p.getAuthors();
+			for ( Author a : authors )
+			{
+				if ( !publicationAuthors.contains( a ) )
+				{
+					publicationAuthors.add( a );
+					Map<String, Object> items = new HashMap<String, Object>();
+					items.put( "name", a.getName() );
+					items.put( "id", a.getId() );
+					items.put( "isAdded", a.isAdded() );
+					listItems.add( items );
+				}
+			}
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "publicationAuthors", publicationAuthors );
+		map.put( "listItems", listItems );
+		return map;
+
+	}
+
+	public Map<String, Object> fetchTopicsForCircles( Circle circle, List<String> allTopics, String startYear, String endYear, String yearFilterPresent )
+	{
+		List<String> interestTopicNames = new ArrayList<String>();
+		List<String> interestTopicIds = new ArrayList<String>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		Set<CircleInterestProfile> circleInterestProfiles = circle.getCircleInterestProfiles();
+		for ( CircleInterestProfile cip : circleInterestProfiles )
+		{
+			Set<CircleInterest> cis = cip.getCircleInterests();
+			for ( CircleInterest ci : cis )
+			{
+				Map<Interest, Double> interests = ci.getTermWeights();
+				Iterator<Interest> interestTerm = interests.keySet().iterator();
+				Iterator<Double> interestTermWeight = interests.values().iterator();
+				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+				{
+					Interest actualInterest = interestTerm.next();
+					String interest = ( actualInterest.getTerm() );
+					Double weight = interestTermWeight.next();
+
+					if ( weight > 0.3 )
+					{
+						if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+						{
+							Boolean validYear = true;
+							Calendar calendar = Calendar.getInstance();
+							calendar.setTime( ci.getYear() );
+							String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+							if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
+							{
+								validYear = true;
+							}
+							else
+							{
+								if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+								{
+									validYear = false;
+								}
+							}
+							if ( validYear )
+							{
+								if ( !interestTopicNames.contains( interest ) )
+								{
+									interestTopicNames.add( interest );
+									interestTopicIds.add( actualInterest.getId() );
+
+									Map<String, Object> items = new HashMap<String, Object>();
+									items.put( "name", interest );
+									items.put( "id", actualInterest.getId() );
+									listItems.add( items );
+								}
+							}
+						}
+					}
+
+				}
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "interestTopicIds", interestTopicIds );
+		map.put( "interestTopicNames", interestTopicNames );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	public Map<String, Object> fetchPublicationsForCircles( Circle circle, String startYear, String endYear, String yearFilterPresent )
+	{
+		Set<Publication> circlePublications = circle.getPublications();
+		List<Publication> allPublications = new ArrayList<Publication>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+
+		for ( Publication p : circlePublications )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null || p.getPublicationDate() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+
+			if ( flag )
+			{
+				if ( !allPublications.contains( p ) )
+				{
+					allPublications.add( p );
+					Map<String, Object> items = new HashMap<String, Object>();
+					items.put( "name", p.getTitle() );
+					items.put( "id", p.getId() );
+					listItems.add( items );
+				}
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "allPublications", allPublications );
+		map.put( "listItems", listItems );
+		return map;
 	}
 }

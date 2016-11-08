@@ -40,32 +40,32 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public Map<String, Object> visualizeEvolution( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear )
+	public Map<String, Object> visualizeEvolution( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent )
 	{
 		// System.out.println( startYear + " : " + endYear );
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		Map<String, String> topicIdMap = new HashMap<String, String>();
 
 		List<String> allTopics = new ArrayList<String>();
-		for ( Publication pub : publications )
-		{
-			Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
-			for ( PublicationTopic pubTopic : publicationTopics )
-			{
-				List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
-				List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
-				for ( int i = 0; i < topics.size(); i++ )
-				{
-					if ( !allTopics.contains( topics.get( i ) ) )// &&
-																	// topicWeights.get(
-																	// i ) > 0.2
-																	// )
-					{
-						allTopics.add( topics.get( i ) );
-					}
-				}
-			}
-		}
+		// for ( Publication pub : publications )
+		// {
+		// Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
+		// for ( PublicationTopic pubTopic : publicationTopics )
+		// {
+		// List<Double> topicWeights = new ArrayList<Double>(
+		// pubTopic.getTermValues().values() );
+		// List<String> topics = new ArrayList<String>(
+		// pubTopic.getTermValues().keySet() );
+		// for ( int i = 0; i < topics.size(); i++ )
+		// {
+		// if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i )
+		// > 0.3 )
+		// {
+		// allTopics.add( topics.get( i ) );
+		// }
+		// }
+		// }
+		// }
 
 		List<Map<String, Object>> mapList = new ArrayList<Map<String, Object>>();
 
@@ -87,13 +87,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 							for ( int i = 0; i < topics.size(); i++ )
 							{
-								if ( !allTopics.contains( topics.get( i ) ) )// &&
-																				// topicWeights.get(
-																				// i
-																				// )
-																				// >
-																				// 0.2
-																				// )
+								if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
 								{
 									allTopics.add( topics.get( i ) );
 								}
@@ -130,45 +124,83 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 							String interest = actualInterest.getTerm();
 							Double weight = interestTermWeight.next();
 
-							if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+							if ( weight > 0.3 )
 							{
-								// System.out.println( "interest: " + interest
-								// );
-								Boolean validYear = true;
-								Calendar calendar = Calendar.getInstance();
-								calendar.setTime( ai.getYear() );
-								String year = Integer.toString( calendar.get( Calendar.YEAR ) );
-								// System.out.println( "year: " + year );
-								if ( startYear.equals( "0" ) || startYear.equals( "" ) )
+								if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
 								{
-									// System.out.println( "in -4" );
-									validYear = true;
-								}
-								else
-								{
-									// System.out.println( "in -3" );
-									if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+									Boolean validYear = true;
+									Calendar calendar = Calendar.getInstance();
+									calendar.setTime( ai.getYear() );
+									String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+									if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
 									{
-										// System.out.println( "in -2: " + year
-										// );
-										validYear = false;
+										validYear = true;
 									}
-								}
-								if ( validYear )
-								{
-									List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
-									List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
-									if ( yWI.contains( year ) )
+									else
 									{
-										// System.out.println( "in -1" );
-										int index = yWI.indexOf( year );
-										if ( !yWIVal.get( index ).contains( actualInterest ) )
+										if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
 										{
-											// System.out.println( "in 0" );
-											yWIVal.get( index ).add( actualInterest );
+											validYear = false;
+										}
+									}
+									if ( validYear )
+									{
+										List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
+										List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
+										if ( yWI.contains( year ) )
+										{
+											int index = yWI.indexOf( year );
+											if ( !yWIVal.get( index ).contains( actualInterest ) )
+											{
+												yWIVal.get( index ).add( actualInterest );
+												if ( !authorInterests.contains( actualInterest ) )
+												{
+													authorInterests.add( actualInterest );
+													authorInterestWeights.add( weight );
+													List<Author> la = new ArrayList<Author>();
+													la.add( a );
+													interestAuthors.add( la );
+												}
+												else
+												{
+													int ind = authorInterests.indexOf( actualInterest );
+													authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
+
+													List<Author> la = interestAuthors.get( ind );
+													if ( !la.contains( a ) )
+													{
+														la.add( a );
+														interestAuthors.set( ind, la );
+													}
+												}
+												Map<String, Object> values = new HashMap<String, Object>();
+												values.put( "Author", a.getName() );
+												values.put( "Topic", actualInterest.getTerm() );
+												values.put( "TopicId", actualInterest.getId() );
+												values.put( "Year", year );
+												values.put( "Weight", weight );
+												mapList.add( values );
+												topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
+											}
+											else
+											{
+												int ind = authorInterests.indexOf( actualInterest );
+
+												authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
+												List<Author> la = interestAuthors.get( ind );
+												if ( !la.contains( a ) )
+												{
+													la.add( a );
+													interestAuthors.set( ind, la );
+												}
+											}
+										}
+										else
+										{
+											List<Interest> newInterestList = new ArrayList<Interest>();
+											newInterestList.add( actualInterest );
 											if ( !authorInterests.contains( actualInterest ) )
 											{
-												// System.out.println( "in 1" );
 												authorInterests.add( actualInterest );
 												authorInterestWeights.add( weight );
 												List<Author> la = new ArrayList<Author>();
@@ -178,12 +210,8 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 											else
 											{
 												int ind = authorInterests.indexOf( actualInterest );
-												// System.out.println( "in 2 :"
-												// + authorInterestWeights.get(
-												// ind ) );
 
 												authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
-
 												List<Author> la = interestAuthors.get( ind );
 												if ( !la.contains( a ) )
 												{
@@ -191,10 +219,10 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 													interestAuthors.set( ind, la );
 												}
 											}
+											yearWiseInterests.put( year, newInterestList );
+
 											Map<String, Object> values = new HashMap<String, Object>();
-											// System.out.println(
-											// actualInterest.getTerm() + " : "
-											// + actualInterest.getId() );
+
 											values.put( "Author", a.getName() );
 											values.put( "Topic", actualInterest.getTerm() );
 											values.put( "TopicId", actualInterest.getId() );
@@ -203,62 +231,6 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 											mapList.add( values );
 											topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 										}
-										else
-										{
-											int ind = authorInterests.indexOf( actualInterest );
-											// System.out.println( "in 3 : " +
-											// authorInterestWeights.get( ind )
-											// );
-
-											authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
-											List<Author> la = interestAuthors.get( ind );
-											if ( !la.contains( a ) )
-											{
-												la.add( a );
-												interestAuthors.set( ind, la );
-											}
-										}
-									}
-									else
-									{
-										// System.out.println( "in 4" );
-										List<Interest> newInterestList = new ArrayList<Interest>();
-										newInterestList.add( actualInterest );
-										if ( !authorInterests.contains( actualInterest ) )
-										{
-											// System.out.println( "in 5" );
-											authorInterests.add( actualInterest );
-											authorInterestWeights.add( weight );
-											List<Author> la = new ArrayList<Author>();
-											la.add( a );
-											interestAuthors.add( la );
-										}
-										else
-										{
-											int ind = authorInterests.indexOf( actualInterest );
-											// System.out.println( "in 6 : " +
-											// authorInterestWeights.get( ind )
-											// );
-
-											authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
-											List<Author> la = interestAuthors.get( ind );
-											if ( !la.contains( a ) )
-											{
-												la.add( a );
-												interestAuthors.set( ind, la );
-											}
-										}
-										yearWiseInterests.put( year, newInterestList );
-
-										Map<String, Object> values = new HashMap<String, Object>();
-
-										values.put( "Author", a.getName() );
-										values.put( "Topic", actualInterest.getTerm() );
-										values.put( "TopicId", actualInterest.getId() );
-										values.put( "Year", year );
-										values.put( "Weight", weight );
-										mapList.add( values );
-										topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 									}
 								}
 							}
@@ -285,7 +257,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			// threshold = 0.3;
 			// }
 
-			double threshold = 0.8;
+			double threshold = 0.0;
 			// if ( authorList.size() > 1 )
 			// {
 			// threshold = 0.0;
@@ -351,13 +323,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 								List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 								for ( int i = 0; i < topics.size(); i++ )
 								{
-									if ( !allTopics.contains( topics.get( i ) ) ) // &&
-																					// topicWeights.get(
-																					// i
-																					// )
-																					// >
-																					// 0.2
-																					// )
+									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
 									{
 										allTopics.add( topics.get( i ) );
 									}
@@ -395,36 +361,83 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 								Interest actualInterest = interestTerm.next();
 								String interest = actualInterest.getTerm();
 								Double weight = interestTermWeight.next();
-
-								if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+								if ( weight > 0.3 )
 								{
-									Boolean validYear = true;
-									Calendar calendar = Calendar.getInstance();
-									calendar.setTime( ei.getYear() );
-									String year = Integer.toString( calendar.get( Calendar.YEAR ) );
-									// System.out.println( interest + " : " +
-									// year );
-									if ( startYear.equals( "0" ) || startYear.equals( "" ) )
+									if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
 									{
-										validYear = true;
-									}
-									else
-									{
-										if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+										Boolean validYear = true;
+										Calendar calendar = Calendar.getInstance();
+										calendar.setTime( ei.getYear() );
+										String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+										// System.out.println( interest + " : "
+										// +
+										// year );
+										if ( startYear.equals( "0" ) || startYear.equals( "" ) )
 										{
-											validYear = false;
+											validYear = true;
 										}
-									}
-									if ( validYear )
-									{
-										List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
-										List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
-										if ( yWI.contains( year ) )
+										else
 										{
-											int index = yWI.indexOf( year );
-											if ( !yWIVal.get( index ).contains( actualInterest ) )
+											if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
 											{
-												yWIVal.get( index ).add( actualInterest );
+												validYear = false;
+											}
+										}
+										if ( validYear )
+										{
+											List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
+											List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
+											if ( yWI.contains( year ) )
+											{
+												int index = yWI.indexOf( year );
+												if ( !yWIVal.get( index ).contains( actualInterest ) )
+												{
+													yWIVal.get( index ).add( actualInterest );
+													if ( !conferenceInterests.contains( actualInterest ) )
+													{
+														conferenceInterests.add( actualInterest );
+														conferenceInterestWeights.add( weight );
+														List<EventGroup> le = new ArrayList<EventGroup>();
+														le.add( eg );
+														interestConferences.add( le );
+													}
+													else
+													{
+														int ind = conferenceInterests.indexOf( actualInterest );
+														conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
+														List<EventGroup> le = interestConferences.get( ind );
+														if ( !le.contains( eg ) )
+														{
+															le.add( eg );
+															interestConferences.set( ind, le );
+														}
+													}
+													Map<String, Object> values = new HashMap<String, Object>();
+
+													values.put( "Author", eg.getName() );
+													values.put( "Topic", actualInterest.getTerm() );
+													values.put( "TopicId", actualInterest.getId() );
+													values.put( "Year", year );
+													values.put( "Weight", weight );
+													mapList.add( values );
+													topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
+												}
+												else
+												{
+													int ind = conferenceInterests.indexOf( actualInterest );
+													conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
+													List<EventGroup> le = interestConferences.get( ind );
+													if ( !le.contains( eg ) )
+													{
+														le.add( eg );
+														interestConferences.set( ind, le );
+													}
+												}
+											}
+											else
+											{
+												List<Interest> newInterestList = new ArrayList<Interest>();
+												newInterestList.add( actualInterest );
 												if ( !conferenceInterests.contains( actualInterest ) )
 												{
 													conferenceInterests.add( actualInterest );
@@ -444,6 +457,8 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 														interestConferences.set( ind, le );
 													}
 												}
+												yearWiseInterests.put( year, newInterestList );
+
 												Map<String, Object> values = new HashMap<String, Object>();
 
 												values.put( "Author", eg.getName() );
@@ -454,52 +469,6 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 												mapList.add( values );
 												topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 											}
-											else
-											{
-												int ind = conferenceInterests.indexOf( actualInterest );
-												conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
-												List<EventGroup> le = interestConferences.get( ind );
-												if ( !le.contains( eg ) )
-												{
-													le.add( eg );
-													interestConferences.set( ind, le );
-												}
-											}
-										}
-										else
-										{
-											List<Interest> newInterestList = new ArrayList<Interest>();
-											newInterestList.add( actualInterest );
-											if ( !conferenceInterests.contains( actualInterest ) )
-											{
-												conferenceInterests.add( actualInterest );
-												conferenceInterestWeights.add( weight );
-												List<EventGroup> le = new ArrayList<EventGroup>();
-												le.add( eg );
-												interestConferences.add( le );
-											}
-											else
-											{
-												int ind = conferenceInterests.indexOf( actualInterest );
-												conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
-												List<EventGroup> le = interestConferences.get( ind );
-												if ( !le.contains( eg ) )
-												{
-													le.add( eg );
-													interestConferences.set( ind, le );
-												}
-											}
-											yearWiseInterests.put( year, newInterestList );
-
-											Map<String, Object> values = new HashMap<String, Object>();
-
-											values.put( "Author", eg.getName() );
-											values.put( "Topic", actualInterest.getTerm() );
-											values.put( "TopicId", actualInterest.getId() );
-											values.put( "Year", year );
-											values.put( "Weight", weight );
-											mapList.add( values );
-											topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 										}
 									}
 								}
@@ -521,7 +490,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			// {
 			// threshold = 3.0;
 			// }
-			double threshold = 0.8;
+			double threshold = 0.0;
 			// if ( authorList.size() > 1 )
 			// {
 			// threshold = 0.0;
@@ -648,13 +617,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 							for ( int i = 0; i < topics.size(); i++ )
 							{
-								if ( !allTopics.contains( topics.get( i ) ) )// &&
-																				// topicWeights.get(
-																				// i
-																				// )
-																				// >
-																				// 0.2
-																				// )
+								if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
 								{
 									allTopics.add( topics.get( i ) );
 								}
@@ -690,58 +653,66 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 							Interest actualInterest = interestTerm.next();
 							String interest = actualInterest.getTerm();
 							Double weight = interestTermWeight.next();
-
-							if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+							if ( weight > 0.3 )
 							{
-								// System.out.println( "interest: " + interest
-								// );
-								Boolean validYear = true;
-								Calendar calendar = Calendar.getInstance();
-								calendar.setTime( ci.getYear() );
-								String year = Integer.toString( calendar.get( Calendar.YEAR ) );
-								// System.out.println( "year: " + year );
-								if ( startYear.equals( "0" ) || startYear.equals( "" ) )
+								if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
 								{
-									// System.out.println( "in -4" );
-									validYear = true;
-								}
-								else
-								{
-									// System.out.println( "in -3" );
-									if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+									Boolean validYear = true;
+									Calendar calendar = Calendar.getInstance();
+									calendar.setTime( ci.getYear() );
+									String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+									if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
 									{
-										// System.out.println( "in -2: " + year
-										// );
-										validYear = false;
+										validYear = true;
 									}
-								}
-								if ( validYear )
-								{
-									List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
-									List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
-									if ( yWI.contains( year ) )
+									else
 									{
-										// System.out.println( "in -1" );
-										int index = yWI.indexOf( year );
-										if ( !yWIVal.get( index ).contains( actualInterest ) )
+										if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
 										{
-											// System.out.println( "in 0" );
-											yWIVal.get( index ).add( actualInterest );
-											if ( !circleInterests.contains( actualInterest ) )
+											validYear = false;
+										}
+									}
+									if ( validYear )
+									{
+										List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
+										List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
+										if ( yWI.contains( year ) )
+										{
+											int index = yWI.indexOf( year );
+											if ( !yWIVal.get( index ).contains( actualInterest ) )
 											{
-												// System.out.println( "in 1" );
-												circleInterests.add( actualInterest );
-												circleInterestWeights.add( weight );
-												List<Circle> lc = new ArrayList<Circle>();
-												lc.add( c );
-												interestCircles.add( lc );
+												yWIVal.get( index ).add( actualInterest );
+												if ( !circleInterests.contains( actualInterest ) )
+												{
+													circleInterests.add( actualInterest );
+													circleInterestWeights.add( weight );
+													List<Circle> lc = new ArrayList<Circle>();
+													lc.add( c );
+													interestCircles.add( lc );
+												}
+												else
+												{
+													int ind = circleInterests.indexOf( actualInterest );
+													circleInterestWeights.set( ind, circleInterestWeights.get( ind ) + weight );
+													List<Circle> lc = interestCircles.get( ind );
+													if ( !lc.contains( c ) )
+													{
+														lc.add( c );
+														interestCircles.set( ind, lc );
+													}
+												}
+												Map<String, Object> values = new HashMap<String, Object>();
+												values.put( "Author", c.getName() );
+												values.put( "Topic", actualInterest.getTerm() );
+												values.put( "TopicId", actualInterest.getId() );
+												values.put( "Year", year );
+												values.put( "Weight", weight );
+												mapList.add( values );
+												topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 											}
 											else
 											{
 												int ind = circleInterests.indexOf( actualInterest );
-												// System.out.println( "in 2 :"
-												// + authorInterestWeights.get(
-												// ind ) );
 
 												circleInterestWeights.set( ind, circleInterestWeights.get( ind ) + weight );
 												List<Circle> lc = interestCircles.get( ind );
@@ -751,10 +722,35 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 													interestCircles.set( ind, lc );
 												}
 											}
+										}
+										else
+										{
+											List<Interest> newInterestList = new ArrayList<Interest>();
+											newInterestList.add( actualInterest );
+											if ( !circleInterests.contains( actualInterest ) )
+											{
+												circleInterests.add( actualInterest );
+												circleInterestWeights.add( weight );
+												List<Circle> lc = new ArrayList<Circle>();
+												lc.add( c );
+												interestCircles.add( lc );
+											}
+											else
+											{
+												int ind = circleInterests.indexOf( actualInterest );
+
+												circleInterestWeights.set( ind, circleInterestWeights.get( ind ) + weight );
+												List<Circle> lc = interestCircles.get( ind );
+												if ( !lc.contains( c ) )
+												{
+													lc.add( c );
+													interestCircles.set( ind, lc );
+												}
+											}
+											yearWiseInterests.put( year, newInterestList );
+
 											Map<String, Object> values = new HashMap<String, Object>();
-											// System.out.println(
-											// actualInterest.getTerm() + " : "
-											// + actualInterest.getId() );
+
 											values.put( "Author", c.getName() );
 											values.put( "Topic", actualInterest.getTerm() );
 											values.put( "TopicId", actualInterest.getId() );
@@ -763,62 +759,6 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 											mapList.add( values );
 											topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 										}
-										else
-										{
-											int ind = circleInterests.indexOf( actualInterest );
-											// System.out.println( "in 3 : " +
-											// authorInterestWeights.get( ind )
-											// );
-
-											circleInterestWeights.set( ind, circleInterestWeights.get( ind ) + weight );
-											List<Circle> lc = interestCircles.get( ind );
-											if ( !lc.contains( c ) )
-											{
-												lc.add( c );
-												interestCircles.set( ind, lc );
-											}
-										}
-									}
-									else
-									{
-										// System.out.println( "in 4" );
-										List<Interest> newInterestList = new ArrayList<Interest>();
-										newInterestList.add( actualInterest );
-										if ( !circleInterests.contains( actualInterest ) )
-										{
-											// System.out.println( "in 5" );
-											circleInterests.add( actualInterest );
-											circleInterestWeights.add( weight );
-											List<Circle> lc = new ArrayList<Circle>();
-											lc.add( c );
-											interestCircles.add( lc );
-										}
-										else
-										{
-											int ind = circleInterests.indexOf( actualInterest );
-											// System.out.println( "in 6 : " +
-											// authorInterestWeights.get( ind )
-											// );
-
-											circleInterestWeights.set( ind, circleInterestWeights.get( ind ) + weight );
-											List<Circle> lc = interestCircles.get( ind );
-											if ( !lc.contains( c ) )
-											{
-												lc.add( c );
-												interestCircles.set( ind, lc );
-											}
-										}
-										yearWiseInterests.put( year, newInterestList );
-
-										Map<String, Object> values = new HashMap<String, Object>();
-
-										values.put( "Author", c.getName() );
-										values.put( "Topic", actualInterest.getTerm() );
-										values.put( "TopicId", actualInterest.getId() );
-										values.put( "Year", year );
-										values.put( "Weight", weight );
-										mapList.add( values );
-										topicIdMap.put( actualInterest.getTerm(), actualInterest.getId() );
 									}
 								}
 							}
@@ -826,30 +766,8 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 					}
 				}
 			}
-			// System.out.println( "map list size: " + mapList.size() );
-			// double threshold = 3.0;
-			// if ( authorList.size() > 1 )
-			// {
-			// if ( mapList.size() <= 50 )
-			// threshold = 0.3;
-			// else if ( mapList.size() > 50 || mapList.size() < 100 )
-			// threshold = 0.6;
-			// else if ( mapList.size() > 100 )
-			// threshold = 3.0;
-			// else
-			// threshold = 1.0;
-			// }
-			// else
-			// {
-			// if ( mapList.size() < 50 )
-			// threshold = 0.3;
-			// }
 
-			double threshold = 0.8;
-			// if ( authorList.size() > 1 )
-			// {
-			// threshold = 0.0;
-			// }
+			double threshold = 0.0;
 
 			for ( int i = 0; i < circleInterests.size(); i++ )
 			{

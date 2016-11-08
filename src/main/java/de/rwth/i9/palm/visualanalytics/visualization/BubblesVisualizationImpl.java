@@ -33,27 +33,29 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	public Map<String, Object> visualizeBubbles( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear )
+	public Map<String, Object> visualizeBubbles( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
 		List<String> allTopics = new ArrayList<String>();
-		for ( Publication pub : publications )
-		{
-			Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
-			for ( PublicationTopic pubTopic : publicationTopics )
-			{
-				List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
-				List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
-				for ( int i = 0; i < topics.size(); i++ )
-				{
-					if ( !allTopics.contains( topics.get( i ) ) )
-					{
-						allTopics.add( topics.get( i ) );
-					}
-				}
-			}
-		}
+		// for ( Publication pub : publications )
+		// {
+		// Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
+		// for ( PublicationTopic pubTopic : publicationTopics )
+		// {
+		// List<Double> topicWeights = new ArrayList<Double>(
+		// pubTopic.getTermValues().values() );
+		// List<String> topics = new ArrayList<String>(
+		// pubTopic.getTermValues().keySet() );
+		// for ( int i = 0; i < topics.size(); i++ )
+		// {
+		// if ( !allTopics.contains( topics.get( i ) ) )
+		// {
+		// allTopics.add( topics.get( i ) );
+		// }
+		// }
+		// }
+		// }
 
 		if ( type.equals( "researcher" ) )
 		{
@@ -73,13 +75,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 							for ( int i = 0; i < topics.size(); i++ )
 							{
-								if ( !allTopics.contains( topics.get( i ) ) )// &&
-																				// topicWeights.get(
-																				// i
-																				// )
-																				// >
-																				// 0.2
-																				// )
+								if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
 								{
 									allTopics.add( topics.get( i ) );
 								}
@@ -113,34 +109,86 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							String interest = ( actualInterest.getTerm() );
 							Double weight = interestTermWeight.next();
 
-							if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+							if ( weight > 0.3 )
 							{
-								Boolean validYear = true;
-								Calendar calendar = Calendar.getInstance();
-								calendar.setTime( ai.getYear() );
-								String year = Integer.toString( calendar.get( Calendar.YEAR ) );
-								if ( startYear.equals( "0" ) || startYear.equals( "" ) )
+								if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
 								{
-									validYear = true;
-								}
-								else
-								{
-									if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+									Boolean validYear = true;
+									Calendar calendar = Calendar.getInstance();
+									calendar.setTime( ai.getYear() );
+									String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+									if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
 									{
-										validYear = false;
+										validYear = true;
 									}
-								}
-								if ( validYear )
-								{
-
-									List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
-									List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
-									if ( yWI.contains( year ) )
+									else
 									{
-										int index = yWI.indexOf( year );
-										if ( !yWIVal.get( index ).contains( actualInterest ) )
+										if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
 										{
-											yWIVal.get( index ).add( actualInterest );
+											validYear = false;
+										}
+									}
+									if ( validYear )
+									{
+
+										List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
+										List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
+										if ( yWI.contains( year ) )
+										{
+											int index = yWI.indexOf( year );
+											if ( !yWIVal.get( index ).contains( actualInterest ) )
+											{
+												yWIVal.get( index ).add( actualInterest );
+												if ( !authorInterests.contains( actualInterest ) )
+												{
+													authorInterests.add( actualInterest );
+													authorInterestWeights.add( weight );
+													List<Author> la = new ArrayList<Author>();
+													la.add( a );
+													interestAuthors.add( la );
+												}
+												else
+												{
+													int ind = authorInterests.indexOf( actualInterest );
+													authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
+													List<Author> la = interestAuthors.get( ind );
+													if ( !la.contains( a ) )
+													{
+														la.add( a );
+														interestAuthors.set( ind, la );
+													}
+												}
+												if ( interestWeightMap.containsKey( actualInterest ) )
+												{
+													double w = interestWeightMap.get( actualInterest );
+													interestWeightMap.remove( actualInterest );
+													interestWeightMap.put( actualInterest, w + weight );
+												}
+												else
+													interestWeightMap.put( actualInterest, weight );
+											}
+											else
+											{
+												int ind = authorInterests.indexOf( actualInterest );
+												authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
+												List<Author> la = interestAuthors.get( ind );
+												if ( !la.contains( a ) )
+												{
+													la.add( a );
+													interestAuthors.set( ind, la );
+												}
+												if ( interestWeightMap.containsKey( actualInterest ) )
+												{
+													double w = interestWeightMap.get( actualInterest );
+													interestWeightMap.remove( actualInterest );
+													interestWeightMap.put( actualInterest, w + weight );
+												}
+											}
+										}
+										else
+										{
+											List<Interest> newInterestList = new ArrayList<Interest>();
+											newInterestList.add( actualInterest );
 											if ( !authorInterests.contains( actualInterest ) )
 											{
 												authorInterests.add( actualInterest );
@@ -160,6 +208,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 													interestAuthors.set( ind, la );
 												}
 											}
+											yearWiseInterests.put( year, newInterestList );
 											if ( interestWeightMap.containsKey( actualInterest ) )
 											{
 												double w = interestWeightMap.get( actualInterest );
@@ -169,58 +218,8 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 											else
 												interestWeightMap.put( actualInterest, weight );
 										}
-										else
-										{
-											int ind = authorInterests.indexOf( actualInterest );
-											authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
-											List<Author> la = interestAuthors.get( ind );
-											if ( !la.contains( a ) )
-											{
-												la.add( a );
-												interestAuthors.set( ind, la );
-											}
-											if ( interestWeightMap.containsKey( actualInterest ) )
-											{
-												double w = interestWeightMap.get( actualInterest );
-												interestWeightMap.remove( actualInterest );
-												interestWeightMap.put( actualInterest, w + weight );
-											}
-										}
-									}
-									else
-									{
-										List<Interest> newInterestList = new ArrayList<Interest>();
-										newInterestList.add( actualInterest );
-										if ( !authorInterests.contains( actualInterest ) )
-										{
-											authorInterests.add( actualInterest );
-											authorInterestWeights.add( weight );
-											List<Author> la = new ArrayList<Author>();
-											la.add( a );
-											interestAuthors.add( la );
-										}
-										else
-										{
-											int ind = authorInterests.indexOf( actualInterest );
-											authorInterestWeights.set( ind, authorInterestWeights.get( ind ) + weight );
-											List<Author> la = interestAuthors.get( ind );
-											if ( !la.contains( a ) )
-											{
-												la.add( a );
-												interestAuthors.set( ind, la );
-											}
-										}
-										yearWiseInterests.put( year, newInterestList );
-										if ( interestWeightMap.containsKey( actualInterest ) )
-										{
-											double w = interestWeightMap.get( actualInterest );
-											interestWeightMap.remove( actualInterest );
-											interestWeightMap.put( actualInterest, w + weight );
-										}
-										else
-											interestWeightMap.put( actualInterest, weight );
-									}
 
+									}
 								}
 							}
 						}
@@ -232,7 +231,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 
 			Map<Interest, Object> finalMap = new HashMap<Interest, Object>();
 
-			double threshold = 0.8;
+			double threshold = 0.0;
 			// if ( authorList.size() > 1 )
 			// {
 			// threshold = 0.0;
@@ -293,14 +292,11 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 								List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 								for ( int i = 0; i < topics.size(); i++ )
 								{
-									if ( !allTopics.contains( topics.get( i ) ) )// &&
-																					// topicWeights.get(
-																					// i
-																					// )
-																					// >
-																					// 0.2
-																					// )
+									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
 									{
+										if ( topics.get( i ).equals( "blended learning" ) )
+											System.out.println( "\n " + "topic: " + topics.get( i ) + " " + topicWeights.get( i ) + " " + eg.getName() );
+
 										allTopics.add( topics.get( i ) );
 									}
 								}
@@ -339,36 +335,93 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 								Interest actualInterest = interestTerm.next();
 								String interest = ( actualInterest.getTerm() );
 								Double weight = interestTermWeight.next();
+								if ( interest.equals( "blended learning" ) )
+									System.out.println( "\n " + interest + " " + weight + " " + eg.getName() );
 
-								if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+								if ( weight > 0.3 )
 								{
-									// System.out.println( "\n " + interest );
-									Boolean validYear = true;
-									Calendar calendar = Calendar.getInstance();
-									calendar.setTime( ei.getYear() );
-									String year = Integer.toString( calendar.get( Calendar.YEAR ) );
-									if ( startYear.equals( "0" ) || startYear.equals( "" ) )
-									{
-										validYear = true;
-									}
-									else
-									{
-										if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-										{
-											validYear = false;
-										}
-									}
-									if ( validYear )
+
+									if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
 									{
 
-										List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
-										List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
-										if ( yWI.contains( year ) )
+										Boolean validYear = true;
+										Calendar calendar = Calendar.getInstance();
+										calendar.setTime( ei.getYear() );
+										String year = Integer.toString( calendar.get( Calendar.YEAR ) );
+										if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
 										{
-											int index = yWI.indexOf( year );
-											if ( !yWIVal.get( index ).contains( actualInterest ) )
+											validYear = true;
+										}
+										else
+										{
+											if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
 											{
-												yWIVal.get( index ).add( actualInterest );
+												validYear = false;
+											}
+										}
+										if ( validYear )
+										{
+
+											List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
+											List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
+											if ( yWI.contains( year ) )
+											{
+												int index = yWI.indexOf( year );
+												if ( !yWIVal.get( index ).contains( actualInterest ) )
+												{
+													yWIVal.get( index ).add( actualInterest );
+													if ( !conferenceInterests.contains( actualInterest ) )
+													{
+														conferenceInterests.add( actualInterest );
+														conferenceInterestWeights.add( weight );
+														List<EventGroup> le = new ArrayList<EventGroup>();
+														le.add( eg );
+														interestConferences.add( le );
+													}
+													else
+													{
+														int ind = conferenceInterests.indexOf( actualInterest );
+														conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
+														List<EventGroup> le = interestConferences.get( ind );
+														if ( !le.contains( eg ) )
+														{
+															le.add( eg );
+															interestConferences.set( ind, le );
+														}
+													}
+													if ( interestWeightMap.containsKey( actualInterest ) )
+													{
+														Double w = interestWeightMap.get( actualInterest );
+														interestWeightMap.remove( actualInterest );
+														interestWeightMap.put( actualInterest, w + weight );
+													}
+													else
+													{
+														interestWeightMap.put( actualInterest, weight );
+													}
+												}
+												else
+												{
+													int ind = conferenceInterests.indexOf( actualInterest );
+													conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
+													List<EventGroup> le = interestConferences.get( ind );
+													if ( !le.contains( eg ) )
+													{
+														le.add( eg );
+														interestConferences.set( ind, le );
+													}
+													if ( interestWeightMap.containsKey( actualInterest ) )
+													{
+														Double w = interestWeightMap.get( actualInterest );
+														interestWeightMap.remove( actualInterest );
+														interestWeightMap.put( actualInterest, w + weight );
+													}
+												}
+											}
+											else
+											{
+												List<Interest> newInterestList = new ArrayList<Interest>();
+												newInterestList.add( actualInterest );
 												if ( !conferenceInterests.contains( actualInterest ) )
 												{
 													conferenceInterests.add( actualInterest );
@@ -388,6 +441,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 														interestConferences.set( ind, le );
 													}
 												}
+												yearWiseInterests.put( year, newInterestList );
 												if ( interestWeightMap.containsKey( actualInterest ) )
 												{
 													Double w = interestWeightMap.get( actualInterest );
@@ -395,60 +449,8 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 													interestWeightMap.put( actualInterest, w + weight );
 												}
 												else
-												{
 													interestWeightMap.put( actualInterest, weight );
-												}
 											}
-											else
-											{
-												int ind = conferenceInterests.indexOf( actualInterest );
-												conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
-												List<EventGroup> le = interestConferences.get( ind );
-												if ( !le.contains( eg ) )
-												{
-													le.add( eg );
-													interestConferences.set( ind, le );
-												}
-												if ( interestWeightMap.containsKey( actualInterest ) )
-												{
-													Double w = interestWeightMap.get( actualInterest );
-													interestWeightMap.remove( actualInterest );
-													interestWeightMap.put( actualInterest, w + weight );
-												}
-											}
-										}
-										else
-										{
-											List<Interest> newInterestList = new ArrayList<Interest>();
-											newInterestList.add( actualInterest );
-											if ( !conferenceInterests.contains( actualInterest ) )
-											{
-												conferenceInterests.add( actualInterest );
-												conferenceInterestWeights.add( weight );
-												List<EventGroup> le = new ArrayList<EventGroup>();
-												le.add( eg );
-												interestConferences.add( le );
-											}
-											else
-											{
-												int ind = conferenceInterests.indexOf( actualInterest );
-												conferenceInterestWeights.set( ind, conferenceInterestWeights.get( ind ) + weight );
-												List<EventGroup> le = interestConferences.get( ind );
-												if ( !le.contains( eg ) )
-												{
-													le.add( eg );
-													interestConferences.set( ind, le );
-												}
-											}
-											yearWiseInterests.put( year, newInterestList );
-											if ( interestWeightMap.containsKey( actualInterest ) )
-											{
-												Double w = interestWeightMap.get( actualInterest );
-												interestWeightMap.remove( actualInterest );
-												interestWeightMap.put( actualInterest, w + weight );
-											}
-											else
-												interestWeightMap.put( actualInterest, weight );
 										}
 									}
 								}
@@ -461,7 +463,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 
 			Map<Interest, Object> finalMap = new HashMap<Interest, Object>();
 
-			double threshold = 0.8;
+			double threshold = 0.0;
 			// if ( idsList.size() > 1 )
 			// {
 			// threshold = 0.0;
@@ -508,13 +510,31 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 
 		if ( type.equals( "publication" ) )
 		{
+			for ( Publication pub : publications )
+			{
+				Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
+				for ( PublicationTopic pubTopic : publicationTopics )
+				{
+					List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+					List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+					for ( int i = 0; i < topics.size(); i++ )
+					{
+						if ( !allTopics.contains( topics.get( i ) ) )
+						{
+							allTopics.add( topics.get( i ) );
+						}
+					}
+				}
+			}
 
+			System.out.println( "in publications" );
 			List<String> publicationTopics = new ArrayList<String>();
 			List<Double> publicationTopicWeights = new ArrayList<Double>();
 			List<List<Publication>> interestPublications = new ArrayList<List<Publication>>();
 			List<Map<String, Double>> publicationTopicList = new ArrayList<Map<String, Double>>();
 			for ( String id : idsList )
 			{
+				System.out.println( "1" );
 				Map<String, List<String>> yearWiseInterests = new HashMap<String, List<String>>();
 				Publication p = persistenceStrategy.getPublicationDAO().getById( id );
 				Map<String, Double> topicWeightMap = new HashMap<String, Double>();
@@ -522,13 +542,16 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 				List<PublicationTopic> pubTopics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
 				for ( PublicationTopic pt : pubTopics )
 				{
+					System.out.println( "2" );
 					Map<String, Double> termValues = pt.getTermValues();
 					List<String> terms = new ArrayList<String>( termValues.keySet() );
 					List<Double> weights = new ArrayList<Double>( termValues.values() );
 					for ( int i = 0; i < terms.size(); i++ )
 					{
+						System.out.println( "3" );
 						if ( allTopics.contains( terms.get( i ) ) || allTopics.contains( terms.get( i ) + "s" ) )
 						{
+							System.out.println( "4" );
 							Boolean validYear = true;
 							String year = p.getYear();
 							if ( startYear.equals( "0" ) || startYear.equals( "" ) )
@@ -544,7 +567,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							}
 							if ( validYear )
 							{
-
 								List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
 								List<List<String>> yWIVal = new ArrayList<List<String>>( yearWiseInterests.values() );
 								if ( yWI.contains( year ) )
@@ -675,6 +697,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 					Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( publicationTopics.get( i ) );
 					if ( interest != null )
 					{
+						System.out.println( "5" );
 						Object[] randArray = new Object[3];
 						randArray[0] = interest.getTerm();
 						randArray[1] = interestList;
@@ -694,11 +717,9 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 						}
 					}
 				}
-
 			}
-
+			System.out.println( "LIST OBJECTS SIZE : " + listObjects.size() );
 			visMap.put( "list", listObjects );
-
 		}
 		if ( type.equals( "circle" ) )
 		{
@@ -718,13 +739,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 							for ( int i = 0; i < topics.size(); i++ )
 							{
-								if ( !allTopics.contains( topics.get( i ) ) )// &&
-																				// topicWeights.get(
-																				// i
-																				// )
-																				// >
-																				// 0.2
-																				// )
+								if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
 								{
 									allTopics.add( topics.get( i ) );
 								}
@@ -758,13 +773,15 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							String interest = ( actualInterest.getTerm() );
 							Double weight = interestTermWeight.next();
 
+							if ( weight > 0.3 )
+							{
 							if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
 							{
 								Boolean validYear = true;
 								Calendar calendar = Calendar.getInstance();
 								calendar.setTime( ci.getYear() );
 								String year = Integer.toString( calendar.get( Calendar.YEAR ) );
-								if ( startYear.equals( "0" ) || startYear.equals( "" ) )
+									if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
 								{
 									validYear = true;
 								}
@@ -866,6 +883,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 									}
 
 								}
+								}
 							}
 						}
 					}
@@ -875,7 +893,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 
 			Map<Interest, Object> finalMap = new HashMap<Interest, Object>();
 
-			double threshold = 0.8;
+			double threshold = 0.0;
 			// if ( authorList.size() > 1 )
 			// {
 			// threshold = 0.0;

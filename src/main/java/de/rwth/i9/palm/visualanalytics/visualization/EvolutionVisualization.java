@@ -8,5 +8,5 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface EvolutionVisualization
 {
-	public Map<String, Object> visualizeEvolution( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear );
+	public Map<String, Object> visualizeEvolution( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent );
 }

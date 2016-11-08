@@ -246,7 +246,6 @@ public class FilterHelperImpl implements FilterHelper
 							if ( !circlePublicationsList.contains( tempPubList.get( j ) ) )
 							{
 								circlePublicationsList.add( tempPubList.get( j ) );
-								System.out.println( tempPubList.get( j ).getTitle() );
 								count.add( 0 );
 							}
 							else
@@ -255,7 +254,6 @@ public class FilterHelperImpl implements FilterHelper
 								count.set( index, count.get( index ) + 1 );
 							}
 						}
-
 					}
 				}
 				System.out.println( "pubs before: " + count.size() );

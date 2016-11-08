@@ -25,7 +25,7 @@ public class ListVisualizationImpl implements ListVisualization
 	private VisualizationFeature visualizationFeature;
 
 	@Override
-	public Map<String, Object> visualizeResearchersList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
+	public Map<String, Object> visualizeResearchersList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, idsList, startYear, endYear ) );
@@ -33,7 +33,7 @@ public class ListVisualizationImpl implements ListVisualization
 	}
 
 	@Override
-	public Map<String, Object> visualizeConferencesList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
+	public Map<String, Object> visualizeConferencesList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
 	{
 		System.out.println( "type: " + type );
 
@@ -52,7 +52,7 @@ public class ListVisualizationImpl implements ListVisualization
 	}
 
 	@Override
-	public Map<String, Object> visualizePublicationsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
+	public Map<String, Object> visualizePublicationsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
@@ -80,12 +80,12 @@ public class ListVisualizationImpl implements ListVisualization
 	}
 
 	@Override
-	public Map<String, Object> visualizeTopicsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList )
+	public Map<String, Object> visualizeTopicsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
 	{
 		System.out.println( "type: " + type );
 
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear );
+		visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear, yearFilterPresent );
 
 		System.out.println( "vis topic list:  " + visMap.size() );
 		return visMap;

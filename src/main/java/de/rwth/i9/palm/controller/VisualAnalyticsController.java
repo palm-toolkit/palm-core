@@ -807,9 +807,6 @@ public class VisualAnalyticsController
 
 			Set<Publication> publications = new HashSet<Publication>();
 
-			System.out.println( "\n\n idsLsit: " + idsList.size() + " \n" + idsList.toString() + "\n\n" );
-			
-			System.out.println( startYear + " " + endYear + " " + yearFilterPresent );
 			if ( visType.equals( "researchers" ) && !type.equals( "publication" ) && filteredPublication.isEmpty() && filteredConference.isEmpty() && filteredTopic.isEmpty() && filteredCircle.isEmpty() && yearFilterPresent.equals( "false" ) )
 			{
 				System.out.println( "publications: !! " + publications.size() );
@@ -952,11 +949,11 @@ public class VisualAnalyticsController
 			break;
 		}
 		case "Evolution": {
-			visMap = visualizationFeature.getVisEvolution().visualizeEvolution( type, idsList, publications, startYear, endYear );
+			visMap = visualizationFeature.getVisEvolution().visualizeEvolution( type, idsList, publications, startYear, endYear, yearFilterPresent );
 			break;
 		}
 		case "Bubbles": {
-			visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear );
+			visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear, yearFilterPresent );
 			break;
 		}
 		case "Group": {
@@ -978,23 +975,24 @@ public class VisualAnalyticsController
 			}
 			break;
 		}
+
 		case "List": {
 
 			if ( visType.equals( "researchers" ) )
 			{
-				visMap = visualizationFeature.getVisList().visualizeResearchersList( type, publications, startYear, endYear, idsList );
+				visMap = visualizationFeature.getVisList().visualizeResearchersList( type, publications, startYear, endYear, idsList, yearFilterPresent );
 			}
 			if ( visType.equals( "conferences" ) )
 			{
-				visMap = visualizationFeature.getVisList().visualizeConferencesList( type, publications, startYear, endYear, idsList );
+				visMap = visualizationFeature.getVisList().visualizeConferencesList( type, publications, startYear, endYear, idsList, yearFilterPresent );
 			}
 			if ( visType.equals( "publications" ) )
 			{
-				visMap = visualizationFeature.getVisList().visualizePublicationsList( type, publications, startYear, endYear, idsList );
+				visMap = visualizationFeature.getVisList().visualizePublicationsList( type, publications, startYear, endYear, idsList, yearFilterPresent );
 			}
 			if ( visType.equals( "topics" ) )
 			{
-				visMap = visualizationFeature.getVisList().visualizeTopicsList( type, publications, startYear, endYear, idsList );
+				visMap = visualizationFeature.getVisList().visualizeTopicsList( type, publications, startYear, endYear, idsList, yearFilterPresent );
 			}
 			break;
 		}

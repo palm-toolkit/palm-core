@@ -69,7 +69,7 @@ public class FilteredDataImpl implements FilteredData
 			}
 		}
 		authorPublications = new HashSet<Publication>( publicationsTemp );
-
+		System.out.println( "PUBLICATIONS FROM FILTERED DATA: " + publicationsTemp.size() );
 		// conference filter
 		List<Publication> conferencePublications = new ArrayList<Publication>();
 		if ( !filteredConference.isEmpty() )
