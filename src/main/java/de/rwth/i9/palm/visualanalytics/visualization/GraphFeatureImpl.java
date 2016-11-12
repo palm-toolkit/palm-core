@@ -538,6 +538,7 @@ public class GraphFeatureImpl implements GraphFeature
 
 												Edge e = graphModel.factory().newEdge( nodes.get( indexn ), nodes.get( indexn2 ), 0, 1, false );
 												edges.add( e );
+												e.setWeight( 0.1 );
 												e.setAttribute( "sourceAuthorId", a.getId() );
 												e.setAttribute( "targetAuthorId", list2.get( j ).getId() );
 												e.setAttribute( "sourceAuthorIsAdded", a.isAdded() );
@@ -551,6 +552,7 @@ public class GraphFeatureImpl implements GraphFeature
 
 												e = graphModel.factory().newEdge( nodes.get( index1 ), nodes.get( indexn ), 0, 1, false );
 												edges.add( e );
+												e.setWeight( 0.1 );
 												e.setAttribute( "sourceAuthorId", authorList.get( i - 1 ).getId() );
 												e.setAttribute( "targetAuthorId", a.getId() );
 												e.setAttribute( "sourceAuthorIsAdded", authorList.get( i - 1 ).isAdded() );
@@ -558,6 +560,7 @@ public class GraphFeatureImpl implements GraphFeature
 												undirectedGraph.addEdge( e );
 
 												e = graphModel.factory().newEdge( nodes.get( index2 ), nodes.get( indexn2 ), 0, 1, false );
+												e.setWeight( 0.1 );
 												e.setAttribute( "sourceAuthorId", authorList.get( i ).getId() );
 												e.setAttribute( "targetAuthorId", list2.get( j ).getId() );
 												e.setAttribute( "sourceAuthorIsAdded", authorList.get( i ).isAdded() );

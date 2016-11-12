@@ -280,7 +280,6 @@ public class FilterHelperImpl implements FilterHelper
 				}
 			}
 		}
-		System.out.println( "publications from type wise; " + publications.size() );
 		return publications;
 	}
 

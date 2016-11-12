@@ -1007,11 +1007,9 @@ public class VisualAnalyticsController
 
 	public List<String> namesFromIds( List<String> idsList, String type )
 	{
-		System.out.println( "type : " + type );
 		List<String> namesList = new ArrayList<String>();
 		for ( String i : idsList )
 		{
-			System.out.println( i );
 			if ( type.equals( "researcher" ) )
 			{
 				Author author = persistenceStrategy.getAuthorDAO().getById( i );
