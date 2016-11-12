@@ -277,11 +277,8 @@ public class DataController
 			Map<String, Double> sortedMap = MapSorter.sortByValue( publicationTopics );
 			PublicationTopicFlat ptf = new PublicationTopicFlat();
 			ptf.setPublication_id( publication.getId() );
-			// System.out.println( sortedMap.toString().replaceAll( "[\\{\\}]",
-			// "" ) );
 			ptf.setTopics( sortedMap.toString().replaceAll( "[\\{\\}]", "" ) );
 			persistenceStrategy.getPublicationTopicFlatDAO().persist( ptf );
-			// System.out.println( "Added no " + j );
 			j++;
 		}
 

@@ -118,8 +118,13 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		// Prepare set of coauthor HashSet;
 		Set<Author> coauthorSet = new HashSet<Author>();
 
-		List<Author> commonAuthors = dataFetcher.fetchCommonAuthors( type, publications, idsList );
-		System.out.println( "common a: " + commonAuthors.size() );
+		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+		List<Author> commonAuthors = (List<Author>) map.get( "commonAuthors" );
+		Map<String, Object> collaborationMaps = (Map<String, Object>) map.get( "collaborationMaps" );
+
+		Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
+		if ( collaborationMaps != null )
+			totalCollaborationCount = (Map<String, Integer>) collaborationMaps.get( "totalCollaborationCount" );
 
 		List<Author> authorList = new ArrayList<Author>();
 		for ( String id : idsList )
@@ -151,31 +156,25 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 			Map<String, Object> coAuthorMap = new LinkedHashMap<String, Object>();
 			coAuthorMap.put( "id", coAuthor.getId() );
 			coAuthorMap.put( "name", coAuthor.getName() );
-			if ( coAuthor.getInstitution() != null )
-				coAuthorMap.put( "affiliation", coAuthor.getInstitution().getName() );
-			if ( coAuthor.getPhotoUrl() != null )
-				coAuthorMap.put( "photo", coAuthor.getPhotoUrl() );
 			coAuthorMap.put( "isAdded", coAuthor.isAdded() );
-			coAuthorMap.put( "coautorTimes", coAuthorCollaborationCountMap.get( coAuthor.getId() ) );
+
+			if ( collaborationMaps != null )
+				coAuthorMap.put( "coautorTimes", totalCollaborationCount.get( coAuthor.getId() ) );
+			else
+				coAuthorMap.put( "coautorTimes", coAuthorCollaborationCountMap.get( coAuthor.getId() ) );
 
 			// add into list
 			coAuthorList.add( coAuthorMap );
 		}
 
-		Collections.sort( coAuthorList, new CoAuthorByNumberOfCollaborationComparator() );
-
-		// prepare list of object map containing coAuthor details
-		List<Map<String, Object>> coAuthorListPaging = new ArrayList<Map<String, Object>>();
-
-		for ( Map<String, Object> coAuthor : coAuthorList )
-		{
-			coAuthorListPaging.add( coAuthor );
-		}
+		if ( collaborationMaps != null )
+			Collections.sort( coAuthorList, new CoAuthorByNumberOfCollaborationComparator() );
 
 		// put coauthor to responseMap
 		responseMap.put( "countTotal", coAuthorList.size() );
-		responseMap.put( "count", coAuthorListPaging.size() );
-		responseMap.put( "coAuthors", coAuthorListPaging );
+		responseMap.put( "count", coAuthorList.size() );
+		responseMap.put( "coAuthors", coAuthorList );
+		responseMap.put( "collaborationMaps", collaborationMaps );
 
 		return responseMap;
 	}

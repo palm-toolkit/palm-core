@@ -61,7 +61,6 @@ public class FilterHelperImpl implements FilterHelper
 	public Set<Publication> typeWisePublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationsList, List<Interest> interestList, List<Circle> circleList )
 	{
 		Set<Publication> publications = new HashSet<Publication>();
-
 		if ( type.equals( "researcher" ) )
 		{
 			// if there are more than one authors in consideration
@@ -157,7 +156,7 @@ public class FilterHelperImpl implements FilterHelper
 							List<Publication> eventGroupPublications = e.getPublications();
 							for ( int j = 0; j < eventGroupPublications.size(); j++ )
 							{
-								if ( !eventGroupPublications.contains( eventGroupPublications.get( j ) ) && ( eventGroupPublications.get( j ).getYear() != null || eventGroupPublications.get( j ).getPublicationDate() != null ) )
+								if ( !publications.contains( eventGroupPublications.get( j ) ) && ( eventGroupPublications.get( j ).getYear() != null || eventGroupPublications.get( j ).getPublicationDate() != null ) )
 								{
 									if ( eventGroupPublications.get( j ) != null && eventGroupPublications.get( j ).getPublicationDate() != null )
 										eventGroupPublications.get( j ).setYear( eventGroupPublications.get( j ).getPublicationDate().toString().substring( 0, 4 ) );
@@ -176,8 +175,6 @@ public class FilterHelperImpl implements FilterHelper
 		}
 		if ( type.equals( "topic" ) )
 		{
-			System.out.println( "in getby type" );
-
 			List<DataMiningPublication> allDMPublications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
 			List<DataMiningPublication> selectedDMPublications = new ArrayList<DataMiningPublication>();
 			List<String> pubIds = new ArrayList<String>();
@@ -216,7 +213,6 @@ public class FilterHelperImpl implements FilterHelper
 					}
 				}
 			}
-			System.out.println( selectedDMPublications.size() + " selec dm" );
 			for ( int i = 0; i < count.size(); i++ )
 			{
 				if ( count.get( i ) < interestList.size() )
@@ -256,7 +252,6 @@ public class FilterHelperImpl implements FilterHelper
 						}
 					}
 				}
-				System.out.println( "pubs before: " + count.size() );
 				for ( int i = 0; i < count.size(); i++ )
 				{
 					if ( count.get( i ) != circleList.size() - 1 )
@@ -266,7 +261,6 @@ public class FilterHelperImpl implements FilterHelper
 						i--;
 					}
 				}
-				System.out.println( "pubs after: " + count.size() );
 				publications = new HashSet<Publication>( circlePublicationsList );
 			}
 			if ( circleList.size() == 1 )
@@ -286,6 +280,7 @@ public class FilterHelperImpl implements FilterHelper
 				}
 			}
 		}
+		System.out.println( "publications from type wise; " + publications.size() );
 		return publications;
 	}
 

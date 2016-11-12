@@ -133,7 +133,6 @@ public class DataForFilterImpl implements DataForFilter
 	public Map<String, Object> topicFilter( List<String> idsList, String type )
 	{
 		Map<String, Object> topicsMap = new HashMap<String, Object>();
-		System.out.println( "type: " + type );
 		ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
 
 		if ( type.equals( "researcher" ) )
@@ -297,7 +296,6 @@ public class DataForFilterImpl implements DataForFilter
 		}
 		if ( type.equals( "publication" ) )
 		{
-			System.out.println( "1" );
 			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type );
 
 			List<Interest> allInterestsInDB = persistenceStrategy.getInterestDAO().allTerms();
@@ -326,7 +324,6 @@ public class DataForFilterImpl implements DataForFilter
 						List<String> termValues = new ArrayList<>( pubTopic.getTermValues().keySet() );
 						for ( int j = 0; j < termValues.size(); j++ )
 						{
-							// System.out.println( termValues.get( j ) );
 							Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
 							if ( !allTopics.contains( termValues.get( j ) ) )
 							{

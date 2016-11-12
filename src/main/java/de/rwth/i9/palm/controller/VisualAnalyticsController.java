@@ -459,7 +459,6 @@ public class VisualAnalyticsController
 		List<Interest> interests = (List<Interest>) interestMap.get( "interests" );
 		List<String> allTopics = persistenceStrategy.getPublicationTopicDAO().allTopics();
 
-		System.out.println( "interests siz: " + interests.size() );
 
 		// intersection of topics and interests
 		List<Interest> combinedInterests = new ArrayList<Interest>();
@@ -554,37 +553,8 @@ public class VisualAnalyticsController
 			replace = "";
 
 		List<String> idsList = new ArrayList<String>( Arrays.asList( id.split( "," ) ) );
-		List<String> namesList = new ArrayList<String>();
+		List<String> namesList = namesFromIds( idsList, type );
 
-		for ( String i : idsList )
-		{
-
-			if ( type.equals( "researcher" ) )
-			{
-				Author author = persistenceStrategy.getAuthorDAO().getById( i );
-				namesList.add( author.getName() );
-			}
-			if ( type.equals( "conference" ) )
-			{
-				EventGroup conference = persistenceStrategy.getEventGroupDAO().getById( i );
-				namesList.add( conference.getName() );
-			}
-			if ( type.equals( "publication" ) )
-			{
-				Publication publication = persistenceStrategy.getPublicationDAO().getById( i );
-				namesList.add( publication.getTitle() );
-			}
-			if ( type.equals( "topic" ) )
-			{
-				Interest interest = persistenceStrategy.getInterestDAO().getById( i );
-				namesList.add( interest.getTerm() );
-			}
-			if ( type.equals( "circle" ) )
-			{
-				Circle circle = persistenceStrategy.getCircleDAO().getById( i );
-				namesList.add( circle.getName() );
-			}
-		}
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		responseMap.put( "name", namesList );
@@ -657,26 +627,23 @@ public class VisualAnalyticsController
 
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-
-		if ( dataList != null && idsList != null )
+		System.out.println( "idlist: " + idList );
+		if ( idList != null && !idList.equals( "" ) )
 		{
-			namesList = new ArrayList<String>( Arrays.asList( dataList.split( "," ) ) );
 			idsList = new ArrayList<String>( Arrays.asList( idList.split( "," ) ) );
-		}
+			namesList = namesFromIds( idsList, type );
 
-		if ( idList != null )
-		{
-			if ( idList.length() == 0 )
-			{
-				idsList = new ArrayList<String>();
-			}
+			// if ( idList.length() == 0 )
+			// {
+			// idsList = new ArrayList<String>();
+			// }
 		}
 
 		if ( dataTransfer.equals( "true" ) )
 		{
 			responseMap.put( "type", type );
 			responseMap.put( "visType", visType );
-			responseMap.put( "dataList", dataList );
+			responseMap.put( "dataList", namesList );
 			responseMap.put( "idsList", idsList );
 			responseMap.put( "yearFilterPresent", yearFilterPresent );
 			responseMap.put( "deleteFlag", deleteFlag );
@@ -818,7 +785,7 @@ public class VisualAnalyticsController
 
 			responseMap.put( "type", type );
 			responseMap.put( "visType", visType );
-			responseMap.put( "dataList", dataList );
+			responseMap.put( "dataList", namesList );
 			responseMap.put( "idsList", idsList );
 			responseMap.put( "map", visMap );
 		}
@@ -920,7 +887,6 @@ public class VisualAnalyticsController
 					}
 					if ( filters.get( i ).equals( "Topics" ) )
 					{
-						System.out.println( "topic filter there!" );
 						responseMap.put( "topicFilter", filterFeature.getDataForFilter().topicFilter( idsList, type ) );
 					}
 				}
@@ -1037,6 +1003,45 @@ public class VisualAnalyticsController
 		}
 		}
 		return visMap;
+	}
+
+	public List<String> namesFromIds( List<String> idsList, String type )
+	{
+		System.out.println( "type : " + type );
+		List<String> namesList = new ArrayList<String>();
+		for ( String i : idsList )
+		{
+			System.out.println( i );
+			if ( type.equals( "researcher" ) )
+			{
+				Author author = persistenceStrategy.getAuthorDAO().getById( i );
+				namesList.add( author.getName() );
+			}
+			if ( type.equals( "conference" ) )
+			{
+				EventGroup conference = persistenceStrategy.getEventGroupDAO().getById( i );
+				namesList.add( conference.getName() );
+			}
+			if ( type.equals( "publication" ) )
+			{
+				Publication publication = persistenceStrategy.getPublicationDAO().getById( i );
+				namesList.add( publication.getTitle() );
+			}
+			if ( type.equals( "topic" ) )
+			{
+				Interest interest = persistenceStrategy.getInterestDAO().getById( i );
+
+				// RECHECK TOPIC LIST IN SEARCH BAR!!!!
+				System.out.println( interest.getId() );
+				namesList.add( interest.getTerm() );
+			}
+			if ( type.equals( "circle" ) )
+			{
+				Circle circle = persistenceStrategy.getCircleDAO().getById( i );
+				namesList.add( circle.getName() );
+			}
+		}
+		return namesList;
 	}
 
 }

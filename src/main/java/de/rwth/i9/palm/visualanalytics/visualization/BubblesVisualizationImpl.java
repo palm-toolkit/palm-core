@@ -263,8 +263,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 					randArray[0] = authorInterests.get( i ).getTerm();
 					randArray[1] = interestList;
 					randArray[2] = authorInterests.get( i ).getId();
-					// System.out.println( authorInterests.get( i ).getTerm() +
-					// " : " + authorInterests.get( i ).getId() );
 					listObjects.add( randArray );
 				}
 			}
@@ -527,14 +525,12 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 				}
 			}
 
-			System.out.println( "in publications" );
 			List<String> publicationTopics = new ArrayList<String>();
 			List<Double> publicationTopicWeights = new ArrayList<Double>();
 			List<List<Publication>> interestPublications = new ArrayList<List<Publication>>();
 			List<Map<String, Double>> publicationTopicList = new ArrayList<Map<String, Double>>();
 			for ( String id : idsList )
 			{
-				System.out.println( "1" );
 				Map<String, List<String>> yearWiseInterests = new HashMap<String, List<String>>();
 				Publication p = persistenceStrategy.getPublicationDAO().getById( id );
 				Map<String, Double> topicWeightMap = new HashMap<String, Double>();
@@ -542,16 +538,13 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 				List<PublicationTopic> pubTopics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
 				for ( PublicationTopic pt : pubTopics )
 				{
-					System.out.println( "2" );
 					Map<String, Double> termValues = pt.getTermValues();
 					List<String> terms = new ArrayList<String>( termValues.keySet() );
 					List<Double> weights = new ArrayList<Double>( termValues.values() );
 					for ( int i = 0; i < terms.size(); i++ )
 					{
-						System.out.println( "3" );
 						if ( allTopics.contains( terms.get( i ) ) || allTopics.contains( terms.get( i ) + "s" ) )
 						{
-							System.out.println( "4" );
 							Boolean validYear = true;
 							String year = p.getYear();
 							if ( startYear.equals( "0" ) || startYear.equals( "" ) )
@@ -692,12 +685,10 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 					}
 					finalMap.put( publicationTopics.get( i ), interestList );
 
-					// System.out.println( publicationTopics.get( i ) );
 
 					Interest interest = persistenceStrategy.getInterestDAO().getInterestByTerm( publicationTopics.get( i ) );
 					if ( interest != null )
 					{
-						System.out.println( "5" );
 						Object[] randArray = new Object[3];
 						randArray[0] = interest.getTerm();
 						randArray[1] = interestList;
@@ -718,7 +709,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 					}
 				}
 			}
-			System.out.println( "LIST OBJECTS SIZE : " + listObjects.size() );
 			visMap.put( "list", listObjects );
 		}
 		if ( type.equals( "circle" ) )

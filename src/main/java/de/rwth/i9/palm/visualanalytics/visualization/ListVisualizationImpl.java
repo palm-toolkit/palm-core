@@ -35,18 +35,17 @@ public class ListVisualizationImpl implements ListVisualization
 	@Override
 	public Map<String, Object> visualizeConferencesList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
 	{
-		System.out.println( "type: " + type );
-
-		System.out.println( publications.size() );
-		System.out.println( "LIST OF CONFERENCES" );
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		if ( type.equals( "researcher" ) || type.equals( "publication" ) || type.equals( "topic" ) || type.equals( "circle" ) )
+
+		// if ( type.equals( "conference" ) )
 			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, false ) );
 
-		if ( type.equals( "conference" ) )
-			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, false ) );
+		// if ( type.equals( "researcher" ) || type.equals( "publication" ) ||
+		// type.equals( "topic" ) || type.equals( "circle" ) )
+		// visMap.putAll(
+		// researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents(
+		// publications, false ) );
 
-		System.out.println( "vis conference list:  " + visMap.size() );
 
 		return visMap;
 	}
@@ -82,12 +81,9 @@ public class ListVisualizationImpl implements ListVisualization
 	@Override
 	public Map<String, Object> visualizeTopicsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
 	{
-		System.out.println( "type: " + type );
-
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear, yearFilterPresent );
 
-		System.out.println( "vis topic list:  " + visMap.size() );
 		return visMap;
 	}
 

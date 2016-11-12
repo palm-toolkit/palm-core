@@ -9,9 +9,12 @@ import java.util.Map;
 import java.util.Set;
 
 import de.rwth.i9.palm.helper.TreeHelper;
+import de.rwth.i9.palm.helper.comparator.EventByNotationComparator;
 import de.rwth.i9.palm.helper.comparator.TreeDirectChildByChildNumberComparator;
 import de.rwth.i9.palm.helper.comparator.TreeDirectChildByNaturalOrderComparator;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Event;
+import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationType;
 
@@ -193,65 +196,57 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 		List<Publication> publications = new ArrayList<Publication>( authorPublications );
 		System.out.println( "pub size in all events: " + authorPublications.size() );
 		ArrayList<Map<String, Object>> eventDetailsList = new ArrayList<Map<String, Object>>();
-		List<String> tempIds = new ArrayList<String>();
-
-		for ( int i = 0; i < publications.size(); i++ )
+//		Map<String, String> locationYearMap = new HashMap<String,String>();
+		List<Event> events = new ArrayList<Event>();
+		for ( Publication p : publications )
 		{
-			// set of conditions!!
-			if ( publications.get( i ).getEvent() != null )
+			if ( p.getEvent() != null )
 			{
-				if ( publications.get( i ).getEvent().getEventGroup() != null )
-				{
-					if ( !tempIds.contains( publications.get( i ).getEvent().getId() ) )
-					{
-						Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
-						tempIds.add( publications.get( i ).getEvent().getId() );
-						eventDetail.put( "name", publications.get( i ).getEvent().getName() );
-						eventDetail.put( "groupName", publications.get( i ).getEvent().getEventGroup().getName() );
-						eventDetail.put( "location", publications.get( i ).getEvent().getLocation() );
-						eventDetail.put( "year", publications.get( i ).getEvent().getYear() );
-						eventDetail.put( "eventGroupId", publications.get( i ).getEvent().getEventGroup().getId() );
-						eventDetail.put( "isAdded", publications.get( i ).getEvent().isAdded() );
-						eventDetail.put( "id", publications.get( i ).getEvent().getEventGroup().getId() );
-						if ( locations )
-						{
-							if ( publications.get( i ).getEvent().getLocation() != null )
-								eventDetailsList.add( eventDetail );
-						}
-						else
-							eventDetailsList.add( eventDetail );
-					}
-				}
-				else
-				{
-					Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
-					eventDetail.put( "name", "Event Group name unknown" );
-					eventDetail.put( "location", publications.get( i ).getEvent().getLocation() );
-					eventDetail.put( "year", publications.get( i ).getEvent().getYear() );
-					eventDetail.put( "eventGroupId", "event group id unknown" );
-					eventDetail.put( "isAdded", "is added unknown" );
-					eventDetail.put( "id", "id unknown" );
-					if ( locations )
-					{
-					}
-					else
-						eventDetailsList.add( eventDetail );
-				}
+				Event e = p.getEvent();
+				if ( !events.contains( e ))
+					events.add( e );
 			}
-			else
+		}
+
+		Collections.sort( events, new EventByNotationComparator() );
+
+		Map<EventGroup, List<String>> eventYears = new HashMap<EventGroup, List<String>>();
+		List<String> yearsBlank = new ArrayList<String>();
+		for ( Event e : events )
+		{
+		
+			if ( e.getEventGroup() != null )
 			{
-				Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
-				eventDetail.put( "name", "Event Group unknown" );
-				eventDetail.put( "location", "Location unknown" );
-				eventDetail.put( "year", "Event unknown" );
-				eventDetail.put( "eventGroupId", "Event Group id unknown" );
-				eventDetail.put( "isAdded", "unknown" );
-				eventDetail.put( "id", "event group id unknown" );
+				EventGroup eg = e.getEventGroup();
+				// if the event group doesn't exist in map
+				if(!eventYears.containsKey(eg))
+					eventYears.put(eg, yearsBlank);
+				
+				List<EventGroup> eventGroups = new ArrayList<EventGroup>(eventYears.keySet());
+				List<List<String>> eventGroupYears = new ArrayList<List<String>>(eventYears.values());
+				int index = eventGroups.indexOf(eg);
+				List<String> years = eventGroupYears.get(index);
+				Boolean flag = true;
 				if ( locations )
 				{
+					if ( e.getLocation() == null )
+						flag = false;
 				}
-				else
+				if ( flag && !years.contains(e.getYear()))
+				{
+					years.add(e.getYear());
+					Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
+					eventDetail.put( "name", e.getName() );
+					eventDetail.put( "groupName", e.getEventGroup().getName() );
+					eventDetail.put( "location", e.getLocation() );
+					eventDetail.put( "year", e.getYear() );
+					eventDetail.put( "eventGroupId", e.getEventGroup().getId() );
+					eventDetail.put( "isAdded", e.isAdded() );
+					eventDetail.put( "eventGroupIsAdded", e.getEventGroup().isAdded() );
+					eventDetail.put( "id", e.getEventGroup().getId() );
 					eventDetailsList.add( eventDetail );
+				}
+
 			}
 		}
 

@@ -43,7 +43,9 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 			authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
 		}
 
-		List<Author> selectedAuthors = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+		@SuppressWarnings( "unchecked" )
+		List<Author> selectedAuthors = (List<Author>) map.get( "commonAuthors" );
 		System.out.println( "SELETED AUTHORS IN NETWORK: " + selectedAuthors.size() );
 		if ( publications.isEmpty() )
 			publications = dataFetcher.fetchAllPublications( type, idsList, authorList );

@@ -69,10 +69,9 @@ public class FilteredDataImpl implements FilteredData
 			}
 		}
 		authorPublications = new HashSet<Publication>( publicationsTemp );
-		System.out.println( "PUBLICATIONS FROM FILTERED DATA: " + publicationsTemp.size() );
 		// conference filter
 		List<Publication> conferencePublications = new ArrayList<Publication>();
-		if ( !filteredConference.isEmpty() )
+		if ( filteredConference != null && !filteredConference.isEmpty() )
 		{
 			for ( int i = 0; i < filteredConference.size(); i++ )
 			{
@@ -102,7 +101,7 @@ public class FilteredDataImpl implements FilteredData
 		}
 
 		// topic filter
-		if ( !filteredTopic.isEmpty() )
+		if ( filteredTopic != null && !filteredTopic.isEmpty() )
 		{
 			Set<Publication> topicPublications = new HashSet<Publication>();
 
@@ -134,7 +133,7 @@ public class FilteredDataImpl implements FilteredData
 		}
 
 		// circle filter
-		if ( !filteredCircle.isEmpty() )
+		if ( filteredCircle != null && !filteredCircle.isEmpty() )
 		{
 			List<Publication> circlePublications = new ArrayList<Publication>();
 			for ( int i = 0; i < filteredCircle.size(); i++ )

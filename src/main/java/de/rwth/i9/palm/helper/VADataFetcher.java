@@ -21,6 +21,7 @@ import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.CircleInterest;
 import de.rwth.i9.palm.model.CircleInterestProfile;
 import de.rwth.i9.palm.model.DataMiningAuthor;
+import de.rwth.i9.palm.model.DataMiningEventGroup;
 import de.rwth.i9.palm.model.DataMiningPublication;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
@@ -41,10 +42,10 @@ public class VADataFetcher
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public List<Author> fetchCommonAuthors( String type, Set<Publication> publications, List<String> idsList )
+	public Map<String, Object> fetchCommonAuthors( String type, Set<Publication> publications, List<String> idsList )
 	{
 
-		System.out.println( "!!!Pub count: " + publications.size() );
+		Map<String, Object> finalMap = new HashMap<String, Object>();
 		List<Author> commonAuthors = new ArrayList<Author>();
 		List<Integer> count = new ArrayList<Integer>();
 
@@ -67,25 +68,51 @@ public class VADataFetcher
 				}
 			}
 
-			System.out.println( "!!!Common auth count: " + commonAuthors.size() );
 		}
 		if ( type.equals( "researcher" ) )
 		{
+			Map<String, Object> coAuthorCollaborationMaps = new HashMap<String, Object>();
+			Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
+
 			for ( int i = 0; i < idsList.size(); i++ )
 			{
+				Map<String, Integer> coAuthorCollaborationCountMap = new HashMap<String, Integer>();
+
 				Author researcher = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
 				List<Author> researcherCoAuthors = new ArrayList<Author>();
 				List<Publication> researcherPublications = new ArrayList<Publication>( researcher.getPublications() );
 				for ( Publication p : researcherPublications )
 				{
-					for ( Author pubAuthor : p.getAuthors() )
+					Boolean flag = true;
+					if ( !publications.isEmpty() )
 					{
-						if ( !researcherCoAuthors.contains( pubAuthor ) )
+						if ( !publications.contains( p ) )
+							flag = false;
+						// else
+						// flag = true;
+					}
+					if ( flag )
+					{
+						for ( Author pubAuthor : p.getAuthors() )
 						{
-							researcherCoAuthors.add( pubAuthor );
+							if ( !researcherCoAuthors.contains( pubAuthor ) )
+							{
+								researcherCoAuthors.add( pubAuthor );
+								coAuthorCollaborationCountMap.put( pubAuthor.getId(), 1 );
+							}
+							else
+							{
+								coAuthorCollaborationCountMap.put( pubAuthor.getId(), coAuthorCollaborationCountMap.get( pubAuthor.getId() ) + 1 );
+							}
+							if ( totalCollaborationCount.get( pubAuthor.getId() ) == null )
+								totalCollaborationCount.put( pubAuthor.getId(), 1 );
+							else
+								totalCollaborationCount.put( pubAuthor.getId(), totalCollaborationCount.get( pubAuthor.getId() ) + 1 );
+
 						}
 					}
 				}
+				coAuthorCollaborationMaps.put( researcher.getId(), coAuthorCollaborationCountMap );
 
 				for ( Author a : researcherCoAuthors )
 				{
@@ -100,6 +127,8 @@ public class VADataFetcher
 					}
 				}
 			}
+			coAuthorCollaborationMaps.put( "totalCollaborationCount", totalCollaborationCount );
+			finalMap.put( "collaborationMaps", coAuthorCollaborationMaps );
 		}
 
 		if ( type.equals( "topic" ) )
@@ -132,8 +161,13 @@ public class VADataFetcher
 		}
 		if ( type.equals( "conference" ) )
 		{
+			Map<String, Object> authorCollaborationMaps = new HashMap<String, Object>();
+			Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
+
 			for ( int i = 0; i < idsList.size(); i++ )
 			{
+				Map<String, Integer> authorCollaborationCountMap = new HashMap<String, Integer>();
+
 				EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( idsList.get( i ) );
 				List<Author> eventAuthors = new ArrayList<Author>();
 
@@ -143,16 +177,39 @@ public class VADataFetcher
 					List<Publication> eventPublications = e.getPublications();
 					for ( Publication p : eventPublications )
 					{
-						List<Author> authors = p.getAuthors();
-						for ( Author a : authors )
+						Boolean flag = true;
+						if ( !publications.isEmpty() )
 						{
-							if ( !eventAuthors.contains( a ) )
+							if ( !publications.contains( p ) )
+								flag = false;
+							// else
+							// flag = true;
+						}
+						if ( flag )
+						{
+							List<Author> authors = p.getAuthors();
+							for ( Author a : authors )
 							{
-								eventAuthors.add( a );
+								if ( !eventAuthors.contains( a ) )
+								{
+									eventAuthors.add( a );
+									authorCollaborationCountMap.put( a.getId(), 1 );
+								}
+								else
+								{
+									authorCollaborationCountMap.put( a.getId(), authorCollaborationCountMap.get( a.getId() ) + 1 );
+								}
+								if ( totalCollaborationCount.get( a.getId() ) == null )
+									totalCollaborationCount.put( a.getId(), 1 );
+								else
+									totalCollaborationCount.put( a.getId(), totalCollaborationCount.get( a.getId() ) + 1 );
 							}
 						}
 					}
 				}
+
+				authorCollaborationMaps.put( eg.getId(), authorCollaborationCountMap );
+
 				for ( Author a : eventAuthors )
 				{
 					if ( !commonAuthors.contains( a ) )
@@ -166,6 +223,8 @@ public class VADataFetcher
 					}
 				}
 			}
+			authorCollaborationMaps.put( "totalCollaborationCount", totalCollaborationCount );
+			finalMap.put( "collaborationMaps", authorCollaborationMaps );
 		}
 		if ( type.equals( "circle" ) )
 		{
@@ -196,9 +255,12 @@ public class VADataFetcher
 				i--;
 			}
 		}
-		System.out.println( "!!!new author count: " + commonAuthors.size() );
+
+		System.out.println( "COMMON AUTHORS: " + commonAuthors.size() );
+		System.out.println( "Pubs in data fetch: " + publications.size() );
 		if ( !publications.isEmpty() )
 		{
+			System.out.println( "publications not empty!" );
 			// get authors from the publications
 			List<Author> authors = new ArrayList<Author>();
 			for ( Publication p : publications )
@@ -212,6 +274,7 @@ public class VADataFetcher
 				}
 			}
 
+			System.out.println( "pub authors: " + authors.size() );
 			// the common authors must be part of the publication authors
 			for ( int i = 0; i < commonAuthors.size(); i++ )
 			{
@@ -221,8 +284,12 @@ public class VADataFetcher
 					i--;
 				}
 			}
+
+			System.out.println( "commonAuthors: " + commonAuthors.size() );
 		}
-		return commonAuthors;
+
+		finalMap.put( "commonAuthors", commonAuthors );
+		return finalMap;
 	}
 
 	public Set<Publication> fetchAllPublications( String type, List<String> idsList, List<Author> authorList )
@@ -633,8 +700,6 @@ public class VADataFetcher
 						{
 							if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
 							{
-								// System.out.println( "\n " + interest
-								// );
 								Boolean validYear = true;
 								Calendar calendar = Calendar.getInstance();
 								calendar.setTime( ei.getYear() );
@@ -782,7 +847,6 @@ public class VADataFetcher
 				{
 					if ( !interestTopicNames.contains( terms.get( k ) ) )// &&
 					{
-						System.out.println( terms.get( k ) + " in 1 " );
 						if ( allPublicationInterests.contains( terms.get( k ) ) )
 						{
 							interestTopicNames.add( terms.get( k ) );
@@ -796,7 +860,6 @@ public class VADataFetcher
 						}
 						else if ( allPublicationInterests.contains( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) ) )
 						{
-							System.out.println( " inside 2 " + terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 							interestTopicNames.add( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 							int pos = allPublicationInterests.indexOf( terms.get( k ).substring( 0, terms.get( k ).length() - 1 ) );
 							interestTopicIds.add( allPublicationInterestIds.get( pos ) );
@@ -966,4 +1029,93 @@ public class VADataFetcher
 		map.put( "listItems", listItems );
 		return map;
 	}
+
+	public Map<String, Object> fetchResearchersForTopics( Interest interest, List<DataMiningAuthor> DMAuthors, List<Author> publicationAuthors, String yearFilterPresent )
+	{
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		List<Author> interestAuthors = new ArrayList<Author>();
+		for ( DataMiningAuthor dma : DMAuthors )
+		{
+			Map<String, Double> interests = new HashMap<String, Double>();
+			interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
+			if ( interests.keySet().contains( interest.getTerm() ) )
+			{
+				Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
+
+				if ( !interestAuthors.contains( a ) )
+				{
+					interestAuthors.add( a );
+					Map<String, Object> items = new HashMap<String, Object>();
+					items.put( "name", a.getName() );
+					items.put( "id", a.getId() );
+					items.put( "isAdded", a.isAdded() );
+					listItems.add( items );
+				}
+			}
+		}
+
+		if ( yearFilterPresent.equals( "true" ) )
+		{
+			for ( int j = 0; j < interestAuthors.size(); j++ )
+			{
+				if ( !publicationAuthors.contains( interestAuthors.get( j ) ) )
+				{
+					interestAuthors.remove( j );
+					listItems.remove( j );
+					j--;
+				}
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "interestAuthors", interestAuthors );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	public Map<String, Object> fetchConferencesForTopics( Interest interest, List<DataMiningEventGroup> DMEventGroups, List<EventGroup> publicationEventGroups, String yearFilterPresent )
+	{
+		System.out.println( interest.getTerm() );
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+
+		List<EventGroup> interestEventGroups = new ArrayList<EventGroup>();
+		for ( DataMiningEventGroup dmeg : DMEventGroups )
+		{
+
+			Map<String, Double> interests = new HashMap<String, Double>();
+			interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
+			if ( interests.keySet().contains( interest.getTerm() ) )
+			{
+				EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( dmeg.getId() );
+				if ( !interestEventGroups.contains( eg ) )
+				{
+					interestEventGroups.add( eg );
+					Map<String, Object> items = new HashMap<String, Object>();
+					items.put( "name", eg.getName() );
+					items.put( "id", eg.getId() );
+					items.put( "isAdded", eg.isAdded() );
+					listItems.add( items );
+				}
+			}
+		}
+
+		if ( yearFilterPresent.equals( "true" ) )
+		{
+			for ( int j = 0; j < interestEventGroups.size(); j++ )
+			{
+				if ( !publicationEventGroups.contains( interestEventGroups.get( j ) ) )
+				{
+					interestEventGroups.remove( j );
+					listItems.remove( j );
+					j--;
+				}
+				else
+					System.out.println( interestEventGroups.get( j ).getName() );
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "interestEventGroups", interestEventGroups );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
 }

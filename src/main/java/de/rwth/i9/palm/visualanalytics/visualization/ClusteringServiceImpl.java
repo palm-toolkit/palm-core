@@ -68,7 +68,9 @@ public class ClusteringServiceImpl implements ClusteringService
 		Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
 
 		// Now find coauthors from these publications
-		List<Author> commonAuthors = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+		@SuppressWarnings( "unchecked" )
+		List<Author> commonAuthors = (List<Author>) map.get( "commonAuthors" );
 		List<Author> coAuthorList = new ArrayList<Author>();
 
 		// authors from selection
@@ -508,6 +510,7 @@ public class ClusteringServiceImpl implements ClusteringService
 
 	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications )
 	{
+		System.out.println( "PUBLICATION COUNT IN CLUSTER FUNCTION " + publications.size() );
 		System.out.println( "CLUSTER PUBLICATIONS!!!" );
 		List<Publication> publicationsList = new ArrayList<Publication>( publications );
 
@@ -525,11 +528,13 @@ public class ClusteringServiceImpl implements ClusteringService
 		{
 			for ( Publication p : publications )
 			{
-				if ( dmp.getTitle().equals( p.getTitle() ) )
+				if ( dmp.getId().equals( p.getId() ) )
 					publicationsFromSelection.add( dmp );
 			}
+
 		}
 
+		System.out.println( " afetdkfdk " + publicationsFromSelection.size() );
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> allTopics = new ArrayList<String>();
 

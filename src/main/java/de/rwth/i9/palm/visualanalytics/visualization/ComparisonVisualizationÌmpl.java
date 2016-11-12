@@ -1,7 +1,6 @@
 package de.rwth.i9.palm.visualanalytics.visualization;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -16,8 +15,6 @@ import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.helper.VADataFetcher;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.model.AuthorInterest;
-import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.DataMiningEventGroup;
@@ -230,8 +227,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
 
 						String label = "";
-						// System.out.println( previousEventGroup.getName()
-						// );
 
 						if ( !previousEventGroup.equals( eg ) )
 						{
@@ -377,7 +372,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						String label = "";
 
 						// for ( Author co : previousAuthorCoAuthors )
-						// System.out.println( co.getName() );
 						if ( !previousPublication.equals( p ) )
 						{
 							List<Author> temp = new ArrayList<Author>();
@@ -415,7 +409,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 			// common to all
 			if ( idsList.size() > 2 )
 			{
-				// System.out.println( "coming here" );
 				List<Author> allAuthors = new ArrayList<Author>();
 				List<Integer> count = new ArrayList<Integer>();
 				List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
@@ -480,69 +473,21 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 		if ( type.equals( "topic" ) )
 		{
 			Map<Interest, List<Author>> mapAuthors = new HashMap<Interest, List<Author>>();
-
-			List<DataMiningPublication> allDMPublications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
-
 			List<DataMiningAuthor> DMAuthors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
-
 			List<Interest> interestTempList = new ArrayList<Interest>();
-
-			for ( int i = 0; i < idsList.size(); i++ )
+			List<Publication> selectedPublications = new ArrayList<Publication>();
+			List<Author> publicationAuthors = new ArrayList<Author>();
+			if ( yearFilterPresent.equals( "true" ) )
 			{
-
-				Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
-				interestTempList.add( interest );
-
-				List<DataMiningPublication> selectedDMPublications = new ArrayList<DataMiningPublication>();
-				List<Publication> selectedPublications = new ArrayList<Publication>();
-				List<Author> publicationAuthors = new ArrayList<Author>();
-
-				for ( DataMiningPublication dmp : allDMPublications )
+				List<Interest> iList = new ArrayList<Interest>();
+				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
-					if ( ptf != null )
-					{
-						Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
-
-						Iterator<String> term = topics.keySet().iterator();
-						Iterator<Double> termWeight = topics.values().iterator();
-						while ( term.hasNext() && termWeight.hasNext() )
-						{
-							String topic = term.next();
-							float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, interest.getTerm() );
-
-							if ( dist > 0.9f )
-							{
-								if ( !selectedDMPublications.contains( dmp ) )
-								{
-									selectedDMPublications.add( dmp );
-									Publication p = persistenceStrategy.getPublicationDAO().getById( dmp.getId() );
-									Boolean flag = false;
-									if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-									{
-										flag = true;
-									}
-									else
-									{
-										if ( p.getYear() != null )
-										{
-											if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-											{
-												flag = true;
-											}
-										}
-										else
-											System.out.println( p.getTitle() );
-									}
-									if ( flag )
-									{
-										selectedPublications.add( p );
-									}
-								}
-							}
-						}
-					}
+					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
+					iList.add( interest );
 				}
+				selectedPublications = new ArrayList<Publication>( filterFeature.getFilterHelper().typeWisePublications( type, null, null, null, iList, null ) );
+				selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear ) );
+				System.out.println( "pubs in comparison: " + selectedPublications.size() );
 				for ( Publication p : selectedPublications )
 				{
 					for ( Author a : p.getAuthors() )
@@ -551,34 +496,22 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							publicationAuthors.add( a );
 					}
 				}
+				System.out.println( "pub authors: " + publicationAuthors.size() );
+			}
+
+			for ( int i = 0; i < idsList.size(); i++ )
+			{
+
+				Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
+				interestTempList.add( interest );
 
 				Map<String, Object> mapValues = new HashMap<String, Object>();
 				List<Integer> index = new ArrayList<Integer>();
 				index.add( i );
 
-				List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-				List<Author> interestAuthors = new ArrayList<Author>();
-				for ( DataMiningAuthor dma : DMAuthors )
-				{
-					Map<String, Double> interests = new HashMap<String, Double>();
-					interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
-					if ( interests.keySet().contains( interest.getTerm() ) )
-					{
-						Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
-						if ( publicationAuthors.contains( a ) )
-						{
-							if ( !interestAuthors.contains( a ) )
-							{
-								interestAuthors.add( a );
-								Map<String, Object> items = new HashMap<String, Object>();
-								items.put( "name", a.getName() );
-								items.put( "id", a.getId() );
-								items.put( "isAdded", a.isAdded() );
-								listItems.add( items );
-							}
-						}
-					}
-				}
+				Map<String, Object> map = dataFetcher.fetchResearchersForTopics( interest, DMAuthors, publicationAuthors, yearFilterPresent );
+				List<Author> interestAuthors = (List<Author>) map.get( "interestAuthors" );
+				List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 
 				mapAuthors.put( interest, interestAuthors );
 
@@ -648,115 +581,26 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					List<Author> allCoAuthors = new ArrayList<Author>();
-					List<Author> publicationAuthors = new ArrayList<Author>();
-
 					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
+					Map<String, Object> map = dataFetcher.fetchResearchersForTopics( interest, DMAuthors, publicationAuthors, yearFilterPresent );
+					List<Author> interestAuthors = (List<Author>) map.get( "interestAuthors" );
 
-					List<DataMiningPublication> selectedDMPublications = new ArrayList<DataMiningPublication>();
-					List<Publication> selectedPublications = new ArrayList<Publication>();
-
-					for ( DataMiningPublication dmp : allDMPublications )
+					for ( int k = 0; k < interestAuthors.size(); k++ )
 					{
-						PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
-						if ( ptf != null )
+						if ( !allAuthors.contains( interestAuthors.get( k ) ) )
 						{
-							Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
-
-							Iterator<String> term = topics.keySet().iterator();
-							Iterator<Double> termWeight = topics.values().iterator();
-							while ( term.hasNext() && termWeight.hasNext() )
-							{
-								String topic = term.next();
-								float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, interest.getTerm() );
-
-								if ( dist > 0.9f )
-								{
-									if ( !selectedDMPublications.contains( dmp ) )
-									{
-										selectedDMPublications.add( dmp );
-										Publication p = persistenceStrategy.getPublicationDAO().getById( dmp.getId() );
-										Boolean flag = false;
-										if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-										{
-											flag = true;
-										}
-										else
-										{
-											if ( p.getYear() != null )
-											{
-												if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-												{
-													flag = true;
-												}
-											}
-											else
-												System.out.println( p.getTitle() );
-										}
-										if ( flag )
-										{
-											selectedPublications.add( p );
-										}
-									}
-								}
-							}
-						}
-					}
-					for ( Publication p : selectedPublications )
-					{
-						for ( Author a : p.getAuthors() )
-						{
-							if ( !publicationAuthors.contains( a ) )
-								publicationAuthors.add( a );
-						}
-					}
-
-					for ( DataMiningAuthor dma : DMAuthors )
-					{
-						Map<String, Double> interests = new HashMap<String, Double>();
-						interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
-						if ( interests.keySet().contains( interest.getTerm() ) )
-						{
-							Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
-							if ( publicationAuthors.contains( a ) )
-							{
-								Set<AuthorInterestProfile> authorInterestProfiles = a.getAuthorInterestProfiles();
-								for ( AuthorInterestProfile aip : authorInterestProfiles )
-								{
-									Set<AuthorInterest> ais = aip.getAuthorInterests();
-									for ( AuthorInterest ai : ais )
-									{
-										Calendar calendar = Calendar.getInstance();
-										calendar.setTime( ai.getYear() );
-										if ( !allCoAuthors.contains( a ) )
-										{
-											allCoAuthors.add( a );
-										}
-									}
-								}
-							}
-						}
-					}
-
-					for ( int k = 0; k < allCoAuthors.size(); k++ )
-					{
-						if ( !allAuthors.contains( allCoAuthors.get( k ) ) )
-						{
-							allAuthors.add( allCoAuthors.get( k ) );
+							allAuthors.add( interestAuthors.get( k ) );
 							Map<String, Object> items = new HashMap<String, Object>();
-							items.put( "name", allCoAuthors.get( k ).getName() );
-							items.put( "id", allCoAuthors.get( k ).getId() );
-							items.put( "isAdded", allCoAuthors.get( k ).isAdded() );
+							items.put( "name", interestAuthors.get( k ).getName() );
+							items.put( "id", interestAuthors.get( k ).getId() );
+							items.put( "isAdded", interestAuthors.get( k ).isAdded() );
 							combinedListItems.add( items );
 							count.add( 1 );
 						}
 						else
-							count.set( allAuthors.indexOf( allCoAuthors.get( k ) ), count.get( allAuthors.indexOf( allCoAuthors.get( k ) ) ) + 1 );
+							count.set( allAuthors.indexOf( interestAuthors.get( k ) ), count.get( allAuthors.indexOf( interestAuthors.get( k ) ) ) + 1 );
 					}
-
 				}
-				System.out.println( count.toString() );
-				System.out.println( allAuthors.toString() );
 
 				for ( int i = 0; i < allAuthors.size(); i++ )
 				{
@@ -1159,62 +1003,19 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 			List<Interest> interestTempList = new ArrayList<Interest>();
 
-			for ( int i = 0; i < idsList.size(); i++ )
+			List<Publication> selectedPublications = new ArrayList<Publication>();
+			List<EventGroup> publicationEventGroups = new ArrayList<EventGroup>();
+			if ( yearFilterPresent.equals( "true" ) )
 			{
-
-				Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
-				interestTempList.add( interest );
-
-				List<DataMiningPublication> selectedDMPublications = new ArrayList<DataMiningPublication>();
-				List<Publication> selectedPublications = new ArrayList<Publication>();
-				List<EventGroup> publicationEventGroups = new ArrayList<EventGroup>();
-
-				for ( DataMiningPublication dmp : allDMPublications )
+				List<Interest> iList = new ArrayList<Interest>();
+				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
-					if ( ptf != null )
-					{
-						Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
-
-						Iterator<String> term = topics.keySet().iterator();
-						Iterator<Double> termWeight = topics.values().iterator();
-						while ( term.hasNext() && termWeight.hasNext() )
-						{
-							String topic = term.next();
-							float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, interest.getTerm() );
-
-							if ( dist > 0.9f )
-							{
-								if ( !selectedDMPublications.contains( dmp ) )
-								{
-									selectedDMPublications.add( dmp );
-									Publication p = persistenceStrategy.getPublicationDAO().getById( dmp.getId() );
-									Boolean flag = false;
-									if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-									{
-										flag = true;
-									}
-									else
-									{
-										if ( p.getYear() != null )
-										{
-											if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-											{
-												flag = true;
-											}
-										}
-										else
-											System.out.println( p.getTitle() );
-									}
-									if ( flag )
-									{
-										selectedPublications.add( p );
-									}
-								}
-							}
-						}
-					}
+					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
+					iList.add( interest );
 				}
+				selectedPublications = new ArrayList<Publication>( filterFeature.getFilterHelper().typeWisePublications( type, null, null, null, iList, null ) );
+				selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear ) );
+				System.out.println( "pubs in comparison: " + selectedPublications.size() );
 				for ( Publication p : selectedPublications )
 				{
 					if ( p.getEvent() != null )
@@ -1224,38 +1025,28 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							if ( !publicationEventGroups.contains( p.getEvent().getEventGroup() ) )
 							{
 								publicationEventGroups.add( p.getEvent().getEventGroup() );
+								System.out.println( "PEG:" + p.getEvent().getEventGroup().getName() );
 							}
 						}
 					}
 				}
+				System.out.println( "publicationEventGroups: " + publicationEventGroups.size() );
+			}
+
+			for ( int i = 0; i < idsList.size(); i++ )
+			{
+
+				Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
+				interestTempList.add( interest );
+
 
 				Map<String, Object> mapValues = new HashMap<String, Object>();
 				List<Integer> index = new ArrayList<Integer>();
 				index.add( i );
 
-				List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-				List<EventGroup> interestEventGroups = new ArrayList<EventGroup>();
-				for ( DataMiningEventGroup dmeg : DMEventGroups )
-				{
-					Map<String, Double> interests = new HashMap<String, Double>();
-					interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
-					if ( interests.keySet().contains( interest.getTerm() ) )
-					{
-						EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( dmeg.getId() );
-						if ( publicationEventGroups.contains( eg ) )
-						{
-							if ( !interestEventGroups.contains( eg ) )
-							{
-								interestEventGroups.add( eg );
-								Map<String, Object> items = new HashMap<String, Object>();
-								items.put( "name", eg.getName() );
-								items.put( "id", eg.getId() );
-								items.put( "isAdded", eg.isAdded() );
-								listItems.add( items );
-							}
-						}
-					}
-				}
+				Map<String, Object> map = dataFetcher.fetchConferencesForTopics( interest, DMEventGroups, publicationEventGroups, yearFilterPresent );
+				List<EventGroup> interestEventGroups = (List<EventGroup>) map.get( "interestEventGroups" );
+				List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 
 				mapEventGroups.put( interest, interestEventGroups );
 
@@ -1326,110 +1117,28 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				List<Map<String, Object>> combinedListItems = new ArrayList<Map<String, Object>>();
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					List<EventGroup> EventGroups = new ArrayList<EventGroup>();
-					List<EventGroup> publicationEventGroups = new ArrayList<EventGroup>();
-
 					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
 
-					List<DataMiningPublication> selectedDMPublications = new ArrayList<DataMiningPublication>();
-					List<Publication> selectedPublications = new ArrayList<Publication>();
+					Map<String, Object> map = dataFetcher.fetchConferencesForTopics( interest, DMEventGroups, publicationEventGroups, yearFilterPresent );
+					List<EventGroup> interestEventGroups = (List<EventGroup>) map.get( "interestEventGroups" );
 
-					for ( DataMiningPublication dmp : allDMPublications )
+					for ( int k = 0; k < interestEventGroups.size(); k++ )
 					{
-						PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
-						if ( ptf != null )
+						if ( !allEventGroups.contains( interestEventGroups.get( k ) ) )
 						{
-							Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
-
-							Iterator<String> term = topics.keySet().iterator();
-							Iterator<Double> termWeight = topics.values().iterator();
-							while ( term.hasNext() && termWeight.hasNext() )
-							{
-								String topic = term.next();
-								float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, interest.getTerm() );
-
-								if ( dist > 0.9f )
-								{
-									if ( !selectedDMPublications.contains( dmp ) )
-									{
-										selectedDMPublications.add( dmp );
-										Publication p = persistenceStrategy.getPublicationDAO().getById( dmp.getId() );
-										Boolean flag = false;
-										if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-										{
-											flag = true;
-										}
-										else
-										{
-											if ( p.getYear() != null )
-											{
-												if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-												{
-													flag = true;
-												}
-											}
-											else
-												System.out.println( p.getTitle() );
-										}
-										if ( flag )
-										{
-											selectedPublications.add( p );
-										}
-									}
-								}
-							}
-						}
-					}
-					for ( Publication p : selectedPublications )
-					{
-						if ( p.getEvent() != null )
-						{
-							if ( p.getEvent().getEventGroup() != null )
-							{
-								if ( !publicationEventGroups.contains( p.getEvent().getEventGroup() ) )
-								{
-									publicationEventGroups.add( p.getEvent().getEventGroup() );
-								}
-							}
-						}
-					}
-
-					for ( DataMiningEventGroup dmeg : DMEventGroups )
-					{
-						Map<String, Double> interests = new HashMap<String, Double>();
-						interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
-						if ( interests.keySet().contains( interest.getTerm() ) )
-						{
-							EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( dmeg.getId() );
-							if ( publicationEventGroups.contains( eg ) )
-							{
-								if ( !EventGroups.contains( eg ) )
-								{
-									EventGroups.add( eg );
-								}
-							}
-						}
-					}
-
-					for ( int k = 0; k < EventGroups.size(); k++ )
-					{
-						if ( !allEventGroups.contains( EventGroups.get( k ) ) )
-						{
-							allEventGroups.add( EventGroups.get( k ) );
+							allEventGroups.add( interestEventGroups.get( k ) );
 							Map<String, Object> items = new HashMap<String, Object>();
-							items.put( "name", EventGroups.get( k ).getName() );
-							items.put( "id", EventGroups.get( k ).getId() );
-							items.put( "isAdded", EventGroups.get( k ).isAdded() );
+							items.put( "name", interestEventGroups.get( k ).getName() );
+							items.put( "id", interestEventGroups.get( k ).getId() );
+							items.put( "isAdded", interestEventGroups.get( k ).isAdded() );
 							combinedListItems.add( items );
 							count.add( 1 );
 						}
 						else
-							count.set( allEventGroups.indexOf( EventGroups.get( k ) ), count.get( allEventGroups.indexOf( EventGroups.get( k ) ) ) + 1 );
+							count.set( allEventGroups.indexOf( interestEventGroups.get( k ) ), count.get( allEventGroups.indexOf( interestEventGroups.get( k ) ) ) + 1 );
 					}
 
 				}
-				System.out.println( count.toString() );
-				System.out.println( allEventGroups.toString() );
 
 				for ( int i = 0; i < allEventGroups.size(); i++ )
 				{
@@ -1652,8 +1361,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						i--;
 					}
 				}
-				System.out.println( count.toString() );
-				System.out.println( allEventGroups.toString() );
 				Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
 				List<Integer> sets = new ArrayList<Integer>();
 				for ( int i = 0; i < idsList.size(); i++ )
@@ -1887,8 +1594,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 												flag = true;
 											}
 										}
-										else
-											System.out.println( p.getTitle() );
 									}
 									if ( flag )
 									{
@@ -2011,8 +1716,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 													flag = true;
 												}
 											}
-											else
-												System.out.println( p.getTitle() );
 										}
 										if ( flag )
 										{
@@ -2040,8 +1743,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					}
 
 				}
-				System.out.println( count.toString() );
-				System.out.println( allPublications.toString() );
 
 				for ( int i = 0; i < allPublications.size(); i++ )
 				{
@@ -2419,7 +2120,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
 				List<String> listItems = (List<String>) map.get( "listItems" );
 
-				System.out.println( eg.getName() + "\n" + interestTopicNames.size() );
 				mapTopics.put( eg, interestTopicNames );
 
 				// single values to venn diagram
@@ -2432,7 +2132,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 				if ( mapTopics.size() > 1 )
 				{
-					System.out.println( "mapTopics " + mapTopics.size() );
 					// publications of authors added before current author
 					for ( int k = 0; k < mapTopics.size(); k++ )
 					{
@@ -2452,7 +2151,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							{
 								if ( interestTopicNames.contains( pat ) )
 								{
-									System.out.println( pat );
 									tempNames.add( pat );
 									int pos = interestTopicNames.indexOf( pat );
 
@@ -2470,7 +2168,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							label = label + idsList.get( i ) + "-" + previousEvent.getName();
 							mapValuesForPairs.put( "sets", sets );
 							mapValuesForPairs.put( "size", tempNames.size() );
-							System.out.println( "tempNames.size() " + tempNames.size() );
 
 							mapValuesForPairs.put( "list", tempListItems );
 							mapValuesForPairs.put( "altLabel", label );
