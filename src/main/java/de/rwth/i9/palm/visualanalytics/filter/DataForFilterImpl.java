@@ -260,16 +260,9 @@ public class DataForFilterImpl implements DataForFilter
 						for ( int j = 0; j < termValues.size(); j++ )
 						{
 							Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
-							if ( !allTopics.contains( termValues.get( j ) ) )
+							if ( !allTopics.contains( termValues.get( j ) ) && termValues.get( j ).length() > 1 )
 							{
-								int index = 0;// allConferenceInterests.indexOf(
-												// termValues.get( j ) );
-								// allTopics.add( termValues.get( j ) );
-								// topicDetail.put( "id",
-								// allConferenceInterestIds.get( index ) );
-								// topicDetail.put( "title", termValues.get( j )
-								// );
-								// topicDetailsList.add( topicDetail );
+								int index = 0;
 
 								if ( allConferenceInterests.contains( termValues.get( j ) ) )
 								{

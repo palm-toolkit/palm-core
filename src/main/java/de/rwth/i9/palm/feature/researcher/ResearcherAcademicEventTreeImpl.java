@@ -196,14 +196,14 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 		List<Publication> publications = new ArrayList<Publication>( authorPublications );
 		System.out.println( "pub size in all events: " + authorPublications.size() );
 		ArrayList<Map<String, Object>> eventDetailsList = new ArrayList<Map<String, Object>>();
-//		Map<String, String> locationYearMap = new HashMap<String,String>();
+		// Map<String, String> locationYearMap = new HashMap<String,String>();
 		List<Event> events = new ArrayList<Event>();
 		for ( Publication p : publications )
 		{
 			if ( p.getEvent() != null )
 			{
 				Event e = p.getEvent();
-				if ( !events.contains( e ))
+				if ( !events.contains( e ) )
 					events.add( e );
 			}
 		}
@@ -211,40 +211,90 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 		Collections.sort( events, new EventByNotationComparator() );
 
 		Map<EventGroup, List<String>> eventYears = new HashMap<EventGroup, List<String>>();
-		List<String> yearsBlank = new ArrayList<String>();
+		Map<EventGroup, List<String>> eventLocations = new HashMap<EventGroup, List<String>>();
 		for ( Event e : events )
 		{
-		
+
 			if ( e.getEventGroup() != null )
 			{
+				List<String> years = new ArrayList<String>();
+				List<String> locationList = new ArrayList<String>();
 				EventGroup eg = e.getEventGroup();
 				// if the event group doesn't exist in map
-				if(!eventYears.containsKey(eg))
-					eventYears.put(eg, yearsBlank);
-				
-				List<EventGroup> eventGroups = new ArrayList<EventGroup>(eventYears.keySet());
-				List<List<String>> eventGroupYears = new ArrayList<List<String>>(eventYears.values());
-				int index = eventGroups.indexOf(eg);
-				List<String> years = eventGroupYears.get(index);
+				if ( !eventYears.containsKey( eg ) )
+					eventYears.put( eg, years );
+				if ( !eventLocations.containsKey( eg ) )
+					eventLocations.put( eg, locationList );
+
+				years = eventYears.get( eg );
+				locationList = eventLocations.get( eg );
+
 				Boolean flag = true;
-				if ( locations )
+				if ( years.contains( e.getYear() ) )
 				{
-					if ( e.getLocation() == null )
-						flag = false;
+					System.out.println( e.getYear() );
+					int index = years.indexOf( e.getYear() );
+					if ( index != -1 )
+					{
+						String loc = locationList.get( index );
+						System.out.println( "loc" + loc + "loc" );
+						if ( !loc.equals( "" ) )
+							flag = false;
+					}
 				}
-				if ( flag && !years.contains(e.getYear()))
+				if ( flag )
 				{
-					years.add(e.getYear());
+					years.add( e.getYear() );
+
+					eventYears.remove( eg );
+					eventYears.put( eg, years );
+
 					Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
 					eventDetail.put( "name", e.getName() );
 					eventDetail.put( "groupName", e.getEventGroup().getName() );
-					eventDetail.put( "location", e.getLocation() );
+
+					String location = "";
+					if ( e.getLocation() != null )
+					{
+						if ( e.getLocation().getCity() != null )
+							location = e.getLocation().getCity();
+						if ( e.getLocation().getState() != null )
+							location += ", " + e.getLocation().getState();
+						if ( e.getLocation().getCountry() != null )
+							location += ", " + e.getLocation().getCountry().getName();
+					}
+					else
+					{
+						Map<String, Object> additionalInformationMap = null;
+						if ( e.getAdditionalInformation() != null )
+							additionalInformationMap = e.getAdditionalInformationAsMap();
+						if ( additionalInformationMap != null && !additionalInformationMap.isEmpty() )
+						{
+							if ( location.equals( "" ) )
+							{
+								if ( additionalInformationMap.get( "city" ) != null )
+									location = (String) additionalInformationMap.get( "city" );
+								if ( additionalInformationMap.get( "state" ) != null )
+									location += ", " + (String) additionalInformationMap.get( "state" );
+								if ( additionalInformationMap.get( "country" ) != null )
+									location += ", " + (String) additionalInformationMap.get( "country" );
+							}
+						}
+						// if ( !location.equals( "" ) )
+						// eventMap.put( "location", location );
+					}
+
+					eventDetail.put( "location", location );
 					eventDetail.put( "year", e.getYear() );
 					eventDetail.put( "eventGroupId", e.getEventGroup().getId() );
 					eventDetail.put( "isAdded", e.isAdded() );
 					eventDetail.put( "eventGroupIsAdded", e.getEventGroup().isAdded() );
 					eventDetail.put( "id", e.getEventGroup().getId() );
 					eventDetailsList.add( eventDetail );
+
+					locationList.add( location );
+					eventLocations.remove( eg );
+					eventLocations.put( eg, locationList );
 				}
 
 			}
