@@ -55,7 +55,7 @@ public class DataForFilterImpl implements DataForFilter
 			Map<String, Object> publicationDetail = new LinkedHashMap<String, Object>();
 
 			publicationDetail.put( "id", publications.get( i ).getId() );
-			publicationDetail.put( "title", publications.get( i ).getTitle() );
+			publicationDetail.put( "name", publications.get( i ).getTitle() );
 
 			publicationDetailsList.add( publicationDetail );
 		}
@@ -86,7 +86,7 @@ public class DataForFilterImpl implements DataForFilter
 						Map<String, Object> eventDetail = new LinkedHashMap<String, Object>();
 						tempIds.add( publications.get( i ).getEvent().getEventGroup().getId() );
 						eventDetail.put( "id", publications.get( i ).getEvent().getEventGroup().getId() );
-						eventDetail.put( "title", publications.get( i ).getEvent().getEventGroup().getName() );
+						eventDetail.put( "name", publications.get( i ).getEvent().getEventGroup().getName() );
 						eventDetailsList.add( eventDetail );
 					}
 				}
@@ -188,7 +188,7 @@ public class DataForFilterImpl implements DataForFilter
 									index = allAuthorInterests.indexOf( termValues.get( j ) );
 									allTopics.add( termValues.get( j ) );
 									topicDetail.put( "id", allAuthorInterestIds.get( index ) );
-									topicDetail.put( "title", termValues.get( j ) );
+									topicDetail.put( "name", termValues.get( j ) );
 									topicDetailsList.add( topicDetail );
 								}
 								if ( allAuthorInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
@@ -196,7 +196,7 @@ public class DataForFilterImpl implements DataForFilter
 									index = allAuthorInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 									allTopics.add( termValues.get( j ) );
 									topicDetail.put( "id", allAuthorInterestIds.get( index ) );
-									topicDetail.put( "title", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									topicDetail.put( "name", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 									topicDetailsList.add( topicDetail );
 								}
 							}
@@ -269,7 +269,7 @@ public class DataForFilterImpl implements DataForFilter
 									index = allConferenceInterests.indexOf( termValues.get( j ) );
 									allTopics.add( termValues.get( j ) );
 									topicDetail.put( "id", allConferenceInterestIds.get( index ) );
-									topicDetail.put( "title", termValues.get( j ) );
+									topicDetail.put( "name", termValues.get( j ) );
 									topicDetailsList.add( topicDetail );
 								}
 								else if ( allConferenceInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
@@ -277,7 +277,7 @@ public class DataForFilterImpl implements DataForFilter
 									index = allConferenceInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 									allTopics.add( termValues.get( j ) );
 									topicDetail.put( "id", allConferenceInterestIds.get( index ) );
-									topicDetail.put( "title", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									topicDetail.put( "name", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 									topicDetailsList.add( topicDetail );
 								}
 							}
@@ -325,7 +325,7 @@ public class DataForFilterImpl implements DataForFilter
 								// allTopics.add( termValues.get( j ) );
 								// topicDetail.put( "id",
 								// allPublicationInterestIds.get( index ) );
-								// topicDetail.put( "title", termValues.get( j )
+								// topicDetail.put( "name", termValues.get( j )
 								// );
 								// topicDetailsList.add( topicDetail );
 								if ( allPublicationInterests.contains( termValues.get( j ) ) )
@@ -333,7 +333,7 @@ public class DataForFilterImpl implements DataForFilter
 									index = allPublicationInterests.indexOf( termValues.get( j ) );
 									allTopics.add( termValues.get( j ) );
 									topicDetail.put( "id", allPublicationInterestIds.get( index ) );
-									topicDetail.put( "title", termValues.get( j ) );
+									topicDetail.put( "name", termValues.get( j ) );
 									topicDetailsList.add( topicDetail );
 								}
 								else if ( allPublicationInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
@@ -341,7 +341,7 @@ public class DataForFilterImpl implements DataForFilter
 									index = allPublicationInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 									allTopics.add( termValues.get( j ) );
 									topicDetail.put( "id", allPublicationInterestIds.get( index ) );
-									topicDetail.put( "title", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									topicDetail.put( "name", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 									topicDetailsList.add( topicDetail );
 								}
 							}
@@ -405,7 +405,7 @@ public class DataForFilterImpl implements DataForFilter
 									index = allCircleInterests.indexOf( termValues.get( j ) );
 									allTopics.add( termValues.get( j ) );
 									topicDetail.put( "id", allCircleInterestIds.get( index ) );
-									topicDetail.put( "title", termValues.get( j ) );
+									topicDetail.put( "name", termValues.get( j ) );
 									topicDetailsList.add( topicDetail );
 								}
 								if ( allCircleInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
@@ -413,7 +413,7 @@ public class DataForFilterImpl implements DataForFilter
 									index = allCircleInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 									allTopics.add( termValues.get( j ) );
 									topicDetail.put( "id", allCircleInterestIds.get( index ) );
-									topicDetail.put( "title", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
+									topicDetail.put( "name", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 									topicDetailsList.add( topicDetail );
 								}
 							}

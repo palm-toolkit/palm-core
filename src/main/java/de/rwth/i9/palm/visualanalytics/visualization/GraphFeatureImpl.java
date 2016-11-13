@@ -183,18 +183,12 @@ public class GraphFeatureImpl implements GraphFeature
 											{
 												if ( ( eTest.getSource().equals( nodes.get( indexTempNode ) ) && eTest.getTarget().equals( nodes.get( indexPubNode ) ) ) || ( eTest.getSource().equals( nodes.get( indexPubNode ) ) && eTest.getTarget().equals( nodes.get( indexTempNode ) ) ) )
 												{
-													System.out.println( publicationAuthor.getName() + " , " + tempPubAuthors.get( i ).getName() );
-													System.out.println( publication.getTitle() );
-
 													flag = true;
 													eTest.setWeight( eTest.getWeight() + 0.1 );
 												}
 											}
 											if ( !flag )
 											{
-												System.out.println( publicationAuthor.getName() + " , " + tempPubAuthors.get( i ).getName() );
-												System.out.println( publication.getTitle() );
-
 												Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
 												edges.add( e );
 												e.setWeight( 0.1 );
