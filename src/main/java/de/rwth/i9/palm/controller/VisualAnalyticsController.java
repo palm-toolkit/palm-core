@@ -461,28 +461,29 @@ public class VisualAnalyticsController
 		List<Interest> interests = (List<Interest>) interestMap.get( "interests" );
 		List<String> allTopics = persistenceStrategy.getPublicationTopicDAO().allTopics();
 
-
-		// intersection of topics and interests
-		List<Interest> combinedInterests = new ArrayList<Interest>();
-		for ( int i = 0; i < allTopics.size(); i++ )
+		if ( interests != null )
 		{
-			for ( int j = 0; j < interests.size(); j++ )
+			// intersection of topics and interests
+			List<Interest> combinedInterests = new ArrayList<Interest>();
+			for ( int i = 0; i < allTopics.size(); i++ )
 			{
-				float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( allTopics.get( i ), interests.get( j ).getTerm() );
-
-				if ( dist > 0.9f && !combinedInterests.contains( interests.get( j ) ) )
+				for ( int j = 0; j < interests.size(); j++ )
 				{
-					Map<String, Object> interestMapTemp = new HashMap<String, Object>();
+					float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( allTopics.get( i ), interests.get( j ).getTerm() );
 
-					combinedInterests.add( interests.get( j ) );
-					interestMapTemp.put( "id", interests.get( j ).getId() );
-					interestMapTemp.put( "name", interests.get( j ).getTerm() );
+					if ( dist > 0.9f && !combinedInterests.contains( interests.get( j ) ) )
+					{
+						Map<String, Object> interestMapTemp = new HashMap<String, Object>();
 
-					mapList.add( interestMapTemp );
+						combinedInterests.add( interests.get( j ) );
+						interestMapTemp.put( "id", interests.get( j ).getId() );
+						interestMapTemp.put( "name", interests.get( j ).getTerm() );
+
+						mapList.add( interestMapTemp );
+					}
 				}
 			}
 		}
-
 		responseMap.put( "totalCount", interestMap.get( "totalCount" ) );
 		responseMap.put( "count", mapList.size() );
 
