@@ -336,7 +336,7 @@ public class VisualAnalyticsController
 		if ( type == null )
 			type = "all";
 		if ( source == null )
-			source = "internal";
+			source = "all";
 		if ( persist == null )
 			persist = "no";
 		if ( addedVenue == null )
@@ -448,11 +448,13 @@ public class VisualAnalyticsController
 			year = "all";
 		if ( orderBy == null )
 			orderBy = "citation";
-		// Currently, system only provides query on internal database
-		source = "internal";
 
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		responseMap.put( "query", query );
+		responseMap.put( "page", page );
+		responseMap.put( "maxresult", maxresult );
 
 		List<Map<String, Object>> mapList = new ArrayList<Map<String, Object>>();
 		Map<String, Object> interestMap = persistenceStrategy.getInterestDAO().allTermsByPaging( query, page, maxresult );
@@ -480,6 +482,9 @@ public class VisualAnalyticsController
 				}
 			}
 		}
+
+		responseMap.put( "totalCount", interestMap.get( "totalCount" ) );
+		responseMap.put( "count", mapList.size() );
 
 		responseMap.put( "topicsList", mapList );
 		return responseMap;
