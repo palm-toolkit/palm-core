@@ -23,6 +23,7 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	@SuppressWarnings( "unchecked" )
 	@Override
 	public Map<String, Object> visualizeSimilarResearchers( String type, List<String> idsList )
 	{
@@ -35,10 +36,8 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 		Map<String, Object> map = similarityService.similarAuthors( authorList );
 		if ( map != null )
 		{
-			@SuppressWarnings( "unchecked" )
 			Map<DataMiningAuthor, Map<String, Double>> interestMap = (Map<DataMiningAuthor, Map<String, Double>>) map.get( "interestMap" );
 
-			@SuppressWarnings( "unchecked" )
 			Map<DataMiningAuthor, Double> scoreMap = (Map<DataMiningAuthor, Double>) map.get( "scoreMap" );
 
 			List<Double> similarityValues = new ArrayList<Double>( scoreMap.values() );
@@ -65,17 +64,18 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 				truncInterests.add( interestMap.get( similarAuthors.get( i ) ) );
 			}
 
-			visMap.put( "authorNames", authorNames );
-			visMap.put( "authorIds", authorIds );
+			visMap.put( "names", authorNames );
+			visMap.put( "ids", authorIds );
 			visMap.put( "similarity", truncSimilarityValues );
 			visMap.put( "interests", truncInterests );
 			return visMap;
 		}
 		else
-			return (Map<String, Object>) visMap.put( "coauthors", "none" );
+			return (Map<String, Object>) visMap.put( "names", null );
 
 	}
 
+	@SuppressWarnings( "unchecked" )
 	@Override
 	public Map<String, Object> visualizeSimilarConferences( String type, List<String> idsList )
 	{
@@ -84,10 +84,8 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 		Map<String, Object> map = similarityService.similarConferences( idsList );
 		if ( map != null )
 		{
-			@SuppressWarnings( "unchecked" )
 			Map<DataMiningPublication, Map<String, Double>> interestMap = (Map<DataMiningPublication, Map<String, Double>>) map.get( "interestMap" );
 
-			@SuppressWarnings( "unchecked" )
 			Map<DataMiningEventGroup, Double> scoreMap = (Map<DataMiningEventGroup, Double>) map.get( "scoreMap" );
 
 			// System.out.println( map.toString() );
@@ -107,25 +105,24 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 
 			for ( int i = 0; i < count; i++ )
 			{
-				// System.out.println( similarityValues.get( i ) + " : " +
-				// similarConferences.get( i ).getName() );
 				truncSimilarityValues.add( similarityValues.get( i ) );
 				conferenceNames.add( similarConferences.get( i ).getName() );
 				conferenceIds.add( similarConferences.get( i ).getId() );
 				truncInterests.add( interestMap.get( similarConferences.get( i ) ) );
 			}
 
-			visMap.put( "authorNames", conferenceNames );
-			visMap.put( "authorIds", conferenceIds );
+			visMap.put( "names", conferenceNames );
+			visMap.put( "ids", conferenceIds );
 			visMap.put( "similarity", truncSimilarityValues );
 			visMap.put( "interests", truncInterests );
 			return visMap;
 		}
 		else
-			return (Map<String, Object>) visMap.put( "coauthors", "none" );
+			return (Map<String, Object>) visMap.put( "names", null );
 
 	}
 
+	@SuppressWarnings( "unchecked" )
 	@Override
 	public Map<String, Object> visualizeSimilarPublications( String type, List<String> idsList )
 	{
@@ -134,10 +131,8 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 		Map<String, Object> map = similarityService.similarPublications( idsList );
 		if ( map != null )
 		{
-			@SuppressWarnings( "unchecked" )
 			Map<DataMiningPublication, Map<String, Double>> interestMap = (Map<DataMiningPublication, Map<String, Double>>) map.get( "interestMap" );
 
-			@SuppressWarnings( "unchecked" )
 			Map<DataMiningPublication, Double> scoreMap = (Map<DataMiningPublication, Double>) map.get( "scoreMap" );
 
 			List<Double> similarityValues = new ArrayList<Double>( scoreMap.values() );
@@ -147,8 +142,6 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 			List<String> publicationNames = new ArrayList<String>();
 			List<String> publicationsIds = new ArrayList<String>();
 			List<Map<String, Double>> truncInterests = new ArrayList<Map<String, Double>>();
-
-			// System.out.println( map.size() + " : maz size" );
 
 			int count = 0;
 			if ( interestMap.size() > 20 )
@@ -164,14 +157,14 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 				truncInterests.add( interestMap.get( similarPublications.get( i ) ) );
 			}
 
-			visMap.put( "authorNames", publicationNames );
-			visMap.put( "authorIds", publicationsIds );
+			visMap.put( "names", publicationNames );
+			visMap.put( "ids", publicationsIds );
 			visMap.put( "similarity", truncSimilarityValues );
 			visMap.put( "interests", truncInterests );
 			return visMap;
 		}
 		else
-			return (Map<String, Object>) visMap.put( "coauthors", "none" );
+			return (Map<String, Object>) visMap.put( "names", null );
 
 	}
 
@@ -182,16 +175,12 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 
 		Map<String, Object> map = similarityService.similarTopics( idsList );
 
-		visMap.put( "authorNames", map.get( "authorNames" ) );
-		visMap.put( "authorIds", map.get( "authorIds" ) );
+		visMap.put( "names", map.get( "authorNames" ) );
+		visMap.put( "ids", map.get( "authorIds" ) );
 		visMap.put( "similarity", map.get( "similarity" ) );
-		// visMap.put( "interests", map.get( "truncInterests" ) );
 
 		return visMap;
 
-		// attributes from the interest table
-		// set data from the conf_flat and author_flat tables
-		// apply apriori
 	}
 
 }

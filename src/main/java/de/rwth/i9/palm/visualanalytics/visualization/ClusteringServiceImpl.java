@@ -202,7 +202,7 @@ public class ClusteringServiceImpl implements ClusteringService
 		try
 		{
 			// applying the clustering algorithm
-			if ( algorithm.equals( "xmeans" ) )
+			if ( algorithm.equals( "xmeans" ) && attributes.size() > 0 )
 			{
 				XMeans result = WekaXMeans.run( 2, data );
 				for ( int ind = 0; ind < data.size(); ind++ )
@@ -294,8 +294,6 @@ public class ClusteringServiceImpl implements ClusteringService
 	@Override
 	public Map<String, Object> clusterConferences( String algorithm, Set<Publication> publications )
 	{
-		System.out.println( "CLUSTER CONFERENCES!!!" );
-
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
@@ -414,7 +412,7 @@ public class ClusteringServiceImpl implements ClusteringService
 		try
 		{
 			// applying the clustering algorithm
-			if ( algorithm.equals( "xmeans" ) )
+			if ( algorithm.equals( "xmeans" ) && attributes.size() > 0 )
 			{
 				XMeans result = WekaXMeans.run( 2, data );
 
@@ -621,7 +619,7 @@ public class ClusteringServiceImpl implements ClusteringService
 		try
 		{
 			// applying the clustering algorithm
-			if ( algorithm.equals( "xmeans" ) )
+			if ( algorithm.equals( "xmeans" ) && attributes.size() > 0 )
 			{
 				// System.out.println( "in xmeans" );
 				XMeans result = WekaXMeans.run( 2, data );

@@ -129,8 +129,6 @@ public class GraphFeatureImpl implements GraphFeature
 
 				if ( !selectedAuthors.isEmpty() )
 				{
-					// System.out.println( "new pu list: " +
-					// authorPublications.size() );
 					// iterating over all publications of the authors
 					for ( Publication publication : authorPublications )
 					{
@@ -189,6 +187,7 @@ public class GraphFeatureImpl implements GraphFeature
 											}
 											if ( !flag )
 											{
+
 												Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
 												edges.add( e );
 												e.setWeight( 0.1 );
@@ -199,7 +198,6 @@ public class GraphFeatureImpl implements GraphFeature
 												undirectedGraph.addEdge( e );
 											}
 										}
-
 									}
 									tempPubAuthors.add( publicationAuthor );
 								}

@@ -386,8 +386,6 @@ public class SimilarityServiceImpl implements SimilarityService
 
 		}
 
-		System.out.println( "topics size: " + topics.size() );
-
 		Map<DataMiningPublication, Double> scoreMap = new HashMap<DataMiningPublication, Double>();
 
 		Map<DataMiningPublication, Map<String, Double>> topicMap = new HashMap<DataMiningPublication, Map<String, Double>>();
@@ -715,8 +713,8 @@ public class SimilarityServiceImpl implements SimilarityService
 		}
 		Map<String, Object> finalMap = new HashMap<String, Object>();
 
-		finalMap.put( "authorNames", bestMatchingTerms );
-		finalMap.put( "authorIds", bestMatchingTermIds );
+		finalMap.put( "names", bestMatchingTerms );
+		finalMap.put( "ids", bestMatchingTermIds );
 		finalMap.put( "similarity", bestMatchingTermFrequency );
 
 		return finalMap;

@@ -627,7 +627,6 @@ public class VisualAnalyticsController
 
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-		System.out.println( "idlist: " + idList );
 		if ( idList != null && !idList.equals( "" ) )
 		{
 			idsList = new ArrayList<String>( Arrays.asList( idList.split( "," ) ) );

@@ -312,7 +312,6 @@ public class VADataFetcher
 			// if there are more than one conferences in consideration
 			if ( idsList.size() > 1 )
 			{
-
 				List<Publication> eventGroupPublicationsList = new ArrayList<Publication>( publications );
 				for ( int i = 0; i < eventGroupList.size(); i++ )
 				{
@@ -345,7 +344,7 @@ public class VADataFetcher
 							List<Publication> eventGroupPublications = e.getPublications();
 							for ( int j = 0; j < eventGroupPublications.size(); j++ )
 							{
-								if ( !eventGroupPublications.contains( eventGroupPublications.get( j ) ) && ( eventGroupPublications.get( j ).getYear() != null || eventGroupPublications.get( j ).getPublicationDate() != null ) )
+								if ( !publications.contains( eventGroupPublications.get( j ) ) && ( eventGroupPublications.get( j ).getYear() != null || eventGroupPublications.get( j ).getPublicationDate() != null ) )
 								{
 									if ( eventGroupPublications.get( j ) != null && eventGroupPublications.get( j ).getPublicationDate() != null )
 										eventGroupPublications.get( j ).setYear( eventGroupPublications.get( j ).getPublicationDate().toString().substring( 0, 4 ) );

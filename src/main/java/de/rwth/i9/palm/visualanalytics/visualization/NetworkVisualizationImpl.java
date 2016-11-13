@@ -46,7 +46,7 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
 		@SuppressWarnings( "unchecked" )
 		List<Author> selectedAuthors = (List<Author>) map.get( "commonAuthors" );
-		System.out.println( "SELETED AUTHORS IN NETWORK: " + selectedAuthors.size() );
+
 		if ( publications.isEmpty() )
 			publications = dataFetcher.fetchAllPublications( type, idsList, authorList );
 
