@@ -403,7 +403,7 @@ public class GraphFeatureImpl implements GraphFeature
 
 					// find associations upto 2 levels, if authors are not
 					// co-authors
-					if ( type.equals( "researcher" ) && authorList.size() > 1 )
+					if ( type.equals( "researcher" ) && authorList.size() == 2 )
 					{
 						// add nodes for main authors
 						for ( int f = 0; f < authorList.size(); f++ )
