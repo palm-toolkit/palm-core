@@ -209,7 +209,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 		}
 
 		Collections.sort( events, new EventByNotationComparator() );
-
+		Integer realLocationsFound = 0;
 		Map<EventGroup, List<String>> eventYears = new HashMap<EventGroup, List<String>>();
 		Map<EventGroup, List<String>> eventLocations = new HashMap<EventGroup, List<String>>();
 		for ( Event e : events )
@@ -262,6 +262,7 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 							location += ", " + e.getLocation().getState();
 						if ( e.getLocation().getCountry() != null )
 							location += ", " + e.getLocation().getCountry().getName();
+						realLocationsFound++;
 					}
 					else
 					{
@@ -278,8 +279,10 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 									location += ", " + (String) additionalInformationMap.get( "state" );
 								if ( additionalInformationMap.get( "country" ) != null )
 									location += ", " + (String) additionalInformationMap.get( "country" );
+								realLocationsFound++;
 							}
 						}
+
 						// if ( !location.equals( "" ) )
 						// eventMap.put( "location", location );
 					}
@@ -300,9 +303,8 @@ public class ResearcherAcademicEventTreeImpl implements ResearcherAcademicEventT
 			}
 		}
 
-		System.out.println( "pub size in all events afterwards: " + eventDetailsList.size() );
-
 		eventsMap.put( "events", eventDetailsList );
+		eventsMap.put( "realLocationsFound", realLocationsFound );
 
 		return eventsMap;
 	}
