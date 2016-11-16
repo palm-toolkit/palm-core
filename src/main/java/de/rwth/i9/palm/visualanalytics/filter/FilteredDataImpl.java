@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,38 +25,31 @@ public class FilteredDataImpl implements FilteredData
 	@Autowired
 	private FilterHelper filterHelper;
 
-	public Set<Publication> getFilteredPublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationList, List<Interest> interestList, List<Circle> circleList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear )
+	public Set<Publication> getFilteredPublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationList, List<Interest> interestList, List<Circle> circleList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear, HttpServletRequest request )
 	{
 		Set<Publication> authorPublications = new HashSet<Publication>();
 
-		if ( !filteredPublication.isEmpty() )
+		// proceed only if it a part of the current request
+		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) )
 		{
-			authorPublications = new HashSet<Publication>( filteredPublication );
-		}
-		else
-		{
-			authorPublications = filterHelper.typeWisePublications( type, authorList, eventGroupList, publicationList, interestList, circleList );
-		}
 
-		List<Publication> publicationsTemp = new ArrayList<Publication>( authorPublications );
-		if ( !startYear.equals( "" ) && !startYear.equals( "0" ) && startYear != null )
-		{
-			for ( int i = 0; i < publicationsTemp.size(); i++ )
+			if ( !filteredPublication.isEmpty() )
 			{
-				if ( publicationsTemp.get( i ).getYear() != null )
+				authorPublications = new HashSet<Publication>( filteredPublication );
+			}
+			else
+			{
+				authorPublications = filterHelper.typeWisePublications( type, authorList, eventGroupList, publicationList, interestList, circleList, request );
+			}
+
+			List<Publication> publicationsTemp = new ArrayList<Publication>( authorPublications );
+			if ( !startYear.equals( "" ) && !startYear.equals( "0" ) && startYear != null )
+			{
+				for ( int i = 0; i < publicationsTemp.size(); i++ )
 				{
-					if ( Integer.parseInt( publicationsTemp.get( i ).getYear() ) < Integer.parseInt( startYear ) || Integer.parseInt( publicationsTemp.get( i ).getYear() ) > Integer.parseInt( endYear ) )
+					if ( publicationsTemp.get( i ).getYear() != null )
 					{
-						publicationsTemp.remove( i );
-						i--;
-					}
-				}
-				else
-				{
-					if ( publicationsTemp.get( i ).getPublicationDate() != null )
-					{
-						String year = publicationsTemp.get( i ).getPublicationDate().toString().substring( 0, 4 );
-						if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+						if ( Integer.parseInt( publicationsTemp.get( i ).getYear() ) < Integer.parseInt( startYear ) || Integer.parseInt( publicationsTemp.get( i ).getYear() ) > Integer.parseInt( endYear ) )
 						{
 							publicationsTemp.remove( i );
 							i--;
@@ -62,103 +57,114 @@ public class FilteredDataImpl implements FilteredData
 					}
 					else
 					{
-						publicationsTemp.remove( i );
-						i--;
-					}
-				}
-			}
-		}
-		authorPublications = new HashSet<Publication>( publicationsTemp );
-		// conference filter
-		List<Publication> conferencePublications = new ArrayList<Publication>();
-		if ( filteredConference != null && !filteredConference.isEmpty() )
-		{
-			for ( int i = 0; i < filteredConference.size(); i++ )
-			{
-				List<Event> events = filteredConference.get( i ).getEvents();
-				for ( int j = 0; j < events.size(); j++ )
-				{
-					List<Publication> eventPublications = events.get( j ).getPublications();
-					for ( int k = 0; k < eventPublications.size(); k++ )
-					{
-						if ( !conferencePublications.contains( eventPublications.get( k ) ) )
+						if ( publicationsTemp.get( i ).getPublicationDate() != null )
 						{
-							conferencePublications.add( eventPublications.get( k ) );
+							String year = publicationsTemp.get( i ).getPublicationDate().toString().substring( 0, 4 );
+							if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+							{
+								publicationsTemp.remove( i );
+								i--;
+							}
+						}
+						else
+						{
+							publicationsTemp.remove( i );
+							i--;
 						}
 					}
 				}
 			}
-			List<Publication> tempPubList = new ArrayList<Publication>( authorPublications );
-			for ( int l = 0; l < tempPubList.size(); l++ )
+			authorPublications = new HashSet<Publication>( publicationsTemp );
+			// conference filter
+			List<Publication> conferencePublications = new ArrayList<Publication>();
+			if ( filteredConference != null && !filteredConference.isEmpty() )
 			{
-				if ( !conferencePublications.contains( tempPubList.get( l ) ) )
+				for ( int i = 0; i < filteredConference.size(); i++ )
 				{
-					tempPubList.remove( l );
-					l--;
-				}
-			}
-			authorPublications = new HashSet<Publication>( tempPubList );
-		}
-
-		// topic filter
-		if ( filteredTopic != null && !filteredTopic.isEmpty() )
-		{
-			Set<Publication> topicPublications = new HashSet<Publication>();
-
-			for ( Publication authorPublication : authorPublications )
-			{
-				List<PublicationTopic> pubTopics = new ArrayList<PublicationTopic>( authorPublication.getPublicationTopics() );
-
-				for ( PublicationTopic pt : pubTopics )
-				{
-					Map<String, Double> termValues = pt.getTermValues();
-					List<String> terms = new ArrayList<String>( termValues.keySet() );
-					List<String> interests = new ArrayList<String>();
-					for ( Interest interest : filteredTopic )
+					List<Event> events = filteredConference.get( i ).getEvents();
+					for ( int j = 0; j < events.size(); j++ )
 					{
-						if ( terms.contains( interest.getTerm() ) )
-							interests.add( interest.getTerm() );
-						if ( terms.contains( interest.getTerm() + "s" ) )
+						List<Publication> eventPublications = events.get( j ).getPublications();
+						for ( int k = 0; k < eventPublications.size(); k++ )
 						{
-							interests.add( interest.getTerm() + "s" );
+							if ( !conferencePublications.contains( eventPublications.get( k ) ) )
+							{
+								conferencePublications.add( eventPublications.get( k ) );
+							}
 						}
 					}
-					if ( interests.size() == filteredTopic.size() )
+				}
+				List<Publication> tempPubList = new ArrayList<Publication>( authorPublications );
+				for ( int l = 0; l < tempPubList.size(); l++ )
+				{
+					if ( !conferencePublications.contains( tempPubList.get( l ) ) )
 					{
-						topicPublications.add( authorPublication );
+						tempPubList.remove( l );
+						l--;
 					}
 				}
+				authorPublications = new HashSet<Publication>( tempPubList );
 			}
-			authorPublications = topicPublications;
-		}
 
-		// circle filter
-		if ( filteredCircle != null && !filteredCircle.isEmpty() )
-		{
-			List<Publication> circlePublications = new ArrayList<Publication>();
-			for ( int i = 0; i < filteredCircle.size(); i++ )
+			// topic filter
+			if ( filteredTopic != null && !filteredTopic.isEmpty() )
 			{
-				List<Publication> publications = new ArrayList<Publication>( filteredCircle.get( i ).getPublications() );
-				for ( Publication p : publications )
+				Set<Publication> topicPublications = new HashSet<Publication>();
+
+				for ( Publication authorPublication : authorPublications )
 				{
-					if ( !circlePublications.contains( p ) )
+					List<PublicationTopic> pubTopics = new ArrayList<PublicationTopic>( authorPublication.getPublicationTopics() );
+
+					for ( PublicationTopic pt : pubTopics )
 					{
-						circlePublications.add( p );
+						Map<String, Double> termValues = pt.getTermValues();
+						List<String> terms = new ArrayList<String>( termValues.keySet() );
+						List<String> interests = new ArrayList<String>();
+						for ( Interest interest : filteredTopic )
+						{
+							if ( terms.contains( interest.getTerm() ) )
+								interests.add( interest.getTerm() );
+							if ( terms.contains( interest.getTerm() + "s" ) )
+							{
+								interests.add( interest.getTerm() + "s" );
+							}
+						}
+						if ( interests.size() == filteredTopic.size() )
+						{
+							topicPublications.add( authorPublication );
+						}
 					}
 				}
+				authorPublications = topicPublications;
 			}
-			List<Publication> tempPubList = new ArrayList<Publication>( authorPublications );
-			for ( int l = 0; l < tempPubList.size(); l++ )
+
+			// circle filter
+			if ( filteredCircle != null && !filteredCircle.isEmpty() )
 			{
-				if ( !circlePublications.contains( tempPubList.get( l ) ) )
+				List<Publication> circlePublications = new ArrayList<Publication>();
+				for ( int i = 0; i < filteredCircle.size(); i++ )
 				{
-					tempPubList.remove( l );
-					l--;
+					List<Publication> publications = new ArrayList<Publication>( filteredCircle.get( i ).getPublications() );
+					for ( Publication p : publications )
+					{
+						if ( !circlePublications.contains( p ) )
+						{
+							circlePublications.add( p );
+						}
+					}
 				}
+				List<Publication> tempPubList = new ArrayList<Publication>( authorPublications );
+				for ( int l = 0; l < tempPubList.size(); l++ )
+				{
+					if ( !circlePublications.contains( tempPubList.get( l ) ) )
+					{
+						tempPubList.remove( l );
+						l--;
+					}
+				}
+				authorPublications = new HashSet<Publication>( tempPubList );
 			}
-			authorPublications = new HashSet<Publication>( tempPubList );
 		}
 		return authorPublications;
 	}
-
 }

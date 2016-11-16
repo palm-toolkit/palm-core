@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,65 +27,80 @@ public class ListVisualizationImpl implements ListVisualization
 	private VisualizationFeature visualizationFeature;
 
 	@Override
-	public Map<String, Object> visualizeResearchersList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
+	public Map<String, Object> visualizeResearchersList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, idsList, startYear, endYear ) );
+
+		// proceed only if it a part of the current request
+		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
+		{
+			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, idsList, startYear, endYear ) );
+		}
 		return visMap;
 	}
 
 	@Override
-	public Map<String, Object> visualizeConferencesList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
+	public Map<String, Object> visualizeConferencesList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
-		// if ( type.equals( "conference" ) )
+		// proceed only if it a part of the current request
+		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
+		{
+			// if ( type.equals( "conference" ) )
 			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, false ) );
 
-		// if ( type.equals( "researcher" ) || type.equals( "publication" ) ||
-		// type.equals( "topic" ) || type.equals( "circle" ) )
-		// visMap.putAll(
-		// researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents(
-		// publications, false ) );
-
-
-		return visMap;
-	}
-
-	@Override
-	public Map<String, Object> visualizePublicationsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
-	{
-		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-
-		List<Publication> publicationsList = new ArrayList<Publication>( publications );
-
-		// sort by date
-		Collections.sort( publicationsList, new PublicationByDateComparator() );
-
-		List<Map<String, Object>> pubDetailsList = new ArrayList<Map<String, Object>>();
-
-		for ( Publication pub : publicationsList )
-		{
-			Map<String, Object> pubDetails = new LinkedHashMap<String, Object>();
-			pubDetails.put( "id", pub.getId() );
-			pubDetails.put( "title", pub.getTitle() );
-			pubDetails.put( "year", pub.getYear() );
-			pubDetails.put( "type", pub.getPublicationType() );
-			pubDetails.put( "date", pub.getPublicationDate() );
-			pubDetailsList.add( pubDetails );
+			// if ( type.equals( "researcher" ) || type.equals( "publication" )
+			// ||
+			// type.equals( "topic" ) || type.equals( "circle" ) )
+			// visMap.putAll(
+			// researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents(
+			// publications, false ) );
 		}
-
-		visMap.put( "pubDetailsList", pubDetailsList );
-
 		return visMap;
 	}
 
 	@Override
-	public Map<String, Object> visualizeTopicsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent )
+	public Map<String, Object> visualizePublicationsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear, yearFilterPresent );
 
+		// proceed only if it a part of the current request
+		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
+		{
+			List<Publication> publicationsList = new ArrayList<Publication>( publications );
+
+			// sort by date
+			Collections.sort( publicationsList, new PublicationByDateComparator() );
+
+			List<Map<String, Object>> pubDetailsList = new ArrayList<Map<String, Object>>();
+
+			for ( Publication pub : publicationsList )
+			{
+				Map<String, Object> pubDetails = new LinkedHashMap<String, Object>();
+				pubDetails.put( "id", pub.getId() );
+				pubDetails.put( "title", pub.getTitle() );
+				pubDetails.put( "year", pub.getYear() );
+				pubDetails.put( "type", pub.getPublicationType() );
+				pubDetails.put( "date", pub.getPublicationDate() );
+				pubDetailsList.add( pubDetails );
+			}
+
+			visMap.put( "pubDetailsList", pubDetailsList );
+		}
+		return visMap;
+	}
+
+	@Override
+	public Map<String, Object> visualizeTopicsList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent, HttpServletRequest request )
+	{
+		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
+
+		// proceed only if it a part of the current request
+		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
+		{
+			visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear, yearFilterPresent, request );
+		}
 		return visMap;
 	}
 

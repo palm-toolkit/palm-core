@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,235 +61,215 @@ public class ClusteringServiceImpl implements ClusteringService
 	private VADataFetcher dataFetcher;
 
 	@Override
-	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String startYear, String endYear )
+	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String startYear, String endYear, HttpServletRequest request )
 	{
-		long startTime = System.currentTimeMillis();
-		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
-		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
-		Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
 
-		// Now find coauthors from these publications
-		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
-		@SuppressWarnings( "unchecked" )
-		List<Author> commonAuthors = (List<Author>) map.get( "commonAuthors" );
-		List<Author> coAuthorList = new ArrayList<Author>();
-
-		// authors from selection
-		List<Author> authorList = new ArrayList<Author>();
-		for ( String id : idsList )
+		// proceed only if it a part of the current request
+		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
-		}
+			Map<String, Integer> clusterMap = new HashMap<String, Integer>();
+			Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
+			Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
 
-		// authors apart from selected authors
-		for ( Author coAuthor : commonAuthors )
-		{
-			// just skip if its one of the authors in consideration
-			if ( authorList.contains( coAuthor ) )
-				continue;
-			else
-				coAuthorList.add( coAuthor );
-		}
+			// Now find coauthors from these publications
+			Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+			@SuppressWarnings( "unchecked" )
+			List<Author> commonAuthors = (List<Author>) map.get( "commonAuthors" );
+			List<Author> coAuthorList = new ArrayList<Author>();
 
-		Long midTime = ( System.currentTimeMillis() - startTime ) / 1000;
-		System.out.println( "Step 1: " + midTime );
-
-		List<DataMiningAuthor> authors = persistenceStrategy.getAuthorDAO().getDataMiningObjects(); // all
-																									// database
-		// List<DataMiningAuthor> mainAuthors = new
-		// ArrayList<DataMiningAuthor>();
-		List<DataMiningAuthor> coAuthors = new ArrayList<DataMiningAuthor>();
-		for ( DataMiningAuthor dma : authors )
-		{
-			// if ( type.equals( "researcher" ) )
-			// {
-			// for ( int i = 0; i < idsList.size(); i++ )
-			// {
-			// Author a = persistenceStrategy.getAuthorDAO().getById(
-			// idsList.get( i ) );
-			// if ( dma.getName().equals( a.getName() ) )
-			// mainAuthors.add( dma );
-			// }
-			// }
-			for ( int i = 0; i < coAuthorList.size(); i++ )
+			// authors from selection
+			List<Author> authorList = new ArrayList<Author>();
+			for ( String id : idsList )
 			{
-				if ( dma.getName().equals( coAuthorList.get( i ).getName() ) )
-					coAuthors.add( dma );
-			}
-		}
-
-		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		List<String> allInterests = new ArrayList<String>();
-
-		for ( DataMiningAuthor a : coAuthors )
-		{
-			Map<String, Double> interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
-
-			Iterator<String> interestTerm = interests.keySet().iterator();
-			Iterator<Double> interestTermWeight = interests.values().iterator();
-			while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
-			{
-				String interest = ( interestTerm.next() );
-				if ( !allInterests.contains( interest ) )
-				{
-					allInterests.add( interest );
-					attributes.add( new Attribute( interest ) );
-				}
-			}
-		}
-
-		System.out.println( " All interests: " + allInterests.size() );
-		midTime = ( System.currentTimeMillis() - startTime ) / 1000;
-
-		// Assign interests of authors to topics of publications..
-		Instances data = new Instances( "authors", attributes, coAuthors.size() );
-
-		// System.out.println( "size of coauth: " + coAuthors.size() );
-		for ( DataMiningAuthor a : coAuthors )
-		{
-			// System.out.println( "\n " + a.getName() );
-			Instance i = new DenseInstance( attributes.size() );
-			List<String> authorInterests = new ArrayList<String>();
-			List<Double> authorInterestWeights = new ArrayList<Double>();
-			Map<String, Double> interests = new HashMap<String, Double>();
-			interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
-			interests = MapSorter.sortByValue( interests );
-
-			// System.out.println( interests.toString() );
-
-			int count = 0;
-			List<String> authorTopInterests = new ArrayList<String>();
-			Iterator<String> interestTerm = interests.keySet().iterator();
-			Iterator<Double> interestTermWeight = interests.values().iterator();
-			while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
-			{
-				String interest = ( interestTerm.next() );
-				Double weight = interestTermWeight.next();
-				if ( !authorInterests.contains( interest ) )
-				{
-					authorInterests.add( interest );
-					authorInterestWeights.add( weight );
-					if ( count < 8 )
-						authorTopInterests.add( interest );
-					count++;
-				}
-
+				authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
 			}
 
-			nodeTerms.put( a.getId(), authorTopInterests );
-
-			// check if author interests are present in the topic list, if
-			// yes,
-			// their weights are taken into account for clustering
-			for ( int s = 0; s < allInterests.size(); s++ )
+			// authors apart from selected authors
+			for ( Author coAuthor : commonAuthors )
 			{
-				if ( authorInterests.contains( allInterests.get( s ) ) )
-				{
-					i.setValue( attributes.get( s ), authorInterestWeights.get( authorInterests.indexOf( allInterests.get( s ) ) ) );
-				}
+				// just skip if its one of the authors in consideration
+				if ( authorList.contains( coAuthor ) )
+					continue;
 				else
+					coAuthorList.add( coAuthor );
+			}
+
+			Long midTime = ( System.currentTimeMillis() - startTime ) / 1000;
+			System.out.println( "Step 1: " + midTime );
+
+			List<DataMiningAuthor> authors = persistenceStrategy.getAuthorDAO().getDataMiningObjects(); // all
+																										// database
+			List<DataMiningAuthor> coAuthors = new ArrayList<DataMiningAuthor>();
+			for ( DataMiningAuthor dma : authors )
+			{
+				for ( int i = 0; i < coAuthorList.size(); i++ )
 				{
-					i.setValue( attributes.get( s ), 0 );
+					if ( dma.getName().equals( coAuthorList.get( i ).getName() ) )
+						coAuthors.add( dma );
 				}
 			}
-			data.add( i );
-		}
 
-		// System.out.println( " NODE TERMS: " + nodeTerms.size() );
-		// System.out.println( "size of data: " + data.size() );
-		midTime = ( System.currentTimeMillis() - startTime ) / 1000;
-		// System.out.println( "Step 3: " + midTime );
+			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+			List<String> allInterests = new ArrayList<String>();
 
-		try
-		{
-			// applying the clustering algorithm
-			if ( algorithm.equals( "xmeans" ) && attributes.size() > 0 )
+			for ( DataMiningAuthor a : coAuthors )
 			{
-				XMeans result = WekaXMeans.run( 2, data );
-				for ( int ind = 0; ind < data.size(); ind++ )
+				Map<String, Double> interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
+
+				Iterator<String> interestTerm = interests.keySet().iterator();
+				Iterator<Double> interestTermWeight = interests.values().iterator();
+				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 				{
-					clusterMap.put( mapper.writeValueAsString( coAuthors.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					String interest = ( interestTerm.next() );
+					if ( !allInterests.contains( interest ) )
+					{
+						allInterests.add( interest );
+						attributes.add( new Attribute( interest ) );
+					}
+				}
+			}
+
+			System.out.println( " All interests: " + allInterests.size() );
+			midTime = ( System.currentTimeMillis() - startTime ) / 1000;
+
+			// Assign interests of authors to topics of publications..
+			Instances data = new Instances( "authors", attributes, coAuthors.size() );
+
+			for ( DataMiningAuthor a : coAuthors )
+			{
+				Instance i = new DenseInstance( attributes.size() );
+				List<String> authorInterests = new ArrayList<String>();
+				List<Double> authorInterestWeights = new ArrayList<Double>();
+				Map<String, Double> interests = new HashMap<String, Double>();
+				interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
+				interests = MapSorter.sortByValue( interests );
+
+				int count = 0;
+				List<String> authorTopInterests = new ArrayList<String>();
+				Iterator<String> interestTerm = interests.keySet().iterator();
+				Iterator<Double> interestTermWeight = interests.values().iterator();
+				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+				{
+					String interest = ( interestTerm.next() );
+					Double weight = interestTermWeight.next();
+					if ( !authorInterests.contains( interest ) )
+					{
+						authorInterests.add( interest );
+						authorInterestWeights.add( weight );
+						if ( count < 8 )
+							authorTopInterests.add( interest );
+						count++;
+					}
+
 				}
 
-				Instances instances = result.getClusterCenters();
-				for ( int instanceCounter = 0; instanceCounter < instances.size(); instanceCounter++ )
-				{
-					List<Double> max = new ArrayList<Double>();
-					List<Integer> maxIndex = new ArrayList<Integer>();
-					List<String> terms = new ArrayList<String>();
-					Integer numAttr = instances.get( instanceCounter ).numAttributes();
-					for ( int i = 0; i < numAttr; i++ )
-					{
-						if ( max.size() < 4 )
-						{
-							max.add( instances.get( instanceCounter ).value( i ) );
-							maxIndex.add( i );
-							terms.add( instances.get( instanceCounter ).attribute( maxIndex.get( i ) ).name() );
+				nodeTerms.put( a.getId(), authorTopInterests );
 
-						}
-						else
+				for ( int s = 0; s < allInterests.size(); s++ )
+				{
+					if ( authorInterests.contains( allInterests.get( s ) ) )
+					{
+						i.setValue( attributes.get( s ), authorInterestWeights.get( authorInterests.indexOf( allInterests.get( s ) ) ) );
+					}
+					else
+					{
+						i.setValue( attributes.get( s ), 0 );
+					}
+				}
+				data.add( i );
+			}
+
+			try
+			{
+				// applying the clustering algorithm
+				if ( algorithm.equals( "xmeans" ) && attributes.size() > 0 )
+				{
+					XMeans result = WekaXMeans.run( 2, data );
+					for ( int ind = 0; ind < data.size(); ind++ )
+					{
+						clusterMap.put( mapper.writeValueAsString( coAuthors.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					}
+
+					Instances instances = result.getClusterCenters();
+					for ( int instanceCounter = 0; instanceCounter < instances.size(); instanceCounter++ )
+					{
+						List<Double> max = new ArrayList<Double>();
+						List<Integer> maxIndex = new ArrayList<Integer>();
+						List<String> terms = new ArrayList<String>();
+						Integer numAttr = instances.get( instanceCounter ).numAttributes();
+						for ( int i = 0; i < numAttr; i++ )
 						{
-							for ( int j = 0; j < max.size(); j++ )
+							if ( max.size() < 4 )
 							{
-								if ( instances.get( instanceCounter ).value( i ) > max.get( j ) )
+								max.add( instances.get( instanceCounter ).value( i ) );
+								maxIndex.add( i );
+								terms.add( instances.get( instanceCounter ).attribute( maxIndex.get( i ) ).name() );
+
+							}
+							else
+							{
+								for ( int j = 0; j < max.size(); j++ )
 								{
-									max.set( j, instances.get( instanceCounter ).value( i ) );
-									maxIndex.set( j, i );
-									terms.set( j, instances.get( instanceCounter ).attribute( i ).name() );
-									break;
+									if ( instances.get( instanceCounter ).value( i ) > max.get( j ) )
+									{
+										max.set( j, instances.get( instanceCounter ).value( i ) );
+										maxIndex.set( j, i );
+										terms.set( j, instances.get( instanceCounter ).attribute( i ).name() );
+										break;
+									}
 								}
 							}
 						}
+
+						clusterTerms.put( instanceCounter, terms );
 					}
 
-					clusterTerms.put( instanceCounter, terms );
 				}
+				midTime = ( System.currentTimeMillis() - startTime ) / 1000;
+				System.out.println( "Step 4: " + midTime );
 
-			}
-			midTime = ( System.currentTimeMillis() - startTime ) / 1000;
-			System.out.println( "Step 4: " + midTime );
-
-			// applying the clustering algorithm
-			if ( algorithm.equals( "DBSCAN" ) )
-			{
-				DBSCAN result = wekaDBSCAN.run( data );
-
-				for ( int ind = 0; ind < data.size(); ind++ )
+				// applying the clustering algorithm
+				if ( algorithm.equals( "DBSCAN" ) )
 				{
-					resultMap.put( mapper.writeValueAsString( coAuthorList.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					DBSCAN result = wekaDBSCAN.run( data );
+
+					for ( int ind = 0; ind < data.size(); ind++ )
+					{
+						resultMap.put( mapper.writeValueAsString( coAuthorList.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					}
 				}
-			}
 
-			// applying the clustering algorithm
-			if ( algorithm.equals( "Hierarchical" ) )
-			{
-				HierarchicalClusterer result = hierarchicalClusterer.run( data );
-
-				for ( int ind = 0; ind < data.size(); ind++ )
+				// applying the clustering algorithm
+				if ( algorithm.equals( "Hierarchical" ) )
 				{
-					resultMap.put( mapper.writeValueAsString( coAuthorList.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					HierarchicalClusterer result = hierarchicalClusterer.run( data );
+
+					for ( int ind = 0; ind < data.size(); ind++ )
+					{
+						resultMap.put( mapper.writeValueAsString( coAuthorList.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					}
 				}
-			}
 
-			// applying the clustering algorithm
-			if ( algorithm.equals( "EM" ) )
-			{
-				EM result = eM.run( data );
-
-				for ( int ind = 0; ind < data.size(); ind++ )
+				// applying the clustering algorithm
+				if ( algorithm.equals( "EM" ) )
 				{
-					resultMap.put( mapper.writeValueAsString( coAuthorList.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					EM result = eM.run( data );
+
+					for ( int ind = 0; ind < data.size(); ind++ )
+					{
+						resultMap.put( mapper.writeValueAsString( coAuthorList.get( ind ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
+					}
 				}
 			}
+			catch ( Exception e )
+			{
+				e.printStackTrace();
+			}
+			resultMap.put( "clusterMap", clusterMap );
+			resultMap.put( "clusterTerms", clusterTerms );
+			resultMap.put( "nodeTerms", nodeTerms );
 		}
-		catch ( Exception e )
-		{
-			e.printStackTrace();
-		}
-		resultMap.put( "clusterMap", clusterMap );
-		resultMap.put( "clusterTerms", clusterTerms );
-		resultMap.put( "nodeTerms", nodeTerms );
 		return resultMap;
 	}
 
@@ -304,7 +286,6 @@ public class ClusteringServiceImpl implements ClusteringService
 
 		List<Publication> publicationsList = new ArrayList<Publication>( publications );
 		List<EventGroup> eventGroups = new ArrayList<EventGroup>();
-		// List<Event> events = new ArrayList<Event>();
 
 		for ( int i = 0; i < publicationsList.size(); i++ )
 		{
@@ -312,7 +293,6 @@ public class ClusteringServiceImpl implements ClusteringService
 			if ( e != null )
 			{
 				EventGroup eventGroup = e.getEventGroup();
-				// System.out.println( eventGroup.getName() );
 				if ( eventGroup != null )
 				{
 					if ( !eventGroups.contains( eventGroup ) )
@@ -359,15 +339,12 @@ public class ClusteringServiceImpl implements ClusteringService
 
 		for ( DataMiningEventGroup eg : conferencesFromSelection )
 		{
-			// System.out.println( "\n " + eg.getName() );
 			Instance i = new DenseInstance( attributes.size() );
 			List<String> eventGroupInterests = new ArrayList<String>();
 			List<Double> eventGroupInterestWeights = new ArrayList<Double>();
 			Map<String, Double> interests = new HashMap<String, Double>();
 			interests = InterestParser.parseInterestString( eg.getEventGroup_interest_flat().getInterests() );
 			interests = MapSorter.sortByValue( interests );
-
-			// System.out.println( interests.toString() );
 
 			int count = 0;
 			List<String> eventGroupTopInterests = new ArrayList<String>();
@@ -388,8 +365,6 @@ public class ClusteringServiceImpl implements ClusteringService
 
 			}
 
-			// System.out.println( eg.getName() + " " + eventGroupTopInterests
-			// );
 			nodeTerms.put( eg.getId(), eventGroupTopInterests );
 
 			// check if author interests are present in the topic list, if
@@ -454,10 +429,6 @@ public class ClusteringServiceImpl implements ClusteringService
 					}
 
 					clusterTerms.put( instanceCounter, terms );
-					// for ( int i = 0; i < 4; i++ )
-					// System.out.println( max.get( i ) + " : " + instances.get(
-					// instanceCounter ).attribute( maxIndex.get( i ) ) );
-					// System.out.println( "\n" );
 				}
 
 			}
@@ -508,8 +479,6 @@ public class ClusteringServiceImpl implements ClusteringService
 
 	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications )
 	{
-		System.out.println( "PUBLICATION COUNT IN CLUSTER FUNCTION " + publications.size() );
-		System.out.println( "CLUSTER PUBLICATIONS!!!" );
 		List<Publication> publicationsList = new ArrayList<Publication>( publications );
 
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
@@ -532,7 +501,6 @@ public class ClusteringServiceImpl implements ClusteringService
 
 		}
 
-		System.out.println( " afetdkfdk " + publicationsFromSelection.size() );
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> allTopics = new ArrayList<String>();
 
@@ -562,7 +530,6 @@ public class ClusteringServiceImpl implements ClusteringService
 
 		for ( DataMiningPublication p : publicationsFromSelection )
 		{
-			// System.out.println( "\n " + eg.getName() );
 			Instance i = new DenseInstance( attributes.size() );
 			List<String> publicationTopics = new ArrayList<String>();
 			List<Double> publicationTopicWeights = new ArrayList<Double>();
@@ -572,9 +539,6 @@ public class ClusteringServiceImpl implements ClusteringService
 			{
 				topics = InterestParser.parseInterestString( ptf.getTopics() );
 				topics = MapSorter.sortByValue( topics );
-
-				// System.out.println( interests.toString() );
-
 				int count = 0;
 				List<String> publicationTopTopics = new ArrayList<String>();
 				Iterator<String> term = topics.keySet().iterator();
@@ -594,8 +558,6 @@ public class ClusteringServiceImpl implements ClusteringService
 
 				}
 
-				// System.out.println( p.getTitle() + " " + publicationTopTopics
-				// );
 				nodeTerms.put( p.getId(), publicationTopTopics );
 
 				// check if author interests are present in the topic list, if
@@ -621,7 +583,6 @@ public class ClusteringServiceImpl implements ClusteringService
 			// applying the clustering algorithm
 			if ( algorithm.equals( "xmeans" ) && attributes.size() > 0 )
 			{
-				// System.out.println( "in xmeans" );
 				XMeans result = WekaXMeans.run( 2, data );
 
 				for ( int ind = 0; ind < data.size(); ind++ )
@@ -662,10 +623,6 @@ public class ClusteringServiceImpl implements ClusteringService
 					}
 
 					clusterTerms.put( instanceCounter, terms );
-					// for ( int i = 0; i < 4; i++ )
-					// System.out.println( max.get( i ) + " : " + instances.get(
-					// instanceCounter ).attribute( maxIndex.get( i ) ) );
-					// System.out.println( "\n" );
 				}
 
 			}
@@ -707,7 +664,6 @@ public class ClusteringServiceImpl implements ClusteringService
 			System.out.println( e );
 		}
 
-		// System.out.println( clusterMap.size() + " .. " + clusterMap.size() );
 		resultMap.put( "clusterMap", clusterMap );
 		resultMap.put( "clusterTerms", clusterTerms );
 		resultMap.put( "nodeTerms", nodeTerms );

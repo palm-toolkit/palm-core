@@ -15,6 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.gephi.appearance.api.AppearanceController;
 import org.gephi.appearance.api.AppearanceModel;
 import org.gephi.appearance.api.Function;
@@ -597,67 +599,55 @@ public class GraphFeatureImpl implements GraphFeature
 	ExportController ec;
 
 	@Override
-	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, Author authorForCoAuthors, List<Author> selectedAuthors )
+	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, Author authorForCoAuthors, List<Author> selectedAuthors, HttpServletRequest request )
 	{
-		// Create Thread Pool for parallel layout
-		ExecutorService executor = Executors.newFixedThreadPool( 1 );
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-		Network network = new Network();
 
-		Future<?> f = executor.submit( createRunnable( network, type, authorList, authorPublications, idsList, authorForCoAuthors, selectedAuthors ) );
-		try
+		// proceed only if it a part of the current request
+		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			f.get();
-		}
-		catch ( Exception e )
-		{
-			e.printStackTrace();
-		}
+			Network network = new Network();
 
-		executor.shutdown();
+			// Create Thread Pool for parallel layout
+			ExecutorService executor = Executors.newFixedThreadPool( 1 );
 
-		File file = new File( "src/main/webapp/resources/gexf/co-authors.gexf" );
+			Future<?> f = executor.submit( createRunnable( network, type, authorList, authorPublications, idsList, authorForCoAuthors, selectedAuthors ) );
+			try
+			{
+				f.get();
+			}
+			catch ( Exception e )
+			{
+				e.printStackTrace();
+			}
 
-		Random rand = new Random();
+			executor.shutdown();
 
-		int max = 100;
-		int min = 0;
-		final File file2 = new File( "src/main/webapp/resources/gexf/co-authors" + rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
+			File file = new File( "src/main/webapp/resources/gexf/co-authors.gexf" );
 
-		if ( file2.exists() )
-		{
-			final File file3 = new File( "src/main/webapp/resources/gexf/co-authors" + rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
-			System.out.println( "next attempt: " + file3.getName() );
-			file.renameTo( file3 );
+			Random rand = new Random();
+
+			int max = 100;
+			int min = 0;
+			File newFile = new File( "src/main/webapp/resources/gexf/co-authors" + rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
+
+			while ( newFile.exists() )
+			{
+				newFile = new File( "src/main/webapp/resources/gexf/co-authors" + rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
+			}
+
+			final File fileToExport = newFile;
+			file.renameTo( fileToExport );
 			new java.util.Timer().schedule( new java.util.TimerTask()
 			{
 				@Override
 				public void run()
 				{
-					file3.delete();
+					fileToExport.delete();
 				}
 			}, 3600000 );
-			System.out.println( "File name: " + file3.getName() );
-			responseMap.put( "graphFile", file3.getName() );
+			responseMap.put( "graphFile", fileToExport.getName() );
 		}
-		else
-		{
-			System.out.println( "1st attempt: " + file2.getName() );
-			file.renameTo( file2 );
-			new java.util.Timer().schedule( new java.util.TimerTask()
-			{
-				@Override
-				public void run()
-				{
-					file2.delete();
-				}
-			}, 3600000 );
-			System.out.println( "File name: " + file2.getName() );
-			responseMap.put( "graphFile", file2.getName() );
-		}
-
-
-
 		return responseMap;
 
 	}

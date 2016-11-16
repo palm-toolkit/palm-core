@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,31 +28,34 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 	@Autowired
 	private VADataFetcher dataFetcher;
 
-	public Map<String, Object> visualizeNetwork( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors )
+	public Map<String, Object> visualizeNetwork( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
-
-		Author authorForCoAuthors = new Author();
-		if ( authoridForCoAuthors != null )
+		// proceed only if it a part of the current request
+		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			authorForCoAuthors = persistenceStrategy.getAuthorDAO().getById( authoridForCoAuthors );
+			Author authorForCoAuthors = new Author();
+			if ( authoridForCoAuthors != null )
+			{
+				authorForCoAuthors = persistenceStrategy.getAuthorDAO().getById( authoridForCoAuthors );
+			}
+
+			List<Author> authorList = new ArrayList<Author>();
+			for ( String id : idsList )
+			{
+				authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
+			}
+
+			Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+			@SuppressWarnings( "unchecked" )
+			List<Author> selectedAuthors = (List<Author>) map.get( "commonAuthors" );
+
+			if ( publications.isEmpty() )
+				publications = dataFetcher.fetchAllPublications( type, idsList, authorList );
+
+			visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, authorForCoAuthors, selectedAuthors, request ).get( "graphFile" ) );
 		}
-
-		List<Author> authorList = new ArrayList<Author>();
-		for ( String id : idsList )
-		{
-			authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
-		}
-
-		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
-		@SuppressWarnings( "unchecked" )
-		List<Author> selectedAuthors = (List<Author>) map.get( "commonAuthors" );
-
-		if ( publications.isEmpty() )
-			publications = dataFetcher.fetchAllPublications( type, idsList, authorList );
-
-		visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, authorForCoAuthors, selectedAuthors ).get( "graphFile" ) );
 		return visMap;
 	}
 }
