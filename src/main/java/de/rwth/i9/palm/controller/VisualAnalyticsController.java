@@ -102,24 +102,24 @@ public class VisualAnalyticsController
 		}
 		if ( !alreadyExist )
 		{
-			// create SEARCH Widget in Explore
-			Widget searchWidget = new Widget();
-			searchWidget.setTitle( "Search" );
-			searchWidget.setUniqueName( "explore_search" );
-			searchWidget.setWidgetType( WidgetType.EXPLORE );
-			searchWidget.setWidgetGroup( "sidebar" );
-			searchWidget.setWidgetSource( WidgetSource.INCLUDE );
-			searchWidget.setSourcePath( "../../explore/widget/search.ftl" );
-			searchWidget.setWidgetWidth( WidgetWidth.LARGE );
-			searchWidget.setColor( Color.YELLOW );
-			searchWidget.setInformation( "Visual Analytics widget for searching any item" );
-			searchWidget.setCloseEnabled( false );
-			searchWidget.setMinimizeEnabled( false );
-			searchWidget.setMoveableEnabled( false );
-			searchWidget.setHeaderVisible( false );
-			searchWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			searchWidget.setPosition( 0 );
-			persistenceStrategy.getWidgetDAO().persist( searchWidget );
+			// create Sidebar Widget in Explore
+			Widget sidebarWidget = new Widget();
+			sidebarWidget.setTitle( "Sidebar" );
+			sidebarWidget.setUniqueName( "explore_sidebar" );
+			sidebarWidget.setWidgetType( WidgetType.EXPLORE );
+			sidebarWidget.setWidgetGroup( "sidebar" );
+			sidebarWidget.setWidgetSource( WidgetSource.INCLUDE );
+			sidebarWidget.setSourcePath( "../../explore/widget/exploreSidebar.ftl" );
+			sidebarWidget.setWidgetWidth( WidgetWidth.LARGE );
+			sidebarWidget.setColor( Color.YELLOW );
+			sidebarWidget.setInformation( "Visual Analytics widget for selecting an item" );
+			sidebarWidget.setCloseEnabled( false );
+			sidebarWidget.setMinimizeEnabled( false );
+			sidebarWidget.setMoveableEnabled( false );
+			sidebarWidget.setHeaderVisible( false );
+			sidebarWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			sidebarWidget.setPosition( 0 );
+			persistenceStrategy.getWidgetDAO().persist( sidebarWidget );
 
 			// create Visualization Widget in Explore
 			Widget visualizationWidget = new Widget();
@@ -159,33 +159,27 @@ public class VisualAnalyticsController
 			filterWidget.setPosition( 9 );
 			persistenceStrategy.getWidgetDAO().persist( filterWidget );
 
-			// create Setup Widget in Explore
-			Widget setupWidget = new Widget();
-			setupWidget.setTitle( "Basic Setup" );
-			setupWidget.setUniqueName( "explore_setup" );
-			setupWidget.setWidgetType( WidgetType.EXPLORE );
-			setupWidget.setWidgetGroup( "content" );
-			setupWidget.setWidgetSource( WidgetSource.INCLUDE );
-			setupWidget.setSourcePath( "../../explore/widget/setup.ftl" );
-			setupWidget.setWidgetWidth( WidgetWidth.LARGE );
-			setupWidget.setColor( Color.RED );
-			setupWidget.setInformation( "Visual Analytics widget for basic setup" );
-			setupWidget.setCloseEnabled( false );
-			setupWidget.setMinimizeEnabled( false );
-			setupWidget.setMoveableEnabled( false );
-			setupWidget.setHeaderVisible( false );
-			setupWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			setupWidget.setPosition( 3 );
-			persistenceStrategy.getWidgetDAO().persist( setupWidget );
+			// create Search Widget in Explore
+			Widget searchWidget = new Widget();
+			searchWidget.setTitle( "Search" );
+			searchWidget.setUniqueName( "explore_search" );
+			searchWidget.setWidgetType( WidgetType.EXPLORE );
+			searchWidget.setWidgetGroup( "content" );
+			searchWidget.setWidgetSource( WidgetSource.INCLUDE );
+			searchWidget.setSourcePath( "../../explore/widget/search.ftl" );
+			searchWidget.setWidgetWidth( WidgetWidth.LARGE );
+			searchWidget.setColor( Color.RED );
+			searchWidget.setInformation( "Visual Analytics widget for specifying search criteria" );
+			searchWidget.setCloseEnabled( false );
+			searchWidget.setMinimizeEnabled( false );
+			searchWidget.setMoveableEnabled( false );
+			searchWidget.setHeaderVisible( false );
+			searchWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			searchWidget.setPosition( 3 );
+			persistenceStrategy.getWidgetDAO().persist( searchWidget );
 
 		}
-	}
 
-	// Use explore/addWidgetToExistingUsers to add explore widgets to PALM
-	@RequestMapping( value = "/addWidgetToExistingUsers", method = RequestMethod.GET )
-	@Transactional
-	public void addWidgetToExistingUsers( final HttpServletResponse response ) throws InterruptedException
-	{
 		List<User> existingUsers = persistenceStrategy.getUserDAO().allUsers();
 
 		// list of explore widgets
@@ -226,9 +220,14 @@ public class VisualAnalyticsController
 			}
 			// persist user at the end
 			persistenceStrategy.getUserDAO().persist( user );
-
 		}
+	}
 
+	// Use explore/addWidgetToExistingUsers to add explore widgets to PALM
+	@RequestMapping( value = "/addWidgetToExistingUsers", method = RequestMethod.GET )
+	@Transactional
+	public void addWidgetToExistingUsers( final HttpServletResponse response ) throws InterruptedException
+	{
 	}
 
 	@RequestMapping( method = RequestMethod.GET )
@@ -943,7 +942,7 @@ public class VisualAnalyticsController
 		{
 			switch ( visTab ) {
 			case "Network": {
-				visMap = visualizationFeature.getVisNetwork().visualizeNetwork( type, publications, idsList, startYear, endYear, authoridForCoAuthors, request );
+				visMap = visualizationFeature.getVisNetwork().visualizeNetwork( type, publications, idsList, startYear, endYear, authoridForCoAuthors, yearFilterPresent, request );
 				break;
 			}
 			case "Locations": {
@@ -965,7 +964,7 @@ public class VisualAnalyticsController
 			case "Group": {
 				if ( visType.equals( "researchers" ) )
 				{
-					visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, idsList, publications, startYear, endYear, request );
+					visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, idsList, publications, startYear, endYear, yearFilterPresent, request );
 				}
 				if ( visType.equals( "conferences" ) )
 				{

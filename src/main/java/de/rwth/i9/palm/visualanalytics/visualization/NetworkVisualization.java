@@ -10,5 +10,5 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface NetworkVisualization
 {
-	public Map<String, Object> visualizeNetwork( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors, HttpServletRequest request );
+	public Map<String, Object> visualizeNetwork( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors, String yearFilterPresent, HttpServletRequest request );
 }

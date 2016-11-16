@@ -42,7 +42,7 @@ public class VADataFetcher
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public Map<String, Object> fetchCommonAuthors( String type, Set<Publication> publications, List<String> idsList )
+	public Map<String, Object> fetchCommonAuthors( String type, Set<Publication> publications, List<String> idsList, String yearFilterPresent )
 	{
 
 		Map<String, Object> finalMap = new HashMap<String, Object>();
@@ -71,64 +71,72 @@ public class VADataFetcher
 		}
 		if ( type.equals( "researcher" ) )
 		{
-			Map<String, Object> coAuthorCollaborationMaps = new HashMap<String, Object>();
-			Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
-
-			for ( int i = 0; i < idsList.size(); i++ )
+			// if the filter criteria doesn't filter out any publications
+			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
-				Map<String, Integer> coAuthorCollaborationCountMap = new HashMap<String, Integer>();
+				System.out.println( "no match!" );
+			}
+			else
+			{
+				Map<String, Object> coAuthorCollaborationMaps = new HashMap<String, Object>();
+				Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
 
-				Author researcher = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
-				List<Author> researcherCoAuthors = new ArrayList<Author>();
-				List<Publication> researcherPublications = new ArrayList<Publication>( researcher.getPublications() );
-				for ( Publication p : researcherPublications )
+				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Boolean flag = true;
-					if ( !publications.isEmpty() )
-					{
-						if ( !publications.contains( p ) )
-							flag = false;
-						// else
-						// flag = true;
-					}
-					if ( flag )
-					{
-						for ( Author pubAuthor : p.getAuthors() )
-						{
-							if ( !researcherCoAuthors.contains( pubAuthor ) )
-							{
-								researcherCoAuthors.add( pubAuthor );
-								coAuthorCollaborationCountMap.put( pubAuthor.getId(), 1 );
-							}
-							else
-							{
-								coAuthorCollaborationCountMap.put( pubAuthor.getId(), coAuthorCollaborationCountMap.get( pubAuthor.getId() ) + 1 );
-							}
-							if ( totalCollaborationCount.get( pubAuthor.getId() ) == null )
-								totalCollaborationCount.put( pubAuthor.getId(), 1 );
-							else
-								totalCollaborationCount.put( pubAuthor.getId(), totalCollaborationCount.get( pubAuthor.getId() ) + 1 );
+					Map<String, Integer> coAuthorCollaborationCountMap = new HashMap<String, Integer>();
 
+					Author researcher = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
+					List<Author> researcherCoAuthors = new ArrayList<Author>();
+					List<Publication> researcherPublications = new ArrayList<Publication>( researcher.getPublications() );
+					for ( Publication p : researcherPublications )
+					{
+						Boolean flag = true;
+						if ( !publications.isEmpty() )
+						{
+							if ( !publications.contains( p ) )
+								flag = false;
+							// else
+							// flag = true;
+						}
+						if ( flag )
+						{
+							for ( Author pubAuthor : p.getAuthors() )
+							{
+								if ( !researcherCoAuthors.contains( pubAuthor ) )
+								{
+									researcherCoAuthors.add( pubAuthor );
+									coAuthorCollaborationCountMap.put( pubAuthor.getId(), 1 );
+								}
+								else
+								{
+									coAuthorCollaborationCountMap.put( pubAuthor.getId(), coAuthorCollaborationCountMap.get( pubAuthor.getId() ) + 1 );
+								}
+								if ( totalCollaborationCount.get( pubAuthor.getId() ) == null )
+									totalCollaborationCount.put( pubAuthor.getId(), 1 );
+								else
+									totalCollaborationCount.put( pubAuthor.getId(), totalCollaborationCount.get( pubAuthor.getId() ) + 1 );
+
+							}
+						}
+					}
+					coAuthorCollaborationMaps.put( researcher.getId(), coAuthorCollaborationCountMap );
+
+					for ( Author a : researcherCoAuthors )
+					{
+						if ( !commonAuthors.contains( a ) )
+						{
+							commonAuthors.add( a );
+							count.add( 1 );
+						}
+						else
+						{
+							count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
 						}
 					}
 				}
-				coAuthorCollaborationMaps.put( researcher.getId(), coAuthorCollaborationCountMap );
-
-				for ( Author a : researcherCoAuthors )
-				{
-					if ( !commonAuthors.contains( a ) )
-					{
-						commonAuthors.add( a );
-						count.add( 1 );
-					}
-					else
-					{
-						count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
-					}
-				}
+				coAuthorCollaborationMaps.put( "totalCollaborationCount", totalCollaborationCount );
+				finalMap.put( "collaborationMaps", coAuthorCollaborationMaps );
 			}
-			coAuthorCollaborationMaps.put( "totalCollaborationCount", totalCollaborationCount );
-			finalMap.put( "collaborationMaps", coAuthorCollaborationMaps );
 		}
 
 		if ( type.equals( "topic" ) )

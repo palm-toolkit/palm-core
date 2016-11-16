@@ -61,7 +61,7 @@ public class ClusteringServiceImpl implements ClusteringService
 	private VADataFetcher dataFetcher;
 
 	@Override
-	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String startYear, String endYear, HttpServletRequest request )
+	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String startYear, String endYear, HttpServletRequest request, String yearFilterPresent )
 	{
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 
@@ -73,7 +73,7 @@ public class ClusteringServiceImpl implements ClusteringService
 			Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
 
 			// Now find coauthors from these publications
-			Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+			Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList, yearFilterPresent );
 			@SuppressWarnings( "unchecked" )
 			List<Author> commonAuthors = (List<Author>) map.get( "commonAuthors" );
 			List<Author> coAuthorList = new ArrayList<Author>();

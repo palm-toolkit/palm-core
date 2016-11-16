@@ -34,7 +34,7 @@ public class ListVisualizationImpl implements ListVisualization
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, idsList, startYear, endYear ) );
+			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, idsList, startYear, endYear, yearFilterPresent ) );
 		}
 		return visMap;
 	}

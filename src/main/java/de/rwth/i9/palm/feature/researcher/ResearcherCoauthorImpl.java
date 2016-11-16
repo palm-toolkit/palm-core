@@ -108,7 +108,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> getResearcherCoAuthorMapByPublication( Set<Publication> publications, String type, List<String> idsList, String startYear, String endYear )
+	public Map<String, Object> getResearcherCoAuthorMapByPublication( Set<Publication> publications, String type, List<String> idsList, String startYear, String endYear, String yearFilterPresent )
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -118,7 +118,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		// Prepare set of coauthor HashSet;
 		Set<Author> coauthorSet = new HashSet<Author>();
 
-		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList, yearFilterPresent );
 		List<Author> commonAuthors = (List<Author>) map.get( "commonAuthors" );
 		Map<String, Object> collaborationMaps = (Map<String, Object>) map.get( "collaborationMaps" );
 

@@ -28,7 +28,7 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 	@Autowired
 	private VADataFetcher dataFetcher;
 
-	public Map<String, Object> visualizeNetwork( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors, HttpServletRequest request )
+	public Map<String, Object> visualizeNetwork( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors, String yearFilterPresent, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
@@ -47,7 +47,7 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 				authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
 			}
 
-			Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList );
+			Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList, yearFilterPresent );
 			@SuppressWarnings( "unchecked" )
 			List<Author> selectedAuthors = (List<Author>) map.get( "commonAuthors" );
 
