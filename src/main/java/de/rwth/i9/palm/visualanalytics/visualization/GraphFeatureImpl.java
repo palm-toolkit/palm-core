@@ -39,7 +39,6 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 
-
 class Network
 {
 
@@ -624,25 +623,40 @@ public class GraphFeatureImpl implements GraphFeature
 		int max = 100;
 		int min = 0;
 		final File file2 = new File( "src/main/webapp/resources/gexf/co-authors" + rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
-		// System.out.println( "1st attempt: " + file2.getName() );
-		// while ( file2.exists() )
-		// {
-		// file2 = new File( "src/main/webapp/resources/gexf/co-authors" +
-		// rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
-		// System.out.println( "next attempt: " + file2.getName() );
-		// }
-		file.renameTo( file2 );
-		System.out.println( "File name: " + file2.getName() );
-		responseMap.put( "graphFile", file2.getName() );
 
-		new java.util.Timer().schedule( new java.util.TimerTask()
+		if ( file2.exists() )
 		{
-			@Override
-			public void run()
+			final File file3 = new File( "src/main/webapp/resources/gexf/co-authors" + rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
+			System.out.println( "next attempt: " + file3.getName() );
+			file.renameTo( file3 );
+			new java.util.Timer().schedule( new java.util.TimerTask()
 			{
-				file2.delete();
-			}
-		}, 3600000 );
+				@Override
+				public void run()
+				{
+					file3.delete();
+				}
+			}, 3600000 );
+			System.out.println( "File name: " + file3.getName() );
+			responseMap.put( "graphFile", file3.getName() );
+		}
+		else
+		{
+			System.out.println( "1st attempt: " + file2.getName() );
+			file.renameTo( file2 );
+			new java.util.Timer().schedule( new java.util.TimerTask()
+			{
+				@Override
+				public void run()
+				{
+					file2.delete();
+				}
+			}, 3600000 );
+			System.out.println( "File name: " + file2.getName() );
+			responseMap.put( "graphFile", file2.getName() );
+		}
+
+
 
 		return responseMap;
 
