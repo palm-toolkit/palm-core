@@ -115,8 +115,8 @@ public class VisualAnalyticsController
 			searchWidget.setInformation( "Visual Analytics widget for searching any item" );
 			searchWidget.setCloseEnabled( false );
 			searchWidget.setMinimizeEnabled( false );
-			searchWidget.setMoveableEnabled( true );
-			searchWidget.setHeaderVisible( true );
+			searchWidget.setMoveableEnabled( false );
+			searchWidget.setHeaderVisible( false );
 			searchWidget.setWidgetStatus( WidgetStatus.DEFAULT );
 			searchWidget.setPosition( 0 );
 			persistenceStrategy.getWidgetDAO().persist( searchWidget );
@@ -186,7 +186,6 @@ public class VisualAnalyticsController
 	@Transactional
 	public void addWidgetToExistingUsers( final HttpServletResponse response ) throws InterruptedException
 	{
-
 		List<User> existingUsers = persistenceStrategy.getUserDAO().allUsers();
 
 		// list of explore widgets
