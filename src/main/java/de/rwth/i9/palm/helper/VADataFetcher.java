@@ -51,23 +51,30 @@ public class VADataFetcher
 
 		if ( type.equals( "publication" ) )
 		{
-			for ( Publication p : publications )
+			// if the filter criteria doesn't filter out any publications
+			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
-				for ( Author a : p.getAuthors() )
+				System.out.println( "no match!" );
+			}
+			else
+			{
+				for ( Publication p : publications )
 				{
-					if ( !commonAuthors.contains( a ) )
+					for ( Author a : p.getAuthors() )
 					{
-						commonAuthors.add( a );
-						count.add( 1 );
-					}
-					else
-					{
-						int index = commonAuthors.indexOf( a );
-						count.set( index, count.get( index ) + 1 );
+						if ( !commonAuthors.contains( a ) )
+						{
+							commonAuthors.add( a );
+							count.add( 1 );
+						}
+						else
+						{
+							int index = commonAuthors.indexOf( a );
+							count.set( index, count.get( index ) + 1 );
+						}
 					}
 				}
 			}
-
 		}
 		if ( type.equals( "researcher" ) )
 		{
@@ -138,30 +145,37 @@ public class VADataFetcher
 				finalMap.put( "collaborationMaps", coAuthorCollaborationMaps );
 			}
 		}
-
 		if ( type.equals( "topic" ) )
 		{
-			List<DataMiningAuthor> DMAuthors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
-			for ( int i = 0; i < idsList.size(); i++ )
+			// if the filter criteria doesn't filter out any publications
+			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
-				Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
-
-				for ( DataMiningAuthor dma : DMAuthors )
+				System.out.println( "no match!" );
+			}
+			else
+			{
+				List<DataMiningAuthor> DMAuthors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
+				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Double> interests = new HashMap<String, Double>();
-					interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
-					if ( interests.keySet().contains( interest.getTerm() ) )
+					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
+
+					for ( DataMiningAuthor dma : DMAuthors )
 					{
-						Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
-						if ( !commonAuthors.contains( a ) )
+						Map<String, Double> interests = new HashMap<String, Double>();
+						interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
+						if ( interests.keySet().contains( interest.getTerm() ) )
 						{
-							commonAuthors.add( a );
-							count.add( 1 );
-						}
-						else
-						{
-							int index = commonAuthors.indexOf( a );
-							count.set( index, count.get( index ) + 1 );
+							Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
+							if ( !commonAuthors.contains( a ) )
+							{
+								commonAuthors.add( a );
+								count.add( 1 );
+							}
+							else
+							{
+								int index = commonAuthors.indexOf( a );
+								count.set( index, count.get( index ) + 1 );
+							}
 						}
 					}
 				}
@@ -169,86 +183,103 @@ public class VADataFetcher
 		}
 		if ( type.equals( "conference" ) )
 		{
-			Map<String, Object> authorCollaborationMaps = new HashMap<String, Object>();
-			Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
-
-			for ( int i = 0; i < idsList.size(); i++ )
+			// if the filter criteria doesn't filter out any publications
+			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
-				Map<String, Integer> authorCollaborationCountMap = new HashMap<String, Integer>();
+				System.out.println( "no match!" );
+			}
+			else
+			{
 
-				EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( idsList.get( i ) );
-				List<Author> eventAuthors = new ArrayList<Author>();
+				Map<String, Object> authorCollaborationMaps = new HashMap<String, Object>();
+				Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
 
-				List<Event> events = eg.getEvents();
-				for ( Event e : events )
+				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					List<Publication> eventPublications = e.getPublications();
-					for ( Publication p : eventPublications )
+					Map<String, Integer> authorCollaborationCountMap = new HashMap<String, Integer>();
+
+					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( idsList.get( i ) );
+					List<Author> eventAuthors = new ArrayList<Author>();
+
+					List<Event> events = eg.getEvents();
+					for ( Event e : events )
 					{
-						Boolean flag = true;
-						if ( !publications.isEmpty() )
+						List<Publication> eventPublications = e.getPublications();
+						for ( Publication p : eventPublications )
 						{
-							if ( !publications.contains( p ) )
-								flag = false;
-							// else
-							// flag = true;
-						}
-						if ( flag )
-						{
-							List<Author> authors = p.getAuthors();
-							for ( Author a : authors )
+							Boolean flag = true;
+							if ( !publications.isEmpty() )
 							{
-								if ( !eventAuthors.contains( a ) )
+								if ( !publications.contains( p ) )
+									flag = false;
+								// else
+								// flag = true;
+							}
+							if ( flag )
+							{
+								List<Author> authors = p.getAuthors();
+								for ( Author a : authors )
 								{
-									eventAuthors.add( a );
-									authorCollaborationCountMap.put( a.getId(), 1 );
+									if ( !eventAuthors.contains( a ) )
+									{
+										eventAuthors.add( a );
+										authorCollaborationCountMap.put( a.getId(), 1 );
+									}
+									else
+									{
+										authorCollaborationCountMap.put( a.getId(), authorCollaborationCountMap.get( a.getId() ) + 1 );
+									}
+									if ( totalCollaborationCount.get( a.getId() ) == null )
+										totalCollaborationCount.put( a.getId(), 1 );
+									else
+										totalCollaborationCount.put( a.getId(), totalCollaborationCount.get( a.getId() ) + 1 );
 								}
-								else
-								{
-									authorCollaborationCountMap.put( a.getId(), authorCollaborationCountMap.get( a.getId() ) + 1 );
-								}
-								if ( totalCollaborationCount.get( a.getId() ) == null )
-									totalCollaborationCount.put( a.getId(), 1 );
-								else
-									totalCollaborationCount.put( a.getId(), totalCollaborationCount.get( a.getId() ) + 1 );
 							}
 						}
 					}
-				}
 
-				authorCollaborationMaps.put( eg.getId(), authorCollaborationCountMap );
+					authorCollaborationMaps.put( eg.getId(), authorCollaborationCountMap );
 
-				for ( Author a : eventAuthors )
-				{
-					if ( !commonAuthors.contains( a ) )
+					for ( Author a : eventAuthors )
 					{
-						commonAuthors.add( a );
-						count.add( 1 );
-					}
-					else
-					{
-						count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
+						if ( !commonAuthors.contains( a ) )
+						{
+							commonAuthors.add( a );
+							count.add( 1 );
+						}
+						else
+						{
+							count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
+						}
 					}
 				}
+				authorCollaborationMaps.put( "totalCollaborationCount", totalCollaborationCount );
+				finalMap.put( "collaborationMaps", authorCollaborationMaps );
 			}
-			authorCollaborationMaps.put( "totalCollaborationCount", totalCollaborationCount );
-			finalMap.put( "collaborationMaps", authorCollaborationMaps );
 		}
 		if ( type.equals( "circle" ) )
 		{
-			for ( int i = 0; i < idsList.size(); i++ )
+			// if the filter criteria doesn't filter out any publications
+			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
-				Circle c = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
-				for ( Author a : c.getAuthors() )
+				System.out.println( "no match!" );
+			}
+			else
+			{
+				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					if ( !commonAuthors.contains( a ) )
+					Circle c = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
+					for ( Author a : c.getAuthors() )
 					{
-						commonAuthors.add( a );
-						count.add( 1 );
-					}
-					else
-					{
-						count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
+						if ( !commonAuthors.contains( a ) )
+						{
+							commonAuthors.add( a );
+							count.add( 1 );
+						}
+						else
+						{
+							count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
+						}
 					}
 				}
 			}

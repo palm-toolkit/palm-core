@@ -771,6 +771,7 @@ public class VisualAnalyticsController
 			else
 			{
 				Map<String, Object> timeFilterMap = filterFeature.getDataForFilter().timeFilter( idsList, type, request );
+				System.out.println( "timeFilterMap: " + timeFilterMap.toString() );
 				if ( timeFilterMap != null )
 				{
 					startYear = timeFilterMap.get( "startYear" ).toString();
