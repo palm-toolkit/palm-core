@@ -33,7 +33,7 @@ public class FilterHelperImpl implements FilterHelper
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	public List<Publication> getPublicationsForFilter( List<String> idsList, String type, HttpServletRequest request )
+	public List<Publication> getPublicationsForFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
 		List<Publication> publications = new ArrayList<Publication>();
 
@@ -57,13 +57,13 @@ public class FilterHelperImpl implements FilterHelper
 				circlesList = getCirclesFromIds( idsList, request );
 
 			// if there are more than one authors in consideration
-			publications = new ArrayList<Publication>( typeWisePublications( type, authors, eventGroupList, publicationsList, interestsList, circlesList, request ) );
+			publications = new ArrayList<Publication>( typeWisePublications( "forFilter", type, visType, authors, eventGroupList, publicationsList, interestsList, circlesList, request ) );
 		}
 		return publications;
 
 	}
 
-	public Set<Publication> typeWisePublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationsList, List<Interest> interestList, List<Circle> circleList, HttpServletRequest request )
+	public Set<Publication> typeWisePublications( String callingFunction, String type, String visType, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationsList, List<Interest> interestList, List<Circle> circleList, HttpServletRequest request )
 	{
 		Set<Publication> publications = new HashSet<Publication>();
 
@@ -100,13 +100,19 @@ public class FilterHelperImpl implements FilterHelper
 
 						}
 					}
-					for ( int i = 0; i < count.size(); i++ )
+
+					System.out.println( "VT: " + visType );
+					// find common publications for filter
+					if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) )
 					{
-						if ( count.get( i ) != authorList.size() - 1 )
+						for ( int i = 0; i < count.size(); i++ )
 						{
-							authorPublicationsList.remove( i );
-							count.remove( i );
-							i--;
+							if ( count.get( i ) != authorList.size() - 1 )
+							{
+								authorPublicationsList.remove( i );
+								count.remove( i );
+								i--;
+							}
 						}
 					}
 					publications = new HashSet<Publication>( authorPublicationsList );
@@ -222,15 +228,24 @@ public class FilterHelperImpl implements FilterHelper
 						}
 					}
 				}
-				for ( int i = 0; i < count.size(); i++ )
+				// find common publications for filter
+				if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) )
 				{
-					if ( count.get( i ) < interestList.size() )
+					for ( int i = 0; i < count.size(); i++ )
 					{
-						count.remove( i );
-						pubIds.remove( i );
-						i--;
+						if ( count.get( i ) < interestList.size() )
+						{
+							count.remove( i );
+							pubIds.remove( i );
+							i--;
+						}
 					}
 				}
+				System.out.println( "" + callingFunction );
+				if ( pubIds != null )
+					System.out.println( "PIS:" + pubIds.size() );
+				else
+					System.out.println( "PIS Null" );
 				publications = new HashSet<Publication>( persistenceStrategy.getPublicationDAO().getPublicationByIds( pubIds ) );
 			}
 			if ( type.equals( "circle" ) )
@@ -261,13 +276,17 @@ public class FilterHelperImpl implements FilterHelper
 							}
 						}
 					}
-					for ( int i = 0; i < count.size(); i++ )
+					// find common publications for filter
+					if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) )
 					{
-						if ( count.get( i ) != circleList.size() - 1 )
+						for ( int i = 0; i < count.size(); i++ )
 						{
-							circlePublicationsList.remove( i );
-							count.remove( i );
-							i--;
+							if ( count.get( i ) != circleList.size() - 1 )
+							{
+								circlePublicationsList.remove( i );
+								count.remove( i );
+								i--;
+							}
 						}
 					}
 					publications = new HashSet<Publication>( circlePublicationsList );

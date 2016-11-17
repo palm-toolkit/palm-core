@@ -760,7 +760,7 @@ public class VisualAnalyticsController
 			{
 				if ( !yearFilterPresent.equals( "true" ) && idList.length() != 0 )
 				{
-					Map<String, Object> timeFilterMap = filterFeature.getDataForFilter().timeFilter( idsList, type, request );
+					Map<String, Object> timeFilterMap = filterFeature.getDataForFilter().timeFilter( idsList, type, visType, request );
 					if ( timeFilterMap != null )
 					{
 						startYear = timeFilterMap.get( "startYear" ).toString();
@@ -770,7 +770,7 @@ public class VisualAnalyticsController
 			}
 			else
 			{
-				Map<String, Object> timeFilterMap = filterFeature.getDataForFilter().timeFilter( idsList, type, request );
+				Map<String, Object> timeFilterMap = filterFeature.getDataForFilter().timeFilter( idsList, type, visType, request );
 				System.out.println( "timeFilterMap: " + timeFilterMap.toString() );
 				if ( timeFilterMap != null )
 				{
@@ -802,7 +802,7 @@ public class VisualAnalyticsController
 				System.out.println( "publications: !! " + publications.size() );
 			}
 			else
-				publications = filterFeature.getFilteredData().getFilteredPublications( type, authorList, eventGroupList, publicationList, interestList, circleList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear, request );
+				publications = filterFeature.getFilteredData().getFilteredPublications( type, visType, authorList, eventGroupList, publicationList, interestList, circleList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear, request );
 
 			visMap = visSwitch( type, idsList, visTab, visType, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors, request, response );
 
@@ -903,26 +903,26 @@ public class VisualAnalyticsController
 
 					if ( filters.get( i ).equals( "Time" ) )
 					{
-						responseMap.put( "TimeFilter", filterFeature.getDataForFilter().timeFilter( idsList, type, request ) );
+						responseMap.put( "TimeFilter", filterFeature.getDataForFilter().timeFilter( idsList, type, visType, request ) );
 					}
 					if ( filters.get( i ).equals( "Publications" ) )
 					{
-						responseMap.put( "publicationFilter", filterFeature.getDataForFilter().publicationFilter( idsList, type, request ) );
+						responseMap.put( "publicationFilter", filterFeature.getDataForFilter().publicationFilter( idsList, type, visType, request ) );
 					}
 					if ( filters.get( i ).equals( "Conferences" ) )
 					{
-						responseMap.put( "conferenceFilter", filterFeature.getDataForFilter().conferenceFilter( idsList, type, request ) );
+						responseMap.put( "conferenceFilter", filterFeature.getDataForFilter().conferenceFilter( idsList, type, visType, request ) );
 					}
 					if ( filters.get( i ).equals( "Circles" ) )
 					{
-						responseMap.put( "circleFilter", filterFeature.getDataForFilter().circleFilter( idsList, type ) );
+						responseMap.put( "circleFilter", filterFeature.getDataForFilter().circleFilter( idsList, visType, type ) );
 					}
 					if ( filters.get( i ).equals( "Researchers" ) )
 					{
 					}
 					if ( filters.get( i ).equals( "Topics" ) )
 					{
-						responseMap.put( "topicFilter", filterFeature.getDataForFilter().topicFilter( idsList, type, request ) );
+						responseMap.put( "topicFilter", filterFeature.getDataForFilter().topicFilter( idsList, type, visType, request ) );
 					}
 				}
 			}
@@ -1005,11 +1005,11 @@ public class VisualAnalyticsController
 			case "Comparison": {
 				if ( visType.equals( "researchers" ) )
 				{
-					visMap = visualizationFeature.getVisComparison().visualizeResearchersComparison( type, idsList, publications, startYear, endYear, yearFilterPresent, request );
+					visMap = visualizationFeature.getVisComparison().visualizeResearchersComparison( type, visType, idsList, publications, startYear, endYear, yearFilterPresent, request );
 				}
 				if ( visType.equals( "conferences" ) )
 				{
-					visMap = visualizationFeature.getVisComparison().visualizeConferencesComparison( type, idsList, publications, startYear, endYear, yearFilterPresent, request );
+					visMap = visualizationFeature.getVisComparison().visualizeConferencesComparison( type, visType, idsList, publications, startYear, endYear, yearFilterPresent, request );
 				}
 				if ( visType.equals( "publications" ) )
 				{

@@ -485,6 +485,149 @@ public class VADataFetcher
 		return publications;
 	}
 
+	// Object : Researcher, Visualization Type : Co-authors
+	public Map<String, Object> fetchCoAuthorForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
+	{
+		Set<Publication> authorPublications = author.getPublications();
+		List<Author> allCoAuthors = new ArrayList<Author>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		for ( Publication p : authorPublications )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+			if ( flag )
+			{
+				List<Author> authors = p.getAuthors();
+				for ( Author a : authors )
+				{
+					if ( !allCoAuthors.contains( a ) && !author.equals( a ) )
+					{
+						allCoAuthors.add( a );
+						Map<String, Object> items = new HashMap<String, Object>();
+						items.put( "name", a.getName() );
+						items.put( "id", a.getId() );
+						items.put( "isAdded", a.isAdded() );
+						listItems.add( items );
+					}
+				}
+			}
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "allCoAuthors", allCoAuthors );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	// Object : Researcher, Visualization Type : Conferences
+	public Map<String, Object> fetchConferencesForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
+	{
+		Set<Publication> authorPublications = author.getPublications();
+		List<EventGroup> authorEventGroups = new ArrayList<EventGroup>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		for ( Publication p : authorPublications )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+
+			if ( flag )
+			{
+				if ( p.getEvent() != null )
+				{
+					if ( p.getEvent().getEventGroup() != null )
+					{
+
+						EventGroup eventGroup = p.getEvent().getEventGroup();
+						if ( !authorEventGroups.contains( eventGroup ) )
+						{
+							authorEventGroups.add( eventGroup );
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", eventGroup.getName() );
+							items.put( "id", eventGroup.getId() );
+							items.put( "isAdded", eventGroup.isAdded() );
+							listItems.add( items );
+						}
+					}
+				}
+			}
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "authorEventGroups", authorEventGroups );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	// Object : Researcher, Visualization Type : Publications
+	public Map<String, Object> fetchPublicationsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
+	{
+		Set<Publication> publications = author.getPublications();
+		List<Publication> authorPublications = new ArrayList<Publication>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+
+		for ( Publication p : publications )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+
+			if ( flag )
+			{
+				if ( !authorPublications.contains( p ) )
+				{
+					authorPublications.add( p );
+					Map<String, Object> items = new HashMap<String, Object>();
+					items.put( "name", p.getTitle() );
+					items.put( "id", p.getId() );
+					listItems.add( items );
+				}
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "authorPublications", authorPublications );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	// Object : Researcher, Visualization Type : Topics
 	public Map<String, Object> fetchTopicsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
 	{
 		List<String> allTopics = new ArrayList<String>();
@@ -572,12 +715,25 @@ public class VADataFetcher
 		return map;
 	}
 
-	public Map<String, Object> fetchCoAuthorForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
+	// Object : Conference, Visualization Type : Researchers
+	public Map<String, Object> fetchResearchersForConferences( List<Event> events, String startYear, String endYear, String yearFilterPresent )
 	{
-		Set<Publication> authorPublications = author.getPublications();
-		List<Author> allCoAuthors = new ArrayList<Author>();
+		List<Publication> eventGroupPubs = new ArrayList<Publication>();
+
+		for ( Event e : events )
+		{
+			List<Publication> eventPublications = e.getPublications();
+			for ( Publication p : eventPublications )
+			{
+				if ( !eventGroupPubs.contains( p ) )
+				{
+					eventGroupPubs.add( p );
+				}
+			}
+		}
+		List<Author> publicationAuthors = new ArrayList<Author>();
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-		for ( Publication p : authorPublications )
+		for ( Publication p : eventGroupPubs )
 		{
 			Boolean flag = false;
 			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
@@ -599,9 +755,9 @@ public class VADataFetcher
 				List<Author> authors = p.getAuthors();
 				for ( Author a : authors )
 				{
-					if ( !allCoAuthors.contains( a ) && !author.equals( a ) )
+					if ( !publicationAuthors.contains( a ) )
 					{
-						allCoAuthors.add( a );
+						publicationAuthors.add( a );
 						Map<String, Object> items = new HashMap<String, Object>();
 						items.put( "name", a.getName() );
 						items.put( "id", a.getId() );
@@ -613,104 +769,12 @@ public class VADataFetcher
 		}
 
 		Map<String, Object> map = new HashMap<String, Object>();
-		map.put( "allCoAuthors", allCoAuthors );
+		map.put( "publicationAuthors", publicationAuthors );
 		map.put( "listItems", listItems );
 		return map;
 	}
 
-	public Map<String, Object> fetchConferencesForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
-	{
-		Set<Publication> authorPublications = author.getPublications();
-		List<EventGroup> authorEventGroups = new ArrayList<EventGroup>();
-		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-		for ( Publication p : authorPublications )
-		{
-			Boolean flag = false;
-			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-			{
-				flag = true;
-			}
-			else
-			{
-				if ( p.getYear() != null )
-				{
-					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
-						flag = true;
-					}
-				}
-			}
-
-			if ( flag )
-			{
-				if ( p.getEvent() != null )
-				{
-					if ( p.getEvent().getEventGroup() != null )
-					{
-
-						EventGroup eventGroup = p.getEvent().getEventGroup();
-						if ( !authorEventGroups.contains( eventGroup ) )
-						{
-							authorEventGroups.add( eventGroup );
-							Map<String, Object> items = new HashMap<String, Object>();
-							items.put( "name", eventGroup.getName() );
-							items.put( "id", eventGroup.getId() );
-							items.put( "isAdded", eventGroup.isAdded() );
-							listItems.add( items );
-						}
-					}
-				}
-			}
-		}
-
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put( "authorEventGroups", authorEventGroups );
-		map.put( "listItems", listItems );
-		return map;
-	}
-
-	public Map<String, Object> fetchPublicationsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
-	{
-		Set<Publication> publications = author.getPublications();
-		List<Publication> authorPublications = new ArrayList<Publication>();
-		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-
-		for ( Publication p : publications )
-		{
-			Boolean flag = false;
-			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-			{
-				flag = true;
-			}
-			else
-			{
-				if ( p.getYear() != null )
-				{
-					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
-						flag = true;
-					}
-				}
-			}
-
-			if ( flag )
-			{
-				if ( !authorPublications.contains( p ) )
-				{
-					authorPublications.add( p );
-					Map<String, Object> items = new HashMap<String, Object>();
-					items.put( "name", p.getTitle() );
-					items.put( "id", p.getId() );
-					listItems.add( items );
-				}
-			}
-		}
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put( "authorPublications", authorPublications );
-		map.put( "listItems", listItems );
-		return map;
-	}
-
+	// Object : Conference, Visualization Type : Topics
 	public Map<String, Object> fetchTopicsForConferences( List<Event> events, List<String> allTopics, String startYear, String endYear, String yearFilterPresent )
 	{
 		List<String> interestTopicNames = new ArrayList<String>();
@@ -780,54 +844,39 @@ public class VADataFetcher
 		return map;
 	}
 
-	public Map<String, Object> fetchResearchersForConferences( List<Event> events, String startYear, String endYear, String yearFilterPresent )
+	// Object : Publication, Visualization Type : Researchers
+	public Map<String, Object> fetchResearchersForPublications( Publication p, String startYear, String endYear, String yearFilterPresent )
 	{
-		List<Publication> eventGroupPubs = new ArrayList<Publication>();
-
-		for ( Event e : events )
+		List<Author> publicationAuthors = new ArrayList<Author>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		Boolean flag = false;
+		if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
 		{
-			List<Publication> eventPublications = e.getPublications();
-			for ( Publication p : eventPublications )
+			flag = true;
+		}
+		else
+		{
+			if ( p.getYear() != null )
 			{
-				if ( !eventGroupPubs.contains( p ) )
+				if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
 				{
-					eventGroupPubs.add( p );
+					flag = true;
 				}
 			}
 		}
-		List<Author> publicationAuthors = new ArrayList<Author>();
-		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-		for ( Publication p : eventGroupPubs )
+		if ( flag )
 		{
-			Boolean flag = false;
-			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			List<Author> authors = p.getAuthors();
+			for ( Author a : authors )
 			{
-				flag = true;
-			}
-			else
-			{
-				if ( p.getYear() != null )
+				if ( !publicationAuthors.contains( a ) )
 				{
-					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
-						flag = true;
-					}
-				}
-			}
-			if ( flag )
-			{
-				List<Author> authors = p.getAuthors();
-				for ( Author a : authors )
-				{
-					if ( !publicationAuthors.contains( a ) )
-					{
-						publicationAuthors.add( a );
-						Map<String, Object> items = new HashMap<String, Object>();
-						items.put( "name", a.getName() );
-						items.put( "id", a.getId() );
-						items.put( "isAdded", a.isAdded() );
-						listItems.add( items );
-					}
+					publicationAuthors.add( a );
+					Map<String, Object> items = new HashMap<String, Object>();
+					items.put( "name", a.getName() );
+					items.put( "id", a.getId() );
+					items.put( "isAdded", a.isAdded() );
+					listItems.add( items );
 				}
 			}
 		}
@@ -836,8 +885,10 @@ public class VADataFetcher
 		map.put( "publicationAuthors", publicationAuthors );
 		map.put( "listItems", listItems );
 		return map;
+
 	}
 
+	// Object : Publication, Visualization Type : Topics
 	public Map<String, Object> fetchTopicsForPublications( List<Interest> allInterestsInDB, Publication p, String startYear, String endYear, String yearFilterPresent )
 	{
 
@@ -918,33 +969,22 @@ public class VADataFetcher
 		return map;
 	}
 
-	public Map<String, Object> fetchResearchersForPublications( Publication p, String startYear, String endYear, String yearFilterPresent )
+	// Object : Topic, Visualization Type : Researchers
+	public Map<String, Object> fetchResearchersForTopics( Interest interest, List<DataMiningAuthor> DMAuthors, List<Author> publicationAuthors, String yearFilterPresent )
 	{
-		List<Author> publicationAuthors = new ArrayList<Author>();
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-		Boolean flag = false;
-		if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+		List<Author> interestAuthors = new ArrayList<Author>();
+		for ( DataMiningAuthor dma : DMAuthors )
 		{
-			flag = true;
-		}
-		else
-		{
-			if ( p.getYear() != null )
+			Map<String, Double> interests = new HashMap<String, Double>();
+			interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
+			if ( interests.keySet().contains( interest.getTerm() ) )
 			{
-				if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+				Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
+
+				if ( !interestAuthors.contains( a ) )
 				{
-					flag = true;
-				}
-			}
-		}
-		if ( flag )
-		{
-			List<Author> authors = p.getAuthors();
-			for ( Author a : authors )
-			{
-				if ( !publicationAuthors.contains( a ) )
-				{
-					publicationAuthors.add( a );
+					interestAuthors.add( a );
 					Map<String, Object> items = new HashMap<String, Object>();
 					items.put( "name", a.getName() );
 					items.put( "id", a.getId() );
@@ -954,13 +994,230 @@ public class VADataFetcher
 			}
 		}
 
+		if ( yearFilterPresent.equals( "true" ) )
+		{
+			for ( int j = 0; j < interestAuthors.size(); j++ )
+			{
+				if ( !publicationAuthors.contains( interestAuthors.get( j ) ) )
+				{
+					interestAuthors.remove( j );
+					listItems.remove( j );
+					j--;
+				}
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "interestAuthors", interestAuthors );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	// Object : Topic, Visualization Type : Conferences
+	public Map<String, Object> fetchConferencesForTopics( Interest interest, List<DataMiningEventGroup> DMEventGroups, List<EventGroup> publicationEventGroups, String yearFilterPresent )
+	{
+		System.out.println( interest.getTerm() );
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+
+		List<EventGroup> interestEventGroups = new ArrayList<EventGroup>();
+		for ( DataMiningEventGroup dmeg : DMEventGroups )
+		{
+
+			Map<String, Double> interests = new HashMap<String, Double>();
+			interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
+			if ( interests.keySet().contains( interest.getTerm() ) )
+			{
+				EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( dmeg.getId() );
+				if ( !interestEventGroups.contains( eg ) )
+				{
+					interestEventGroups.add( eg );
+					Map<String, Object> items = new HashMap<String, Object>();
+					items.put( "name", eg.getName() );
+					items.put( "id", eg.getId() );
+					items.put( "isAdded", eg.isAdded() );
+					listItems.add( items );
+				}
+			}
+		}
+
+		if ( yearFilterPresent.equals( "true" ) )
+		{
+			for ( int j = 0; j < interestEventGroups.size(); j++ )
+			{
+				if ( !publicationEventGroups.contains( interestEventGroups.get( j ) ) )
+				{
+					interestEventGroups.remove( j );
+					listItems.remove( j );
+					j--;
+				}
+				else
+					System.out.println( interestEventGroups.get( j ).getName() );
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "interestEventGroups", interestEventGroups );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	// Object : Topic, Visualization Type : Publications
+	public Map<String, Object> fetchPublicationsForTopics( Interest interest, List<DataMiningPublication> allDMPublications, String startYear, String endYear, String yearFilterPresent )
+	{
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		List<Publication> interestPublications = new ArrayList<Publication>();
+		List<DataMiningPublication> selectedDMPublications = new ArrayList<DataMiningPublication>();
+
+		for ( DataMiningPublication dmp : allDMPublications )
+		{
+			PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
+			if ( ptf != null )
+			{
+				Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
+
+				Iterator<String> term = topics.keySet().iterator();
+				Iterator<Double> termWeight = topics.values().iterator();
+				while ( term.hasNext() && termWeight.hasNext() )
+				{
+					String topic = term.next();
+					float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, interest.getTerm() );
+
+					if ( dist > 0.9f )
+					{
+						if ( !selectedDMPublications.contains( dmp ) )
+						{
+							selectedDMPublications.add( dmp );
+							Publication p = persistenceStrategy.getPublicationDAO().getById( dmp.getId() );
+							Boolean flag = false;
+							if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+							{
+								flag = true;
+							}
+							else
+							{
+								if ( p.getYear() != null )
+								{
+									if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+									{
+										flag = true;
+									}
+								}
+							}
+							if ( flag )
+							{
+								interestPublications.add( p );
+								Map<String, Object> items = new HashMap<String, Object>();
+								items.put( "name", p.getTitle() );
+								items.put( "id", p.getId() );
+								listItems.add( items );
+							}
+						}
+					}
+				}
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "interestPublications", interestPublications );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	// Object : Circle, Visualization Type : Researchers
+	public Map<String, Object> fetchResearchersForCircles( Circle circle, String startYear, String endYear, String yearFilterPresent )
+	{
+		Set<Publication> circlePublications = circle.getPublications();
+		List<Author> circleAuthors = new ArrayList<Author>( circle.getAuthors() );
+		List<Author> publicationAuthors = new ArrayList<Author>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		for ( Publication p : circlePublications )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+			if ( flag )
+			{
+				List<Author> authors = p.getAuthors();
+				for ( Author a : authors )
+				{
+					if ( !publicationAuthors.contains( a ) && circleAuthors.contains( a ) )
+					{
+						publicationAuthors.add( a );
+						Map<String, Object> items = new HashMap<String, Object>();
+						items.put( "name", a.getName() );
+						items.put( "id", a.getId() );
+						items.put( "isAdded", a.isAdded() );
+						listItems.add( items );
+					}
+				}
+			}
+		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "publicationAuthors", publicationAuthors );
 		map.put( "listItems", listItems );
 		return map;
-
 	}
 
+	// Object : Circle, Visualization Type : Conferences
+	public Map<String, Object> fetchConferencesForCircles( Circle circle, String startYear, String endYear, String yearFilterPresent )
+	{
+		Set<Publication> circlePublications = circle.getPublications();
+		List<EventGroup> circleEventGroups = new ArrayList<EventGroup>();
+		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
+		for ( Publication p : circlePublications )
+		{
+			Boolean flag = false;
+			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
+			{
+				flag = true;
+			}
+			else
+			{
+				if ( p.getYear() != null )
+				{
+					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
+					{
+						flag = true;
+					}
+				}
+			}
+			if ( flag )
+			{
+				if ( p.getEvent() != null )
+				{
+					if ( p.getEvent().getEventGroup() != null )
+					{
+						EventGroup eg = p.getEvent().getEventGroup();
+						if ( !circleEventGroups.contains( eg ) )
+						{
+							circleEventGroups.add( eg );
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", eg.getName() );
+							items.put( "id", eg.getId() );
+							items.put( "isAdded", eg.isAdded() );
+							listItems.add( items );
+						}
+					}
+				}
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put( "circleEventGroups", circleEventGroups );
+		map.put( "listItems", listItems );
+		return map;
+	}
+
+	// Object : Circle, Visualization Type : Topics
 	public Map<String, Object> fetchTopicsForCircles( Circle circle, List<String> allTopics, String startYear, String endYear, String yearFilterPresent )
 	{
 		List<String> interestTopicNames = new ArrayList<String>();
@@ -1026,6 +1283,7 @@ public class VADataFetcher
 		return map;
 	}
 
+	// Object : Circle, Visualization Type : Publications
 	public Map<String, Object> fetchPublicationsForCircles( Circle circle, String startYear, String endYear, String yearFilterPresent )
 	{
 		Set<Publication> circlePublications = circle.getPublications();
@@ -1064,94 +1322,6 @@ public class VADataFetcher
 		}
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "allPublications", allPublications );
-		map.put( "listItems", listItems );
-		return map;
-	}
-
-	public Map<String, Object> fetchResearchersForTopics( Interest interest, List<DataMiningAuthor> DMAuthors, List<Author> publicationAuthors, String yearFilterPresent )
-	{
-		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-		List<Author> interestAuthors = new ArrayList<Author>();
-		for ( DataMiningAuthor dma : DMAuthors )
-		{
-			Map<String, Double> interests = new HashMap<String, Double>();
-			interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
-			if ( interests.keySet().contains( interest.getTerm() ) )
-			{
-				Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
-
-				if ( !interestAuthors.contains( a ) )
-				{
-					interestAuthors.add( a );
-					Map<String, Object> items = new HashMap<String, Object>();
-					items.put( "name", a.getName() );
-					items.put( "id", a.getId() );
-					items.put( "isAdded", a.isAdded() );
-					listItems.add( items );
-				}
-			}
-		}
-
-		if ( yearFilterPresent.equals( "true" ) )
-		{
-			for ( int j = 0; j < interestAuthors.size(); j++ )
-			{
-				if ( !publicationAuthors.contains( interestAuthors.get( j ) ) )
-				{
-					interestAuthors.remove( j );
-					listItems.remove( j );
-					j--;
-				}
-			}
-		}
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put( "interestAuthors", interestAuthors );
-		map.put( "listItems", listItems );
-		return map;
-	}
-
-	public Map<String, Object> fetchConferencesForTopics( Interest interest, List<DataMiningEventGroup> DMEventGroups, List<EventGroup> publicationEventGroups, String yearFilterPresent )
-	{
-		System.out.println( interest.getTerm() );
-		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-
-		List<EventGroup> interestEventGroups = new ArrayList<EventGroup>();
-		for ( DataMiningEventGroup dmeg : DMEventGroups )
-		{
-
-			Map<String, Double> interests = new HashMap<String, Double>();
-			interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
-			if ( interests.keySet().contains( interest.getTerm() ) )
-			{
-				EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( dmeg.getId() );
-				if ( !interestEventGroups.contains( eg ) )
-				{
-					interestEventGroups.add( eg );
-					Map<String, Object> items = new HashMap<String, Object>();
-					items.put( "name", eg.getName() );
-					items.put( "id", eg.getId() );
-					items.put( "isAdded", eg.isAdded() );
-					listItems.add( items );
-				}
-			}
-		}
-
-		if ( yearFilterPresent.equals( "true" ) )
-		{
-			for ( int j = 0; j < interestEventGroups.size(); j++ )
-			{
-				if ( !publicationEventGroups.contains( interestEventGroups.get( j ) ) )
-				{
-					interestEventGroups.remove( j );
-					listItems.remove( j );
-					j--;
-				}
-				else
-					System.out.println( interestEventGroups.get( j ).getName() );
-			}
-		}
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put( "interestEventGroups", interestEventGroups );
 		map.put( "listItems", listItems );
 		return map;
 	}

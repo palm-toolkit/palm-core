@@ -13,9 +13,9 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface FilterHelper
 {
-	public List<Publication> getPublicationsForFilter( List<String> idsList, String type, HttpServletRequest request );
+	public List<Publication> getPublicationsForFilter( List<String> idsList, String type, String visType, HttpServletRequest request );
 
-	public Set<Publication> typeWisePublications( String type, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationsList, List<Interest> interestList, List<Circle> circleList, HttpServletRequest request );
+	public Set<Publication> typeWisePublications( String callingFunction, String type, String visType, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationsList, List<Interest> interestList, List<Circle> circleList, HttpServletRequest request );
 
 	public List<Author> getAuthorsFromIds( List<String> idsList, HttpServletRequest request );
 

@@ -43,14 +43,14 @@ public class DataForFilterImpl implements DataForFilter
 	@Autowired
 	private AcademicEventFeature eventFeature;
 
-	public Map<String, Object> publicationFilter( List<String> idsList, String type, HttpServletRequest request )
+	public Map<String, Object> publicationFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
 		Map<String, Object> publicationsMap = new HashMap<String, Object>();
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, request );
+			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 
 			ArrayList<Map<String, Object>> publicationDetailsList = new ArrayList<Map<String, Object>>();
 
@@ -69,7 +69,7 @@ public class DataForFilterImpl implements DataForFilter
 		return publicationsMap;
 	}
 
-	public Map<String, Object> conferenceFilter( List<String> idsList, String type, HttpServletRequest request )
+	public Map<String, Object> conferenceFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
 
 		Map<String, Object> eventsMap = new HashMap<String, Object>();
@@ -77,7 +77,7 @@ public class DataForFilterImpl implements DataForFilter
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, request );
+			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 
 			ArrayList<Map<String, Object>> eventDetailsList = new ArrayList<Map<String, Object>>();
 			List<String> tempIds = new ArrayList<String>();
@@ -106,7 +106,7 @@ public class DataForFilterImpl implements DataForFilter
 	}
 
 	@SuppressWarnings( "unchecked" )
-	public Map<String, Object> circleFilter( List<String> idsList, String type )
+	public Map<String, Object> circleFilter( List<String> idsList, String type, String visType )
 	{
 		String query = "";
 		int page = 0;
@@ -135,7 +135,7 @@ public class DataForFilterImpl implements DataForFilter
 
 	}
 
-	public Map<String, Object> topicFilter( List<String> idsList, String type, HttpServletRequest request )
+	public Map<String, Object> topicFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
 		Map<String, Object> topicsMap = new HashMap<String, Object>();
 
@@ -146,7 +146,7 @@ public class DataForFilterImpl implements DataForFilter
 
 			if ( type.equals( "researcher" ) )
 			{
-				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, request );
+				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 
 				List<String> allAuthorInterests = new ArrayList<String>();
 				List<String> allAuthorInterestIds = new ArrayList<String>();
@@ -217,7 +217,7 @@ public class DataForFilterImpl implements DataForFilter
 			}
 			if ( type.equals( "conference" ) )
 			{
-				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, request );
+				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 				List<String> interestStrings = new ArrayList<String>();
 				List<String> allConferenceInterests = new ArrayList<String>();
 				List<String> allConferenceInterestIds = new ArrayList<String>();
@@ -298,7 +298,7 @@ public class DataForFilterImpl implements DataForFilter
 			}
 			if ( type.equals( "publication" ) )
 			{
-				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, request );
+				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 
 				List<Interest> allInterestsInDB = persistenceStrategy.getInterestDAO().allTerms();
 
@@ -356,7 +356,7 @@ public class DataForFilterImpl implements DataForFilter
 			if ( type.equals( "circle" ) )
 			{
 
-				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, request );
+				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 
 				List<String> allCircleInterests = new ArrayList<String>();
 				List<String> allCircleInterestIds = new ArrayList<String>();
@@ -431,14 +431,14 @@ public class DataForFilterImpl implements DataForFilter
 
 	}
 
-	public Map<String, Object> timeFilter( List<String> idsList, String type, HttpServletRequest request )
+	public Map<String, Object> timeFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
 		Map<String, Object> timeMap = new HashMap<String, Object>();
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, request );
+			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 
 			int startYear = 0;
 			int endYear = 0;

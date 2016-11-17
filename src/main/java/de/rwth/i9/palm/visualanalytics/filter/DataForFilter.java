@@ -7,14 +7,14 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface DataForFilter
 {
-	public Map<String, Object> publicationFilter( List<String> idsList, String type, HttpServletRequest request );
+	public Map<String, Object> publicationFilter( List<String> idsList, String type, String visType, HttpServletRequest request );
 
-	public Map<String, Object> conferenceFilter( List<String> idsList, String type, HttpServletRequest request );
+	public Map<String, Object> conferenceFilter( List<String> idsList, String type, String visType, HttpServletRequest request );
 
-	public Map<String, Object> circleFilter( List<String> idsList, String type );
+	public Map<String, Object> circleFilter( List<String> idsList, String type, String visType );
 
-	public Map<String, Object> topicFilter( List<String> idsList, String type, HttpServletRequest request );
+	public Map<String, Object> topicFilter( List<String> idsList, String type, String visType, HttpServletRequest request );
 
-	public Map<String, Object> timeFilter( List<String> idsList, String type, HttpServletRequest request );
+	public Map<String, Object> timeFilter( List<String> idsList, String type, String visType, HttpServletRequest request );
 
 }

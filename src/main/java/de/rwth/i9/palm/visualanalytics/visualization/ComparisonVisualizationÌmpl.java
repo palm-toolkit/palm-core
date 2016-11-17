@@ -2,7 +2,6 @@ package de.rwth.i9.palm.visualanalytics.visualization;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
-import de.rwth.i9.palm.analytics.util.InterestParser;
 import de.rwth.i9.palm.helper.VADataFetcher;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
@@ -26,7 +24,6 @@ import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
-import de.rwth.i9.palm.model.PublicationTopicFlat;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.visualanalytics.service.FilterFeature;
 
@@ -47,7 +44,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizeResearchersComparison( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request )
+	public Map<String, Object> visualizeResearchersComparison( String type, String visType, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request )
 	{
 		List<Map<String, Object>> listOfMaps = new ArrayList<Map<String, Object>>();
 		Map<String, Object> visMap = new HashMap<String, Object>();
@@ -491,8 +488,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
 						iList.add( interest );
 					}
-					selectedPublications = new ArrayList<Publication>( filterFeature.getFilterHelper().typeWisePublications( type, null, null, null, iList, null, request ) );
-					selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear, request ) );
+					selectedPublications = new ArrayList<Publication>( filterFeature.getFilterHelper().typeWisePublications( "filtered", type, visType, null, null, null, iList, null, request ) );
+					selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, visType, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear, request ) );
 					System.out.println( "pubs in comparison: " + selectedPublications.size() );
 					for ( Publication p : selectedPublications )
 					{
@@ -660,44 +657,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					index.add( i );
 
 					Circle circle = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
-					Set<Publication> circlePublications = circle.getPublications();
-					List<Author> circleAuthors = new ArrayList<Author>( circle.getAuthors() );
-					List<Author> publicationAuthors = new ArrayList<Author>();
-					List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-					for ( Publication p : circlePublications )
-					{
-						Boolean flag = false;
-						if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-						{
-							flag = true;
-						}
-						else
-						{
-							if ( p.getYear() != null )
-							{
-								if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-								{
-									flag = true;
-								}
-							}
-						}
-						if ( flag )
-						{
-							List<Author> authors = p.getAuthors();
-							for ( Author a : authors )
-							{
-								if ( !publicationAuthors.contains( a ) && circleAuthors.contains( a ) )
-								{
-									publicationAuthors.add( a );
-									Map<String, Object> items = new HashMap<String, Object>();
-									items.put( "name", a.getName() );
-									items.put( "id", a.getId() );
-									items.put( "isAdded", a.isAdded() );
-									listItems.add( items );
-								}
-							}
-						}
-					}
+					Map<String, Object> map = dataFetcher.fetchResearchersForCircles( circle, startYear, endYear, yearFilterPresent );
+					List<Author> publicationAuthors = (List<Author>) map.get( "publicationAuthors" );
+					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
+
 					mapAuthors.put( circle, publicationAuthors );
 
 					// single values to venn diagram
@@ -763,38 +726,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
 						Circle circle = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
-						List<Author> allCoAuthors = new ArrayList<Author>();
-						List<Author> circleAuthors = new ArrayList<Author>( circle.getAuthors() );
-						Set<Publication> pubs = circle.getPublications();
-						for ( Publication p : pubs )
-						{
-							Boolean flag = false;
-							if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-							{
-								flag = true;
-							}
-							else
-							{
-								if ( p.getYear() != null )
-								{
-									if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-									{
-										flag = true;
-									}
-								}
-							}
-							if ( flag )
-							{
-								List<Author> coAuthors = p.getAuthors();
-								for ( int j = 0; j < coAuthors.size(); j++ )
-								{
-									if ( !allCoAuthors.contains( coAuthors.get( j ) ) && circleAuthors.contains( coAuthors.get( j ) ) )
-									{
-										allCoAuthors.add( coAuthors.get( j ) );
-									}
-								}
-							}
-						}
+						Map<String, Object> map = dataFetcher.fetchResearchersForCircles( circle, startYear, endYear, yearFilterPresent );
+						List<Author> allCoAuthors = (List<Author>) map.get( "publicationAuthors" );
 
 						for ( int k = 0; k < allCoAuthors.size(); k++ )
 						{
@@ -855,7 +788,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizeConferencesComparison( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request )
+	public Map<String, Object> visualizeConferencesComparison( String type, String visType, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request )
 	{
 		List<Map<String, Object>> listOfMaps = new ArrayList<Map<String, Object>>();
 		Map<String, Object> visMap = new HashMap<String, Object>();
@@ -1025,8 +958,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
 						iList.add( interest );
 					}
-					selectedPublications = new ArrayList<Publication>( filterFeature.getFilterHelper().typeWisePublications( type, null, null, null, iList, null, request ) );
-					selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear, request ) );
+					selectedPublications = new ArrayList<Publication>( filterFeature.getFilterHelper().typeWisePublications( "filtered", type, visType, null, null, null, iList, null, request ) );
+					selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, visType, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear, request ) );
 					System.out.println( "pubs in comparison: " + selectedPublications.size() );
 					for ( Publication p : selectedPublications )
 					{
@@ -1203,49 +1136,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					index.add( i );
 
 					Circle circle = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
-					Set<Publication> circlePublications = circle.getPublications();
-					// List<EventGroup> circleEventGroups = new
-					// ArrayList<Author>(
-					// circle.getAuthors() );
-					List<EventGroup> circleEventGroups = new ArrayList<EventGroup>();
-					List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-					for ( Publication p : circlePublications )
-					{
-						Boolean flag = false;
-						if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-						{
-							flag = true;
-						}
-						else
-						{
-							if ( p.getYear() != null )
-							{
-								if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-								{
-									flag = true;
-								}
-							}
-						}
-						if ( flag )
-						{
-							if ( p.getEvent() != null )
-							{
-								if ( p.getEvent().getEventGroup() != null )
-								{
-									EventGroup eg = p.getEvent().getEventGroup();
-									if ( !circleEventGroups.contains( eg ) )
-									{
-										circleEventGroups.add( eg );
-										Map<String, Object> items = new HashMap<String, Object>();
-										items.put( "name", eg.getName() );
-										items.put( "id", eg.getId() );
-										items.put( "isAdded", eg.isAdded() );
-										listItems.add( items );
-									}
-								}
-							}
-						}
-					}
+					Map<String, Object> map = dataFetcher.fetchConferencesForCircles( circle, startYear, endYear, yearFilterPresent );
+					List<EventGroup> circleEventGroups = (List<EventGroup>) map.get( "circleEventGroups" );
+					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 					mapEventGroups.put( circle, circleEventGroups );
 
 					// single values to venn diagram
@@ -1311,55 +1204,23 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
 						Circle circle = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
-						List<EventGroup> eventGroups = new ArrayList<EventGroup>();
-						Set<Publication> pubs = circle.getPublications();
-						for ( Publication p : pubs )
-						{
-							Boolean flag = false;
-							if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-							{
-								flag = true;
-							}
-							else
-							{
-								if ( p.getYear() != null )
-								{
-									if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-									{
-										flag = true;
-									}
-								}
-							}
-							if ( flag )
-							{
-								if ( p.getEvent() != null )
-								{
-									if ( p.getEvent().getEventGroup() != null )
-									{
-										EventGroup eg = p.getEvent().getEventGroup();
-										if ( !eventGroups.contains( eg ) )
-										{
-											eventGroups.add( eg );
-										}
-									}
-								}
-							}
-						}
+						Map<String, Object> map = dataFetcher.fetchConferencesForCircles( circle, startYear, endYear, yearFilterPresent );
+						List<EventGroup> circleEventGroups = (List<EventGroup>) map.get( "circleEventGroups" );
 
-						for ( int k = 0; k < eventGroups.size(); k++ )
+						for ( int k = 0; k < circleEventGroups.size(); k++ )
 						{
-							if ( !allEventGroups.contains( eventGroups.get( k ) ) )
+							if ( !allEventGroups.contains( circleEventGroups.get( k ) ) )
 							{
-								allEventGroups.add( eventGroups.get( k ) );
+								allEventGroups.add( circleEventGroups.get( k ) );
 								Map<String, Object> items = new HashMap<String, Object>();
-								items.put( "name", eventGroups.get( k ).getName() );
-								items.put( "id", eventGroups.get( k ).getId() );
-								items.put( "isAdded", eventGroups.get( k ).isAdded() );
+								items.put( "name", circleEventGroups.get( k ).getName() );
+								items.put( "id", circleEventGroups.get( k ).getId() );
+								items.put( "isAdded", circleEventGroups.get( k ).isAdded() );
 								combinedListItems.add( items );
 								count.add( 0 );
 							}
 							else
-								count.set( allEventGroups.indexOf( eventGroups.get( k ) ), count.get( allEventGroups.indexOf( eventGroups.get( k ) ) ) + 1 );
+								count.set( allEventGroups.indexOf( circleEventGroups.get( k ) ), count.get( allEventGroups.indexOf( circleEventGroups.get( k ) ) ) + 1 );
 						}
 					}
 
@@ -1556,9 +1417,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 				List<DataMiningPublication> allDMPublications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
 
-				// List<DataMiningEventGroup> DMEventGroups =
-				// persistenceStrategy.getEventGroupDAO().getDataMiningObjects();
-
 				List<Interest> interestTempList = new ArrayList<Interest>();
 
 				for ( int i = 0; i < idsList.size(); i++ )
@@ -1567,63 +1425,14 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
 					interestTempList.add( interest );
 
-					List<DataMiningPublication> selectedDMPublications = new ArrayList<DataMiningPublication>();
 
 					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
-					List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
-					List<Publication> interestPublications = new ArrayList<Publication>();
-
-					for ( DataMiningPublication dmp : allDMPublications )
-					{
-						PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
-						if ( ptf != null )
-						{
-							Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
-
-							Iterator<String> term = topics.keySet().iterator();
-							Iterator<Double> termWeight = topics.values().iterator();
-							while ( term.hasNext() && termWeight.hasNext() )
-							{
-								String topic = term.next();
-								float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, interest.getTerm() );
-
-								if ( dist > 0.9f )
-								{
-									if ( !selectedDMPublications.contains( dmp ) )
-									{
-										selectedDMPublications.add( dmp );
-										Publication p = persistenceStrategy.getPublicationDAO().getById( dmp.getId() );
-										Boolean flag = false;
-										if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-										{
-											flag = true;
-										}
-										else
-										{
-											if ( p.getYear() != null )
-											{
-												if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-												{
-													flag = true;
-												}
-											}
-										}
-										if ( flag )
-										{
-											interestPublications.add( p );
-											Map<String, Object> items = new HashMap<String, Object>();
-											items.put( "name", p.getTitle() );
-											items.put( "id", p.getId() );
-											listItems.add( items );
-										}
-									}
-								}
-							}
-						}
-					}
+					Map<String, Object> map = dataFetcher.fetchPublicationsForTopics( interest, allDMPublications, startYear, endYear, yearFilterPresent );
+					List<Publication> interestPublications = (List<Publication>) map.get( "interestPublications" );
+					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 
 					mapPublications.put( interest, interestPublications );
 
@@ -1695,67 +1504,22 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					{
 						Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
 
-						List<DataMiningPublication> selectedDMPublications = new ArrayList<DataMiningPublication>();
-						List<Publication> selectedPublications = new ArrayList<Publication>();
+						Map<String, Object> map = dataFetcher.fetchPublicationsForTopics( interest, allDMPublications, startYear, endYear, yearFilterPresent );
+						List<Publication> interestPublications = (List<Publication>) map.get( "interestPublications" );
 
-						for ( DataMiningPublication dmp : allDMPublications )
+						for ( int k = 0; k < interestPublications.size(); k++ )
 						{
-							PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
-							if ( ptf != null )
+							if ( !allPublications.contains( interestPublications.get( k ) ) )
 							{
-								Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
-
-								Iterator<String> term = topics.keySet().iterator();
-								Iterator<Double> termWeight = topics.values().iterator();
-								while ( term.hasNext() && termWeight.hasNext() )
-								{
-									String topic = term.next();
-									float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, interest.getTerm() );
-
-									if ( dist > 0.9f )
-									{
-										if ( !selectedDMPublications.contains( dmp ) )
-										{
-											selectedDMPublications.add( dmp );
-											Publication p = persistenceStrategy.getPublicationDAO().getById( dmp.getId() );
-											Boolean flag = false;
-											if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-											{
-												flag = true;
-											}
-											else
-											{
-												if ( p.getYear() != null )
-												{
-													if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-													{
-														flag = true;
-													}
-												}
-											}
-											if ( flag )
-											{
-												selectedPublications.add( p );
-											}
-										}
-									}
-								}
-							}
-						}
-
-						for ( int k = 0; k < selectedPublications.size(); k++ )
-						{
-							if ( !allPublications.contains( selectedPublications.get( k ) ) )
-							{
-								allPublications.add( selectedPublications.get( k ) );
+								allPublications.add( interestPublications.get( k ) );
 								Map<String, Object> items = new HashMap<String, Object>();
-								items.put( "name", selectedPublications.get( k ).getTitle() );
-								items.put( "id", selectedPublications.get( k ).getId() );
+								items.put( "name", interestPublications.get( k ).getTitle() );
+								items.put( "id", interestPublications.get( k ).getId() );
 								combinedListItems.add( items );
 								count.add( 1 );
 							}
 							else
-								count.set( allPublications.indexOf( selectedPublications.get( k ) ), count.get( allPublications.indexOf( selectedPublications.get( k ) ) ) + 1 );
+								count.set( allPublications.indexOf( interestPublications.get( k ) ), count.get( allPublications.indexOf( interestPublications.get( k ) ) ) + 1 );
 						}
 
 					}
