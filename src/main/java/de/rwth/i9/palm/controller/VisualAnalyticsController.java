@@ -540,14 +540,28 @@ public class VisualAnalyticsController
 		if ( circlesMap != null && (Integer) circlesMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) circlesMap.get( "totalCount" ) );
-			return circleFeature.getCircleSearch().printJsonOutput( responseMap, (List<Circle>) circlesMap.get( "circles" ) );
+			// return circleFeature.getCircleSearch().printJsonOutput(
+			// responseMap, (List<Circle>) circlesMap.get( "circles" ) );
+			List<Circle> circles = (List<Circle>) circlesMap.get( "circles" );
+			List<Map<String, Object>> circleList = new ArrayList<Map<String, Object>>();
+
+			for ( Circle c : circles )
+			{
+				Map<String, Object> circleMap = new LinkedHashMap<String, Object>();
+				circleMap.put( "id", c.getId() );
+				circleMap.put( "name", c.getName() );
+				circleList.add( circleMap );
+			}
+
+			responseMap.put( "circles", circleList );
+			responseMap.put( "count", circleList.size() );
 		}
 		else
 		{
 			responseMap.put( "totalCount", 0 );
 			responseMap.put( "count", 0 );
-			return responseMap;
 		}
+		return responseMap;
 	}
 
 	@Transactional

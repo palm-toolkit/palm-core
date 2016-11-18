@@ -48,18 +48,37 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		Map<String, String> topicIdMap = new HashMap<String, String>();
 
-		List<String> allTopics = new ArrayList<String>();
-
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
+
+			List<String> allTopics = new ArrayList<String>();
+			if ( yearFilterPresent.equals( "true" ) )
+			{
+				for ( Publication pub : publications )
+				{
+					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
+					for ( PublicationTopic pubTopic : publicationTopics )
+					{
+						List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+						List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+						for ( int i = 0; i < topics.size(); i++ )
+						{
+							if ( !allTopics.contains( topics.get( i ) ) )
+							{
+								allTopics.add( topics.get( i ) );
+							}
+						}
+					}
+				}
+			}
 
 			List<Map<String, Object>> mapList = new ArrayList<Map<String, Object>>();
 
 			if ( type.equals( "researcher" ) )
 			{
 				// If there are no common publications!
-				if ( allTopics.size() == 0 )
+				if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
 				{
 					for ( String id : idsList )
 					{
@@ -259,7 +278,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			if ( type.equals( "conference" ) )
 			{
 				// If there are no common publications!
-				if ( allTopics.size() == 0 )
+				if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
 				{
 					for ( String id : idsList )
 					{
@@ -460,6 +479,11 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			}
 			if ( type.equals( "topic" ) )
 			{
+				System.out.println( "publications after filter: " + publications.size() );
+				List<String> filteredPublicationIds = new ArrayList<String>();
+				for ( Publication p : publications )
+					filteredPublicationIds.add( p.getId() );
+
 				List<DataMiningPublication> allDMPublications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
 				for ( String id : idsList )
 				{
@@ -467,23 +491,26 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 					Interest i = persistenceStrategy.getInterestDAO().getById( id );
 					for ( DataMiningPublication dmp : allDMPublications )
 					{
-						PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
-						if ( ptf != null )
+						if ( filteredPublicationIds.contains( dmp.getId() ) )
 						{
-							Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
-
-							Iterator<String> term = topics.keySet().iterator();
-							Iterator<Double> termWeight = topics.values().iterator();
-							while ( term.hasNext() && termWeight.hasNext() )
+							PublicationTopicFlat ptf = dmp.getPublication_topic_flat();
+							if ( ptf != null )
 							{
-								String topic = term.next();
-								float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, i.getTerm() );
+								Map<String, Double> topics = InterestParser.parseInterestString( ptf.getTopics() );
 
-								if ( dist > 0.9f )
+								Iterator<String> term = topics.keySet().iterator();
+								Iterator<Double> termWeight = topics.values().iterator();
+								while ( term.hasNext() && termWeight.hasNext() )
 								{
-									if ( !publicationsWithTopic.contains( dmp ) )
+									String topic = term.next();
+									float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, i.getTerm() );
+
+									if ( dist > 0.9f )
 									{
-										publicationsWithTopic.add( dmp );
+										if ( !publicationsWithTopic.contains( dmp ) )
+										{
+											publicationsWithTopic.add( dmp );
+										}
 									}
 								}
 							}
@@ -535,7 +562,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			if ( type.equals( "circle" ) )
 			{
 				// If there are no common publications!
-				if ( allTopics.size() == 0 )
+				if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
 				{
 					for ( String id : idsList )
 					{

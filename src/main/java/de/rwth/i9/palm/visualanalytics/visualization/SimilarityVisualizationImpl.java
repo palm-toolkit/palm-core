@@ -193,8 +193,8 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 		{
 			Map<String, Object> map = similarityService.similarTopics( idsList );
 
-			visMap.put( "names", map.get( "authorNames" ) );
-			visMap.put( "ids", map.get( "authorIds" ) );
+			visMap.put( "names", map.get( "names" ) );
+			visMap.put( "ids", map.get( "ids" ) );
 			visMap.put( "similarity", map.get( "similarity" ) );
 		}
 		return visMap;
