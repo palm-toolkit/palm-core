@@ -43,7 +43,7 @@ public class ManageMenuController
 			final HttpServletResponse response) throws InterruptedException
 	{
 		ModelAndView model = null;
-		if ( !( widgetType.equals( "introduction" ) || widgetType.equals( "api" ) || widgetType.equals( "documentation" ) ) )
+		if ( !( widgetType.equals( "introduction" ) || widgetType.equals( "api" ) || widgetType.equals( "documentation" ) || widgetType.equals( "va-help" ) ) )
 		{
 			model = TemplateHelper.createViewWithLink( "404", "error" );
 			return model;

@@ -178,6 +178,25 @@ public class VisualAnalyticsController
 			searchWidget.setPosition( 3 );
 			persistenceStrategy.getWidgetDAO().persist( searchWidget );
 
+			// create Search Widget in Explore
+			Widget helpWidget = new Widget();
+			helpWidget.setTitle( "Visual Analytics Help" );
+			helpWidget.setUniqueName( "explore_help" );
+			helpWidget.setWidgetType( WidgetType.MENU );
+			helpWidget.setWidgetGroup( "menu-va-help" );
+			helpWidget.setWidgetSource( WidgetSource.INCLUDE );
+			helpWidget.setSourcePath( "../../explore/widget/infoVA.ftl" );
+			helpWidget.setWidgetWidth( WidgetWidth.LARGE );
+			helpWidget.setColor( Color.SOLID );
+			helpWidget.setInformation( "Visual Analytics widget for basic information" );
+			helpWidget.setCloseEnabled( false );
+			helpWidget.setMinimizeEnabled( false );
+			helpWidget.setMoveableEnabled( false );
+			helpWidget.setHeaderVisible( false );
+			helpWidget.setWidgetStatus( WidgetStatus.ACTIVE );
+			helpWidget.setPosition( 999 );
+			persistenceStrategy.getWidgetDAO().persist( helpWidget );
+
 		}
 
 		List<User> existingUsers = persistenceStrategy.getUserDAO().allUsers();
@@ -273,6 +292,7 @@ public class VisualAnalyticsController
 	public @ResponseBody Map<String, Object> getResearcherList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "queryType", required = false ) String queryType, @RequestParam( value = "page", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "addedAuthor", required = false ) String addedAuthor, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "persist", required = false ) String persist, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
 
+
 		/* == Set Default Values== */
 		if ( query == null )
 			query = "";
@@ -293,6 +313,20 @@ public class VisualAnalyticsController
 
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+
+		// check if the logged in user is also an author in the system
+		User user = securityService.getUser();
+		String loggedInAuthorID = "";
+		if ( user != null )
+		{
+			if ( user.getAuthor() != null )
+			{
+				loggedInAuthorID = user.getAuthor().getId();
+			}
+		}
+
+		responseMap.put( "loggedInAuthorID", loggedInAuthorID );
+
 		boolean persistResult = false;
 
 		responseMap.put( "query", query );
