@@ -965,9 +965,6 @@ public class VisualAnalyticsController
 					{
 						responseMap.put( "circleFilter", filterFeature.getDataForFilter().circleFilter( idsList, visType, type ) );
 					}
-					if ( filters.get( i ).equals( "Researchers" ) )
-					{
-					}
 					if ( filters.get( i ).equals( "Topics" ) )
 					{
 						responseMap.put( "topicFilter", filterFeature.getDataForFilter().topicFilter( idsList, type, visType, request ) );

@@ -2,6 +2,7 @@ package de.rwth.i9.palm.visualanalytics.filter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
+//import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
@@ -21,6 +22,7 @@ import de.rwth.i9.palm.model.Circle;
 import de.rwth.i9.palm.model.CircleInterest;
 import de.rwth.i9.palm.model.CircleInterestProfile;
 import de.rwth.i9.palm.model.Event;
+import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.EventInterest;
 import de.rwth.i9.palm.model.EventInterestProfile;
 import de.rwth.i9.palm.model.Interest;
@@ -40,8 +42,8 @@ public class DataForFilterImpl implements DataForFilter
 	@Autowired
 	private CircleFeature circleFeature;
 
-	@Autowired
-	private AcademicEventFeature eventFeature;
+	// @Autowired
+	// private AcademicEventFeature eventFeature;
 
 	public Map<String, Object> publicationFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
@@ -142,75 +144,99 @@ public class DataForFilterImpl implements DataForFilter
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			ArrayList<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
+			List<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
 
 			if ( type.equals( "researcher" ) )
 			{
 				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
-
 				List<String> allAuthorInterests = new ArrayList<String>();
-				List<String> allAuthorInterestIds = new ArrayList<String>();
+				List<Integer> count = new ArrayList<Integer>();
 
-				List<Author> authorList = new ArrayList<Author>();
-				authorList = filterHelper.getAuthorsFromIds( idsList, request );
-				for ( Author a : authorList )
+				for ( String id : idsList )
 				{
-					Set<AuthorInterestProfile> authorInterestProfiles = a.getAuthorInterestProfiles();
-					for ( AuthorInterestProfile aip : authorInterestProfiles )
+					List<String> allTopics = new ArrayList<String>();
+
+					Author a = persistenceStrategy.getAuthorDAO().getById( id );
+					List<Publication> pubs = new ArrayList<Publication>( a.getPublications() );
+					for ( Publication p : pubs )
 					{
-						List<AuthorInterest> authorInterests = new ArrayList<AuthorInterest>( aip.getAuthorInterests() );
-						for ( AuthorInterest ai : authorInterests )
+						Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+						for ( PublicationTopic pubTopic : publicationTopics )
 						{
-							Map<Interest, Double> termWeights = ai.getTermWeights();
-							List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
-							for ( int j = 0; j < termWeights.size(); j++ )
+							List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+							for ( int i = 0; i < topics.size(); i++ )
 							{
-								if ( !allAuthorInterests.contains( interests.get( j ).getTerm() ) )
+								if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
 								{
-									allAuthorInterests.add( interests.get( j ).getTerm() );
-									allAuthorInterestIds.add( interests.get( j ).getId() );
+									allTopics.add( topics.get( i ) );
 								}
 							}
 						}
 					}
-				}
 
-				List<String> allTopics = new ArrayList<String>();
-				for ( Publication pub : publications )
-				{
-					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
-					for ( PublicationTopic pubTopic : publicationTopics )
+					List<String> interestTopicNames = new ArrayList<String>();
+					List<String> interestTopicIds = new ArrayList<String>();
+
+					Set<AuthorInterestProfile> authorInterestProfiles = a.getAuthorInterestProfiles();
+					for ( AuthorInterestProfile aip : authorInterestProfiles )
 					{
-
-						for ( int i = 0; i < pubTopic.getTermValues().size(); i++ )
+						Set<AuthorInterest> ais = aip.getAuthorInterests();
+						for ( AuthorInterest ai : ais )
 						{
-
-							List<String> termValues = new ArrayList<>( pubTopic.getTermValues().keySet() );
-							for ( int j = 0; j < termValues.size(); j++ )
+							Map<Interest, Double> interests = ai.getTermWeights();
+							Iterator<Interest> interestTerm = interests.keySet().iterator();
+							Iterator<Double> interestTermWeight = interests.values().iterator();
+							while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 							{
-								Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
-								if ( !allTopics.contains( termValues.get( j ) ) )
+								Interest actualInterest = interestTerm.next();
+								String interest = ( actualInterest.getTerm() );
+								Double weight = interestTermWeight.next();
+
+								if ( weight > 0.3 )
 								{
-									int index = 0;
-									if ( allAuthorInterests.contains( termValues.get( j ) ) )
+									if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
 									{
-										index = allAuthorInterests.indexOf( termValues.get( j ) );
-										allTopics.add( termValues.get( j ) );
-										topicDetail.put( "id", allAuthorInterestIds.get( index ) );
-										topicDetail.put( "name", termValues.get( j ) );
-										topicDetailsList.add( topicDetail );
-									}
-									if ( allAuthorInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
-									{
-										index = allAuthorInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
-										allTopics.add( termValues.get( j ) );
-										topicDetail.put( "id", allAuthorInterestIds.get( index ) );
-										topicDetail.put( "name", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
-										topicDetailsList.add( topicDetail );
+										if ( !interestTopicNames.contains( interest ) )
+										{
+											interestTopicNames.add( interest );
+											interestTopicIds.add( actualInterest.getId() );
+											Map<String, Object> items = new HashMap<String, Object>();
+											items.put( "name", interest );
+											items.put( "id", actualInterest.getId() );
+										}
 									}
 								}
 							}
 						}
+					}
+
+					for ( int k = 0; k < interestTopicNames.size(); k++ )
+					{
+						if ( !allAuthorInterests.contains( interestTopicNames.get( k ) ) )
+						{
+							allAuthorInterests.add( interestTopicNames.get( k ) );
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", interestTopicNames.get( k ) );
+							items.put( "id", interestTopicIds.get( k ) );
+							topicDetailsList.add( items );
+
+							count.add( 0 );
+
+						}
+						else
+							count.set( allAuthorInterests.indexOf( interestTopicNames.get( k ) ), count.get( allAuthorInterests.indexOf( interestTopicNames.get( k ) ) ) + 1 );
+					}
+				}
+
+				for ( int i = 0; i < allAuthorInterests.size(); i++ )
+				{
+					if ( count.get( i ) < idsList.size() - 1 )
+					{
+						count.remove( i );
+						allAuthorInterests.remove( i );
+						topicDetailsList.remove( i );
+						i--;
 					}
 				}
 
@@ -218,83 +244,100 @@ public class DataForFilterImpl implements DataForFilter
 			if ( type.equals( "conference" ) )
 			{
 				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
-				List<String> interestStrings = new ArrayList<String>();
 				List<String> allConferenceInterests = new ArrayList<String>();
-				List<String> allConferenceInterestIds = new ArrayList<String>();
+				List<Integer> count = new ArrayList<Integer>();
+				List<String> allTopics = new ArrayList<String>();
 
-				for ( int i = 0; i < idsList.size(); i++ )
+				for ( String id : idsList )
 				{
-					@SuppressWarnings( "unchecked" )
-					List<Object> innerList = (List<Object>) eventFeature.getEventMining().fetchEventGroupData( idsList.get( i ), null, null ).get( "events" );
-					for ( int j = 0; j < innerList.size(); j++ )
+					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
+					List<Event> events = eg.getEvents();
+					for ( Event e : events )
 					{
-						@SuppressWarnings( "unchecked" )
-						Map<String, Object> innerListMap = (Map<String, Object>) innerList.get( j );
+						List<Publication> pubs = new ArrayList<Publication>( e.getPublications() );
+						for ( Publication p : pubs )
+						{
+							Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+							for ( PublicationTopic pubTopic : publicationTopics )
+							{
+								List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+								List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+								for ( int i = 0; i < topics.size(); i++ )
+								{
+									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
+									{
+										allTopics.add( topics.get( i ) );
+									}
+								}
+							}
+						}
+					}
 
-						Event e = persistenceStrategy.getEventDAO().getById( innerListMap.get( "id" ).toString() );
-						Set<EventInterestProfile> eips = e.getEventInterestProfiles();
+					List<String> interestTopicNames = new ArrayList<String>();
+					List<String> interestTopicIds = new ArrayList<String>();
 
-						for ( EventInterestProfile eip : eips )
+					for ( Event e : events )
+					{
+						Set<EventInterestProfile> eventInterestProfiles = e.getEventInterestProfiles();
+						for ( EventInterestProfile eip : eventInterestProfiles )
 						{
 							Set<EventInterest> eventInterests = eip.getEventInterests();
 							for ( EventInterest ei : eventInterests )
 							{
+								Map<Interest, Double> interests = ei.getTermWeights();
+								Iterator<Interest> interestTerm = interests.keySet().iterator();
+								Iterator<Double> interestTermWeight = interests.values().iterator();
 
-								Map<Interest, Double> termWeights = ei.getTermWeights();
-								List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
-								for ( Interest interest : interests )
+								while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 								{
-									Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
-
-									if ( !interestStrings.contains( interest.getTerm() ) )
+									Interest actualInterest = interestTerm.next();
+									String interest = actualInterest.getTerm();
+									Double weight = interestTermWeight.next();
+									if ( weight > 0.3 )
 									{
-										allConferenceInterests.add( interest.getTerm() );
-										allConferenceInterestIds.add( interest.getId() );
+										if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+										{
+											if ( !interestTopicNames.contains( interest ) )
+											{
+												interestTopicNames.add( interest );
+												interestTopicIds.add( actualInterest.getId() );
+												Map<String, Object> items = new HashMap<String, Object>();
+												items.put( "name", interest );
+												items.put( "id", actualInterest.getId() );
+											}
+										}
 									}
 								}
 							}
 						}
 					}
-				}
-				List<String> allTopics = new ArrayList<String>();
-				for ( Publication pub : publications )
-				{
-					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
-					for ( PublicationTopic pubTopic : publicationTopics )
+					for ( int k = 0; k < interestTopicNames.size(); k++ )
 					{
-						for ( int i = 0; i < pubTopic.getTermValues().size(); i++ )
+						if ( !allConferenceInterests.contains( interestTopicNames.get( k ) ) )
 						{
+							allConferenceInterests.add( interestTopicNames.get( k ) );
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", interestTopicNames.get( k ) );
+							items.put( "id", interestTopicIds.get( k ) );
+							topicDetailsList.add( items );
 
-							List<String> termValues = new ArrayList<>( pubTopic.getTermValues().keySet() );
-							for ( int j = 0; j < termValues.size(); j++ )
-							{
-								Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
-								if ( !allTopics.contains( termValues.get( j ) ) && termValues.get( j ).length() > 1 )
-								{
-									int index = 0;
+							count.add( 0 );
 
-									if ( allConferenceInterests.contains( termValues.get( j ) ) )
-									{
-										index = allConferenceInterests.indexOf( termValues.get( j ) );
-										allTopics.add( termValues.get( j ) );
-										topicDetail.put( "id", allConferenceInterestIds.get( index ) );
-										topicDetail.put( "name", termValues.get( j ) );
-										topicDetailsList.add( topicDetail );
-									}
-									else if ( allConferenceInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
-									{
-										index = allConferenceInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
-										allTopics.add( termValues.get( j ) );
-										topicDetail.put( "id", allConferenceInterestIds.get( index ) );
-										topicDetail.put( "name", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
-										topicDetailsList.add( topicDetail );
-									}
-								}
-							}
 						}
+						else
+							count.set( allConferenceInterests.indexOf( interestTopicNames.get( k ) ), count.get( allConferenceInterests.indexOf( interestTopicNames.get( k ) ) ) + 1 );
 					}
 				}
-
+				for ( int i = 0; i < allConferenceInterests.size(); i++ )
+				{
+					if ( count.get( i ) < idsList.size() - 1 )
+					{
+						count.remove( i );
+						allConferenceInterests.remove( i );
+						topicDetailsList.remove( i );
+						i--;
+					}
+				}
 			}
 			if ( type.equals( "publication" ) )
 			{
@@ -355,75 +398,96 @@ public class DataForFilterImpl implements DataForFilter
 			}
 			if ( type.equals( "circle" ) )
 			{
-
 				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
-
+				List<String> allTopics = new ArrayList<String>();
 				List<String> allCircleInterests = new ArrayList<String>();
-				List<String> allCircleInterestIds = new ArrayList<String>();
+				// List<String> allCircleInterestIds = new ArrayList<String>();
+				List<Integer> count = new ArrayList<Integer>();
 
-				List<Circle> circleList = new ArrayList<Circle>();
-				circleList = filterHelper.getCirclesFromIds( idsList, request );
-				for ( Circle c : circleList )
+				for ( String id : idsList )
 				{
-					Set<CircleInterestProfile> circleInterestProfiles = c.getCircleInterestProfiles();
+					Circle circle = persistenceStrategy.getCircleDAO().getById( id );
+
+					List<Publication> pubs = new ArrayList<Publication>( circle.getPublications() );
+					for ( Publication p : pubs )
+					{
+						Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+						for ( PublicationTopic pubTopic : publicationTopics )
+						{
+							List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+							for ( int i = 0; i < topics.size(); i++ )
+							{
+								if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
+								{
+									allTopics.add( topics.get( i ) );
+								}
+							}
+						}
+					}
+
+					List<String> interestTopicNames = new ArrayList<String>();
+					List<String> interestTopicIds = new ArrayList<String>();
+
+					Set<CircleInterestProfile> circleInterestProfiles = circle.getCircleInterestProfiles();
 					for ( CircleInterestProfile cip : circleInterestProfiles )
 					{
-						List<CircleInterest> circleInterests = new ArrayList<CircleInterest>( cip.getCircleInterests() );
-						for ( CircleInterest ci : circleInterests )
+						Set<CircleInterest> cis = cip.getCircleInterests();
+						for ( CircleInterest ci : cis )
 						{
-							Map<Interest, Double> termWeights = ci.getTermWeights();
-							List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
-							for ( int j = 0; j < termWeights.size(); j++ )
+							Map<Interest, Double> interests = ci.getTermWeights();
+							Iterator<Interest> interestTerm = interests.keySet().iterator();
+							Iterator<Double> interestTermWeight = interests.values().iterator();
+							while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 							{
-								if ( !allCircleInterests.contains( interests.get( j ).getTerm() ) )
+								Interest actualInterest = interestTerm.next();
+								String interest = ( actualInterest.getTerm() );
+								Double weight = interestTermWeight.next();
+
+								if ( weight > 0.3 )
 								{
-									allCircleInterests.add( interests.get( j ).getTerm() );
-									allCircleInterestIds.add( interests.get( j ).getId() );
+									if ( allTopics.contains( interest ) || allTopics.contains( interest + "s" ) )
+									{
+										if ( !interestTopicNames.contains( interest ) )
+										{
+											interestTopicNames.add( interest );
+											interestTopicIds.add( actualInterest.getId() );
+											Map<String, Object> items = new HashMap<String, Object>();
+											items.put( "name", interest );
+											items.put( "id", actualInterest.getId() );
+										}
+									}
 								}
 							}
 						}
 					}
-				}
-
-				List<String> allTopics = new ArrayList<String>();
-				for ( Publication pub : publications )
-				{
-					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
-					for ( PublicationTopic pubTopic : publicationTopics )
+					for ( int k = 0; k < interestTopicNames.size(); k++ )
 					{
-
-						for ( int i = 0; i < pubTopic.getTermValues().size(); i++ )
+						if ( !allCircleInterests.contains( interestTopicNames.get( k ) ) )
 						{
+							allCircleInterests.add( interestTopicNames.get( k ) );
+							Map<String, Object> items = new HashMap<String, Object>();
+							items.put( "name", interestTopicNames.get( k ) );
+							items.put( "id", interestTopicIds.get( k ) );
+							topicDetailsList.add( items );
 
-							List<String> termValues = new ArrayList<>( pubTopic.getTermValues().keySet() );
-							for ( int j = 0; j < termValues.size(); j++ )
-							{
-								Map<String, Object> topicDetail = new LinkedHashMap<String, Object>();
-								if ( !allTopics.contains( termValues.get( j ) ) )
-								{
-									int index = 0;
-									if ( allCircleInterests.contains( termValues.get( j ) ) )
-									{
-										index = allCircleInterests.indexOf( termValues.get( j ) );
-										allTopics.add( termValues.get( j ) );
-										topicDetail.put( "id", allCircleInterestIds.get( index ) );
-										topicDetail.put( "name", termValues.get( j ) );
-										topicDetailsList.add( topicDetail );
-									}
-									if ( allCircleInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
-									{
-										index = allCircleInterests.indexOf( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
-										allTopics.add( termValues.get( j ) );
-										topicDetail.put( "id", allCircleInterestIds.get( index ) );
-										topicDetail.put( "name", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
-										topicDetailsList.add( topicDetail );
-									}
-								}
-							}
+							count.add( 0 );
+
 						}
+						else
+							count.set( allCircleInterests.indexOf( interestTopicNames.get( k ) ), count.get( allCircleInterests.indexOf( interestTopicNames.get( k ) ) ) + 1 );
 					}
 				}
-
+				for ( int i = 0; i < allCircleInterests.size(); i++ )
+				{
+					if ( count.get( i ) < idsList.size() - 1 )
+					{
+						count.remove( i );
+						allCircleInterests.remove( i );
+						topicDetailsList.remove( i );
+						i--;
+					}
+				}
 			}
 			topicsMap.put( "topicDetailsList", topicDetailsList );
 		}

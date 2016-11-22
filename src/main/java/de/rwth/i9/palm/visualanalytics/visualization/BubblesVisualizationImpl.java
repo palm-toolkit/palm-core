@@ -291,9 +291,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 									{
 										if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
 										{
-											if ( topics.get( i ).equals( "blended learning" ) )
-												System.out.println( "\n " + "topic: " + topics.get( i ) + " " + topicWeights.get( i ) + " " + eg.getName() );
-
 											allTopics.add( topics.get( i ) );
 										}
 									}
@@ -502,7 +499,8 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
 					for ( PublicationTopic pubTopic : publicationTopics )
 					{
-						List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+						// List<Double> topicWeights = new ArrayList<Double>(
+						// pubTopic.getTermValues().values() );
 						List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 						for ( int i = 0; i < topics.size(); i++ )
 						{

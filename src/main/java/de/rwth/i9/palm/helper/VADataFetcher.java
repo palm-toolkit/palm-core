@@ -51,7 +51,7 @@ public class VADataFetcher
 
 		if ( type.equals( "publication" ) )
 		{
-			// if the filter criteria doesn't filter out any publications
+			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
 				System.out.println( "no match!" );
@@ -78,7 +78,7 @@ public class VADataFetcher
 		}
 		if ( type.equals( "researcher" ) )
 		{
-			// if the filter criteria doesn't filter out any publications
+			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
 				System.out.println( "no match!" );
@@ -147,7 +147,7 @@ public class VADataFetcher
 		}
 		if ( type.equals( "topic" ) )
 		{
-			// if the filter criteria doesn't filter out any publications
+			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
 				System.out.println( "no match!" );
@@ -183,7 +183,7 @@ public class VADataFetcher
 		}
 		if ( type.equals( "conference" ) )
 		{
-			// if the filter criteria doesn't filter out any publications
+			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
 				System.out.println( "no match!" );
@@ -259,7 +259,7 @@ public class VADataFetcher
 		}
 		if ( type.equals( "circle" ) )
 		{
-			// if the filter criteria doesn't filter out any publications
+			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
 				System.out.println( "no match!" );
@@ -648,6 +648,7 @@ public class VADataFetcher
 				}
 			}
 		}
+		System.out.println( "COMP: " + author.getName() + " : " + allTopics.size() );
 
 		List<String> interestTopicNames = new ArrayList<String>();
 		List<String> interestTopicIds = new ArrayList<String>();
@@ -707,7 +708,7 @@ public class VADataFetcher
 				}
 			}
 		}
-
+		System.out.println( "COMP: " + author.getName() + " : " + listItems.size() );
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestTopicIds", interestTopicIds );
 		map.put( "interestTopicNames", interestTopicNames );
@@ -931,7 +932,8 @@ public class VADataFetcher
 			{
 				Map<String, Double> termValues = pt.getTermValues();
 				List<String> terms = new ArrayList<String>( termValues.keySet() );
-				List<Double> weights = new ArrayList<Double>( termValues.values() );
+				// List<Double> weights = new ArrayList<Double>(
+				// termValues.values() );
 				for ( int k = 0; k < terms.size(); k++ )
 				{
 					if ( !interestTopicNames.contains( terms.get( k ) ) )// &&
