@@ -77,12 +77,20 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 
 			if ( type.equals( "researcher" ) )
 			{
-				// If there are no common publications!
-				if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
+				List<Interest> authorInterests = new ArrayList<Interest>();
+				List<Double> authorInterestWeights = new ArrayList<Double>();
+
+				// List to check if interest belong to all selected authors
+				List<List<Author>> interestAuthors = new ArrayList<List<Author>>();
+
+				for ( String id : idsList )
 				{
-					for ( String id : idsList )
+					Author a = persistenceStrategy.getAuthorDAO().getById( id );
+
+					// If there are no common publications!
+					if ( yearFilterPresent.equals( "false" ) )
 					{
-						Author a = persistenceStrategy.getAuthorDAO().getById( id );
+						allTopics = new ArrayList<String>();
 						List<Publication> pubs = new ArrayList<Publication>( a.getPublications() );
 						for ( Publication p : pubs )
 						{
@@ -101,19 +109,6 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 							}
 						}
 					}
-				}
-				List<Interest> authorInterests = new ArrayList<Interest>();
-				List<Double> authorInterestWeights = new ArrayList<Double>();
-
-				// List to check if interest belong to all selected authors
-				List<List<Author>> interestAuthors = new ArrayList<List<Author>>();
-				// System.out.println( " all topics size: " + allTopics.size()
-				// );
-
-				for ( String id : idsList )
-				{
-					Author a = persistenceStrategy.getAuthorDAO().getById( id );
-					// System.out.println( "\n" + a.getName() );
 					Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
 					Set<AuthorInterestProfile> authorInterestProfiles = a.getAuthorInterestProfiles();
@@ -277,12 +272,20 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			}
 			if ( type.equals( "conference" ) )
 			{
-				// If there are no common publications!
-				if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
+
+				List<Interest> conferenceInterests = new ArrayList<Interest>();
+				List<Double> conferenceInterestWeights = new ArrayList<Double>();
+				// List to check if interest belong to all selected conferences
+				List<List<EventGroup>> interestConferences = new ArrayList<List<EventGroup>>();
+
+				for ( String id : idsList )
 				{
-					for ( String id : idsList )
+					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
+
+					// If there are no common publications!
+					if ( yearFilterPresent.equals( "false" ) )
 					{
-						EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
+						allTopics = new ArrayList<String>();
 						List<Event> events = eg.getEvents();
 						for ( Event e : events )
 						{
@@ -305,16 +308,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 							}
 						}
 					}
-				}
 
-				List<Interest> conferenceInterests = new ArrayList<Interest>();
-				List<Double> conferenceInterestWeights = new ArrayList<Double>();
-				// List to check if interest belong to all selected conferences
-				List<List<EventGroup>> interestConferences = new ArrayList<List<EventGroup>>();
-
-				for ( String id : idsList )
-				{
-					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
 					Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
 					List<Event> events = eg.getEvents();
@@ -561,12 +555,20 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			}
 			if ( type.equals( "circle" ) )
 			{
-				// If there are no common publications!
-				if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
+				List<Interest> circleInterests = new ArrayList<Interest>();
+				List<Double> circleInterestWeights = new ArrayList<Double>();
+
+				// List to check if interest belong to all selected authors
+				List<List<Circle>> interestCircles = new ArrayList<List<Circle>>();
+
+				for ( String id : idsList )
 				{
-					for ( String id : idsList )
+					Circle c = persistenceStrategy.getCircleDAO().getById( id );
+
+					// If there are no common publications!
+					if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
 					{
-						Circle c = persistenceStrategy.getCircleDAO().getById( id );
+						allTopics = new ArrayList<String>();
 						List<Publication> pubs = new ArrayList<Publication>( c.getPublications() );
 						for ( Publication p : pubs )
 						{
@@ -585,16 +587,6 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 							}
 						}
 					}
-				}
-				List<Interest> circleInterests = new ArrayList<Interest>();
-				List<Double> circleInterestWeights = new ArrayList<Double>();
-
-				// List to check if interest belong to all selected authors
-				List<List<Circle>> interestCircles = new ArrayList<List<Circle>>();
-
-				for ( String id : idsList )
-				{
-					Circle c = persistenceStrategy.getCircleDAO().getById( id );
 					Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
 					Set<CircleInterestProfile> circleInterestProfiles = c.getCircleInterestProfiles();

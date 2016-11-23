@@ -103,7 +103,7 @@ public class FilterHelperImpl implements FilterHelper
 
 					System.out.println( "VT: " + visType );
 					// find common publications for filter
-					if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) )
+					if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) || visType.equals( "conferences" ) )
 					{
 						for ( int i = 0; i < count.size(); i++ )
 						{

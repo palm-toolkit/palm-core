@@ -1716,29 +1716,12 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 			if ( type.equals( "researcher" ) )
 			{
 				Map<Author, List<String>> mapTopics = new HashMap<Author, List<String>>();
-				List<String> allTopics = new ArrayList<String>();
 				List<Author> authorList = new ArrayList<Author>();
 				for ( String id : idsList )
 				{
 					Author author = persistenceStrategy.getAuthorDAO().getById( id );
 					authorList.add( author );
-					List<Publication> pubs = new ArrayList<Publication>( author.getPublications() );
-					for ( Publication p : pubs )
-					{
-						Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
-						for ( PublicationTopic pubTopic : publicationTopics )
-						{
-							List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
-							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
-							for ( int j = 0; j < topics.size(); j++ )
-							{
-								if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
-								{
-									allTopics.add( topics.get( j ) );
-								}
-							}
-						}
-					}
+
 				}
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
@@ -1746,7 +1729,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 					Author author = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
-					Map<String, Object> map = dataFetcher.fetchTopicsForAuthors( author, allTopics, startYear, endYear, yearFilterPresent );
+					Map<String, Object> map = dataFetcher.fetchTopicsForAuthors( author, startYear, endYear, yearFilterPresent );
 					List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 					List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
 					List<String> listItems = (List<String>) map.get( "listItems" );
@@ -1817,7 +1800,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
 						Author author = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
-						Map<String, Object> map = dataFetcher.fetchTopicsForAuthors( author, allTopics, startYear, endYear, yearFilterPresent );
+						Map<String, Object> map = dataFetcher.fetchTopicsForAuthors( author, startYear, endYear, yearFilterPresent );
 						List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 						List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
 
@@ -1884,27 +1867,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				{
 					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( idsList.get( i ) );
 					eventGroupTempList.add( eg );
-					List<Event> events = eg.getEvents();
-					for ( Event e : events )
-					{
-						List<Publication> pubs = new ArrayList<Publication>( e.getPublications() );
-						for ( Publication p : pubs )
-						{
-							Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
-							for ( PublicationTopic pubTopic : publicationTopics )
-							{
-								List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
-								List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
-								for ( int j = 0; j < topics.size(); j++ )
-								{
-									if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
-									{
-										allTopics.add( topics.get( j ) );
-									}
-								}
-							}
-						}
-					}
 				}
 
 				System.out.println( "in comparison: " + allTopics.size() );
@@ -1920,7 +1882,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					eventGroupTempList.add( eg );
 					List<Event> events = eg.getEvents();
 
-					Map<String, Object> map = dataFetcher.fetchTopicsForConferences( events, allTopics, startYear, endYear, yearFilterPresent );
+					Map<String, Object> map = dataFetcher.fetchTopicsForConferences( events, startYear, endYear, yearFilterPresent );
 					List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 					List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
 					List<String> listItems = (List<String>) map.get( "listItems" );
@@ -1995,7 +1957,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						eventGroupTempList.add( eg );
 						List<Event> events = eg.getEvents();
 
-						Map<String, Object> map = dataFetcher.fetchTopicsForConferences( events, allTopics, startYear, endYear, yearFilterPresent );
+						Map<String, Object> map = dataFetcher.fetchTopicsForConferences( events, startYear, endYear, yearFilterPresent );
 						List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 						List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
 
@@ -2200,23 +2162,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				{
 					Circle circle = persistenceStrategy.getCircleDAO().getById( id );
 					circleList.add( circle );
-					List<Publication> pubs = new ArrayList<Publication>( circle.getPublications() );
-					for ( Publication p : pubs )
-					{
-						Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
-						for ( PublicationTopic pubTopic : publicationTopics )
-						{
-							List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
-							List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
-							for ( int j = 0; j < topics.size(); j++ )
-							{
-								if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
-								{
-									allTopics.add( topics.get( j ) );
-								}
-							}
-						}
-					}
+
 				}
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
@@ -2225,7 +2171,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					index.add( i );
 
 					Circle circle = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
-					Map<String, Object> map = dataFetcher.fetchTopicsForCircles( circle, allTopics, startYear, endYear, yearFilterPresent );
+					Map<String, Object> map = dataFetcher.fetchTopicsForCircles( circle, startYear, endYear, yearFilterPresent );
 					List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 					List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
@@ -2296,7 +2242,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
 						Circle circle = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
-						Map<String, Object> map = dataFetcher.fetchTopicsForCircles( circle, allTopics, startYear, endYear, yearFilterPresent );
+						Map<String, Object> map = dataFetcher.fetchTopicsForCircles( circle, startYear, endYear, yearFilterPresent );
 						List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 						List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
 

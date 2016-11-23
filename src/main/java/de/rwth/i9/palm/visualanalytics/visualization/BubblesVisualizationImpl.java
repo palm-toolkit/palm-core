@@ -64,12 +64,20 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 			}
 			if ( type.equals( "researcher" ) )
 			{
-				// If there are no common publications!
-				if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
+
+				List<Interest> authorInterests = new ArrayList<Interest>();
+				List<Double> authorInterestWeights = new ArrayList<Double>();
+				List<List<Author>> interestAuthors = new ArrayList<List<Author>>();
+				List<Map<Interest, Double>> authorInterestList = new ArrayList<Map<Interest, Double>>();
+
+				for ( String id : idsList )
 				{
-					for ( String id : idsList )
+					Author a = persistenceStrategy.getAuthorDAO().getById( id );
+
+					// If there are no common publications!
+					if ( yearFilterPresent.equals( "false" ) )
 					{
-						Author a = persistenceStrategy.getAuthorDAO().getById( id );
+						allTopics = new ArrayList<String>();
 						List<Publication> pubs = new ArrayList<Publication>( a.getPublications() );
 						for ( Publication p : pubs )
 						{
@@ -88,14 +96,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							}
 						}
 					}
-				}
-				List<Interest> authorInterests = new ArrayList<Interest>();
-				List<Double> authorInterestWeights = new ArrayList<Double>();
-				List<List<Author>> interestAuthors = new ArrayList<List<Author>>();
-				List<Map<Interest, Double>> authorInterestList = new ArrayList<Map<Interest, Double>>();
-				for ( String id : idsList )
-				{
-					Author a = persistenceStrategy.getAuthorDAO().getById( id );
+
 					Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
 					Map<Interest, Double> interestWeightMap = new HashMap<Interest, Double>();
@@ -270,12 +271,19 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 			}
 			if ( type.equals( "conference" ) )
 			{
-				// If there are no common publications!
-				if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
+
+				List<Interest> conferenceInterests = new ArrayList<Interest>();
+				List<Double> conferenceInterestWeights = new ArrayList<Double>();
+				List<List<EventGroup>> interestConferences = new ArrayList<List<EventGroup>>();
+				List<Map<Interest, Double>> conferenceInterestList = new ArrayList<Map<Interest, Double>>();
+				for ( String id : idsList )
 				{
-					for ( String id : idsList )
+					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
+
+					// If there are no common publications!
+					if ( yearFilterPresent.equals( "false" ) )
 					{
-						EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
+						allTopics = new ArrayList<String>();
 						List<Event> events = eg.getEvents();
 						for ( Event e : events )
 						{
@@ -298,15 +306,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							}
 						}
 					}
-				}
 
-				List<Interest> conferenceInterests = new ArrayList<Interest>();
-				List<Double> conferenceInterestWeights = new ArrayList<Double>();
-				List<List<EventGroup>> interestConferences = new ArrayList<List<EventGroup>>();
-				List<Map<Interest, Double>> conferenceInterestList = new ArrayList<Map<Interest, Double>>();
-				for ( String id : idsList )
-				{
-					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
 					Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
 					Map<Interest, Double> interestWeightMap = new HashMap<Interest, Double>();
@@ -539,9 +539,8 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 								System.out.println( "term-- in bubbles : " + terms.get( i ).substring( 0, terms.get( i ).length() - 1 ) );
 							}
 
-
-							 if ( !interest.equals( "" ))
-							 {
+							if ( !interest.equals( "" ) )
+							{
 								Boolean validYear = true;
 								String year = p.getYear();
 								if ( startYear.equals( "0" ) || startYear.equals( "" ) )
@@ -562,12 +561,12 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 									if ( yWI.contains( year ) )
 									{
 										int index = yWI.indexOf( year );
-									if ( !yWIVal.get( index ).contains( interest ) )
+										if ( !yWIVal.get( index ).contains( interest ) )
 										{
-										yWIVal.get( index ).add( interest );
-										if ( !publicationTopics.contains( interest ) )
+											yWIVal.get( index ).add( interest );
+											if ( !publicationTopics.contains( interest ) )
 											{
-											publicationTopics.add( interest );
+												publicationTopics.add( interest );
 												publicationTopicWeights.add( weights.get( i ) );
 												List<Publication> lp = new ArrayList<Publication>();
 												lp.add( p );
@@ -575,7 +574,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 											}
 											else
 											{
-											int ind = publicationTopics.indexOf( interest );
+												int ind = publicationTopics.indexOf( interest );
 												publicationTopicWeights.set( ind, publicationTopicWeights.get( ind ) + weights.get( i ) );
 												List<Publication> lp = interestPublications.get( ind );
 												if ( !lp.contains( p ) )
@@ -584,18 +583,18 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 													interestPublications.set( ind, lp );
 												}
 											}
-										if ( topicWeightMap.containsKey( interest ) )
+											if ( topicWeightMap.containsKey( interest ) )
 											{
-											double w = topicWeightMap.get( interest );
-											topicWeightMap.remove( interest );
-											topicWeightMap.put( interest, w + weights.get( i ) );
+												double w = topicWeightMap.get( interest );
+												topicWeightMap.remove( interest );
+												topicWeightMap.put( interest, w + weights.get( i ) );
 											}
 											else
-											topicWeightMap.put( interest, weights.get( i ) );
+												topicWeightMap.put( interest, weights.get( i ) );
 										}
 										else
 										{
-										int ind = publicationTopics.indexOf( interest );
+											int ind = publicationTopics.indexOf( interest );
 											publicationTopicWeights.set( ind, publicationTopicWeights.get( ind ) + weights.get( i ) );
 											List<Publication> lp = interestPublications.get( ind );
 											if ( !lp.contains( p ) )
@@ -603,21 +602,21 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 												lp.add( p );
 												interestPublications.set( ind, lp );
 											}
-										if ( topicWeightMap.containsKey( interest ) )
+											if ( topicWeightMap.containsKey( interest ) )
 											{
-											Double w = topicWeightMap.get( interest );
-											topicWeightMap.remove( interest );
-											topicWeightMap.put( interest, w + weights.get( i ) );
+												Double w = topicWeightMap.get( interest );
+												topicWeightMap.remove( interest );
+												topicWeightMap.put( interest, w + weights.get( i ) );
 											}
 										}
 									}
 									else
 									{
 										List<String> newInterestList = new ArrayList<String>();
-									newInterestList.add( interest );
-									if ( !publicationTopics.contains( interest ) )
+										newInterestList.add( interest );
+										if ( !publicationTopics.contains( interest ) )
 										{
-										publicationTopics.add( interest );
+											publicationTopics.add( interest );
 											publicationTopicWeights.add( weights.get( i ) );
 											List<Publication> lp = new ArrayList<Publication>();
 											lp.add( p );
@@ -625,7 +624,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 										}
 										else
 										{
-										int ind = publicationTopics.indexOf( interest );
+											int ind = publicationTopics.indexOf( interest );
 											publicationTopicWeights.set( ind, publicationTopicWeights.get( ind ) + weights.get( i ) );
 											List<Publication> lp = interestPublications.get( ind );
 											if ( !lp.contains( p ) )
@@ -635,14 +634,14 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 											}
 										}
 										yearWiseInterests.put( year, newInterestList );
-									if ( topicWeightMap.containsKey( interest ) )
+										if ( topicWeightMap.containsKey( interest ) )
 										{
-										double w = topicWeightMap.get( interest );
-										topicWeightMap.remove( interest );
-										topicWeightMap.put( interest, w + weights.get( i ) );
+											double w = topicWeightMap.get( interest );
+											topicWeightMap.remove( interest );
+											topicWeightMap.put( interest, w + weights.get( i ) );
 										}
 										else
-										topicWeightMap.put( interest, weights.get( i ) );
+											topicWeightMap.put( interest, weights.get( i ) );
 									}
 								}
 							}
@@ -703,12 +702,19 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 			}
 			if ( type.equals( "circle" ) )
 			{
-				// If there are no common publications!
-				if ( allTopics.size() == 0 && yearFilterPresent.equals( "false" ) )
+
+				List<Interest> circleInterests = new ArrayList<Interest>();
+				List<Double> circleInterestWeights = new ArrayList<Double>();
+				List<List<Circle>> interestCircles = new ArrayList<List<Circle>>();
+				List<Map<Interest, Double>> circleInterestList = new ArrayList<Map<Interest, Double>>();
+				for ( String id : idsList )
 				{
-					for ( String id : idsList )
+					Circle c = persistenceStrategy.getCircleDAO().getById( id );
+
+					// If there are no common publications!
+					if ( yearFilterPresent.equals( "false" ) )
 					{
-						Circle c = persistenceStrategy.getCircleDAO().getById( id );
+						allTopics = new ArrayList<String>();
 						List<Publication> pubs = new ArrayList<Publication>( c.getPublications() );
 						for ( Publication p : pubs )
 						{
@@ -727,14 +733,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							}
 						}
 					}
-				}
-				List<Interest> circleInterests = new ArrayList<Interest>();
-				List<Double> circleInterestWeights = new ArrayList<Double>();
-				List<List<Circle>> interestCircles = new ArrayList<List<Circle>>();
-				List<Map<Interest, Double>> circleInterestList = new ArrayList<Map<Interest, Double>>();
-				for ( String id : idsList )
-				{
-					Circle c = persistenceStrategy.getCircleDAO().getById( id );
+
 					Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
 
 					Map<Interest, Double> interestWeightMap = new HashMap<Interest, Double>();

@@ -628,8 +628,27 @@ public class VADataFetcher
 	}
 
 	// Object : Researcher, Visualization Type : Topics
-	public Map<String, Object> fetchTopicsForAuthors( Author author, List<String> allTopics, String startYear, String endYear, String yearFilterPresent )
+	public Map<String, Object> fetchTopicsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
 	{
+		System.out.println( startYear + " " + endYear );
+		List<String> allTopics = new ArrayList<String>();
+		List<Publication> pubs = new ArrayList<Publication>( author.getPublications() );
+		for ( Publication p : pubs )
+		{
+			Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+			for ( PublicationTopic pubTopic : publicationTopics )
+			{
+				List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+				List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+				for ( int j = 0; j < topics.size(); j++ )
+				{
+					if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
+					{
+						allTopics.add( topics.get( j ) );
+					}
+				}
+			}
+		}
 		System.out.println( "COMP: " + author.getName() + " : " + allTopics.size() );
 
 		List<String> interestTopicNames = new ArrayList<String>();
@@ -667,6 +686,7 @@ public class VADataFetcher
 							{
 								if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
 								{
+									System.out.println( year );
 									validYear = false;
 								}
 							}
@@ -758,8 +778,30 @@ public class VADataFetcher
 	}
 
 	// Object : Conference, Visualization Type : Topics
-	public Map<String, Object> fetchTopicsForConferences( List<Event> events, List<String> allTopics, String startYear, String endYear, String yearFilterPresent )
+	public Map<String, Object> fetchTopicsForConferences( List<Event> events, String startYear, String endYear, String yearFilterPresent )
 	{
+		List<String> allTopics = new ArrayList<String>();
+		for ( Event e : events )
+		{
+			List<Publication> pubs = new ArrayList<Publication>( e.getPublications() );
+			for ( Publication p : pubs )
+			{
+				Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+				for ( PublicationTopic pubTopic : publicationTopics )
+				{
+					List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+					List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+					for ( int j = 0; j < topics.size(); j++ )
+					{
+						if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
+						{
+							allTopics.add( topics.get( j ) );
+						}
+					}
+				}
+			}
+		}
+
 		List<String> interestTopicNames = new ArrayList<String>();
 		List<String> interestTopicIds = new ArrayList<String>();
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
@@ -1202,8 +1244,26 @@ public class VADataFetcher
 	}
 
 	// Object : Circle, Visualization Type : Topics
-	public Map<String, Object> fetchTopicsForCircles( Circle circle, List<String> allTopics, String startYear, String endYear, String yearFilterPresent )
+	public Map<String, Object> fetchTopicsForCircles( Circle circle, String startYear, String endYear, String yearFilterPresent )
 	{
+		List<String> allTopics = new ArrayList<String>();
+		List<Publication> pubs = new ArrayList<Publication>( circle.getPublications() );
+		for ( Publication p : pubs )
+		{
+			Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
+			for ( PublicationTopic pubTopic : publicationTopics )
+			{
+				List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
+				List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
+				for ( int j = 0; j < topics.size(); j++ )
+				{
+					if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
+					{
+						allTopics.add( topics.get( j ) );
+					}
+				}
+			}
+		}
 		List<String> interestTopicNames = new ArrayList<String>();
 		List<String> interestTopicIds = new ArrayList<String>();
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();

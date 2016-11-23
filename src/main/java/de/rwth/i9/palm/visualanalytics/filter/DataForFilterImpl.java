@@ -151,11 +151,11 @@ public class DataForFilterImpl implements DataForFilter
 				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 				List<String> allAuthorInterests = new ArrayList<String>();
 				List<Integer> count = new ArrayList<Integer>();
-				List<String> allTopics = new ArrayList<String>();
 
-				// find topics from all the researchers' publications
 				for ( String id : idsList )
 				{
+					List<String> allTopics = new ArrayList<String>();
+
 					Author a = persistenceStrategy.getAuthorDAO().getById( id );
 					List<Publication> pubs = new ArrayList<Publication>( a.getPublications() );
 					for ( Publication p : pubs )
@@ -174,13 +174,6 @@ public class DataForFilterImpl implements DataForFilter
 							}
 						}
 					}
-				}
-
-				// check for the interests that are also present in the topics
-				// from publications
-				for ( String id : idsList )
-				{
-					Author a = persistenceStrategy.getAuthorDAO().getById( id );
 
 					List<String> interestTopicNames = new ArrayList<String>();
 					List<String> interestTopicIds = new ArrayList<String>();
@@ -253,11 +246,12 @@ public class DataForFilterImpl implements DataForFilter
 				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 				List<String> allConferenceInterests = new ArrayList<String>();
 				List<Integer> count = new ArrayList<Integer>();
-				List<String> allTopics = new ArrayList<String>();
 
 				// find topics from all the conferences
 				for ( String id : idsList )
 				{
+					List<String> allTopics = new ArrayList<String>();
+
 					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
 					List<Event> events = eg.getEvents();
 					for ( Event e : events )
@@ -280,14 +274,7 @@ public class DataForFilterImpl implements DataForFilter
 							}
 						}
 					}
-				}
 
-				// find the conference interests which are also present in the
-				// topics
-				for ( String id : idsList )
-				{
-					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
-					List<Event> events = eg.getEvents();
 					List<String> interestTopicNames = new ArrayList<String>();
 					List<String> interestTopicIds = new ArrayList<String>();
 
@@ -412,7 +399,6 @@ public class DataForFilterImpl implements DataForFilter
 			if ( type.equals( "circle" ) )
 			{
 				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
-				List<String> allTopics = new ArrayList<String>();
 				List<String> allCircleInterests = new ArrayList<String>();
 				// List<String> allCircleInterestIds = new ArrayList<String>();
 				List<Integer> count = new ArrayList<Integer>();
@@ -420,6 +406,8 @@ public class DataForFilterImpl implements DataForFilter
 				// find all the topics from the circles
 				for ( String id : idsList )
 				{
+					List<String> allTopics = new ArrayList<String>();
+
 					Circle circle = persistenceStrategy.getCircleDAO().getById( id );
 
 					List<Publication> pubs = new ArrayList<Publication>( circle.getPublications() );
@@ -439,12 +427,6 @@ public class DataForFilterImpl implements DataForFilter
 							}
 						}
 					}
-				}
-
-				// find the interests which are also present in the interests
-				for ( String id : idsList )
-				{
-					Circle circle = persistenceStrategy.getCircleDAO().getById( id );
 
 					List<String> interestTopicNames = new ArrayList<String>();
 					List<String> interestTopicIds = new ArrayList<String>();
