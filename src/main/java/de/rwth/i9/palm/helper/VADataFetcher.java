@@ -628,26 +628,8 @@ public class VADataFetcher
 	}
 
 	// Object : Researcher, Visualization Type : Topics
-	public Map<String, Object> fetchTopicsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
+	public Map<String, Object> fetchTopicsForAuthors( Author author, List<String> allTopics, String startYear, String endYear, String yearFilterPresent )
 	{
-		List<String> allTopics = new ArrayList<String>();
-		List<Publication> pubs = new ArrayList<Publication>( author.getPublications() );
-		for ( Publication p : pubs )
-		{
-			Set<PublicationTopic> publicationTopics = p.getPublicationTopics();
-			for ( PublicationTopic pubTopic : publicationTopics )
-			{
-				List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
-				List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
-				for ( int j = 0; j < topics.size(); j++ )
-				{
-					if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
-					{
-						allTopics.add( topics.get( j ) );
-					}
-				}
-			}
-		}
 		System.out.println( "COMP: " + author.getName() + " : " + allTopics.size() );
 
 		List<String> interestTopicNames = new ArrayList<String>();
@@ -837,7 +819,7 @@ public class VADataFetcher
 				}
 			}
 		}
-
+		System.out.println( "in comparison: " + interestTopicIds.size() );
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestTopicIds", interestTopicIds );
 		map.put( "interestTopicNames", interestTopicNames );

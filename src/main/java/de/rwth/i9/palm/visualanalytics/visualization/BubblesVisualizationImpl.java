@@ -329,8 +329,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 									Interest actualInterest = interestTerm.next();
 									String interest = ( actualInterest.getTerm() );
 									Double weight = interestTermWeight.next();
-									if ( interest.equals( "blended learning" ) )
-										System.out.println( "\n " + interest + " " + weight + " " + eg.getName() );
 
 									if ( weight > 0.3 )
 									{
@@ -494,32 +492,29 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 
 			if ( type.equals( "publication" ) )
 			{
-				for ( Publication pub : publications )
+				List<Interest> allInterestsInDB = persistenceStrategy.getInterestDAO().allTerms();
+
+				List<String> allPublicationInterests = new ArrayList<String>();
+				// List<String> allPublicationInterestIds = new
+				// ArrayList<String>();
+				for ( Interest interest : allInterestsInDB )
 				{
-					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
-					for ( PublicationTopic pubTopic : publicationTopics )
+					if ( !allPublicationInterests.contains( interest.getTerm() ) )
 					{
-						// List<Double> topicWeights = new ArrayList<Double>(
-						// pubTopic.getTermValues().values() );
-						List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
-						for ( int i = 0; i < topics.size(); i++ )
-						{
-							if ( !allTopics.contains( topics.get( i ) ) )
-							{
-								allTopics.add( topics.get( i ) );
-							}
-						}
+						allPublicationInterests.add( interest.getTerm() );
+						// allPublicationInterestIds.add( interest.getId() );
 					}
 				}
+
+				System.out.println( "size in bubbles: " + allPublicationInterests.size() );
 
 				List<String> publicationTopics = new ArrayList<String>();
 				List<Double> publicationTopicWeights = new ArrayList<Double>();
 				List<List<Publication>> interestPublications = new ArrayList<List<Publication>>();
 				List<Map<String, Double>> publicationTopicList = new ArrayList<Map<String, Double>>();
-				for ( String id : idsList )
+				for ( Publication p : publications )
 				{
 					Map<String, List<String>> yearWiseInterests = new HashMap<String, List<String>>();
-					Publication p = persistenceStrategy.getPublicationDAO().getById( id );
 					Map<String, Double> topicWeightMap = new HashMap<String, Double>();
 
 					List<PublicationTopic> pubTopics = new ArrayList<PublicationTopic>( p.getPublicationTopics() );
@@ -530,8 +525,23 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 						List<Double> weights = new ArrayList<Double>( termValues.values() );
 						for ( int i = 0; i < terms.size(); i++ )
 						{
-							if ( allTopics.contains( terms.get( i ) ) || allTopics.contains( terms.get( i ) + "s" ) )
+							String interest = "";
+							if ( allPublicationInterests.contains( terms.get( i ) ) )
 							{
+								int index = allPublicationInterests.indexOf( terms.get( i ) );
+								interest = allPublicationInterests.get( index );
+								System.out.println( "term in bubbles : " + terms.get( i ) );
+							}
+							else if ( allPublicationInterests.contains( terms.get( i ).substring( 0, terms.get( i ).length() - 1 ) ) )
+							{
+								int index = allPublicationInterests.indexOf( terms.get( i ).substring( 0, terms.get( i ).length() - 1 ) );
+								interest = allPublicationInterests.get( index );
+								System.out.println( "term-- in bubbles : " + terms.get( i ).substring( 0, terms.get( i ).length() - 1 ) );
+							}
+
+
+							 if ( !interest.equals( "" ))
+							 {
 								Boolean validYear = true;
 								String year = p.getYear();
 								if ( startYear.equals( "0" ) || startYear.equals( "" ) )
@@ -552,12 +562,12 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 									if ( yWI.contains( year ) )
 									{
 										int index = yWI.indexOf( year );
-										if ( !yWIVal.get( index ).contains( terms.get( i ) ) )
+									if ( !yWIVal.get( index ).contains( interest ) )
 										{
-											yWIVal.get( index ).add( terms.get( i ) );
-											if ( !publicationTopics.contains( terms.get( i ) ) )
+										yWIVal.get( index ).add( interest );
+										if ( !publicationTopics.contains( interest ) )
 											{
-												publicationTopics.add( terms.get( i ) );
+											publicationTopics.add( interest );
 												publicationTopicWeights.add( weights.get( i ) );
 												List<Publication> lp = new ArrayList<Publication>();
 												lp.add( p );
@@ -565,7 +575,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 											}
 											else
 											{
-												int ind = publicationTopics.indexOf( terms.get( i ) );
+											int ind = publicationTopics.indexOf( interest );
 												publicationTopicWeights.set( ind, publicationTopicWeights.get( ind ) + weights.get( i ) );
 												List<Publication> lp = interestPublications.get( ind );
 												if ( !lp.contains( p ) )
@@ -574,18 +584,18 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 													interestPublications.set( ind, lp );
 												}
 											}
-											if ( topicWeightMap.containsKey( terms.get( i ) ) )
+										if ( topicWeightMap.containsKey( interest ) )
 											{
-												double w = topicWeightMap.get( terms.get( i ) );
-												topicWeightMap.remove( terms.get( i ) );
-												topicWeightMap.put( terms.get( i ), w + weights.get( i ) );
+											double w = topicWeightMap.get( interest );
+											topicWeightMap.remove( interest );
+											topicWeightMap.put( interest, w + weights.get( i ) );
 											}
 											else
-												topicWeightMap.put( terms.get( i ), weights.get( i ) );
+											topicWeightMap.put( interest, weights.get( i ) );
 										}
 										else
 										{
-											int ind = publicationTopics.indexOf( terms.get( i ) );
+										int ind = publicationTopics.indexOf( interest );
 											publicationTopicWeights.set( ind, publicationTopicWeights.get( ind ) + weights.get( i ) );
 											List<Publication> lp = interestPublications.get( ind );
 											if ( !lp.contains( p ) )
@@ -593,21 +603,21 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 												lp.add( p );
 												interestPublications.set( ind, lp );
 											}
-											if ( topicWeightMap.containsKey( terms.get( i ) ) )
+										if ( topicWeightMap.containsKey( interest ) )
 											{
-												Double w = topicWeightMap.get( terms.get( i ) );
-												topicWeightMap.remove( terms.get( i ) );
-												topicWeightMap.put( terms.get( i ), w + weights.get( i ) );
+											Double w = topicWeightMap.get( interest );
+											topicWeightMap.remove( interest );
+											topicWeightMap.put( interest, w + weights.get( i ) );
 											}
 										}
 									}
 									else
 									{
 										List<String> newInterestList = new ArrayList<String>();
-										newInterestList.add( terms.get( i ) );
-										if ( !publicationTopics.contains( terms.get( i ) ) )
+									newInterestList.add( interest );
+									if ( !publicationTopics.contains( interest ) )
 										{
-											publicationTopics.add( terms.get( i ) );
+										publicationTopics.add( interest );
 											publicationTopicWeights.add( weights.get( i ) );
 											List<Publication> lp = new ArrayList<Publication>();
 											lp.add( p );
@@ -615,7 +625,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 										}
 										else
 										{
-											int ind = publicationTopics.indexOf( terms.get( i ) );
+										int ind = publicationTopics.indexOf( interest );
 											publicationTopicWeights.set( ind, publicationTopicWeights.get( ind ) + weights.get( i ) );
 											List<Publication> lp = interestPublications.get( ind );
 											if ( !lp.contains( p ) )
@@ -625,14 +635,14 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 											}
 										}
 										yearWiseInterests.put( year, newInterestList );
-										if ( topicWeightMap.containsKey( terms.get( i ) ) )
+									if ( topicWeightMap.containsKey( interest ) )
 										{
-											double w = topicWeightMap.get( terms.get( i ) );
-											topicWeightMap.remove( terms.get( i ) );
-											topicWeightMap.put( terms.get( i ), w + weights.get( i ) );
+										double w = topicWeightMap.get( interest );
+										topicWeightMap.remove( interest );
+										topicWeightMap.put( interest, w + weights.get( i ) );
 										}
 										else
-											topicWeightMap.put( terms.get( i ), weights.get( i ) );
+										topicWeightMap.put( interest, weights.get( i ) );
 									}
 								}
 							}
