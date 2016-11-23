@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.visualanalytics.visualization;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -38,7 +39,7 @@ public class TimelineVisualizationImpl implements TimelineVisualization
 				pubDetails.put( "title", pub.getTitle() );
 				pubDetails.put( "year", pub.getYear() );
 				pubDetails.put( "type", pub.getPublicationType() );
-				pubDetails.put( "date", pub.getPublicationDate() );
+				pubDetails.put( "date", new SimpleDateFormat( "dd/MM/yyyy" ).format( pub.getPublicationDate() ) );
 				pubDetailsList.add( pubDetails );
 			}
 
