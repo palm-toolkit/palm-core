@@ -55,11 +55,11 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 
 		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();
 
-		if ( !circles.isEmpty() )
+		/*if ( !circles.isEmpty() )
 			for ( Circle circle : circles )
 
 		{
-				PrintWriter writer = new PrintWriter( "C:/Users/Piro/Desktop/Circles/Circles/" + circle.getId() + ".txt", "UTF-8" );
+				PrintWriter writer = new PrintWriter( "F:/palm/palm-core/data" + circle.getId() + ".txt", "UTF-8" );
 				writer.println( "Circle Name : " + circle.getName() );
 				for ( Publication publication : circle.getPublications() )
 			{
@@ -75,6 +75,6 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 				writer.println( count );
 				count = 0;
 				writer.close();
-		}
+		}*/
 	}
 }

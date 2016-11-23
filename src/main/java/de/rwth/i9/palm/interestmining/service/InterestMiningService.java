@@ -676,7 +676,7 @@ public class InterestMiningService
 					calendar.setTime( authorInterest.getYear() );
 					String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 
-					while ( !years.get( indexYear ).equals( year ) )
+					while ( years.size() < indexYear && !years.get( indexYear ).equals( year ) )
 					{
 
 						// empty result

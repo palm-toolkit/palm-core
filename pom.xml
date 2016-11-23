@@ -532,6 +532,11 @@
 			<artifactId>gephi-toolkit</artifactId>
 			<version>0.9.1</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.codeartisans.thirdparties.swing</groupId>
+		    <artifactId>org-openide-util</artifactId>
+		    <version>8.6.2</version>
+		</dependency>
 	
   </dependencies>
 

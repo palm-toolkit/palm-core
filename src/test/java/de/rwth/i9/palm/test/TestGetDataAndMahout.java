@@ -46,7 +46,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	private PalmAnalytics palmAnalytics;
 
 	private final static Logger log = LoggerFactory.getLogger( TestGetDataAndMahout.class );
-
+/*
 	@Test
 	@Ignore
 	public void getResearcherPublication()
@@ -161,7 +161,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 				}
 			}
 			}
-
+*/
 	
 	@Test
 	@Ignore

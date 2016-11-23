@@ -31,7 +31,7 @@ public class ResearcherTopicEvolutionImplTest implements ResearcherTopicEvolutio
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
-		HashMap<String, List<String>> topicevolution = new LinkedHashMap<String, List<String>>();
+		/*HashMap<String, List<String>> topicevolution = new LinkedHashMap<String, List<String>>();
 
 		// getEvolutionofTopicOverTime( 0, 5, false );
 		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "Year-Test", author.getId().toString(), 5, 5, 5, true, false, false );
@@ -69,7 +69,7 @@ public class ResearcherTopicEvolutionImplTest implements ResearcherTopicEvolutio
 		}
 
 		// put similarAuthor to responseMap
-		responseMap.put( "termvalues", idk );
+		responseMap.put( "termvalues", idk );*/
 
 		return responseMap;
 	}
