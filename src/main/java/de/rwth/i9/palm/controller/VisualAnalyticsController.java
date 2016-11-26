@@ -197,6 +197,25 @@ public class VisualAnalyticsController
 			helpWidget.setPosition( 999 );
 			persistenceStrategy.getWidgetDAO().persist( helpWidget );
 
+			// create Search Widget in Explore
+			Widget historyWidget = new Widget();
+			historyWidget.setTitle( "History" );
+			historyWidget.setUniqueName( "explore_history" );
+			historyWidget.setWidgetType( WidgetType.EXPLORE );
+			historyWidget.setWidgetGroup( "content" );
+			historyWidget.setWidgetSource( WidgetSource.INCLUDE );
+			historyWidget.setSourcePath( "../../explore/widget/history.ftl" );
+			historyWidget.setWidgetWidth( WidgetWidth.SMALL );
+			historyWidget.setColor( Color.GRAY );
+			historyWidget.setInformation( "Visual Analytics widget for history" );
+			historyWidget.setCloseEnabled( true );
+			historyWidget.setMinimizeEnabled( true );
+			historyWidget.setMoveableEnabled( true );
+			historyWidget.setHeaderVisible( true );
+			historyWidget.setWidgetStatus( WidgetStatus.DEFAULT );
+			historyWidget.setPosition( 999 );
+			persistenceStrategy.getWidgetDAO().persist( historyWidget );
+
 		}
 
 		List<User> existingUsers = persistenceStrategy.getUserDAO().allUsers();
