@@ -651,7 +651,7 @@ public class GraphFeatureImpl implements GraphFeature
 			{
 				synchronized (network)
 				{
-					network.generateNetwork( type, selectedAuthors, authorPublications, idsList, authorForCoAuthors, selectedAuthors );
+					network.generateNetwork( type, authorList, authorPublications, idsList, authorForCoAuthors, selectedAuthors );
 				}
 			}
 		};

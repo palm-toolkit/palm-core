@@ -504,26 +504,75 @@ public class DataForFilterImpl implements DataForFilter
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
-
 			int startYear = 0;
 			int endYear = 0;
 
-			for ( int i = 0; i < publications.size(); i++ )
+			if ( type.equals( "conference" ) && idsList.size() > 1 )
 			{
-				if ( publications.get( i ).getYear() != null )
+				List<Integer> startYearsOfConferences = new ArrayList<Integer>();
+				List<Integer> endYearsOfConferences = new ArrayList<Integer>();
+				for ( String id : idsList )
 				{
-					int year = Integer.parseInt( publications.get( i ).getYear() );
 
-					if ( startYear == 0 && endYear == 0 )
+					startYear = 0;
+					endYear = 0;
+					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
+
+					List<Event> groupEvents = eg.getEvents();
+					for ( Event e : groupEvents )
 					{
-						startYear = year;
-						endYear = year;
+						List<Publication> eventGroupPublications = e.getPublications();
+						for ( Publication p : eventGroupPublications )
+						{
+							if ( p.getYear() != null )
+							{
+								int year = Integer.parseInt( p.getYear() );
+
+								if ( startYear == 0 && endYear == 0 )
+								{
+									startYear = year;
+									endYear = year;
+								}
+
+								if ( year > endYear )
+									endYear = year;
+								if ( year < startYear )
+									startYear = year;
+							}
+						}
 					}
-					if ( year > endYear )
-						endYear = year;
-					if ( year < startYear )
-						startYear = year;
+					startYearsOfConferences.add( startYear );
+					endYearsOfConferences.add( endYear );
+				}
+
+				for ( int i = 0; i < idsList.size(); i++ )
+				{
+					if ( startYearsOfConferences.get( i ) > startYear )
+						startYear = startYearsOfConferences.get( i );
+					if ( endYearsOfConferences.get( i ) < endYear )
+						endYear = endYearsOfConferences.get( i );
+				}
+			}
+			else
+			{
+				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
+
+				for ( int i = 0; i < publications.size(); i++ )
+				{
+					if ( publications.get( i ).getYear() != null )
+					{
+						int year = Integer.parseInt( publications.get( i ).getYear() );
+
+						if ( startYear == 0 && endYear == 0 )
+						{
+							startYear = year;
+							endYear = year;
+						}
+						if ( year > endYear )
+							endYear = year;
+						if ( year < startYear )
+							startYear = year;
+					}
 				}
 			}
 			timeMap.put( "startYear", startYear );

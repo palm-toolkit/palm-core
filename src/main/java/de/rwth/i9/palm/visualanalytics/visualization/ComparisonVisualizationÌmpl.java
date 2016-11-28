@@ -22,7 +22,6 @@ import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
-import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.visualanalytics.service.FilterFeature;
 
@@ -31,9 +30,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 {
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
-	//
-	// @Autowired
-	// private PalmAnalytics palmAnalytics;
 
 	@Autowired
 	private FilterFeature filterFeature;
@@ -55,16 +51,11 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 			if ( type.equals( "researcher" ) )
 			{
 				Map<Author, List<Author>> mapAuthors = new HashMap<Author, List<Author>>();
-
 				List<Author> authorList = new ArrayList<Author>();
 				for ( String id : idsList )
-				{
 					authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
-				}
-
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 					Author author = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
@@ -72,15 +63,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					List<Author> allCoAuthors = (List<Author>) map.get( "allCoAuthors" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 					mapAuthors.put( author, allCoAuthors );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", author.getName() );
-					mapValues.put( "size", allCoAuthors.size() );
-					mapValues.put( "altLabel", author.getName() );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
-
+					listOfMaps.add( getSingleMapValues( index, author.getName(), allCoAuthors.size(), author.getName(), listItems ) );
 					if ( mapAuthors.size() > 1 )
 					{
 						// publications of authors added before current author
@@ -90,14 +73,11 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<List<Author>> previousAuthorLists = new ArrayList<List<Author>>( mapAuthors.values() );
 							List<Author> previousAuthorCoAuthors = previousAuthorLists.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
-
 							Author previousAuthor = previousAuthors.get( k );
 
 							if ( !previousAuthor.equals( author ) )
 							{
 								List<Author> temp = new ArrayList<Author>();
-
 								// find common authors
 								for ( Author a : previousAuthorCoAuthors )
 								{
@@ -111,17 +91,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( authorList.indexOf( previousAuthor ) );
+								String label = "";
 								label = label + author.getFirstName() + "-" + previousAuthor.getFirstName();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", temp.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, authorList.indexOf( previousAuthor ), label, temp.size(), tempListItems ) );
 							}
 						}
 					}
@@ -167,26 +139,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						}
 					}
 
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < authorList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < authorList.size(); i++ )
-					{
 						label = label + authorList.get( i ).getFirstName();
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( authorList.size(), count.size(), combinedListItems, label ) );
 				}
 			}
 			if ( type.equals( "conference" ) )
@@ -196,7 +152,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
@@ -207,15 +162,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					List<Author> publicationAuthors = (List<Author>) map.get( "publicationAuthors" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 					mapAuthors.put( eg, publicationAuthors );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", eg.getName() );
-					mapValues.put( "size", publicationAuthors.size() );
-					mapValues.put( "altLabel", idsList.get( i ) );
-					mapValues.put( "list", listItems );
-
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, eg.getName(), publicationAuthors.size(), idsList.get( i ), listItems ) );
 
 					if ( mapAuthors.size() > 1 )
 					{
@@ -227,8 +174,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<Author> previousAuthorCoAuthors = previousAuthorLists.get( k );
 							EventGroup previousEventGroup = previousEventGroups.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-
-							String label = "";
 
 							if ( !previousEventGroup.equals( eg ) )
 							{
@@ -247,23 +192,12 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-
+								String label = "";
 								label = label + idsList.get( i ) + "-" + previousEventGroup.getNotation();
-								sets.add( eventGroupTempList.indexOf( previousEventGroup ) ); // to-do
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, eventGroupTempList.indexOf( previousEventGroup ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
-
 					}
-
 				}
 
 				// common to all
@@ -308,27 +242,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + idsList.get( i );
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
 			}
 			if ( type.equals( "publication" ) )
@@ -338,7 +255,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
@@ -347,17 +263,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					Map<String, Object> map = dataFetcher.fetchResearchersForPublications( p, startYear, endYear, yearFilterPresent );
 					List<Author> publicationAuthors = (List<Author>) map.get( "publicationAuthors" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
-
 					mapAuthors.put( p, publicationAuthors );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", p.getTitle() );
-					mapValues.put( "size", publicationAuthors.size() );
-					mapValues.put( "altLabel", idsList.get( i ) );
-					mapValues.put( "list", listItems );
-
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, p.getTitle(), publicationAuthors.size(), idsList.get( i ), listItems ) );
 
 					if ( mapAuthors.size() > 1 )
 					{
@@ -370,8 +277,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<Author> previousAuthorCoAuthors = previousAuthorLists.get( k );
 							Publication previousPublication = previousPublications.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-
-							String label = "";
 
 							// for ( Author co : previousAuthorCoAuthors )
 							if ( !previousPublication.equals( p ) )
@@ -391,18 +296,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-
+								String label = "";
 								label = label + idsList.get( i ) + "-" + previousPublication.getTitle();
-								sets.add( publicationTempList.indexOf( previousPublication ) ); // to-do
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, publicationTempList.indexOf( previousPublication ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
 					}
@@ -449,27 +345,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + idsList.get( i );
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
 			}
 			if ( type.equals( "topic" ) )
@@ -505,24 +384,14 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
 					interestTempList.add( interest );
 
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
 					Map<String, Object> map = dataFetcher.fetchResearchersForTopics( interest, DMAuthors, publicationAuthors, yearFilterPresent );
 					List<Author> interestAuthors = (List<Author>) map.get( "interestAuthors" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
-
 					mapAuthors.put( interest, interestAuthors );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", interest.getTerm() );
-					mapValues.put( "size", interestAuthors.size() );
-					mapValues.put( "altLabel", idsList.get( i ) );
-					mapValues.put( "list", listItems );
-
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, interest.getTerm(), interestAuthors.size(), idsList.get( i ), listItems ) );
 
 					if ( mapAuthors.size() > 1 )
 					{
@@ -535,7 +404,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							Interest previousInterest = previousInterests.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
 
-							String label = "";
 
 							if ( !previousInterest.equals( interest ) )
 							{
@@ -554,23 +422,12 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-
+								String label = "";
 								label = label + idsList.get( i ) + "-" + previousInterest.getTerm();
-								sets.add( interestTempList.indexOf( previousInterest ) ); // to-do
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, interestTempList.indexOf( previousInterest ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
-
 					}
-
 				}
 
 				// common to all
@@ -612,27 +469,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + idsList.get( i );
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
 
 			}
@@ -643,13 +483,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 				List<Circle> circleList = new ArrayList<Circle>();
 				for ( String id : idsList )
-				{
 					circleList.add( persistenceStrategy.getCircleDAO().getById( id ) );
-				}
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
@@ -657,16 +494,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					Map<String, Object> map = dataFetcher.fetchResearchersForCircles( circle, startYear, endYear, yearFilterPresent );
 					List<Author> publicationAuthors = (List<Author>) map.get( "publicationAuthors" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
-
 					mapAuthors.put( circle, publicationAuthors );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", circle.getName() );
-					mapValues.put( "size", publicationAuthors.size() );
-					mapValues.put( "altLabel", circle.getName() );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, circle.getName(), publicationAuthors.size(), circle.getName(), listItems ) );
 
 					if ( mapAuthors.size() > 1 )
 					{
@@ -677,8 +506,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<List<Author>> previousAuthorLists = new ArrayList<List<Author>>( mapAuthors.values() );
 							List<Author> previousAuthorCoAuthors = previousAuthorLists.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
-
 							Circle previousCircle = previousCircles.get( k );
 
 							if ( !previousCircle.equals( circle ) )
@@ -698,17 +525,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( circleList.indexOf( previousCircle ) );
+								String label = "";
 								label = label + circle.getName() + "-" + previousCircle.getName();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", temp.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, circleList.indexOf( previousCircle ), label, temp.size(), tempListItems ) );
 							}
 						}
 					}
@@ -753,31 +572,12 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + circleList.get( i ).getName();
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
-
 			}
-
 			visMap.put( "comparisonList", listOfMaps );
 		}
 		return visMap;
@@ -799,13 +599,11 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 				List<Author> authorList = new ArrayList<Author>();
 				for ( String id : idsList )
-				{
 					authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
-				}
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
+
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
@@ -814,14 +612,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					List<EventGroup> authorEventGroups = (List<EventGroup>) map.get( "authorEventGroups" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 					mapConferences.put( author, authorEventGroups );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", author.getName() );
-					mapValues.put( "size", authorEventGroups.size() );
-					mapValues.put( "altLabel", author.getName() );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, author.getName(), authorEventGroups.size(), author.getName(), listItems ) );
 
 					if ( mapConferences.size() > 1 )
 					{
@@ -833,7 +624,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<EventGroup> previousAuthorEventGroups = previousAuthorLists.get( k );
 							Author previousAuthor = previousAuthors.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
+
 							if ( !previousAuthor.equals( author ) )
 							{
 								List<EventGroup> temp = new ArrayList<EventGroup>();
@@ -853,17 +644,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( authorList.indexOf( previousAuthor ) );
+								String label = "";
 								label = label + author.getFirstName() + "-" + previousAuthor.getFirstName();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, authorList.indexOf( previousAuthor ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
 					}
@@ -910,28 +693,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						Author author = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
-						label = label + author.getFirstName();
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					for ( int i = 0; i < authorList.size(); i++ )
+						label = label + authorList.get( i ).getFirstName();
+					listOfMaps.add( getCombinedMapValues( authorList.size(), count.size(), combinedListItems, label ) );
 				}
 			}
 			if ( type.equals( "topic" ) )
@@ -939,13 +704,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 				Map<Interest, List<EventGroup>> mapEventGroups = new HashMap<Interest, List<EventGroup>>();
 
-				// List<DataMiningPublication> allDMPublications =
-				// persistenceStrategy.getPublicationDAO().getDataMiningObjects();
-
 				List<DataMiningEventGroup> DMEventGroups = persistenceStrategy.getEventGroupDAO().getDataMiningObjects();
-
 				List<Interest> interestTempList = new ArrayList<Interest>();
-
 				List<Publication> selectedPublications = new ArrayList<Publication>();
 				List<EventGroup> publicationEventGroups = new ArrayList<EventGroup>();
 				if ( yearFilterPresent.equals( "true" ) )
@@ -977,24 +737,14 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
 					interestTempList.add( interest );
 
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
 					Map<String, Object> map = dataFetcher.fetchConferencesForTopics( interest, DMEventGroups, publicationEventGroups, yearFilterPresent );
 					List<EventGroup> interestEventGroups = (List<EventGroup>) map.get( "interestEventGroups" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
-
 					mapEventGroups.put( interest, interestEventGroups );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", interest.getTerm() );
-					mapValues.put( "size", interestEventGroups.size() );
-					mapValues.put( "altLabel", idsList.get( i ) );
-					mapValues.put( "list", listItems );
-
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, interest.getTerm(), interestEventGroups.size(), idsList.get( i ), listItems ) );
 
 					if ( mapEventGroups.size() > 1 )
 					{
@@ -1006,8 +756,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<EventGroup> previousInterestEventGroups = previousEventGroupLists.get( k );
 							Interest previousInterest = previousInterests.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-
-							String label = "";
 
 							if ( !previousInterest.equals( interest ) )
 							{
@@ -1026,23 +774,12 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-
+								String label = "";
 								label = label + idsList.get( i ) + "-" + previousInterest.getTerm();
-								sets.add( interestTempList.indexOf( previousInterest ) ); // to-do
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, interestTempList.indexOf( previousInterest ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
-
 					}
-
 				}
 
 				// common to all
@@ -1074,7 +811,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							else
 								count.set( allEventGroups.indexOf( interestEventGroups.get( k ) ), count.get( allEventGroups.indexOf( interestEventGroups.get( k ) ) ) + 1 );
 						}
-
 					}
 
 					for ( int i = 0; i < allEventGroups.size(); i++ )
@@ -1087,44 +823,22 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + idsList.get( i );
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
 
 			}
 			if ( type.equals( "circle" ) )
 			{
-
 				Map<Circle, List<EventGroup>> mapEventGroups = new HashMap<Circle, List<EventGroup>>();
-
 				List<Circle> circleList = new ArrayList<Circle>();
 				for ( String id : idsList )
-				{
 					circleList.add( persistenceStrategy.getCircleDAO().getById( id ) );
-				}
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
@@ -1133,15 +847,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					List<EventGroup> circleEventGroups = (List<EventGroup>) map.get( "circleEventGroups" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 					mapEventGroups.put( circle, circleEventGroups );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", circle.getName() );
-					mapValues.put( "size", circleEventGroups.size() );
-					mapValues.put( "altLabel", circle.getName() );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
-
+					listOfMaps.add( getSingleMapValues( index, circle.getName(), circleEventGroups.size(), circle.getName(), listItems ) );
 					if ( mapEventGroups.size() > 1 )
 					{
 						// publications of authors added before current author
@@ -1151,10 +857,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<List<EventGroup>> previousEventGroupLists = new ArrayList<List<EventGroup>>( mapEventGroups.values() );
 							List<EventGroup> previousCircleEventGroups = previousEventGroupLists.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
-
 							Circle previousCircle = previousCircles.get( k );
-
 							if ( !previousCircle.equals( circle ) )
 							{
 								List<EventGroup> temp = new ArrayList<EventGroup>();
@@ -1172,17 +875,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( circleList.indexOf( previousCircle ) );
+								String label = "";
 								label = label + circle.getName() + "-" + previousCircle.getName();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", temp.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, circleList.indexOf( previousCircle ), label, temp.size(), tempListItems ) );
 							}
 						}
 					}
@@ -1227,30 +922,12 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + circleList.get( i ).getName();
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
-
 			}
-
 			visMap.put( "comparisonList", listOfMaps );
 		}
 		return visMap;
@@ -1271,13 +948,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				Map<Author, List<Publication>> mapPublications = new HashMap<Author, List<Publication>>();
 				List<Author> authorList = new ArrayList<Author>();
 				for ( String id : idsList )
-				{
 					authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
-				}
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
@@ -1285,16 +959,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					Map<String, Object> map = dataFetcher.fetchPublicationsForAuthors( author, startYear, endYear, yearFilterPresent );
 					List<Publication> authorPublications = (List<Publication>) map.get( "authorPublications" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
-
 					mapPublications.put( author, authorPublications );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", author.getName() );
-					mapValues.put( "size", authorPublications.size() );
-					mapValues.put( "altLabel", author.getName() );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, author.getName(), authorPublications.size(), author.getName(), listItems ) );
 
 					if ( mapPublications.size() > 1 )
 					{
@@ -1306,7 +972,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<Publication> previousAuthorPublications = previousAuthorLists.get( k );
 							Author previousAuthor = previousAuthors.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
 
 							if ( !previousAuthor.equals( author ) )
 							{
@@ -1324,17 +989,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( authorList.indexOf( previousAuthor ) );
+								String label = "";
 								label = label + author.getFirstName() + "-" + previousAuthor.getFirstName();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, authorList.indexOf( previousAuthor ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
 					}
@@ -1380,63 +1037,30 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						Author author = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
-						label = label + author.getFirstName();
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					for ( int i = 0; i < authorList.size(); i++ )
+						label = label + authorList.get( i ).getFirstName();
+					listOfMaps.add( getCombinedMapValues( authorList.size(), count.size(), combinedListItems, label ) );
 				}
 			}
 			if ( type.equals( "topic" ) )
 			{
 				Map<Interest, List<Publication>> mapPublications = new HashMap<Interest, List<Publication>>();
-
 				List<DataMiningPublication> allDMPublications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
-
 				List<Interest> interestTempList = new ArrayList<Interest>();
-
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-
 					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
 					interestTempList.add( interest );
 
-
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
 					Map<String, Object> map = dataFetcher.fetchPublicationsForTopics( interest, allDMPublications, startYear, endYear, yearFilterPresent );
 					List<Publication> interestPublications = (List<Publication>) map.get( "interestPublications" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
-
 					mapPublications.put( interest, interestPublications );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", interest.getTerm() );
-					mapValues.put( "size", interestPublications.size() );
-					mapValues.put( "altLabel", idsList.get( i ) );
-					mapValues.put( "list", listItems );
-
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, interest.getTerm(), interestPublications.size(), idsList.get( i ), listItems ) );
 
 					if ( mapPublications.size() > 1 )
 					{
@@ -1448,8 +1072,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<Publication> previousPublications = previousPublicationLists.get( k );
 							Interest previousInterest = previousInterests.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-
-							String label = "";
 
 							if ( !previousInterest.equals( interest ) )
 							{
@@ -1467,28 +1089,16 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-
+								String label = "";
 								label = label + idsList.get( i ) + "-" + previousInterest.getTerm();
-								sets.add( interestTempList.indexOf( previousInterest ) ); // to-do
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, interestTempList.indexOf( previousInterest ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
-
 					}
-
 				}
 
 				// common to all
 				if ( idsList.size() > 2 )
-
 				{
 					List<Publication> allPublications = new ArrayList<Publication>();
 					List<Integer> count = new ArrayList<Integer>();
@@ -1514,7 +1124,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							else
 								count.set( allPublications.indexOf( interestPublications.get( k ) ), count.get( allPublications.indexOf( interestPublications.get( k ) ) ) + 1 );
 						}
-
 					}
 
 					for ( int i = 0; i < allPublications.size(); i++ )
@@ -1527,33 +1136,14 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + idsList.get( i );
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
-
 			}
 			if ( type.equals( "circle" ) )
 			{
-
 				Map<Circle, List<Publication>> mapPublications = new HashMap<Circle, List<Publication>>();
 				List<Circle> circleList = new ArrayList<Circle>();
 				for ( String id : idsList )
@@ -1563,25 +1153,14 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
-
 					Circle circle = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
-
 					Map<String, Object> map = dataFetcher.fetchPublicationsForCircles( circle, startYear, endYear, yearFilterPresent );
 					List<Publication> allPublications = (List<Publication>) map.get( "allPublications" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
-
 					mapPublications.put( circle, allPublications );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", circle.getName() );
-					mapValues.put( "size", allPublications.size() );
-					mapValues.put( "altLabel", circle.getName() );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, circle.getName(), allPublications.size(), circle.getName(), listItems ) );
 
 					if ( mapPublications.size() > 1 )
 					{
@@ -1593,7 +1172,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<Publication> previousCirclePublications = previousCircleLists.get( k );
 							Circle previousCircle = previousCircles.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
 
 							if ( !previousCircle.equals( circle ) )
 							{
@@ -1610,17 +1188,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( circleList.indexOf( previousCircle ) );
+								String label = "";
 								label = label + circle.getName() + "-" + previousCircle.getName();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, circleList.indexOf( previousCircle ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
 					}
@@ -1640,7 +1210,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 						for ( int k = 0; k < circlePublications.size(); k++ )
 						{
-
 							if ( !allPublications.contains( circlePublications.get( k ) ) )
 							{
 								allPublications.add( circlePublications.get( k ) );
@@ -1653,7 +1222,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							else
 								count.set( allPublications.indexOf( circlePublications.get( k ) ), count.get( allPublications.indexOf( circlePublications.get( k ) ) ) + 1 );
 						}
-
 					}
 
 					for ( int i = 0; i < allPublications.size(); i++ )
@@ -1666,28 +1234,13 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
 						Circle circle = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
 						label = label + circle.getName();
 					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
 
 			}
@@ -1714,28 +1267,18 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				{
 					Author author = persistenceStrategy.getAuthorDAO().getById( id );
 					authorList.add( author );
-
 				}
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 					Author author = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
 					Map<String, Object> map = dataFetcher.fetchTopicsForAuthors( author, startYear, endYear, yearFilterPresent );
 					List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 					List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
-					List<String> listItems = (List<String>) map.get( "listItems" );
-
+					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 					mapTopics.put( author, interestTopicNames );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", author.getName() );
-					mapValues.put( "size", listItems.size() );
-					mapValues.put( "altLabel", author.getName() );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, author.getName(), listItems.size(), author.getName(), listItems ) );
 
 					if ( mapTopics.size() > 1 )
 					{
@@ -1747,7 +1290,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<String> previousAuthorTopics = previousAuthorLists.get( k );
 							Author previousAuthor = previousAuthors.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
 
 							if ( !previousAuthor.equals( author ) )
 							{
@@ -1767,17 +1309,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( authorList.indexOf( previousAuthor ) );
+								String label = "";
 								label = label + author.getFirstName() + "-" + previousAuthor.getFirstName();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, authorList.indexOf( previousAuthor ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
 					}
@@ -1807,12 +1341,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 								items.put( "id", interestTopicIds.get( k ) );
 								combinedListItems.add( items );
 								count.add( 0 );
-
 							}
 							else
 								count.set( allInterests.indexOf( interestTopicNames.get( k ) ), count.get( allInterests.indexOf( interestTopicNames.get( k ) ) ) + 1 );
 						}
-
 					}
 
 					for ( int i = 0; i < allInterests.size(); i++ )
@@ -1825,28 +1357,13 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
 					{
 						Author author = persistenceStrategy.getAuthorDAO().getById( idsList.get( i ) );
 						label = label + author.getFirstName();
 					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
 
 			}
@@ -1854,7 +1371,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 			{
 				Map<EventGroup, List<String>> mapTopics = new HashMap<EventGroup, List<String>>();
 				List<EventGroup> eventGroupTempList = new ArrayList<EventGroup>();
-				List<String> allTopics = new ArrayList<String>();
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
@@ -1866,7 +1382,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				{
 					// List<String> allTopics = new ArrayList<String>();
 
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
@@ -1877,17 +1392,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					Map<String, Object> map = dataFetcher.fetchTopicsForConferences( events, startYear, endYear, yearFilterPresent );
 					List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 					List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
-					List<String> listItems = (List<String>) map.get( "listItems" );
-
+					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
 					mapTopics.put( eg, interestTopicNames );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", eg.getName() );
-					mapValues.put( "size", interestTopicNames.size() );
-					mapValues.put( "altLabel", idsList.get( i ) );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, eg.getName(), interestTopicNames.size(), idsList.get( i ), listItems ) );
 
 					if ( mapTopics.size() > 1 )
 					{
@@ -1899,10 +1406,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<String> previousAuthorTopics = previousAuthorLists.get( k );
 							EventGroup previousEvent = previousEvents.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
 							if ( !previousEvent.equals( eg ) )
 							{
-								List<PublicationTopic> temp = new ArrayList<PublicationTopic>();
 								List<String> tempNames = new ArrayList<String>();
 
 								// find common topics
@@ -1919,22 +1424,12 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( eventGroupTempList.indexOf( previousEvent ) );
+								String label = "";
 								label = label + idsList.get( i ) + "-" + previousEvent.getName();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempNames.size() );
-
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, eventGroupTempList.indexOf( previousEvent ), label, tempNames.size(), tempListItems ) );
 							}
 						}
 					}
-
 				}
 				if ( idsList.size() > 2 )
 				{
@@ -1980,28 +1475,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + idsList.get( i );
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
-
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
 			}
 			if ( type.equals( "publication" ) )
@@ -2012,7 +1489,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
 
@@ -2022,16 +1498,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 					List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
-
 					mapTopics.put( p, interestTopicNames );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", p.getTitle() );
-					mapValues.put( "size", interestTopicNames.size() );
-					mapValues.put( "altLabel", idsList.get( i ) );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, p.getTitle(), interestTopicNames.size(), idsList.get( i ), listItems ) );
 
 					if ( mapTopics.size() > 1 )
 					{
@@ -2043,10 +1511,8 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<String> previousAuthorTopics = previousAuthorLists.get( k );
 							Publication previousPublication = previousPublications.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
 							if ( !previousPublication.equals( p ) )
 							{
-								List<PublicationTopic> temp = new ArrayList<PublicationTopic>();
 								List<String> tempNames = new ArrayList<String>();
 
 								// find common topics
@@ -2063,17 +1529,9 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( publicationTempList.indexOf( previousPublication ) );
+								String label = "";
 								label = label + idsList.get( i ) + "-" + previousPublication.getTitle();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempNames.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, publicationTempList.indexOf( previousPublication ), label, tempNames.size(), tempListItems ) );
 							}
 						}
 					}
@@ -2122,34 +1580,16 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + idsList.get( i );
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
 			}
 			if ( type.equals( "circle" ) )
 			{
 				Map<Circle, List<String>> mapTopics = new HashMap<Circle, List<String>>();
 				List<Circle> circleList = new ArrayList<Circle>();
-				List<String> allTopics = new ArrayList<String>();
 				for ( String id : idsList )
 				{
 					Circle circle = persistenceStrategy.getCircleDAO().getById( id );
@@ -2158,25 +1598,15 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 				}
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
-					Map<String, Object> mapValues = new HashMap<String, Object>();
 					List<Integer> index = new ArrayList<Integer>();
 					index.add( i );
-
 					Circle circle = persistenceStrategy.getCircleDAO().getById( idsList.get( i ) );
 					Map<String, Object> map = dataFetcher.fetchTopicsForCircles( circle, startYear, endYear, yearFilterPresent );
 					List<String> interestTopicNames = (List<String>) map.get( "interestTopicNames" );
 					List<String> interestTopicIds = (List<String>) map.get( "interestTopicIds" );
 					List<Map<String, Object>> listItems = (List<Map<String, Object>>) map.get( "listItems" );
-
 					mapTopics.put( circle, interestTopicNames );
-
-					// single values to venn diagram
-					mapValues.put( "sets", index );
-					mapValues.put( "label", circle.getName() );
-					mapValues.put( "size", listItems.size() );
-					mapValues.put( "altLabel", circle.getName() );
-					mapValues.put( "list", listItems );
-					listOfMaps.add( mapValues );
+					listOfMaps.add( getSingleMapValues( index, circle.getName(), listItems.size(), circle.getName(), listItems ) );
 
 					if ( mapTopics.size() > 1 )
 					{
@@ -2189,7 +1619,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							List<String> previousCircleTopics = previousCircleLists.get( k );
 							Circle previousCircle = previousCircles.get( k );
 							List<Map<String, Object>> tempListItems = new ArrayList<Map<String, Object>>();
-							String label = "";
 
 							if ( !previousCircle.equals( circle ) )
 							{
@@ -2202,24 +1631,15 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 									{
 										tempNames.add( pat );
 										int pos = interestTopicNames.indexOf( pat );
-
 										Map<String, Object> items = new HashMap<String, Object>();
 										items.put( "name", pat );
 										items.put( "id", interestTopicIds.get( pos ) );
 										tempListItems.add( items );
 									}
 								}
-
-								Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
-								List<Integer> sets = new ArrayList<Integer>();
-								sets.add( i );
-								sets.add( circleList.indexOf( previousCircle ) );
+								String label = "";
 								label = label + circle.getName() + "-" + previousCircle.getName();
-								mapValuesForPairs.put( "sets", sets );
-								mapValuesForPairs.put( "size", tempListItems.size() );
-								mapValuesForPairs.put( "list", tempListItems );
-								mapValuesForPairs.put( "altLabel", label );
-								listOfMaps.add( mapValuesForPairs );
+								listOfMaps.add( getPairwiseMapValues( i, circleList.indexOf( previousCircle ), label, tempListItems.size(), tempListItems ) );
 							}
 						}
 					}
@@ -2248,12 +1668,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 								items.put( "id", interestTopicIds.get( k ) );
 								combinedListItems.add( items );
 								count.add( 0 );
-
 							}
 							else
 								count.set( allInterests.indexOf( interestTopicNames.get( k ) ), count.get( allInterests.indexOf( interestTopicNames.get( k ) ) ) + 1 );
 						}
-
 					}
 
 					for ( int i = 0; i < allInterests.size(); i++ )
@@ -2266,34 +1684,53 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							i--;
 						}
 					}
-
-					Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
-					List<Integer> sets = new ArrayList<Integer>();
-					for ( int i = 0; i < idsList.size(); i++ )
-					{
-						sets.add( i );
-					}
-
-					mapValuesForAll.put( "sets", sets );
-					mapValuesForAll.put( "size", count.size() );
-					mapValuesForAll.put( "list", combinedListItems );
-
 					String label = "";
 					for ( int i = 0; i < idsList.size(); i++ )
-					{
 						label = label + idsList.get( i );
-					}
-
-					mapValuesForAll.put( "altLabel", label );
-					mapValuesForAll.put( "weight", 1000 );
-					listOfMaps.add( mapValuesForAll );
+					listOfMaps.add( getCombinedMapValues( idsList.size(), count.size(), combinedListItems, label ) );
 				}
-
 			}
-
 			visMap.put( "comparisonList", listOfMaps );
 		}
 		return visMap;
 	}
 
+	public Map<String, Object> getSingleMapValues( List<Integer> index, String label, int size, String altLabel, List<Map<String, Object>> items )
+	{
+		// single values to venn diagram
+		Map<String, Object> mapValues = new HashMap<String, Object>();
+		mapValues.put( "sets", index );
+		mapValues.put( "label", label );
+		mapValues.put( "size", size );
+		mapValues.put( "altLabel", altLabel );
+		mapValues.put( "list", items );
+		return mapValues;
+	}
+
+	public Map<String, Object> getPairwiseMapValues( int i, int prev, String label, int size, List<Map<String, Object>> items )
+	{
+		Map<String, Object> mapValuesForPairs = new LinkedHashMap<String, Object>();
+		List<Integer> sets = new ArrayList<Integer>();
+		sets.add( i );
+		sets.add( prev );
+		mapValuesForPairs.put( "sets", sets );
+		mapValuesForPairs.put( "size", size );
+		mapValuesForPairs.put( "list", items );
+		mapValuesForPairs.put( "altLabel", label );
+		return mapValuesForPairs;
+	}
+
+	public Map<String, Object> getCombinedMapValues( int size, int count, List<Map<String, Object>> items, String label )
+	{
+		Map<String, Object> mapValuesForAll = new LinkedHashMap<String, Object>();
+		List<Integer> sets = new ArrayList<Integer>();
+		for ( int i = 0; i < size; i++ )
+			sets.add( i );
+		mapValuesForAll.put( "sets", sets );
+		mapValuesForAll.put( "size", count );
+		mapValuesForAll.put( "list", items );
+		mapValuesForAll.put( "altLabel", label );
+		mapValuesForAll.put( "weight", 1000 );
+		return mapValuesForAll;
+	}
 }
