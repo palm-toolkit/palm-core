@@ -372,8 +372,6 @@ public class SimilarityServiceImpl implements SimilarityService
 				}
 			}
 
-			// System.out.println( count.toString() );
-
 			for ( int i = 0; i < count.size(); i++ )
 			{
 				if ( count.get( i ) != idsList.size() )
@@ -610,8 +608,6 @@ public class SimilarityServiceImpl implements SimilarityService
 			data.add( i );
 		}
 
-		System.out.println( data );
-
 		WekaApriori apriori = new WekaApriori();
 		Apriori result;
 		List<String> bestMatchingTerms = new ArrayList<String>();
@@ -622,11 +618,9 @@ public class SimilarityServiceImpl implements SimilarityService
 			result = apriori.run( data );
 
 			System.out.println( result );
-
 			System.out.println( "\n==============================\n" );
 
 			List<AssociationRule> arules = result.getAssociationRules().getRules();
-			// System.out.println( arules.size() );
 
 			List<String> selectedInterests = new ArrayList<String>();
 			for ( String id : idsList )
@@ -703,12 +697,9 @@ public class SimilarityServiceImpl implements SimilarityService
 					}
 				}
 			}
-			// for ( String match : bestMatchingTerms )
-			// System.out.println( match );
 		}
 		catch ( Exception e )
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		Map<String, Object> finalMap = new HashMap<String, Object>();

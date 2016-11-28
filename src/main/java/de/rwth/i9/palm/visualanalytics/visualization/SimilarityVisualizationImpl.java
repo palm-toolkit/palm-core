@@ -54,8 +54,6 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 				List<String> authorIds = new ArrayList<String>();
 				List<Map<String, Double>> truncInterests = new ArrayList<Map<String, Double>>();
 
-				// System.out.println( map.size() + " : maz size" );
-
 				int count = 0;
 				if ( interestMap.size() > 20 )
 					count = 20;
@@ -98,7 +96,6 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 
 				Map<DataMiningEventGroup, Double> scoreMap = (Map<DataMiningEventGroup, Double>) map.get( "scoreMap" );
 
-				// System.out.println( map.toString() );
 				List<Double> similarityValues = new ArrayList<Double>( scoreMap.values() );
 				List<DataMiningEventGroup> similarConferences = new ArrayList<DataMiningEventGroup>( scoreMap.keySet() );
 

@@ -43,15 +43,8 @@ import de.rwth.i9.palm.model.Publication;
 
 class Network
 {
-
 	public void generateNetwork( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final Author authorForCoAuthors, final List<Author> selectedAuthors )
 	{
-
-		System.out.println( "********************" );
-		System.out.println( authorList.size() );
-		System.out.println( authorPublications.size() );
-		System.out.println( selectedAuthors.size() );
-		System.out.println( "********************" );
 		Random rand = new Random();
 
 		int max = 100;
@@ -227,8 +220,6 @@ class Network
 					}
 					if ( type.equals( "topic" ) || type.equals( "circle" ) )
 					{
-						if ( publicationAuthor.getName().equals( "Elizabeth A Mclaughlin" ) )
-							System.out.println( "Elizabeth A Mclaughlin is present!!!!!!!!!" );
 						if ( selectedAuthors.contains( publicationAuthor ) )
 						{
 							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
@@ -540,7 +531,6 @@ class Network
 				}
 			}
 		}
-		System.out.println( "step 3" );
 		// Layout for 1 minute
 		AutoLayout autoLayout = new AutoLayout( 2, TimeUnit.SECONDS );
 		autoLayout.setGraphModel( graphModel );
@@ -554,7 +544,7 @@ class Network
 		// Rank color by Degree
 		Function degreeRanking = appearanceModel.getNodeFunction( undirectedGraph, AppearanceModel.GraphFunction.NODE_DEGREE, RankingElementColorTransformer.class );
 		RankingElementColorTransformer degreeTransformer = (RankingElementColorTransformer) degreeRanking.getTransformer();
-		degreeTransformer.setColors( new Color[] { new Color( 0x44d5df ), new Color( 0xe53d56 ) } );
+		degreeTransformer.setColors( new Color[] { new Color( 0xed8c30 ), new Color( 0xdb1616 ) } );
 		degreeTransformer.setColorPositions( new float[] { 0f, 1f } );
 		appearanceController.transform( degreeRanking );
 		// purple 673888
@@ -584,7 +574,7 @@ class Network
 		}
 		catch ( IOException ex )
 		{
-			// System.out.println( ex );
+			System.out.println( ex );
 			return;
 		}
 

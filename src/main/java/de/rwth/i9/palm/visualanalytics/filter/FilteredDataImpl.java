@@ -25,7 +25,7 @@ public class FilteredDataImpl implements FilteredData
 	@Autowired
 	private FilterHelper filterHelper;
 
-	public Set<Publication> getFilteredPublications( String type, String visType, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationList, List<Interest> interestList, List<Circle> circleList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear, HttpServletRequest request )
+	public Set<Publication> getFilteredPublications( String type, String visType, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationList, List<Interest> interestList, List<Circle> circleList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request )
 	{
 		Set<Publication> authorPublications = new HashSet<Publication>();
 
@@ -43,24 +43,15 @@ public class FilteredDataImpl implements FilteredData
 			}
 
 			List<Publication> publicationsTemp = new ArrayList<Publication>( authorPublications );
-			if ( !startYear.equals( "" ) && !startYear.equals( "0" ) && startYear != null )
+			if ( yearFilterPresent.equals( "true" ) )
 			{
-				for ( int i = 0; i < publicationsTemp.size(); i++ )
+				if ( !startYear.equals( "" ) && !startYear.equals( "0" ) && startYear != null )
 				{
-					if ( publicationsTemp.get( i ).getYear() != null )
+					for ( int i = 0; i < publicationsTemp.size(); i++ )
 					{
-						if ( Integer.parseInt( publicationsTemp.get( i ).getYear() ) < Integer.parseInt( startYear ) || Integer.parseInt( publicationsTemp.get( i ).getYear() ) > Integer.parseInt( endYear ) )
+						if ( publicationsTemp.get( i ).getYear() != null )
 						{
-							publicationsTemp.remove( i );
-							i--;
-						}
-					}
-					else
-					{
-						if ( publicationsTemp.get( i ).getPublicationDate() != null )
-						{
-							String year = publicationsTemp.get( i ).getPublicationDate().toString().substring( 0, 4 );
-							if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+							if ( Integer.parseInt( publicationsTemp.get( i ).getYear() ) < Integer.parseInt( startYear ) || Integer.parseInt( publicationsTemp.get( i ).getYear() ) > Integer.parseInt( endYear ) )
 							{
 								publicationsTemp.remove( i );
 								i--;
@@ -68,13 +59,26 @@ public class FilteredDataImpl implements FilteredData
 						}
 						else
 						{
-							publicationsTemp.remove( i );
-							i--;
+							if ( publicationsTemp.get( i ).getPublicationDate() != null )
+							{
+								String year = publicationsTemp.get( i ).getPublicationDate().toString().substring( 0, 4 );
+								if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+								{
+									publicationsTemp.remove( i );
+									i--;
+								}
+							}
+							else
+							{
+								publicationsTemp.remove( i );
+								i--;
+							}
 						}
 					}
 				}
 			}
 			authorPublications = new HashSet<Publication>( publicationsTemp );
+			System.out.println( "pub temp: " + publicationsTemp.size() );
 			// conference filter
 			List<Publication> conferencePublications = new ArrayList<Publication>();
 			if ( filteredConference != null && !filteredConference.isEmpty() )

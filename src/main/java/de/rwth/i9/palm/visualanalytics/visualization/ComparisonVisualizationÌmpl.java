@@ -488,8 +488,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						iList.add( interest );
 					}
 					selectedPublications = new ArrayList<Publication>( filterFeature.getFilterHelper().typeWisePublications( "filtered", type, visType, null, null, null, iList, null, request ) );
-					selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, visType, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear, request ) );
-					System.out.println( "pubs in comparison: " + selectedPublications.size() );
+					selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, visType, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear, yearFilterPresent, request ) );
 					for ( Publication p : selectedPublications )
 					{
 						for ( Author a : p.getAuthors() )
@@ -498,7 +497,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 								publicationAuthors.add( a );
 						}
 					}
-					System.out.println( "pub authors: " + publicationAuthors.size() );
 				}
 
 				for ( int i = 0; i < idsList.size(); i++ )
@@ -959,8 +957,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						iList.add( interest );
 					}
 					selectedPublications = new ArrayList<Publication>( filterFeature.getFilterHelper().typeWisePublications( "filtered", type, visType, null, null, null, iList, null, request ) );
-					selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, visType, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear, request ) );
-					System.out.println( "pubs in comparison: " + selectedPublications.size() );
+					selectedPublications = new ArrayList<Publication>( filterFeature.getFilteredData().getFilteredPublications( type, visType, null, null, null, iList, null, selectedPublications, null, null, null, startYear, endYear, yearFilterPresent, request ) );
 					for ( Publication p : selectedPublications )
 					{
 						if ( p.getEvent() != null )
@@ -968,14 +965,10 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 							if ( p.getEvent().getEventGroup() != null )
 							{
 								if ( !publicationEventGroups.contains( p.getEvent().getEventGroup() ) )
-								{
 									publicationEventGroups.add( p.getEvent().getEventGroup() );
-									System.out.println( "PEG:" + p.getEvent().getEventGroup().getName() );
-								}
 							}
 						}
 					}
-					System.out.println( "publicationEventGroups: " + publicationEventGroups.size() );
 				}
 
 				for ( int i = 0; i < idsList.size(); i++ )
@@ -1869,7 +1862,6 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 					eventGroupTempList.add( eg );
 				}
 
-				System.out.println( "in comparison: " + allTopics.size() );
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
 					// List<String> allTopics = new ArrayList<String>();

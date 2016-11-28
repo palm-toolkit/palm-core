@@ -155,7 +155,6 @@ public class GroupVisualizationImpl implements GroupVisualization
 					responseMapTemp.put( "clusterTerms", clusterTerms.get( clusters.get( i ) ) );
 					publicationsList.add( responseMapTemp );
 				}
-				// System.out.println( publicationsList.toString() );
 				visMap.put( "publications", publicationsList );
 			}
 			return visMap;
@@ -209,7 +208,6 @@ public class GroupVisualizationImpl implements GroupVisualization
 						e.printStackTrace();
 					}
 					Iterator<String> iterator = mapValues.values().iterator();
-					System.out.println( mapValues.values().toString() );
 					while ( iterator.hasNext() )
 					{
 						ids.add( iterator.next() );
@@ -242,7 +240,6 @@ public class GroupVisualizationImpl implements GroupVisualization
 	@Override
 	public Map<String, Object> visualizeTopicsGroup( String type, Set<Publication> publications, HttpServletRequest request )
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 

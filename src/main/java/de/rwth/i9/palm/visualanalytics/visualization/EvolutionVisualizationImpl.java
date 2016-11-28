@@ -44,7 +44,6 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 
 	public Map<String, Object> visualizeEvolution( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request )
 	{
-		// System.out.println( startYear + " : " + endYear );
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 		Map<String, String> topicIdMap = new HashMap<String, String>();
 
@@ -473,7 +472,6 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 			}
 			if ( type.equals( "topic" ) )
 			{
-				System.out.println( "publications after filter: " + publications.size() );
 				List<String> filteredPublicationIds = new ArrayList<String>();
 				for ( Publication p : publications )
 					filteredPublicationIds.add( p.getId() );

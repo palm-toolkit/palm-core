@@ -295,11 +295,8 @@ public class VADataFetcher
 			}
 		}
 
-		System.out.println( "COMMON AUTHORS: " + commonAuthors.size() );
-		System.out.println( "Pubs in data fetch: " + publications.size() );
 		if ( !publications.isEmpty() )
 		{
-			System.out.println( "publications not empty!" );
 			// get authors from the publications
 			List<Author> authors = new ArrayList<Author>();
 			for ( Publication p : publications )
@@ -313,7 +310,6 @@ public class VADataFetcher
 				}
 			}
 
-			System.out.println( "pub authors: " + authors.size() );
 			// the common authors must be part of the publication authors
 			for ( int i = 0; i < commonAuthors.size(); i++ )
 			{
@@ -324,7 +320,6 @@ public class VADataFetcher
 				}
 			}
 
-			System.out.println( "commonAuthors: " + commonAuthors.size() );
 		}
 
 		finalMap.put( "commonAuthors", commonAuthors );
@@ -630,7 +625,6 @@ public class VADataFetcher
 	// Object : Researcher, Visualization Type : Topics
 	public Map<String, Object> fetchTopicsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
 	{
-		System.out.println( startYear + " " + endYear );
 		List<String> allTopics = new ArrayList<String>();
 		List<Publication> pubs = new ArrayList<Publication>( author.getPublications() );
 		for ( Publication p : pubs )
@@ -649,7 +643,6 @@ public class VADataFetcher
 				}
 			}
 		}
-		System.out.println( "COMP: " + author.getName() + " : " + allTopics.size() );
 
 		List<String> interestTopicNames = new ArrayList<String>();
 		List<String> interestTopicIds = new ArrayList<String>();
@@ -686,7 +679,6 @@ public class VADataFetcher
 							{
 								if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
 								{
-									System.out.println( year );
 									validYear = false;
 								}
 							}
@@ -710,7 +702,6 @@ public class VADataFetcher
 				}
 			}
 		}
-		System.out.println( "COMP: " + author.getName() + " : " + listItems.size() );
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestTopicIds", interestTopicIds );
 		map.put( "interestTopicNames", interestTopicNames );
@@ -861,7 +852,6 @@ public class VADataFetcher
 				}
 			}
 		}
-		System.out.println( "in comparison: " + interestTopicIds.size() );
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestTopicIds", interestTopicIds );
 		map.put( "interestTopicNames", interestTopicNames );
@@ -1041,7 +1031,6 @@ public class VADataFetcher
 	// Object : Topic, Visualization Type : Conferences
 	public Map<String, Object> fetchConferencesForTopics( Interest interest, List<DataMiningEventGroup> DMEventGroups, List<EventGroup> publicationEventGroups, String yearFilterPresent )
 	{
-		System.out.println( interest.getTerm() );
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 
 		List<EventGroup> interestEventGroups = new ArrayList<EventGroup>();
@@ -1075,8 +1064,6 @@ public class VADataFetcher
 					listItems.remove( j );
 					j--;
 				}
-				else
-					System.out.println( interestEventGroups.get( j ).getName() );
 			}
 		}
 		Map<String, Object> map = new HashMap<String, Object>();

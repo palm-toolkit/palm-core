@@ -869,7 +869,7 @@ public class VisualAnalyticsController
 				System.out.println( "publications: !! " + publications.size() );
 			}
 			else
-				publications = filterFeature.getFilteredData().getFilteredPublications( type, visType, authorList, eventGroupList, publicationList, interestList, circleList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear, request );
+				publications = filterFeature.getFilteredData().getFilteredPublications( type, visType, authorList, eventGroupList, publicationList, interestList, circleList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear, yearFilterPresent, request );
 
 			visMap = visSwitch( type, idsList, visTab, visType, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors, request, response );
 

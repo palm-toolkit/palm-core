@@ -130,7 +130,6 @@ public class ClusteringServiceImpl implements ClusteringService
 				}
 			}
 
-			System.out.println( " All interests: " + allInterests.size() );
 			midTime = ( System.currentTimeMillis() - startTime ) / 1000;
 
 			// Assign interests of authors to topics of publications..

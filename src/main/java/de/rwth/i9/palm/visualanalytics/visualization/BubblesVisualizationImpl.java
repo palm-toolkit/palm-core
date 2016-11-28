@@ -506,8 +506,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 					}
 				}
 
-				System.out.println( "size in bubbles: " + allPublicationInterests.size() );
-
 				List<String> publicationTopics = new ArrayList<String>();
 				List<Double> publicationTopicWeights = new ArrayList<Double>();
 				List<List<Publication>> interestPublications = new ArrayList<List<Publication>>();
@@ -530,13 +528,11 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							{
 								int index = allPublicationInterests.indexOf( terms.get( i ) );
 								interest = allPublicationInterests.get( index );
-								System.out.println( "term in bubbles : " + terms.get( i ) );
 							}
 							else if ( allPublicationInterests.contains( terms.get( i ).substring( 0, terms.get( i ).length() - 1 ) ) )
 							{
 								int index = allPublicationInterests.indexOf( terms.get( i ).substring( 0, terms.get( i ).length() - 1 ) );
 								interest = allPublicationInterests.get( index );
-								System.out.println( "term-- in bubbles : " + terms.get( i ).substring( 0, terms.get( i ).length() - 1 ) );
 							}
 
 							if ( !interest.equals( "" ) )

@@ -37,9 +37,15 @@ public class TimelineVisualizationImpl implements TimelineVisualization
 
 				pubDetails.put( "id", pub.getId() );
 				pubDetails.put( "title", pub.getTitle() );
-				pubDetails.put( "year", pub.getYear() );
 				pubDetails.put( "type", pub.getPublicationType() );
-				pubDetails.put( "date", new SimpleDateFormat( "dd/MM/yyyy" ).format( pub.getPublicationDate() ) );
+				if ( pub.getYear() != null )
+					pubDetails.put( "year", pub.getYear() );
+				else
+					pubDetails.put( "year", "unknown" );
+				if ( pub.getPublicationDate() != null )
+					pubDetails.put( "date", new SimpleDateFormat( "dd/MM/yyyy" ).format( pub.getPublicationDate() ) );
+				else
+					pubDetails.put( "date", "unknown" );
 				pubDetailsList.add( pubDetails );
 			}
 
