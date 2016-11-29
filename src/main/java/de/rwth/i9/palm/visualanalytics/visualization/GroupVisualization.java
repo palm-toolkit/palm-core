@@ -10,7 +10,7 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface GroupVisualization
 {
-	public Map<String, Object> visualizeResearchersGroup( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request );
+	public Map<String, Object> visualizeResearchersGroup( String type, String visType, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request );
 
 	public Map<String, Object> visualizePublicationsGroup( String type, Set<Publication> publications, HttpServletRequest request );
 

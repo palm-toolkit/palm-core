@@ -2,6 +2,7 @@ package de.rwth.i9.palm.visualanalytics.visualization;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +62,7 @@ public class ClusteringServiceImpl implements ClusteringService
 	private VADataFetcher dataFetcher;
 
 	@Override
-	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String startYear, String endYear, HttpServletRequest request, String yearFilterPresent )
+	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String visType, String startYear, String endYear, HttpServletRequest request, String yearFilterPresent )
 	{
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 
@@ -85,11 +86,26 @@ public class ClusteringServiceImpl implements ClusteringService
 				authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
 			}
 
+			// shortlisted researchers' publications must also have the
+			// corresponding topics
+			List<Author> publicationAuthors = new ArrayList<Author>();
+			Set<Publication> publicationsWithInterest = new HashSet<Publication>();
+			if ( type.equals( "topic" ) && visType.equals( "researchers" ) )
+			{
+				publicationsWithInterest = dataFetcher.fetchAllPublications( type, idsList, authorList );
+				for ( Publication p : publicationsWithInterest )
+					for ( Author a : p.getAuthors() )
+						if ( !publicationAuthors.contains( a ) )
+							publicationAuthors.add( a );
+			}
+
 			// authors apart from selected authors
 			for ( Author coAuthor : commonAuthors )
 			{
 				// just skip if its one of the authors in consideration
 				if ( authorList.contains( coAuthor ) )
+					continue;
+				else if ( !publicationsWithInterest.isEmpty() && !publicationAuthors.contains( coAuthor ) )
 					continue;
 				else
 					coAuthorList.add( coAuthor );

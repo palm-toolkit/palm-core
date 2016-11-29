@@ -166,6 +166,7 @@ public class VADataFetcher
 						if ( interests.keySet().contains( interest.getTerm() ) )
 						{
 							Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
+							System.out.println( "I:" + a.getName() );
 							if ( !commonAuthors.contains( a ) )
 							{
 								commonAuthors.add( a );

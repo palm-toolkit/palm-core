@@ -108,7 +108,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> getResearcherCoAuthorMapByPublication( Set<Publication> publications, String type, List<String> idsList, String startYear, String endYear, String yearFilterPresent )
+	public Map<String, Object> getResearcherCoAuthorMapByPublication( Set<Publication> publications, String type, String visType, List<String> idsList, String startYear, String endYear, String yearFilterPresent )
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -121,7 +121,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList, yearFilterPresent );
 		List<Author> commonAuthors = (List<Author>) map.get( "commonAuthors" );
 		Map<String, Object> collaborationMaps = (Map<String, Object>) map.get( "collaborationMaps" );
-
+		System.out.println( "sel authors in list:" + commonAuthors.size() );
 		Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
 		if ( collaborationMaps != null )
 			totalCollaborationCount = (Map<String, Integer>) collaborationMaps.get( "totalCollaborationCount" );
@@ -132,10 +132,26 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 			authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
 		}
 
+		// shortlisted researchers' publications must also have the
+		// corresponding topics
+		List<Author> publicationAuthors = new ArrayList<Author>();
+		Set<Publication> publicationsWithInterest = new HashSet<Publication>();
+		if ( type.equals( "topic" ) && visType.equals( "researchers" ) )
+		{
+			publicationsWithInterest = dataFetcher.fetchAllPublications( type, idsList, authorList );
+			for ( Publication p : publicationsWithInterest )
+				for ( Author a : p.getAuthors() )
+					if ( !publicationAuthors.contains( a ) )
+						publicationAuthors.add( a );
+		}
+
 		for ( Author coAuthor : commonAuthors )
 		{
 			// just skip if its one of the authors in consideration
 			if ( authorList.contains( coAuthor ) )
+				continue;
+
+			if ( !publicationsWithInterest.isEmpty() && !publicationAuthors.contains( coAuthor ) )
 				continue;
 
 			coauthorSet.add( coAuthor );

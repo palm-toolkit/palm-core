@@ -10,7 +10,7 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface ClusteringService
 {
-	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String startYear, String endYear, HttpServletRequest request, String yearFilterPresent );
+	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String visType, String startYear, String endYear, HttpServletRequest request, String yearFilterPresent );
 
 	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications );
 

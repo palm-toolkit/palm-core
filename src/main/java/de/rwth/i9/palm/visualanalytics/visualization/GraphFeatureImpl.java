@@ -220,8 +220,10 @@ class Network
 					}
 					if ( type.equals( "topic" ) || type.equals( "circle" ) )
 					{
+
 						if ( selectedAuthors.contains( publicationAuthor ) )
 						{
+							System.out.println( "TA:" + publicationAuthor.getName() );
 							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
 							// add the authors which are not already
 							// present
@@ -339,6 +341,7 @@ class Network
 
 		if ( selectedAuthors.isEmpty() )
 		{
+			System.out.println( "selected authors: empty" );
 			// if ( type.equals( "circle" ) && idsList.size() > 1 )
 			// {
 			// for ( Author a : selectedAuthors )
@@ -359,10 +362,16 @@ class Network
 			// }
 			// }
 
+			System.out.println( type );
+			System.out.println( authorList.size() );
+			System.out.println( idsList.size() );
+			
 			// find associations upto 2 levels, if authors are not
 			// co-authors
 			if ( type.equals( "researcher" ) && authorList.size() == 2 )
 			{
+				System.out.println( "inside correct condition" );
+
 				// add nodes for main authors
 				for ( int f = 0; f < authorList.size(); f++ )
 				{

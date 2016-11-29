@@ -27,15 +27,14 @@ public class ListVisualizationImpl implements ListVisualization
 	private VisualizationFeature visualizationFeature;
 
 	@Override
-	public Map<String, Object> visualizeResearchersList( String type, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent, HttpServletRequest request )
+	public Map<String, Object> visualizeResearchersList( String type, String visType, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-		{
-			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, idsList, startYear, endYear, yearFilterPresent ) );
-		}
+			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, visType, idsList, startYear, endYear, yearFilterPresent ) );
+
 		return visMap;
 	}
 

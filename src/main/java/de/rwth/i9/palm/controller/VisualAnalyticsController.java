@@ -276,6 +276,7 @@ public class VisualAnalyticsController
 		request.getSession().setAttribute( "visType", "" );
 		request.getSession().setAttribute( "objectType", "" );
 		request.getSession().setAttribute( "idsList", "" );
+		System.out.println( "set here!!" );
 
 		ModelAndView model = TemplateHelper.createViewWithLink( "explore", LINK_NAME );
 
@@ -310,7 +311,6 @@ public class VisualAnalyticsController
 	@RequestMapping( value = "/searchResearchers", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getResearcherList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "queryType", required = false ) String queryType, @RequestParam( value = "page", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "addedAuthor", required = false ) String addedAuthor, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "persist", required = false ) String persist, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-
 
 		/* == Set Default Values== */
 		if ( query == null )
@@ -879,12 +879,13 @@ public class VisualAnalyticsController
 			responseMap.put( "idsList", idsList );
 			responseMap.put( "map", visMap );
 		}
-
-		if ( !request.getSession().getAttribute( "objectType" ).equals( type ) || !request.getSession().getAttribute( "idsList" ).equals( idsList ) || !request.getSession().getAttribute( "visType" ).equals( visType ) )
-			responseMap.put( "oldVis", "true" );
-		else
-			responseMap.put( "oldVis", "false" );
-
+		if ( request.getSession().getAttribute( "objectType" ) != null )
+		{
+			if ( !request.getSession().getAttribute( "objectType" ).equals( type ) || !request.getSession().getAttribute( "idsList" ).equals( idsList ) || !request.getSession().getAttribute( "visType" ).equals( visType ) )
+				responseMap.put( "oldVis", "true" );
+			else
+				responseMap.put( "oldVis", "false" );
+		}
 		return responseMap;
 	}
 
@@ -992,11 +993,13 @@ public class VisualAnalyticsController
 			}
 
 		}
-		if ( !request.getSession().getAttribute( "objectType" ).equals( type ) || !request.getSession().getAttribute( "idsList" ).equals( idsList ) || !request.getSession().getAttribute( "visType" ).equals( visType ) )
-			responseMap.put( "oldFilters", "true" );
-		else
-			responseMap.put( "oldFilters", "false" );
-
+		if ( request.getSession().getAttribute( "objectType" ) != null )
+		{
+			if ( !request.getSession().getAttribute( "objectType" ).equals( type ) || !request.getSession().getAttribute( "idsList" ).equals( idsList ) || !request.getSession().getAttribute( "visType" ).equals( visType ) )
+				responseMap.put( "oldFilters", "true" );
+			else
+				responseMap.put( "oldFilters", "false" );
+		}
 		return responseMap;
 	}
 
@@ -1029,7 +1032,7 @@ public class VisualAnalyticsController
 			case "Group": {
 				if ( visType.equals( "researchers" ) )
 				{
-					visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, idsList, publications, startYear, endYear, yearFilterPresent, request );
+					visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, visType, idsList, publications, startYear, endYear, yearFilterPresent, request );
 				}
 				if ( visType.equals( "conferences" ) )
 				{
@@ -1050,7 +1053,7 @@ public class VisualAnalyticsController
 
 				if ( visType.equals( "researchers" ) )
 				{
-					visMap = visualizationFeature.getVisList().visualizeResearchersList( type, publications, startYear, endYear, idsList, yearFilterPresent, request );
+					visMap = visualizationFeature.getVisList().visualizeResearchersList( type, visType, publications, startYear, endYear, idsList, yearFilterPresent, request );
 				}
 				if ( visType.equals( "conferences" ) )
 				{
