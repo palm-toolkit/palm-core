@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 
 @Component
@@ -26,14 +27,14 @@ public class GroupVisualizationImpl implements GroupVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizeResearchersGroup( String type, String visType, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request )
+	public Map<String, Object> visualizeResearchersGroup( String type, String visType, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			Map<String, Object> clusteringResultMap = clusteringService.clusterAuthors( "xmeans", idsList, publications, type, visType, startYear, endYear, request, yearFilterPresent );
+			Map<String, Object> clusteringResultMap = clusteringService.clusterAuthors( "xmeans", idsList, publications, type, visType, startYear, endYear, request, yearFilterPresent, filteredTopic );
 			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
 			Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
 			Map<String, Integer> mapClusterAuthor = (Map<String, Integer>) clusteringResultMap.get( "clusterMap" );

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.helper.VADataFetcher;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -28,7 +29,7 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 	@Autowired
 	private VADataFetcher dataFetcher;
 
-	public Map<String, Object> visualizeNetwork( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors, String yearFilterPresent, HttpServletRequest request )
+	public Map<String, Object> visualizeNetwork( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors, String yearFilterPresent, List<Interest> filteredTopic, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
@@ -50,7 +51,14 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 			Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList, yearFilterPresent );
 			@SuppressWarnings( "unchecked" )
 			List<Author> selectedAuthors = (List<Author>) map.get( "commonAuthors" );
-			System.out.println( "sel authors in network:" + selectedAuthors.size() );
+			// System.out.println( "sel authors in network:" +
+			// selectedAuthors.size() + "\n" );
+
+			// verify if the researchers also have the selected interests, not
+			// just there publications
+			if ( !filteredTopic.isEmpty() )
+				selectedAuthors = dataFetcher.getAuthorsFromInterestFilter( filteredTopic, selectedAuthors );
+
 			if ( publications.isEmpty() )
 				publications = dataFetcher.fetchAllPublications( type, idsList, authorList );
 

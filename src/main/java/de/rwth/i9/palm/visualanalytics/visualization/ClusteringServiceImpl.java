@@ -28,6 +28,7 @@ import de.rwth.i9.palm.model.DataMiningEventGroup;
 import de.rwth.i9.palm.model.DataMiningPublication;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
+import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopicFlat;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -62,7 +63,7 @@ public class ClusteringServiceImpl implements ClusteringService
 	private VADataFetcher dataFetcher;
 
 	@Override
-	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String visType, String startYear, String endYear, HttpServletRequest request, String yearFilterPresent )
+	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String visType, String startYear, String endYear, HttpServletRequest request, String yearFilterPresent, List<Interest> filteredTopic )
 	{
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 
@@ -85,6 +86,12 @@ public class ClusteringServiceImpl implements ClusteringService
 			{
 				authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
 			}
+
+			// verify if the researchers also have the selected interests, not
+			// just
+			// there publications
+			if ( !filteredTopic.isEmpty() )
+				commonAuthors = dataFetcher.getAuthorsFromInterestFilter( filteredTopic, commonAuthors );
 
 			// shortlisted researchers' publications must also have the
 			// corresponding topics

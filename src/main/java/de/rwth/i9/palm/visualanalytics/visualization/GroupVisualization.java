@@ -6,11 +6,12 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 
 public interface GroupVisualization
 {
-	public Map<String, Object> visualizeResearchersGroup( String type, String visType, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request );
+	public Map<String, Object> visualizeResearchersGroup( String type, String visType, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic, HttpServletRequest request );
 
 	public Map<String, Object> visualizePublicationsGroup( String type, Set<Publication> publications, HttpServletRequest request );
 

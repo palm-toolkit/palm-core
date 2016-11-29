@@ -361,6 +361,7 @@ public class DataForFilterImpl implements DataForFilter
 				List<String> allTopics = new ArrayList<String>();
 				for ( Publication pub : publications )
 				{
+					// System.out.println( "pub title: " + pub.getTitle() );
 					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
 					for ( PublicationTopic pubTopic : publicationTopics )
 					{
@@ -380,6 +381,8 @@ public class DataForFilterImpl implements DataForFilter
 										topicDetail.put( "id", allPublicationInterestIds.get( index ) );
 										topicDetail.put( "name", termValues.get( j ) );
 										topicDetailsList.add( topicDetail );
+										// System.out.println( " topic w s: " +
+										// termValues.get( j ) );
 									}
 									else if ( allPublicationInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
 									{
@@ -388,6 +391,9 @@ public class DataForFilterImpl implements DataForFilter
 										topicDetail.put( "id", allPublicationInterestIds.get( index ) );
 										topicDetail.put( "name", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 										topicDetailsList.add( topicDetail );
+										// System.out.println( " topic w/ s: " +
+										// termValues.get( j ).substring( 0,
+										// termValues.get( j ).length() - 1 ) );
 									}
 								}
 							}

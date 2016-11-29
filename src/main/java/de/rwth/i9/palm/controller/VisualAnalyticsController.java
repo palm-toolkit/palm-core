@@ -862,11 +862,13 @@ public class VisualAnalyticsController
 			if ( type.equals( "circle" ) )
 				circleList = filterFeature.getFilterHelper().getCirclesFromIds( idsList, request );
 
+			// System.out.println( "pub list in vac: " + publicationList.size()
+			// );
 			Set<Publication> publications = new HashSet<Publication>();
 
 			if ( visType.equals( "researchers" ) && !type.equals( "publication" ) && filteredPublication.isEmpty() && filteredConference.isEmpty() && filteredTopic.isEmpty() && filteredCircle.isEmpty() && yearFilterPresent.equals( "false" ) )
 			{
-				System.out.println( "publications: !! " + publications.size() );
+				System.out.println( "publications not considered here " + publications.size() );
 			}
 			else
 				publications = filterFeature.getFilteredData().getFilteredPublications( type, visType, authorList, eventGroupList, publicationList, interestList, circleList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear, yearFilterPresent, request );
@@ -1010,7 +1012,7 @@ public class VisualAnalyticsController
 		{
 			switch ( visTab ) {
 			case "Network": {
-				visMap = visualizationFeature.getVisNetwork().visualizeNetwork( type, publications, idsList, startYear, endYear, authoridForCoAuthors, yearFilterPresent, request );
+				visMap = visualizationFeature.getVisNetwork().visualizeNetwork( type, publications, idsList, startYear, endYear, authoridForCoAuthors, yearFilterPresent, filteredTopic, request );
 				break;
 			}
 			case "Locations": {
@@ -1032,7 +1034,7 @@ public class VisualAnalyticsController
 			case "Group": {
 				if ( visType.equals( "researchers" ) )
 				{
-					visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, visType, idsList, publications, startYear, endYear, yearFilterPresent, request );
+					visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, visType, idsList, publications, startYear, endYear, yearFilterPresent, filteredTopic, request );
 				}
 				if ( visType.equals( "conferences" ) )
 				{
@@ -1053,7 +1055,7 @@ public class VisualAnalyticsController
 
 				if ( visType.equals( "researchers" ) )
 				{
-					visMap = visualizationFeature.getVisList().visualizeResearchersList( type, visType, publications, startYear, endYear, idsList, yearFilterPresent, request );
+					visMap = visualizationFeature.getVisList().visualizeResearchersList( type, visType, publications, startYear, endYear, idsList, yearFilterPresent, filteredTopic, request );
 				}
 				if ( visType.equals( "conferences" ) )
 				{

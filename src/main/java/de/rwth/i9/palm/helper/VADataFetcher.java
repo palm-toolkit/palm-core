@@ -327,6 +327,64 @@ public class VADataFetcher
 		return finalMap;
 	}
 
+	public List<Author> getAuthorsFromInterestFilter( List<Interest> filteredTopic, List<Author> selectedAuthors )
+	{
+		List<Author> interestAuthors = new ArrayList<Author>();
+		List<Integer> count = new ArrayList<Integer>();
+
+		List<DataMiningAuthor> DMAuthors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
+		for ( Interest interest : filteredTopic )
+		{
+			for ( DataMiningAuthor dma : DMAuthors )
+			{
+				Map<String, Double> interests = new HashMap<String, Double>();
+				interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
+				if ( interests.keySet().contains( interest.getTerm() ) )
+				{
+					int i = new ArrayList<String>( interests.keySet() ).indexOf( interest.getTerm() );
+					if ( new ArrayList<Double>( interests.values() ).get( i ) > 0.3 )
+					{
+						Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
+						if ( !interestAuthors.contains( a ) )
+						{
+							interestAuthors.add( a );
+							count.add( 1 );
+						}
+						else
+						{
+							int index = interestAuthors.indexOf( a );
+							count.set( index, count.get( index ) + 1 );
+						}
+					}
+				}
+			}
+		}
+
+		for ( int i = 0; i < count.size(); i++ )
+		{
+			if ( count.get( i ) < filteredTopic.size() )
+			{
+				count.remove( i );
+				interestAuthors.remove( i );
+				i--;
+			}
+			// else
+			// System.out.println( interestAuthors.get( i ).getName() );
+		}
+
+		for ( int i = 0; i < selectedAuthors.size(); i++ )
+		{
+			if ( !interestAuthors.contains( selectedAuthors.get( i ) ) )
+			{
+				// System.out.println( "del: " + selectedAuthors.get( i
+				// ).getName() );
+				selectedAuthors.remove( i );
+				i--;
+			}
+		}
+		return selectedAuthors;
+	}
+
 	public Set<Publication> fetchAllPublications( String type, List<String> idsList, List<Author> authorList )
 	{
 		Set<Publication> publications = new HashSet<Publication>();
@@ -334,6 +392,7 @@ public class VADataFetcher
 		{
 			for ( Author a : authorList )
 			{
+				System.out.println( "author for pubs;" + a.getName() );
 				publications.addAll( a.getPublications() );
 			}
 		}
@@ -1001,6 +1060,7 @@ public class VADataFetcher
 
 				if ( !interestAuthors.contains( a ) )
 				{
+					System.out.println( "IA: " + a.getName() );
 					interestAuthors.add( a );
 					Map<String, Object> items = new HashMap<String, Object>();
 					items.put( "name", a.getName() );
@@ -1023,6 +1083,36 @@ public class VADataFetcher
 				}
 			}
 		}
+		else
+		{
+			// shortlisted researchers' publications must also have the
+			// corresponding topics
+
+			publicationAuthors = new ArrayList<Author>();
+			Set<Publication> publicationsWithInterest = new HashSet<Publication>();
+			List<String> interestList = new ArrayList<String>();
+			interestList.add( interest.getId() );
+			publicationsWithInterest = fetchAllPublications( "topic", interestList, null );
+			for ( Publication p : publicationsWithInterest )
+				for ( Author a : p.getAuthors() )
+					if ( !publicationAuthors.contains( a ) )
+					{
+						publicationAuthors.add( a );
+						System.out.println( a.getName() );
+					}
+
+			for ( int j = 0; j < interestAuthors.size(); j++ )
+			{
+				if ( !publicationAuthors.contains( interestAuthors.get( j ) ) )
+				{
+					System.out.println( "del: " + interestAuthors.get( j ).getName() );
+					interestAuthors.remove( j );
+					listItems.remove( j );
+					j--;
+				}
+			}
+		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestAuthors", interestAuthors );
 		map.put( "listItems", listItems );

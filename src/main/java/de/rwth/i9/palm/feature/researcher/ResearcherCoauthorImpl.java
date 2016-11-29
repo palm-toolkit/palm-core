@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.helper.VADataFetcher;
 import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationComparator;
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -108,7 +109,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> getResearcherCoAuthorMapByPublication( Set<Publication> publications, String type, String visType, List<String> idsList, String startYear, String endYear, String yearFilterPresent )
+	public Map<String, Object> getResearcherCoAuthorMapByPublication( Set<Publication> publications, String type, String visType, List<String> idsList, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic )
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -121,7 +122,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList, yearFilterPresent );
 		List<Author> commonAuthors = (List<Author>) map.get( "commonAuthors" );
 		Map<String, Object> collaborationMaps = (Map<String, Object>) map.get( "collaborationMaps" );
-		System.out.println( "sel authors in list:" + commonAuthors.size() );
+		// System.out.println( "sel authors in list:" + commonAuthors.size() );
 		Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
 		if ( collaborationMaps != null )
 			totalCollaborationCount = (Map<String, Integer>) collaborationMaps.get( "totalCollaborationCount" );
@@ -144,6 +145,11 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 					if ( !publicationAuthors.contains( a ) )
 						publicationAuthors.add( a );
 		}
+
+		// verify if the researchers also have the selected interests, not just
+		// there publications
+		if ( !filteredTopic.isEmpty() )
+			commonAuthors = dataFetcher.getAuthorsFromInterestFilter( filteredTopic, commonAuthors );
 
 		for ( Author coAuthor : commonAuthors )
 		{

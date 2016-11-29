@@ -186,6 +186,8 @@ public class FilterHelperImpl implements FilterHelper
 			if ( type.equals( "publication" ) )
 			{
 				publications = new HashSet<Publication>( publicationsList );
+				// System.out.println( "publications in typewise: " +
+				// publications.size() );
 			}
 			if ( type.equals( "topic" ) )
 			{
@@ -230,8 +232,8 @@ public class FilterHelperImpl implements FilterHelper
 				// find common publications for filter
 				if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) )
 				{
-					System.out.println( "cf:" + callingFunction );
-					System.out.println( "vt:" + visType );
+					// System.out.println( "cf:" + callingFunction );
+					// System.out.println( "vt:" + visType );
 					for ( int i = 0; i < count.size(); i++ )
 					{
 						if ( count.get( i ) < interestList.size() )
@@ -243,7 +245,8 @@ public class FilterHelperImpl implements FilterHelper
 					}
 				}
 				publications = new HashSet<Publication>( persistenceStrategy.getPublicationDAO().getPublicationByIds( pubIds ) );
-				System.out.println( "publications count: " + publications.size() );
+				// System.out.println( "publications count: " +
+				// publications.size() );
 			}
 			if ( type.equals( "circle" ) )
 			{

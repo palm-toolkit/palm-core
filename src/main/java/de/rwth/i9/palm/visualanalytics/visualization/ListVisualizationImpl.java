@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
+import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.visualanalytics.service.VisualizationFeature;
 
@@ -27,13 +28,13 @@ public class ListVisualizationImpl implements ListVisualization
 	private VisualizationFeature visualizationFeature;
 
 	@Override
-	public Map<String, Object> visualizeResearchersList( String type, String visType, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent, HttpServletRequest request )
+	public Map<String, Object> visualizeResearchersList( String type, String visType, Set<Publication> publications, String startYear, String endYear, List<String> idsList, String yearFilterPresent, List<Interest> filteredTopic, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, visType, idsList, startYear, endYear, yearFilterPresent ) );
+			visMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMapByPublication( publications, type, visType, idsList, startYear, endYear, yearFilterPresent, filteredTopic ) );
 
 		return visMap;
 	}

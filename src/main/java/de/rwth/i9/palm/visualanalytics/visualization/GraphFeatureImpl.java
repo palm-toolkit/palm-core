@@ -223,7 +223,8 @@ class Network
 
 						if ( selectedAuthors.contains( publicationAuthor ) )
 						{
-							System.out.println( "TA:" + publicationAuthor.getName() );
+							// System.out.println( "TA:" +
+							// publicationAuthor.getName() );
 							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
 							// add the authors which are not already
 							// present
