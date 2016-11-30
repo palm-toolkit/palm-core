@@ -15,5 +15,5 @@ public interface ClusteringService
 
 	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications );
 
-	public Map<String, Object> clusterConferences( String algorithm, Set<Publication> publications );
+	public Map<String, Object> clusterConferences( String algorithm, Set<Publication> publications, List<Interest> filteredTopic, String type, List<String> idsList );
 }

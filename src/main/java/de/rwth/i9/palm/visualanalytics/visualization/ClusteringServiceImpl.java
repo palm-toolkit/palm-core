@@ -296,7 +296,7 @@ public class ClusteringServiceImpl implements ClusteringService
 	}
 
 	@Override
-	public Map<String, Object> clusterConferences( String algorithm, Set<Publication> publications )
+	public Map<String, Object> clusterConferences( String algorithm, Set<Publication> publications, List<Interest> filteredTopic, String type, List<String> idsList )
 	{
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -325,6 +325,18 @@ public class ClusteringServiceImpl implements ClusteringService
 			}
 		}
 
+		List<String> interestStrings = new ArrayList<String>();
+		if ( !filteredTopic.isEmpty() )
+		{
+			for ( Interest i : filteredTopic )
+				interestStrings.add( i.getTerm() );
+		}
+		if ( type.equals( "topic" ) )
+		{
+			for ( String id : idsList )
+				interestStrings.add( persistenceStrategy.getInterestDAO().getById( id ).getTerm() );
+		}
+
 		// Find DataMiningEvent Groups corresponding to the subset of
 		// conferences
 		for ( DataMiningEventGroup dmc : allConferences )
@@ -332,7 +344,38 @@ public class ClusteringServiceImpl implements ClusteringService
 			for ( EventGroup eg : eventGroups )
 			{
 				if ( dmc.getName().equals( eg.getName() ) )
-					conferencesFromSelection.add( dmc );
+				{
+					Boolean flag = true;
+
+					// // add conference only if it has the topics from the
+					// filter
+					// if ( !filteredTopic.isEmpty() )
+					// {
+					// Map<String, Double> interests =
+					// InterestParser.parseInterestString(
+					// dmc.getEventGroup_interest_flat().getInterests() );
+					// Set<String> interestTerms = interests.keySet();
+					// if ( interestTerms.containsAll( interestStrings ) )
+					// flag = true;
+					// else
+					// flag = false;
+					// }
+					// // add conference only if it has the selected interests
+					// if ( type.equals( "topic" ) )
+					// {
+					// Map<String, Double> interests =
+					// InterestParser.parseInterestString(
+					// dmc.getEventGroup_interest_flat().getInterests() );
+					// Set<String> interestTerms = interests.keySet();
+					// if ( interestTerms.containsAll( interestStrings ) )
+					// flag = true;
+					// else
+					// flag = false;
+					// }
+
+					if ( flag )
+						conferencesFromSelection.add( dmc );
+				}
 			}
 		}
 

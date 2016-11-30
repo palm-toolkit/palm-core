@@ -167,14 +167,14 @@ public class GroupVisualizationImpl implements GroupVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizeConferencesGroup( String type, Set<Publication> publications, HttpServletRequest request )
+	public Map<String, Object> visualizeConferencesGroup( String type, Set<Publication> publications, List<Interest> filteredTopic, List<String> idsList, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) )
 		{
-			Map<String, Object> clusteringResultMap = clusteringService.clusterConferences( "xmeans", publications );
+			Map<String, Object> clusteringResultMap = clusteringService.clusterConferences( "xmeans", publications, filteredTopic, type, idsList );
 			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
 			Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
 			Map<String, Integer> mapClusterConference = (Map<String, Integer>) clusteringResultMap.get( "clusterMap" );

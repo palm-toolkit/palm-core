@@ -15,7 +15,7 @@ public interface GroupVisualization
 
 	public Map<String, Object> visualizePublicationsGroup( String type, Set<Publication> publications, HttpServletRequest request );
 
-	public Map<String, Object> visualizeConferencesGroup( String type, Set<Publication> publications, HttpServletRequest request );
+	public Map<String, Object> visualizeConferencesGroup( String type, Set<Publication> publications, List<Interest> filteredTopic, List<String> idsList, HttpServletRequest request );
 
 	public Map<String, Object> visualizeTopicsGroup( String type, Set<Publication> publications, HttpServletRequest request );
 }

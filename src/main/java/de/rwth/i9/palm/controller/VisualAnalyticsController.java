@@ -261,13 +261,6 @@ public class VisualAnalyticsController
 		}
 	}
 
-	// Use explore/addWidgetToExistingUsers to add explore widgets to PALM
-	@RequestMapping( value = "/addWidgetToExistingUsers", method = RequestMethod.GET )
-	@Transactional
-	public void addWidgetToExistingUsers( final HttpServletResponse response ) throws InterruptedException
-	{
-	}
-
 	@RequestMapping( method = RequestMethod.GET )
 	@Transactional
 	public ModelAndView explorePage( final HttpServletRequest request, final HttpServletResponse response ) throws InterruptedException
@@ -276,7 +269,6 @@ public class VisualAnalyticsController
 		request.getSession().setAttribute( "visType", "" );
 		request.getSession().setAttribute( "objectType", "" );
 		request.getSession().setAttribute( "idsList", "" );
-		System.out.println( "set here!!" );
 
 		ModelAndView model = TemplateHelper.createViewWithLink( "explore", LINK_NAME );
 
@@ -311,7 +303,6 @@ public class VisualAnalyticsController
 	@RequestMapping( value = "/searchResearchers", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> getResearcherList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "queryType", required = false ) String queryType, @RequestParam( value = "page", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "addedAuthor", required = false ) String addedAuthor, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "persist", required = false ) String persist, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
 	{
-
 		/* == Set Default Values== */
 		if ( query == null )
 			query = "";
@@ -329,6 +320,11 @@ public class VisualAnalyticsController
 			fulltextSearch = "no";
 		if ( persist == null )
 			persist = "no";
+
+		// set variables in session as soon as the page loads
+		request.getSession().setAttribute( "listType", "researchers" );
+		request.getSession().setAttribute( "page", startPage );
+		request.getSession().setAttribute( "query", query );
 
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -369,13 +365,25 @@ public class VisualAnalyticsController
 		if ( authorsMap != null && (Integer) authorsMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) authorsMap.get( "totalCount" ) );
-			return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, (List<Author>) authorsMap.get( "authors" ) );
+			if ( request.getSession().getAttribute( "listType" ).equals( "researchers" ) && request.getSession().getAttribute( "query" ).equals( query ) && request.getSession().getAttribute( "page" ).equals( startPage ) )
+				return researcherFeature.getResearcherSearch().printJsonOutput( responseMap, (List<Author>) authorsMap.get( "authors" ) );
+			else
+			{
+				responseMap.put( "oldList", "true" );
+				return responseMap;
+			}
 		}
 		else
 		{
 			responseMap.put( "totalCount", 0 );
 			responseMap.put( "count", 0 );
-			return responseMap;
+			if ( request.getSession().getAttribute( "listType" ).equals( "researchers" ) && request.getSession().getAttribute( "query" ).equals( query ) && request.getSession().getAttribute( "page" ).equals( startPage ) )
+				return responseMap;
+			else
+			{
+				responseMap.put( "oldList", "true" );
+				return responseMap;
+			}
 		}
 	}
 
@@ -399,6 +407,11 @@ public class VisualAnalyticsController
 		if ( addedVenue == null )
 			addedVenue = "yes";
 
+		// set variables in session as soon as the page loads
+		request.getSession().setAttribute( "listType", "conferences" );
+		request.getSession().setAttribute( "page", startPage );
+		request.getSession().setAttribute( "query", query );
+
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		boolean persistResult = false;
@@ -420,20 +433,33 @@ public class VisualAnalyticsController
 		if ( (Integer) eventGroupsMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) eventGroupsMap.get( "totalCount" ) );
-			return academicEventFeature.getEventSearch().printJsonOutput( responseMap, (List<EventGroup>) eventGroupsMap.get( "eventGroups" ) );
+			if ( request.getSession().getAttribute( "listType" ).equals( "conferences" ) && request.getSession().getAttribute( "query" ).equals( query ) && request.getSession().getAttribute( "page" ).equals( startPage ) )
+				return academicEventFeature.getEventSearch().printJsonOutput( responseMap, (List<EventGroup>) eventGroupsMap.get( "eventGroups" ) );
+			else
+			{
+				responseMap.put( "oldList", "true" );
+				return responseMap;
+			}
+
 		}
 		else
 		{
 			responseMap.put( "totalCount", 0 );
 			responseMap.put( "count", 0 );
-			return responseMap;
+			if ( request.getSession().getAttribute( "listType" ).equals( "conferences" ) && request.getSession().getAttribute( "query" ).equals( query ) && request.getSession().getAttribute( "page" ).equals( startPage ) )
+				return responseMap;
+			else
+			{
+				responseMap.put( "oldList", "true" );
+				return responseMap;
+			}
 		}
 	}
 
 	@SuppressWarnings( "unchecked" )
 	@Transactional
 	@RequestMapping( value = "/searchPublications", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> getPublicationList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "publicationType", required = false ) String publicationType, @RequestParam( value = "authorId", required = false ) String authorId, @RequestParam( value = "eventId", required = false ) String eventId, @RequestParam( value = "page", required = false ) Integer page, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "year", required = false ) String year, @RequestParam( value = "orderBy", required = false ) String orderBy, final HttpServletResponse response )
+	public @ResponseBody Map<String, Object> getPublicationList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "publicationType", required = false ) String publicationType, @RequestParam( value = "authorId", required = false ) String authorId, @RequestParam( value = "eventId", required = false ) String eventId, @RequestParam( value = "page", required = false ) Integer page, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "year", required = false ) String year, @RequestParam( value = "orderBy", required = false ) String orderBy, HttpServletRequest request, HttpServletResponse response )
 	{
 		/* == Set Default Values== */
 		if ( query == null )
@@ -455,6 +481,11 @@ public class VisualAnalyticsController
 		// Currently, system only provides query on internal database
 		source = "internal";
 
+		// set variables in session as soon as the page loads
+		request.getSession().setAttribute( "listType", "publications" );
+		request.getSession().setAttribute( "page", page );
+		request.getSession().setAttribute( "query", query );
+
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
@@ -473,21 +504,34 @@ public class VisualAnalyticsController
 		if ( (Integer) publicationMap.get( "totalCount" ) > 0 )
 		{
 			responseMap.put( "totalCount", (Integer) publicationMap.get( "totalCount" ) );
-			return publicationFeature.getPublicationSearch().printJsonOutput( responseMap, (List<Publication>) publicationMap.get( "publications" ) );
+			if ( request.getSession().getAttribute( "listType" ).equals( "publications" ) && request.getSession().getAttribute( "query" ).equals( query ) && request.getSession().getAttribute( "page" ).equals( page ) )
+				return publicationFeature.getPublicationSearch().printJsonOutput( responseMap, (List<Publication>) publicationMap.get( "publications" ) );
+			else
+			{
+				responseMap.put( "oldList", "true" );
+				return responseMap;
+			}
 		}
 		else
 		{
 			responseMap.put( "totalCount", 0 );
 			responseMap.put( "count", 0 );
-			return responseMap;
+			if ( request.getSession().getAttribute( "listType" ).equals( "publications" ) && request.getSession().getAttribute( "query" ).equals( query ) && request.getSession().getAttribute( "page" ).equals( page ) )
+				return responseMap;
+			else
+			{
+				responseMap.put( "oldList", "true" );
+				return responseMap;
+			}
 		}
 	}
 
 	@SuppressWarnings( "unchecked" )
 	@Transactional
 	@RequestMapping( value = "/searchTopics", method = RequestMethod.GET )
-	public @ResponseBody Map<String, Object> getTopicList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "publicationType", required = false ) String publicationType, @RequestParam( value = "authorId", required = false ) String authorId, @RequestParam( value = "eventId", required = false ) String eventId, @RequestParam( value = "page", required = false ) Integer page, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "year", required = false ) String year, @RequestParam( value = "orderBy", required = false ) String orderBy, final HttpServletResponse response )
+	public @ResponseBody Map<String, Object> getTopicList( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "publicationType", required = false ) String publicationType, @RequestParam( value = "authorId", required = false ) String authorId, @RequestParam( value = "eventId", required = false ) String eventId, @RequestParam( value = "page", required = false ) Integer page, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "source", required = false ) String source, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "year", required = false ) String year, @RequestParam( value = "orderBy", required = false ) String orderBy, HttpServletRequest request, HttpServletResponse response )
 	{
+
 		/* == Set Default Values== */
 		if ( query == null )
 			query = "";
@@ -505,6 +549,11 @@ public class VisualAnalyticsController
 			year = "all";
 		if ( orderBy == null )
 			orderBy = "citation";
+
+		// set variables in session as soon as the page loads
+		request.getSession().setAttribute( "listType", "topics" );
+		request.getSession().setAttribute( "page", page );
+		request.getSession().setAttribute( "query", query );
 
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -545,7 +594,13 @@ public class VisualAnalyticsController
 		responseMap.put( "count", mapList.size() );
 
 		responseMap.put( "topicsList", mapList );
-		return responseMap;
+		if ( request.getSession().getAttribute( "listType" ).equals( "topics" ) && request.getSession().getAttribute( "query" ).equals( query ) && request.getSession().getAttribute( "page" ).equals( page ) )
+			return responseMap;
+		else
+		{
+			responseMap.put( "oldList", "true" );
+			return responseMap;
+		}
 	}
 
 	@SuppressWarnings( "unchecked" )
@@ -571,6 +626,11 @@ public class VisualAnalyticsController
 			fulltextSearch = "no";
 		if ( persist == null )
 			persist = "no";
+
+		// set variables in session as soon as the page loads
+		request.getSession().setAttribute( "listType", "circles" );
+		request.getSession().setAttribute( "page", startPage );
+		request.getSession().setAttribute( "query", query );
 
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -614,7 +674,13 @@ public class VisualAnalyticsController
 			responseMap.put( "totalCount", 0 );
 			responseMap.put( "count", 0 );
 		}
-		return responseMap;
+		if ( request.getSession().getAttribute( "listType" ).equals( "circles" ) && request.getSession().getAttribute( "query" ).equals( query ) && request.getSession().getAttribute( "page" ).equals( startPage ) )
+			return responseMap;
+		else
+		{
+			responseMap.put( "oldList", "true" );
+			return responseMap;
+		}
 	}
 
 	@Transactional
@@ -1038,7 +1104,7 @@ public class VisualAnalyticsController
 				}
 				if ( visType.equals( "conferences" ) )
 				{
-					visMap = visualizationFeature.getVisGroup().visualizeConferencesGroup( type, publications, request );
+					visMap = visualizationFeature.getVisGroup().visualizeConferencesGroup( type, publications, filteredTopic, idsList, request );
 				}
 				if ( visType.equals( "publications" ) )
 				{

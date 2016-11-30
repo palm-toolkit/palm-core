@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +20,8 @@ import org.gephi.appearance.api.AppearanceController;
 import org.gephi.appearance.api.AppearanceModel;
 import org.gephi.appearance.api.Function;
 import org.gephi.appearance.plugin.RankingElementColorTransformer;
+import org.gephi.appearance.plugin.RankingNodeSizeTransformer;
+import org.gephi.graph.api.Column;
 import org.gephi.graph.api.Edge;
 import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.GraphModel;
@@ -35,6 +36,7 @@ import org.gephi.preview.api.PreviewProperty;
 import org.gephi.preview.types.EdgeColor;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
+import org.gephi.statistics.plugin.GraphDistance;
 import org.openide.util.Lookup;
 import org.springframework.stereotype.Component;
 
@@ -80,12 +82,12 @@ class Network
 		nodes.clear();
 		edges.clear();
 
-		Set<Publication> pubs = new HashSet<Publication>();
-		if ( authorForCoAuthors != null )
-		{
-			pubs = authorForCoAuthors.getPublications();
-			authorPublications.addAll( pubs );
-		}
+		// Set<Publication> pubs = new HashSet<Publication>();
+		// if ( authorForCoAuthors != null )
+		// {
+		// pubs = authorForCoAuthors.getPublications();
+		// authorPublications.addAll( pubs );
+		// }
 
 		if ( !selectedAuthors.isEmpty() )
 		{
@@ -115,10 +117,10 @@ class Network
 							{
 								nodes.add( n );
 								n.setLabel( publicationAuthor.getName() );
-								if ( pubs.contains( publication ) )
-									n.setSize( 0.5f );
-								else
-									n.setSize( 0.1f );
+								// if ( pubs.contains( publication ) )
+								// n.setSize( 0.5f );
+								// else
+								n.setSize( 0.1f );
 								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
 								n.setAttribute( "authorId", publicationAuthor.getId() );
 								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
@@ -174,10 +176,10 @@ class Network
 								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
 								n.setAttribute( "authorId", publicationAuthor.getId() );
 								n.setLabel( publicationAuthor.getName() );
-								if ( pubs.contains( publication ) )
-									n.setSize( 0.5f );
-								else
-									n.setSize( 0.1f );
+								// if ( pubs.contains( publication ) )
+								// n.setSize( 0.5f );
+								// else
+								n.setSize( 0.1f );
 								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
 								undirectedGraph.addNode( n );
 							}
@@ -234,10 +236,10 @@ class Network
 							{
 								nodes.add( n );
 								n.setLabel( publicationAuthor.getName() );
-								if ( pubs.contains( publication ) )
-									n.setSize( 0.5f );
-								else
-									n.setSize( 0.1f );
+								// if ( pubs.contains( publication ) )
+								// n.setSize( 0.5f );
+								// else
+								n.setSize( 0.1f );
 								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
 								n.setAttribute( "authorId", publicationAuthor.getId() );
 								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
@@ -366,7 +368,7 @@ class Network
 			System.out.println( type );
 			System.out.println( authorList.size() );
 			System.out.println( idsList.size() );
-			
+
 			// find associations upto 2 levels, if authors are not
 			// co-authors
 			if ( type.equals( "researcher" ) && authorList.size() == 2 )
@@ -551,6 +553,11 @@ class Network
 		autoLayout.addLayout( layout, 1f, new AutoLayout.DynamicProperty[] { repulsion, attraction } );
 		autoLayout.execute();
 
+		//Get Centrality
+        GraphDistance distance = new GraphDistance();
+        distance.setDirected(false);
+        distance.execute(graphModel);
+		
 		// Rank color by Degree
 		Function degreeRanking = appearanceModel.getNodeFunction( undirectedGraph, AppearanceModel.GraphFunction.NODE_DEGREE, RankingElementColorTransformer.class );
 		RankingElementColorTransformer degreeTransformer = (RankingElementColorTransformer) degreeRanking.getTransformer();
@@ -558,6 +565,15 @@ class Network
 		degreeTransformer.setColorPositions( new float[] { 0f, 1f } );
 		appearanceController.transform( degreeRanking );
 		// purple 673888
+
+		// Rank size by centrality/Harmonic Closeness
+		Column centralityColumn = graphModel.getNodeTable().getColumn( GraphDistance.HARMONIC_CLOSENESS );
+		Function centralityRanking = appearanceModel.getNodeFunction( undirectedGraph, centralityColumn, RankingNodeSizeTransformer.class );
+		RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
+		centralityTransformer.setMinSize( 3 );
+		centralityTransformer.setMaxSize( 10 );
+		appearanceController.transform( centralityRanking );
+
 		// Preview
 		model.getProperties().putValue( PreviewProperty.SHOW_NODE_LABELS, Boolean.TRUE );
 		model.getProperties().putValue( PreviewProperty.EDGE_COLOR, new EdgeColor( Color.GRAY ) );

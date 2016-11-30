@@ -166,7 +166,6 @@ public class VADataFetcher
 						if ( interests.keySet().contains( interest.getTerm() ) )
 						{
 							Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
-							System.out.println( "I:" + a.getName() );
 							if ( !commonAuthors.contains( a ) )
 							{
 								commonAuthors.add( a );
@@ -392,7 +391,6 @@ public class VADataFetcher
 		{
 			for ( Author a : authorList )
 			{
-				System.out.println( "author for pubs;" + a.getName() );
 				publications.addAll( a.getPublications() );
 			}
 		}
@@ -1060,7 +1058,6 @@ public class VADataFetcher
 
 				if ( !interestAuthors.contains( a ) )
 				{
-					System.out.println( "IA: " + a.getName() );
 					interestAuthors.add( a );
 					Map<String, Object> items = new HashMap<String, Object>();
 					items.put( "name", a.getName() );
@@ -1096,16 +1093,12 @@ public class VADataFetcher
 			for ( Publication p : publicationsWithInterest )
 				for ( Author a : p.getAuthors() )
 					if ( !publicationAuthors.contains( a ) )
-					{
 						publicationAuthors.add( a );
-						System.out.println( a.getName() );
-					}
 
 			for ( int j = 0; j < interestAuthors.size(); j++ )
 			{
 				if ( !publicationAuthors.contains( interestAuthors.get( j ) ) )
 				{
-					System.out.println( "del: " + interestAuthors.get( j ).getName() );
 					interestAuthors.remove( j );
 					listItems.remove( j );
 					j--;
