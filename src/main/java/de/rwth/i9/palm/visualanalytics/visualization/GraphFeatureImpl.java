@@ -543,21 +543,31 @@ class Network
 				}
 			}
 		}
+
+		System.out.println( "nodes size: " + nodes.size() );
+
+		int time = 2;
+		if ( !type.equals( "researcher" ) || nodes.size() > 20 )
+			time = 20;
+		if ( nodes.size() > 1000 )
+			time = 40;
+
+		System.out.println( "time: " + time );
 		// Layout for 1 minute
-		AutoLayout autoLayout = new AutoLayout( 2, TimeUnit.SECONDS );
+		AutoLayout autoLayout = new AutoLayout( time, TimeUnit.SECONDS );
 		autoLayout.setGraphModel( graphModel );
-		ForceAtlasLayout layout = new ForceAtlasLayout( null );
+		ForceAtlasLayout forceAtlasLayout = new ForceAtlasLayout( null );
 
 		AutoLayout.DynamicProperty repulsion = AutoLayout.createDynamicProperty( "forceAtlas.repulsionStrength.name", new Double( 200.0 ), 1f );
 		AutoLayout.DynamicProperty attraction = AutoLayout.createDynamicProperty( "forceAtlas.attractionStrength.name", new Double( 10.0 ), 1f );
-		autoLayout.addLayout( layout, 1f, new AutoLayout.DynamicProperty[] { repulsion, attraction } );
+		autoLayout.addLayout( forceAtlasLayout, 1.0f, new AutoLayout.DynamicProperty[] { repulsion, attraction } );
 		autoLayout.execute();
 
-		//Get Centrality
-        GraphDistance distance = new GraphDistance();
-        distance.setDirected(false);
-        distance.execute(graphModel);
-		
+		// Get Centrality
+		GraphDistance distance = new GraphDistance();
+		distance.setDirected( false );
+		distance.execute( graphModel );
+
 		// Rank color by Degree
 		Function degreeRanking = appearanceModel.getNodeFunction( undirectedGraph, AppearanceModel.GraphFunction.NODE_DEGREE, RankingElementColorTransformer.class );
 		RankingElementColorTransformer degreeTransformer = (RankingElementColorTransformer) degreeRanking.getTransformer();
@@ -565,14 +575,16 @@ class Network
 		degreeTransformer.setColorPositions( new float[] { 0f, 1f } );
 		appearanceController.transform( degreeRanking );
 		// purple 673888
-
-		// Rank size by centrality/Harmonic Closeness
-		Column centralityColumn = graphModel.getNodeTable().getColumn( GraphDistance.HARMONIC_CLOSENESS );
-		Function centralityRanking = appearanceModel.getNodeFunction( undirectedGraph, centralityColumn, RankingNodeSizeTransformer.class );
-		RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
-		centralityTransformer.setMinSize( 3 );
-		centralityTransformer.setMaxSize( 10 );
-		appearanceController.transform( centralityRanking );
+		if ( nodes.size() > 1 )
+		{
+			// Rank size by centrality/Harmonic Closeness
+			Column centralityColumn = graphModel.getNodeTable().getColumn( GraphDistance.BETWEENNESS );
+			Function centralityRanking = appearanceModel.getNodeFunction( undirectedGraph, centralityColumn, RankingNodeSizeTransformer.class );
+			RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
+			centralityTransformer.setMinSize( 4 );
+			centralityTransformer.setMaxSize( 10 );
+			appearanceController.transform( centralityRanking );
+		}
 
 		// Preview
 		model.getProperties().putValue( PreviewProperty.SHOW_NODE_LABELS, Boolean.TRUE );

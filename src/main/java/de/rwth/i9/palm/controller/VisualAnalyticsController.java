@@ -88,7 +88,7 @@ public class VisualAnalyticsController
 	// Use explore/createVAWidgets to create Visual Analytics Widgets
 	@Transactional
 	@RequestMapping( value = "/createVAWidgets", method = RequestMethod.GET )
-	public void createVAWidgets( final HttpServletResponse response ) throws InterruptedException
+	public @ResponseBody String createVAWidgets( final HttpServletResponse response ) throws InterruptedException
 	{
 		List<Widget> existingWidgets = persistenceStrategy.getWidgetDAO().getAllWidgets();
 		Boolean alreadyExist = false;
@@ -259,6 +259,7 @@ public class VisualAnalyticsController
 			// persist user at the end
 			persistenceStrategy.getUserDAO().persist( user );
 		}
+		return "Created visual analytics widgets";
 	}
 
 	@RequestMapping( method = RequestMethod.GET )

@@ -139,8 +139,18 @@ public class DataController
 	}
 
 	@Transactional
+	@RequestMapping( value = "/updateflattables/all", method = RequestMethod.GET )
+	public @ResponseBody String updateFlatTables()
+	{
+		updateFlatAuthor();
+		updateFlatConference();
+		updateFlatPublication();
+		return "creation/updation of flat tables complete";
+	}
+
+	@Transactional
 	@RequestMapping( value = "/updateflattables/authors", method = RequestMethod.GET )
-	public @ResponseBody String updateFlatAuthor()
+	public void updateFlatAuthor()
 	{
 		System.out.println( "will start updating flat author table" );
 		List<Author> authors = persistenceStrategy.getAuthorDAO().getAllAuthors();
@@ -148,7 +158,11 @@ public class DataController
 		for ( Author author : authors )
 		{
 			if ( persistenceStrategy.getAuthorInterestFlatDAO().authorIdExists( author.getId() ) )
-				continue;
+			{
+				AuthorInterestFlat authorInterestFlat = persistenceStrategy.getAuthorInterestFlatDAO().getById( author.getId() );
+				persistenceStrategy.getAuthorInterestFlatDAO().delete( authorInterestFlat );
+				// continue;
+			}
 			Map<String, Double> authorInterests = new HashMap<String, Double>();
 			for ( AuthorInterestProfile aip : author.getAuthorInterestProfiles() )
 			{
@@ -169,11 +183,9 @@ public class DataController
 							authorInterests.put( i.getTerm(), truncWeight );
 						else
 						{
-							System.out.println( i.getTerm() );
 							authorInterests.remove( i );
 							authorInterests.put( i.getTerm(), truncValue + truncWeight );
 						}
-						System.out.println( truncValue + " : " + truncWeight );
 					}
 				}
 			}
@@ -187,12 +199,12 @@ public class DataController
 			j++;
 		}
 
-		return "Updated flat author table.";
+		System.out.println( "Updated flat author table." );
 	}
 
 	@Transactional
 	@RequestMapping( value = "/updateflattables/events", method = RequestMethod.GET )
-	public @ResponseBody String updateFlatConference()
+	public void updateFlatConference()
 	{
 		System.out.println( "will start updating flat academic event table" );
 		List<EventGroup> eventGroupList = persistenceStrategy.getEventGroupDAO().getEventGroupListWithoutPaging( "", "", "" );
@@ -200,7 +212,11 @@ public class DataController
 		for ( EventGroup eg : eventGroupList )
 		{
 			if ( persistenceStrategy.getEventGroupInterestFlatDAO().eventIdExists( eg.getId() ) )
-				continue;
+			{
+				EventGroupInterestFlat eventGroupInterestFlat = persistenceStrategy.getEventGroupInterestFlatDAO().getById( eg.getId() );
+				persistenceStrategy.getEventGroupInterestFlatDAO().delete( eventGroupInterestFlat );
+				// continue;
+			}
 			List<Event> events = eg.getEvents();
 			Map<String, Double> eventGroupTopics = new HashMap<String, Double>();
 
@@ -252,19 +268,23 @@ public class DataController
 
 		}
 
-		return "Updated flat event group table.";
+		System.out.println( "Updated flat event group table." );
 	}
 
 	@Transactional
 	@RequestMapping( value = "/updateflattables/publications", method = RequestMethod.GET )
-	public @ResponseBody String updateFlatPublication()
+	public void updateFlatPublication()
 	{
 		List<DataMiningPublication> publications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
 		int j = 1;
 		for ( DataMiningPublication publication : publications )
 		{
 			if ( persistenceStrategy.getPublicationTopicFlatDAO().publicationIdExists( publication.getId() ) )
-				continue;
+			{
+				PublicationTopicFlat publicationTopicFlat = persistenceStrategy.getPublicationTopicFlatDAO().getById( publication.getId() );
+				persistenceStrategy.getPublicationTopicFlatDAO().delete( publicationTopicFlat );
+				// continue;
+			}
 			Map<String, Double> publicationTopics = new HashMap<String, Double>();
 			for ( PublicationTopic pt : publication.getPublicationTopics() )
 			{
@@ -279,10 +299,11 @@ public class DataController
 			ptf.setPublication_id( publication.getId() );
 			ptf.setTopics( sortedMap.toString().replaceAll( "[\\{\\}]", "" ) );
 			persistenceStrategy.getPublicationTopicFlatDAO().persist( ptf );
+			System.out.println( "Added no " + j );
 			j++;
 		}
 
-		return "Updated flat publication tables";
+		System.out.println( "Updated flat publication tables" );
 	}
 
 }
