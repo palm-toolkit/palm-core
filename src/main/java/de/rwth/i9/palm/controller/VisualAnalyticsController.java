@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.controller;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -270,6 +271,8 @@ public class VisualAnalyticsController
 		request.getSession().setAttribute( "visType", "" );
 		request.getSession().setAttribute( "objectType", "" );
 		request.getSession().setAttribute( "idsList", "" );
+
+		deleteOldGexfFiles();
 
 		ModelAndView model = TemplateHelper.createViewWithLink( "explore", LINK_NAME );
 
@@ -1219,4 +1222,20 @@ public class VisualAnalyticsController
 		return namesList;
 	}
 
+	public void deleteOldGexfFiles()
+	{
+		// delete files older than one day
+		File directory = new File( "src/main/webapp/resources/gexf" );
+		if ( directory.exists() )
+		{
+			File[] listFiles = directory.listFiles();
+			long purgeTime = System.currentTimeMillis() - ( 1 * 24 * 60 * 60 * 1000 );
+			for ( File listFile : listFiles )
+			{
+				if ( listFile.lastModified() < purgeTime )
+					if ( !listFile.delete() )
+						System.err.println( "Unable to delete file: " + listFile );
+			}
+		}
+	}
 }

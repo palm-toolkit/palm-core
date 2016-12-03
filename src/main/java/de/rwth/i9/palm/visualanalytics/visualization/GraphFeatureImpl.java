@@ -30,10 +30,6 @@ import org.gephi.graph.api.UndirectedGraph;
 import org.gephi.io.exporter.api.ExportController;
 import org.gephi.layout.plugin.AutoLayout;
 import org.gephi.layout.plugin.forceAtlas.ForceAtlasLayout;
-import org.gephi.preview.api.PreviewController;
-import org.gephi.preview.api.PreviewModel;
-import org.gephi.preview.api.PreviewProperty;
-import org.gephi.preview.types.EdgeColor;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.gephi.statistics.plugin.GraphDistance;
@@ -47,6 +43,8 @@ class Network
 {
 	public void generateNetwork( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final Author authorForCoAuthors, final List<Author> selectedAuthors )
 	{
+		System.out.println( "authorLst: " + authorList.size() );
+		System.out.println( "selectedAuthors: " + selectedAuthors.size() );
 		Random rand = new Random();
 
 		int max = 100;
@@ -71,11 +69,14 @@ class Network
 		// Lookup.getDefault().lookup( FilterController.class );
 		AppearanceController appearanceController = Lookup.getDefault().lookup( AppearanceController.class );
 		AppearanceModel appearanceModel = appearanceController.getModel();
-		PreviewModel model = Lookup.getDefault().lookup( PreviewController.class ).getModel();
+		// PreviewModel model = Lookup.getDefault().lookup(
+		// PreviewController.class ).getModel();
 
 		// Append as an undirected Graph
 		UndirectedGraph undirectedGraph = graphModel.getUndirectedGraph();
 		undirectedGraph.writeLock();
+
+		System.out.println( "authorPublications: " + authorPublications.size() );
 
 		List<Node> nodes = new ArrayList<Node>();
 		List<Edge> edges = new ArrayList<Edge>();
@@ -547,7 +548,7 @@ class Network
 		System.out.println( "nodes size: " + nodes.size() );
 
 		int time = 2;
-		if ( !type.equals( "researcher" ) || nodes.size() > 20 )
+		if ( !type.equals( "researcher" ) || !type.equals( "circle" ) || nodes.size() > 20 )
 			time = 20;
 		if ( nodes.size() > 1000 )
 			time = 40;
@@ -563,6 +564,7 @@ class Network
 		autoLayout.addLayout( forceAtlasLayout, 1.0f, new AutoLayout.DynamicProperty[] { repulsion, attraction } );
 		autoLayout.execute();
 
+		System.out.println( "layout done" );
 		// Get Centrality
 		GraphDistance distance = new GraphDistance();
 		distance.setDirected( false );
@@ -580,24 +582,49 @@ class Network
 			// Rank size by centrality/Harmonic Closeness
 			Column centralityColumn = graphModel.getNodeTable().getColumn( GraphDistance.BETWEENNESS );
 			Function centralityRanking = appearanceModel.getNodeFunction( undirectedGraph, centralityColumn, RankingNodeSizeTransformer.class );
-			RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
-			centralityTransformer.setMinSize( 4 );
-			centralityTransformer.setMaxSize( 10 );
-			appearanceController.transform( centralityRanking );
+			if ( centralityRanking != null )
+			{
+				RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
+				centralityTransformer.setMinSize( 4 );
+				centralityTransformer.setMaxSize( 10 );
+				appearanceController.transform( centralityRanking );
+			}
 		}
 
-		// Preview
-		model.getProperties().putValue( PreviewProperty.SHOW_NODE_LABELS, Boolean.TRUE );
-		model.getProperties().putValue( PreviewProperty.EDGE_COLOR, new EdgeColor( Color.GRAY ) );
-		model.getProperties().putValue( PreviewProperty.EDGE_THICKNESS, new Float( 0.1f ) );
-		model.getProperties().putValue( PreviewProperty.NODE_LABEL_FONT, model.getProperties().getFontValue( PreviewProperty.NODE_LABEL_FONT ).deriveFont( 8 ) );
+		System.out.println( "centrality done" );
+		// // Preview
+		// model.getProperties().putValue( PreviewProperty.SHOW_NODE_LABELS,
+		// Boolean.TRUE );
+		// model.getProperties().putValue( PreviewProperty.EDGE_COLOR, new
+		// EdgeColor( Color.GRAY ) );
+		// model.getProperties().putValue( PreviewProperty.EDGE_THICKNESS, new
+		// Float( 0.1f ) );
+		// model.getProperties().putValue( PreviewProperty.NODE_LABEL_FONT,
+		// model.getProperties().getFontValue( PreviewProperty.NODE_LABEL_FONT
+		// ).deriveFont( 8 ) );
 
 		// Export full graph
 		ExportController ec = Lookup.getDefault().lookup( ExportController.class );
 		try
 		{
+
+			File gexfDir = new File( "src/main/webapp/resources/gexf" );
+			if ( !gexfDir.exists() )
+			{
+				try
+				{
+					gexfDir.mkdir();
+				}
+				catch ( SecurityException se )
+				{
+					se.getStackTrace();
+				}
+			}
+
 			final File f = new File( "src/main/webapp/resources/gexf/co-authors.gexf" );
 			ec.exportFile( f );
+
+			System.out.println( "exported" );
 			// String graphFile = f.getName();
 			pc.deleteWorkspace( workspace );
 			undirectedGraph.writeUnlock();
@@ -652,29 +679,32 @@ public class GraphFeatureImpl implements GraphFeature
 			executor.shutdown();
 
 			File file = new File( "src/main/webapp/resources/gexf/co-authors.gexf" );
+			System.out.println( "file:" + file.getName() );
+			// Random rand = new Random();
+			//
+			// int max = 10000;
+			// int min = 0;
+			long time = System.currentTimeMillis();
+			final File newFile = new File( "src/main/webapp/resources/gexf/" + time + ".gexf" );
+			System.out.println( newFile.getName() );
+			// while ( newFile.exists() )
+			// {
+			// newFile = new File( "src/main/webapp/resources/gexf/co-authors" +
+			// rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
+			// System.out.println( "re " + newFile.getName() );
+			// }
 
-			Random rand = new Random();
-
-			int max = 100;
-			int min = 0;
-			File newFile = new File( "src/main/webapp/resources/gexf/co-authors" + rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
-
-			while ( newFile.exists() )
-			{
-				newFile = new File( "src/main/webapp/resources/gexf/co-authors" + rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
-			}
-
-			final File fileToExport = newFile;
-			file.renameTo( fileToExport );
+			// final File fileToExport = newFile;
+			file.renameTo( newFile );
 			new java.util.Timer().schedule( new java.util.TimerTask()
 			{
 				@Override
 				public void run()
 				{
-					fileToExport.delete();
+					newFile.delete();
 				}
 			}, 3600000 );
-			responseMap.put( "graphFile", fileToExport.getName() );
+			responseMap.put( "graphFile", newFile.getName() );
 		}
 		return responseMap;
 
