@@ -294,7 +294,7 @@ public class VADataFetcher
 				i--;
 			}
 		}
-
+		System.out.println( "common co: " + commonAuthors.size() );
 		if ( !publications.isEmpty() )
 		{
 			// get authors from the publications
@@ -321,7 +321,7 @@ public class VADataFetcher
 			}
 
 		}
-
+		System.out.println( "common co2: " + commonAuthors.size() );
 		finalMap.put( "commonAuthors", commonAuthors );
 		return finalMap;
 	}

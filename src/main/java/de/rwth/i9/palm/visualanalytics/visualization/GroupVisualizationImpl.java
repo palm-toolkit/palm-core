@@ -27,14 +27,14 @@ public class GroupVisualizationImpl implements GroupVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizeResearchersGroup( String type, String visType, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic, HttpServletRequest request )
+	public Map<String, Object> visualizeResearchersGroup( String type, String visType, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic, List<String> repeatCallList, String algo, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			Map<String, Object> clusteringResultMap = clusteringService.clusterAuthors( "xmeans", idsList, publications, type, visType, startYear, endYear, request, yearFilterPresent, filteredTopic );
+			Map<String, Object> clusteringResultMap = clusteringService.clusterAuthors( algo, idsList, publications, type, visType, startYear, endYear, request, yearFilterPresent, filteredTopic, repeatCallList, seedVal, noOfClustersVal, foldsVal, iterationsVal );
 			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
 			Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
 			Map<String, Integer> mapClusterAuthor = (Map<String, Integer>) clusteringResultMap.get( "clusterMap" );
@@ -87,6 +87,12 @@ public class GroupVisualizationImpl implements GroupVisualization
 					authors.add( visMapTemp );
 				}
 				visMap.put( "coauthors", authors );
+				visMap.put( "dataSet", clusteringResultMap.get( "dataSet" ) );
+				visMap.put( "algo", clusteringResultMap.get( "algo" ) );
+				visMap.put( "seedVal", clusteringResultMap.get( "seedVal" ) );
+				visMap.put( "noOfClustersVal", clusteringResultMap.get( "noOfClustersVal" ) );
+				visMap.put( "foldsVal", clusteringResultMap.get( "foldsVal" ) );
+				visMap.put( "iterationsVal", clusteringResultMap.get( "iterationsVal" ) );
 			}
 			return visMap;
 		}
@@ -97,14 +103,14 @@ public class GroupVisualizationImpl implements GroupVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizePublicationsGroup( String type, Set<Publication> publications, HttpServletRequest request )
+	public Map<String, Object> visualizePublicationsGroup( String type, String visType, Set<Publication> publications, List<String> repeatCallList, String algo, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) )
 		{
-			Map<String, Object> clusteringResultMap = clusteringService.clusterPublications( "xmeans", publications );
+			Map<String, Object> clusteringResultMap = clusteringService.clusterPublications( algo, publications, type, visType, repeatCallList, seedVal, noOfClustersVal, foldsVal, iterationsVal );
 			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
 			Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
 			Map<String, Integer> mapClusterPublication = (Map<String, Integer>) clusteringResultMap.get( "clusterMap" );
@@ -157,6 +163,12 @@ public class GroupVisualizationImpl implements GroupVisualization
 					publicationsList.add( responseMapTemp );
 				}
 				visMap.put( "publications", publicationsList );
+				visMap.put( "dataSet", clusteringResultMap.get( "dataSet" ) );
+				visMap.put( "algo", clusteringResultMap.get( "algo" ) );
+				visMap.put( "seedVal", clusteringResultMap.get( "seedVal" ) );
+				visMap.put( "noOfClustersVal", clusteringResultMap.get( "noOfClustersVal" ) );
+				visMap.put( "foldsVal", clusteringResultMap.get( "foldsVal" ) );
+				visMap.put( "iterationsVal", clusteringResultMap.get( "iterationsVal" ) );
 			}
 			return visMap;
 		}
@@ -167,14 +179,16 @@ public class GroupVisualizationImpl implements GroupVisualization
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> visualizeConferencesGroup( String type, Set<Publication> publications, List<Interest> filteredTopic, List<String> idsList, HttpServletRequest request )
+	public Map<String, Object> visualizeConferencesGroup( String type, String visType, Set<Publication> publications, List<Interest> filteredTopic, List<String> idsList, List<String> repeatCallList, String algo, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-
+		System.out.println( request.getSession().getAttribute( "objectType" ) );
+		System.out.println( type );
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) )
 		{
-			Map<String, Object> clusteringResultMap = clusteringService.clusterConferences( "xmeans", publications, filteredTopic, type, idsList );
+			System.out.println( "coming in group" );
+			Map<String, Object> clusteringResultMap = clusteringService.clusterConferences( algo, publications, filteredTopic, type, visType, idsList, repeatCallList, seedVal, noOfClustersVal, foldsVal, iterationsVal );
 			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
 			Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
 			Map<String, Integer> mapClusterConference = (Map<String, Integer>) clusteringResultMap.get( "clusterMap" );
@@ -230,6 +244,12 @@ public class GroupVisualizationImpl implements GroupVisualization
 					conferences.add( responseMapTemp );
 				}
 				visMap.put( "conferences", conferences );
+				visMap.put( "dataSet", clusteringResultMap.get( "dataSet" ) );
+				visMap.put( "algo", clusteringResultMap.get( "algo" ) );
+				visMap.put( "seedVal", clusteringResultMap.get( "seedVal" ) );
+				visMap.put( "noOfClustersVal", clusteringResultMap.get( "noOfClustersVal" ) );
+				visMap.put( "foldsVal", clusteringResultMap.get( "foldsVal" ) );
+				visMap.put( "iterationsVal", clusteringResultMap.get( "iterationsVal" ) );
 			}
 			return visMap;
 		}

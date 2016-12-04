@@ -826,6 +826,9 @@ public class VisualAnalyticsController
 		}
 		else
 		{
+			Set<Publication> publications = new HashSet<Publication>();
+			// if ( dataSetIds == null || dataSetIds.isEmpty() )
+			// {
 			if ( visTab == "" || visTab.equals( "" ) )
 			{
 				if ( visType.equals( "researchers" ) )
@@ -932,9 +935,9 @@ public class VisualAnalyticsController
 			if ( type.equals( "circle" ) )
 				circleList = filterFeature.getFilterHelper().getCirclesFromIds( idsList, request );
 
-			// System.out.println( "pub list in vac: " + publicationList.size()
+			// System.out.println( "pub list in vac: " +
+			// publicationList.size()
 			// );
-			Set<Publication> publications = new HashSet<Publication>();
 
 			if ( visType.equals( "researchers" ) && !type.equals( "publication" ) && filteredPublication.isEmpty() && filteredConference.isEmpty() && filteredTopic.isEmpty() && filteredCircle.isEmpty() && yearFilterPresent.equals( "false" ) )
 			{
@@ -943,7 +946,12 @@ public class VisualAnalyticsController
 			else
 				publications = filterFeature.getFilteredData().getFilteredPublications( type, visType, authorList, eventGroupList, publicationList, interestList, circleList, filteredPublication, filteredConference, filteredTopic, filteredCircle, startYear, endYear, yearFilterPresent, request );
 
-			visMap = visSwitch( type, idsList, visTab, visType, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors, request, response );
+			visMap = visSwitch( type, idsList, visTab, visType, publications, startYear, endYear, yearFilterPresent, filteredTopic, authoridForCoAuthors, null, "", "", "", "", "", request, response );
+			// }
+			// else
+			// visMap = visSwitch( type, idsList, visTab, visType, publications,
+			// startYear, endYear, yearFilterPresent, filteredTopic,
+			// authoridForCoAuthors, dataSetIdsList, request, response );
 
 			responseMap.put( "type", type );
 			responseMap.put( "visType", visType );
@@ -1075,9 +1083,10 @@ public class VisualAnalyticsController
 		return responseMap;
 	}
 
-	public Map<String, Object> visSwitch( String type, List<String> idsList, String visTab, String visType, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic, String authoridForCoAuthors, HttpServletRequest request, HttpServletResponse response )
+	public Map<String, Object> visSwitch( String type, List<String> idsList, String visTab, String visType, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, List<Interest> filteredTopic, String authoridForCoAuthors, List<String> repeatCallList, String algo, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal, HttpServletRequest request, HttpServletResponse response )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
+		System.out.println( visTab + " : " + visType + " : " + type );
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && visType.equals( request.getSession().getAttribute( "visType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
 			switch ( visTab ) {
@@ -1104,15 +1113,17 @@ public class VisualAnalyticsController
 			case "Group": {
 				if ( visType.equals( "researchers" ) )
 				{
-					visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, visType, idsList, publications, startYear, endYear, yearFilterPresent, filteredTopic, request );
+					System.out.println( "coming in" );
+					visMap = visualizationFeature.getVisGroup().visualizeResearchersGroup( type, visType, idsList, publications, startYear, endYear, yearFilterPresent, filteredTopic, repeatCallList, algo, seedVal, noOfClustersVal, foldsVal, iterationsVal, request );
 				}
 				if ( visType.equals( "conferences" ) )
 				{
-					visMap = visualizationFeature.getVisGroup().visualizeConferencesGroup( type, publications, filteredTopic, idsList, request );
+					System.out.println( "coming in conf" );
+					visMap = visualizationFeature.getVisGroup().visualizeConferencesGroup( type, visType, publications, filteredTopic, idsList, repeatCallList, algo, seedVal, noOfClustersVal, foldsVal, iterationsVal, request );
 				}
 				if ( visType.equals( "publications" ) )
 				{
-					visMap = visualizationFeature.getVisGroup().visualizePublicationsGroup( type, publications, request );
+					visMap = visualizationFeature.getVisGroup().visualizePublicationsGroup( type, visType, publications, repeatCallList, algo, seedVal, noOfClustersVal, foldsVal, iterationsVal, request );
 				}
 				if ( visType.equals( "topics" ) )
 				{
@@ -1182,6 +1193,30 @@ public class VisualAnalyticsController
 			}
 			}
 		}
+		return visMap;
+	}
+
+	@Transactional
+	@RequestMapping( value = "/clusterAlternateAlgo", method = RequestMethod.GET )
+	public @ResponseBody Map<String, Object> clusterAlternateAlgo( @RequestParam( value = "dataSetIds", required = false ) String dataSetIds, @RequestParam( value = "type", required = false ) String type, @RequestParam( value = "visType", required = false ) String visType, @RequestParam( value = "idList", required = false ) String idList, @RequestParam( value = "algo", required = false ) String algo, @RequestParam( value = "seedVal", required = false ) String seedVal, @RequestParam( value = "noOfClustersVal", required = false ) String noOfClustersVal, @RequestParam( value = "foldsVal", required = false ) String foldsVal, @RequestParam( value = "iterationsVal", required = false ) String iterationsVal, HttpServletRequest request, HttpServletResponse response ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException
+	{
+		System.out.println( "in correct function" );
+		System.out.println( foldsVal + " " + seedVal );
+		Map<String, Object> visMap = new HashMap<String, Object>();
+		List<String> dataSetIdsList = new ArrayList<String>();
+		if ( dataSetIds != null && !dataSetIds.equals( "" ) )
+		{
+			dataSetIdsList = new ArrayList<String>( Arrays.asList( dataSetIds.split( "," ) ) );
+		}
+		List<String> idsList = new ArrayList<String>();
+		if ( idList != null && !idList.equals( "" ) )
+		{
+			idsList = new ArrayList<String>( Arrays.asList( idList.split( "," ) ) );
+		}
+		List<Interest> filteredTopic = null;
+		Set<Publication> publications = new HashSet<Publication>();
+		visMap = visSwitch( type, idsList, "Group", visType, publications, "", "", "", filteredTopic, "", dataSetIdsList, algo, seedVal, noOfClustersVal, foldsVal, iterationsVal, request, response );
+
 		return visMap;
 	}
 

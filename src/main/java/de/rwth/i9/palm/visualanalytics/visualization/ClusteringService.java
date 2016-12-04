@@ -11,9 +11,9 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface ClusteringService
 {
-	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String visType, String startYear, String endYear, HttpServletRequest request, String yearFilterPresent, List<Interest> filteredTopic );
+	public Map<String, Object> clusterAuthors( String algorithm, List<String> idsList, Set<Publication> publications, String type, String visType, String startYear, String endYear, HttpServletRequest request, String yearFilterPresent, List<Interest> filteredTopic, List<String> repeatCallList, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal );
 
-	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications );
+	public Map<String, Object> clusterPublications( String algorithm, Set<Publication> publications, String type, String visType, List<String> repeatCallList, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal );
 
-	public Map<String, Object> clusterConferences( String algorithm, Set<Publication> publications, List<Interest> filteredTopic, String type, List<String> idsList );
+	public Map<String, Object> clusterConferences( String algorithm, Set<Publication> publications, List<Interest> filteredTopic, String type, String visType, List<String> idsList, List<String> repeatCallList, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal );
 }
