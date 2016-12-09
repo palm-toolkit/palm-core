@@ -15,8 +15,8 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.rwth.i9.palm.analytics.algorithm.clustering.WekaDBSCAN;
 import de.rwth.i9.palm.analytics.algorithm.clustering.WekaEM;
+import de.rwth.i9.palm.analytics.algorithm.clustering.WekaFarthestFirst;
 import de.rwth.i9.palm.analytics.algorithm.clustering.WekaHierarchichal;
 import de.rwth.i9.palm.analytics.algorithm.clustering.WekaKMeans;
 import de.rwth.i9.palm.analytics.algorithm.clustering.WekaXMeans;
@@ -33,8 +33,8 @@ import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopicFlat;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
-import weka.clusterers.DBSCAN;
 import weka.clusterers.EM;
+import weka.clusterers.FarthestFirst;
 import weka.clusterers.HierarchicalClusterer;
 import weka.clusterers.SimpleKMeans;
 import weka.clusterers.XMeans;
@@ -50,7 +50,7 @@ public class ClusteringServiceImpl implements ClusteringService
 	private ObjectMapper mapper = new ObjectMapper();
 
 	@Autowired
-	WekaDBSCAN wekaDBSCAN;
+	WekaFarthestFirst wekaFarthestFirst;
 
 	@Autowired
 	WekaHierarchichal hierarchicalClusterer;
@@ -69,9 +69,9 @@ public class ClusteringServiceImpl implements ClusteringService
 	{
 
 		if ( seedVal == "" )
-			seedVal = "10";
+			seedVal = "2";
 		if ( noOfClustersVal == "" )
-			noOfClustersVal = "4";
+			noOfClustersVal = "3";
 		if ( foldsVal == "" )
 			foldsVal = "2";
 		if ( iterationsVal == "" )
@@ -272,7 +272,7 @@ public class ClusteringServiceImpl implements ClusteringService
 		if ( seedVal == "" )
 			seedVal = "10";
 		if ( noOfClustersVal == "" )
-			noOfClustersVal = "4";
+			noOfClustersVal = "3";
 		if ( foldsVal == "" )
 			foldsVal = "2";
 		if ( iterationsVal == "" )
@@ -475,7 +475,7 @@ public class ClusteringServiceImpl implements ClusteringService
 		if ( seedVal == "" )
 			seedVal = "10";
 		if ( noOfClustersVal == "" )
-			noOfClustersVal = "4";
+			noOfClustersVal = "3";
 		if ( foldsVal == "" )
 			foldsVal = "2";
 		if ( iterationsVal == "" )
@@ -650,9 +650,13 @@ public class ClusteringServiceImpl implements ClusteringService
 					List<Integer> maxIndex = new ArrayList<Integer>();
 					List<String> terms = new ArrayList<String>();
 					Integer numAttr = instances.get( instanceCounter ).numAttributes();
+
+					// Integer fetchCount = 10;
+					// if ( numAttr < 10 )
+					// fetchCount = numAttr;
 					for ( int i = 0; i < numAttr; i++ )
 					{
-						if ( max.size() < 4 )
+						if ( max.size() < 10 )
 						{
 							max.add( instances.get( instanceCounter ).value( i ) );
 							maxIndex.add( i );
@@ -703,7 +707,7 @@ public class ClusteringServiceImpl implements ClusteringService
 					Integer numAttr = instances.get( instanceCounter ).numAttributes();
 					for ( int i = 0; i < numAttr; i++ )
 					{
-						if ( max.size() < 4 )
+						if ( max.size() < 10 )
 						{
 							max.add( instances.get( instanceCounter ).value( i ) );
 							maxIndex.add( i );
@@ -731,9 +735,9 @@ public class ClusteringServiceImpl implements ClusteringService
 			}
 
 			// applying the clustering algorithm
-			if ( algorithm.equals( "DBSCAN" ) )
+			if ( algorithm.equals( "FarthestFirst" ) )
 			{
-				DBSCAN result = wekaDBSCAN.run( data );
+				FarthestFirst result = wekaFarthestFirst.run( seedVal, noOfClustersVal, data );
 
 				for ( int ind = 0; ind < data.size(); ind++ )
 				{
@@ -744,13 +748,46 @@ public class ClusteringServiceImpl implements ClusteringService
 					if ( visType.equals( "publications" ) )
 						clusterMap.put( mapper.writeValueAsString( ( publicationsFromSelection.get( ind ) ).getJsonStub() ), result.clusterInstance( data.get( ind ) ) );
 				}
+				Instances instances = result.getClusterCentroids();
+				for ( int instanceCounter = 0; instanceCounter < instances.size(); instanceCounter++ )
+				{
+					List<Double> max = new ArrayList<Double>();
+					List<Integer> maxIndex = new ArrayList<Integer>();
+					List<String> terms = new ArrayList<String>();
+					Integer numAttr = instances.get( instanceCounter ).numAttributes();
+					for ( int i = 0; i < numAttr; i++ )
+					{
+						if ( max.size() < 10 )
+						{
+							max.add( instances.get( instanceCounter ).value( i ) );
+							maxIndex.add( i );
+							terms.add( instances.get( instanceCounter ).attribute( maxIndex.get( i ) ).name() );
+
+						}
+						else
+						{
+							for ( int j = 0; j < max.size(); j++ )
+							{
+								if ( instances.get( instanceCounter ).value( i ) > max.get( j ) )
+								{
+									max.set( j, instances.get( instanceCounter ).value( i ) );
+									maxIndex.set( j, i );
+									terms.set( j, instances.get( instanceCounter ).attribute( i ).name() );
+									break;
+								}
+							}
+						}
+					}
+
+					clusterTerms.put( instanceCounter, terms );
+				}
+
 			}
 
 			// applying the clustering algorithm
 			if ( algorithm.equals( "Hierarchical" ) )
 			{
 				HierarchicalClusterer result = hierarchicalClusterer.run( noOfClustersVal, data );
-
 				for ( int ind = 0; ind < data.size(); ind++ )
 				{
 					if ( visType.equals( "researchers" ) )
@@ -766,7 +803,6 @@ public class ClusteringServiceImpl implements ClusteringService
 			if ( algorithm.equals( "EM" ) )
 			{
 				EM result = eM.run( seedVal, foldsVal, iterationsVal, data );
-
 				for ( int ind = 0; ind < data.size(); ind++ )
 				{
 					if ( visType.equals( "researchers" ) )
