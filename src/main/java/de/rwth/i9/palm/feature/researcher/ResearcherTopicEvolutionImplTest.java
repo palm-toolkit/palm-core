@@ -34,42 +34,42 @@ public class ResearcherTopicEvolutionImplTest implements ResearcherTopicEvolutio
 		HashMap<String, List<String>> topicevolution = new LinkedHashMap<String, List<String>>();
 
 		// getEvolutionofTopicOverTime( 0, 5, false );
-		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "Year-Test", author.getId().toString(), 5, 5, 5, true, false, false );
-		// Prepare set of similarAuthor HashSet;
-		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
-		String[] colors = { "0efff8", "ff7f0e", "0eff7f", "ffa70e", "ff7f5a", "d4991c", "ad937c", "ff430e", "ff0e8e", "0e8eff" };
-		int col = 0;
-		for ( Entry<String, List<String>> topic : topicevolution.entrySet() )
-		{
-			LinkedHashMap<String, Object> evolutionMap = new LinkedHashMap<String, Object>();
-			LinkedHashMap<String, String> yearproportion = new LinkedHashMap<String, String>();
-			for ( String proportions : topic.getValue() )
-				yearproportion.put( proportions.split( "_-_" )[0], proportions.split( "_-_" )[1] );
-			evolutionMap.put( "values", yearproportion );
-			evolutionMap.put( "key", topic.getKey() );
-			evolutionMap.put( "color", colors[col] );
-			if ( col < colors.length )
-			{
-				col++;
-			}
-			else
-			{
-				col = 0;
-			}
-
-			topicList.add( evolutionMap );
-		}
+//		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "Year-Test", author.getId().toString(), 5, 5, 5, true, false, false );
+//		// Prepare set of similarAuthor HashSet;
+//		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
+//		String[] colors = { "0efff8", "ff7f0e", "0eff7f", "ffa70e", "ff7f5a", "d4991c", "ad937c", "ff430e", "ff0e8e", "0e8eff" };
+//		int col = 0;
+//		for ( Entry<String, List<String>> topic : topicevolution.entrySet() )
+//		{
+//			LinkedHashMap<String, Object> evolutionMap = new LinkedHashMap<String, Object>();
+//			LinkedHashMap<String, String> yearproportion = new LinkedHashMap<String, String>();
+//			for ( String proportions : topic.getValue() )
+//				yearproportion.put( proportions.split( "_-_" )[0], proportions.split( "_-_" )[1] );
+//			evolutionMap.put( "values", yearproportion );
+//			evolutionMap.put( "key", topic.getKey() );
+//			evolutionMap.put( "color", colors[col] );
+//			if ( col < colors.length )
+//			{
+//				col++;
+//			}
+//			else
+//			{
+//				col = 0;
+//			}
+//
+//			topicList.add( evolutionMap );
+//		}
 
 		// prepare list of object map containing similarAuthor details
-		List<Map<String, Object>> idk = new ArrayList<Map<String, Object>>();
+//		List<Map<String, Object>> idk = new ArrayList<Map<String, Object>>();
 
-		for ( Map<String, Object> individaltopics : topicList )
-		{
-			idk.add( individaltopics );
-		}
-
-		// put similarAuthor to responseMap
-		responseMap.put( "termvalues", idk );
+////		for ( Map<String, Object> individaltopics : topicList )
+//		{
+//			idk.add( individaltopics );
+//		}
+//
+//		// put similarAuthor to responseMap
+//		responseMap.put( "termvalues", idk );
 
 		return responseMap;
 	}

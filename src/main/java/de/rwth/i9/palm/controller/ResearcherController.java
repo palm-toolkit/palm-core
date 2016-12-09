@@ -1,10 +1,12 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -483,6 +485,11 @@ public class ResearcherController
 	 * @param maxresult
 	 * @param response
 	 * @return
+	 * @throws ExecutionException 
+	 * @throws ParseException 
+	 * @throws URISyntaxException 
+	 * @throws InterruptedException 
+	 * @throws UnsupportedEncodingException 
 	 */
 	@RequestMapping( value = "/coAuthorList", method = RequestMethod.GET )
 	@Transactional
@@ -490,7 +497,7 @@ public class ResearcherController
 			@RequestParam( value = "id", required = false ) final String authorId, 
 			@RequestParam( value = "startPage", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
-			final HttpServletResponse response)
+			final HttpServletResponse response) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ParseException, ExecutionException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -516,12 +523,31 @@ public class ResearcherController
 			return responseMap;
 		}
 
-		// get coauthor calculation
+		responseMap.put("author", createAuthorMap(author));
 		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
-
+	
 		return responseMap;
 	}
 	
+	private Map<String, Object> createAuthorMap(Author author){
+		Map<String, Object> authorMap = new HashMap<String, Object>();
+		
+		authorMap.put("id", author.getId());
+		authorMap.put("name", author.getName());
+		authorMap.put("isAdded", author.isAdded());
+		
+		if ( author.getInstitution() != null ){
+			Map<String, String> affiliationData = new HashMap<String, String>();			
+			
+			affiliationData.put("institution", author.getInstitution().getName());
+			
+			if (author.getInstitution().getLocation() != null){
+				affiliationData.put("country", author.getInstitution().getLocation().getCountry().getName());
+			}						
+			authorMap.put( "affiliation", affiliationData );
+		}
+		return authorMap;
+	}
 	/**
 	 * Get Recommended authorMap of given author
 	 * 
