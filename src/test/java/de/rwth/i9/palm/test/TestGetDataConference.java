@@ -35,65 +35,55 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 {
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+	
+	String path =  "C:/Users/Albi/Desktop/";
 
 	@Test
 	@Ignore
 	public void testGetEventPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
-		// int count = 0;
 		System.out.println( "\n========== TEST 0 - Get Conferences publications ==========" );
-		// Event event = persistenceStrategy.getEventDAO().getById(
-		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
 
 		List<Event> events = persistenceStrategy.getEventDAO().getAll();
 
 		if ( !events.isEmpty() )
 			for ( Event event : events )
-
-		{
-				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Conferences/Conferences/" + event.getId() + ".txt", "UTF-8" );
-				// writer.println( "Event Name : " + event.getName() );
-				for ( Publication publication : event.getPublications() )
 			{
-					if ( publication.getAbstractText() != null )
-					{
-						writer.println( publication.getTitle() );
-						writer.println( publication.getAbstractText() );
-						writer.println();
-						// count++;
-					}
+					PrintWriter writer = new PrintWriter( path + "Conferences/Conferences/" + event.getId() + ".txt", "UTF-8" );
+					for ( Publication publication : event.getPublications() )
+				{
+						if ( publication.getAbstractText() != null )
+						{
+							writer.println( publication.getTitle() );
+							writer.println( publication.getAbstractText() );
+							writer.println();
+						}
+				}
+			writer.close();
 			}
-				writer.close();
-		}
 	}
 	
 	@Test
 	@Ignore
 	public void testGetEventGroupsPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
-		// int count = 0;
-		System.out.println( "\n========== TEST 0 - Get Conferences publications ==========" );
-		// Event event = persistenceStrategy.getEventDAO().getById(
-		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
-
+		System.out.println( "\n========== TEST 1 - Get Conferences publications ==========" );
 		List<Event> events = persistenceStrategy.getEventDAO().getAll();
 
 		if ( !events.isEmpty() )
 			for ( Event event : events )
 
 		{
-				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Conferences/Conferences/" + event.getId() + ".txt", "UTF-8" );
-				// writer.println( "Event Name : " + event.getName() );
+				PrintWriter writer = new PrintWriter( path + "Conferences/Conferences/" + event.getId() + ".txt", "UTF-8" );
 				for ( Publication publication : event.getPublications() )
-			{
+				{
 					if ( publication.getAbstractText() != null )
 					{
 						writer.println( publication.getTitle() );
 						writer.println( publication.getAbstractText() );
 						writer.println();
-						// count++;
 					}
-			}
+				}
 				writer.close();
 		}
 	}
@@ -102,19 +92,14 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	@Ignore
 	public void testcreateEntityDirectories() throws IOException
 	{
-		System.out.println( "\n========== TEST 1 - Create Architecture for Event-Test Collection ==========" );
-		List<Event> events = persistenceStrategy.getEventDAO().getAll();// getByName(
-																			// "mohamed
-																			// amine
-																			// chatti"
-																			// );//getById(
-																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-																			// );
+		System.out.println( "\n========== TEST 2 - Create Architecture for Event-Test Collection ==========" );
+		List<Event> events = persistenceStrategy.getEventDAO().getAll();
+		
 		if ( !events.isEmpty() )
 			for ( Event event : events )
 			{
 
-				File theDir = new File( "C:/Users/Albi/Desktop/Event-Test/" + event.getId().toString() + "/" );
+				File theDir = new File( path + "Event-Test/" + event.getId().toString() + "/" );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -143,19 +128,13 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	public void testGetEventGroupPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for Event-Test from database ==========" );
-		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();// getByName(
-																		// "mohamed
-																		// amine
-																		// chatti"
-																		// );//getById(
-																		// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-																		// );
+		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();
 
 		if ( !eventgroups.isEmpty() )
 			for ( EventGroup eventgroup : eventgroups )
 			{
 				System.out.println( eventgroup.getName() );
-				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Conferences/Conferences/" + eventgroup.getId().toString() + ".txt", "UTF-8" );
+				PrintWriter writer = new PrintWriter( path + "Conferences/Conferences/" + eventgroup.getId().toString() + ".txt", "UTF-8" );
 				for ( Event event : eventgroup.getEvents() )
 				{
 					for ( Publication publication : event.getPublications() )
@@ -177,19 +156,19 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 	
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabase6() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for each Author-Test from database ==========" );
-		//List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
+		List<Event> events = persistenceStrategy.getEventDAO().getAll();
 		
-		Event event = persistenceStrategy.getEventDAO().getById("8c4f5711-a75f-49aa-8479-c204bde8db80");
-		//if( !authors.isEmpty())
-		//	for (Author author:authors)
-		//	{	
+		if( !events.isEmpty())
+			for (Event event:events)
+			{	
 				for(Publication publication : event.getPublications()){
 					if ( publication.getAbstractText() != "null" )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Event-Test/" + event.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+						PrintWriter writer = new PrintWriter( path + "Event-Test/" + event.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
 						writer.print( publication.getTitle() + " " );
 						writer.print( publication.getAbstractText() );
 						writer.println();
@@ -200,7 +179,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 						continue;
 					}
 				}
-		//	}
+			}
 	}
 
 	@Test
@@ -208,18 +187,13 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	public void testcreateEntityDirectoriesEventGroups() throws IOException
 	{
 		System.out.println( "\n========== TEST 3 - Create Architecture for EventGroups ==========" );
-		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();// getByName(
-		// "mohamed
-		// amine
-		// chatti"
-		// );//getById(
-		// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-		// );
+		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();
+	
 		if ( !eventgroups.isEmpty() )
 			for ( EventGroup eventgroup : eventgroups )
 			{
 
-				File theDir = new File( "C:/Users/Albi/Desktop/EventGroups/" + eventgroup.getId().toString() + "/" );
+				File theDir = new File( path + "EventGroups/" + eventgroup.getId().toString() + "/" );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -250,21 +224,14 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 4 - Fetch publications per Eventgroups from database ==========" );
-		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();// getByName(
-																			// "mohamed
-																			// amine
-																			// chatti"
-																			// );//getById(
-																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-																			// );
-
+		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();
 		if ( !eventgroups.isEmpty() )
 			for ( EventGroup eventgroup : eventgroups )
 			{
 				System.out.println( eventgroup.getName() );
 				for ( Event event : eventgroup.getEvents() )
 				{
-					PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/EventGroups/" + eventgroup.getId() + "/" + event.getId().toString() + ".txt", "UTF-8" );
+					PrintWriter writer = new PrintWriter( path + "EventGroups/" + eventgroup.getId() + "/" + event.getId().toString() + ".txt", "UTF-8" );
 
 					for ( Publication publication : event.getPublications() )
 					{
@@ -289,18 +256,12 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	public void testcreateEntityDirectoriesEventGroupsClustered() throws IOException
 	{
 		System.out.println( "\n========== TEST 3 - Create Architecture for EventGroups ==========" );
-		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();// getByName(
-		// "mohamed
-		// amine
-		// chatti"
-		// );//getById(
-		// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-		// );
+		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();
 		if ( !eventgroups.isEmpty() )
 			for ( EventGroup eventgroup : eventgroups )
 			{
 
-				File theDir = new File( "C:/Users/Albi/Desktop/EventGroupsClustered/" + eventgroup.getId().toString() + "/" );
+				File theDir = new File( path + "EventGroupsClustered/" + eventgroup.getId().toString() + "/" );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -331,21 +292,14 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	public void testGetDatabaseFromDatabaseConferenceClustered() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 4 - Fetch publications per Eventgroups from database ==========" );
-		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();// getByName(
-																			// "mohamed
-																			// amine
-																			// chatti"
-																			// );//getById(
-																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-																			// );
-
+		List<EventGroup> eventgroups = persistenceStrategy.getEventGroupDAO().getAll();
 		if ( !eventgroups.isEmpty() )
 			for ( EventGroup eventgroup : eventgroups )
 			{
 				System.out.println( eventgroup.getName() );
 				for ( Event event : eventgroup.getEvents() )
 				{
-					PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/EventGroupsClustered/" + eventgroup.getId() + "/" + event.getYear().toString() + ".txt", "UTF-8" );
+					PrintWriter writer = new PrintWriter( path + "EventGroupsClustered/" + eventgroup.getId() + "/" + event.getYear().toString() + ".txt", "UTF-8" );
 
 					for ( Publication publication : event.getPublications() )
 					{

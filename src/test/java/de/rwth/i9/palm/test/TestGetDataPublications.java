@@ -35,6 +35,8 @@ public class TestGetDataPublications extends AbstractTransactionalJUnit4SpringCo
 {
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
+	
+	String path =  "C:/Users/Albi/Desktop/";
 
 	private final static Logger log = LoggerFactory.getLogger( TestGetDataPublications.class );
 
@@ -51,7 +53,7 @@ public class TestGetDataPublications extends AbstractTransactionalJUnit4SpringCo
 				{
 					if ( publication.getAbstractText() != "null" )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Publications/Publications/" + publication.getId() + ".txt", "UTF-8" );
+						PrintWriter writer = new PrintWriter( path + "Publications/Publications/" + publication.getId() + ".txt", "UTF-8" );
 						writer.print( publication.getTitle() + " " );
 						writer.print( publication.getAbstractText() );
 						writer.println();

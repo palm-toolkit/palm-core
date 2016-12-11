@@ -35,14 +35,13 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
+	String path =  "C:/Users/Albi/Desktop/";
+
 	@Test
 	@Ignore
 	public void testGetCirclePublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
-		int count = 0;
 		System.out.println( "\n========== TEST 0 - Get publications for Circles ==========" );
-		// Circle circle = persistenceStrategy.getCircleDAO().getById(
-		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
 
 		List<Circle> circles = (List<Circle>) persistenceStrategy.getCircleDAO().getAll();
 		
@@ -50,7 +49,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 			for ( Circle circle : circles )
 
 		{
-				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circles/Circles/" + circle.getId() + ".txt", "UTF-8" );
+				PrintWriter writer = new PrintWriter( path + "Circles/Circles/" + circle.getId() + ".txt", "UTF-8" );
 				writer.println( "Circle Name : " + circle.getName() );
 				for ( Publication publication : circle.getPublications() )
 			{
@@ -59,12 +58,10 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 						writer.println( publication.getTitle() );
 						writer.println( publication.getAbstractText() );
 						writer.println();
-						count++;
+
 					}
 			}
 				writer.println();
-				writer.println( count );
-				count = 0;
 				writer.close();
 		}
 	}
@@ -74,18 +71,13 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	public void testcreateEntityDirectories() throws IOException
 	{
 		System.out.println( "\n========== TEST 1 - Create Architecture for Circle-Test Collection ==========" );
-		List<Circle> circles =  persistenceStrategy.getCircleDAO().getAll();// getByName(
-																			// "mohamed
-																			// amine
-																			// chatti"
-																			// );//getById(
-																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-																			// );
+		List<Circle> circles =  persistenceStrategy.getCircleDAO().getAll();
+		
 		if ( !circles.isEmpty() )
 			for ( Circle circle : circles )
 			{
 
-				File theDir = new File( "C:/Users/Albi/Desktop/Circle-Test/" + circle.getId().toString() );
+				File theDir = new File( path + "Circle-Test/" + circle.getId().toString() );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -114,14 +106,8 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for Circle-Test database ==========" );
-		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();// getByName(
-																			// "mohamed
-																			// amine
-																			// chatti"
-																			// );//getById(
-																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-																			// );
-
+		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();
+		
 		if ( !circles.isEmpty() )
 			for ( Circle circle : circles )
 			{
@@ -129,7 +115,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 				{
 					if ( publication.getAbstractText() != "null" )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circle-Test/" + circle.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+						PrintWriter writer = new PrintWriter( path +"Circle-Test/" + circle.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
 						writer.print( publication.getTitle() + " " );
 						writer.print( publication.getAbstractText() );
 						writer.println();
@@ -148,18 +134,13 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	public void testcreateEntityDirectoriesYear() throws IOException
 	{
 		System.out.println( "\n========== TEST 3 - Create Architecture for Circle-Year-Test==========" );
-		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();// getByName(
-																			// "mohamed
-																			// amine
-																			// chatti"
-																			// );//getById(
-																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
-																			// );
+		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();
+		
 		if ( !circles.isEmpty() )
 			for ( Circle circle : circles )
 			{
 
-				File theDir = new File( "C:/Users/Albi/Desktop/Circle-Year-Test/" + circle.getId().toString() );
+				File theDir = new File( path +"Circle-Year-Test/" + circle.getId().toString() );
 
 				// if the directory does not exist, create it
 				if ( !theDir.exists() )
@@ -188,8 +169,6 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	public void testGetCirclePublicationsFromDatabaseYearly() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 4 - Get Circle publications for Circle-Year-Test ==========" );
-		// Circle circle = persistenceStrategy.getCircleDAO().getById(
-		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
 
 		List<Circle> circles = (List<Circle>) persistenceStrategy.getCircleDAO().getAll();
 
@@ -203,7 +182,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 					{
 						if ( !author.getPublicationsByYear( year ).isEmpty() )
 						{
-							PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Circle-Year-Test/" + circle.getId().toString() + "/" + year + ".txt" );
+							PrintWriter writer = new PrintWriter( path + "Circle-Year-Test/" + circle.getId().toString() + "/" + year + ".txt" );
 							for ( Publication publication : author.getPublicationsByYear( year ) )
 							{
 								writer.print( publication.getTitle() + " " );
