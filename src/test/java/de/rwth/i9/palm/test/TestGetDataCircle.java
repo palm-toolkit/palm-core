@@ -36,6 +36,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
+	@Ignore
 	public void testGetCirclePublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		int count = 0;
@@ -43,8 +44,8 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 		// Circle circle = persistenceStrategy.getCircleDAO().getById(
 		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
 
-		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();
-
+		List<Circle> circles = (List<Circle>) persistenceStrategy.getCircleDAO().getAll();
+		
 		if ( !circles.isEmpty() )
 			for ( Circle circle : circles )
 
@@ -73,7 +74,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	public void testcreateEntityDirectories() throws IOException
 	{
 		System.out.println( "\n========== TEST 1 - Create Architecture for Circle-Test Collection ==========" );
-		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();// getByName(
+		List<Circle> circles =  persistenceStrategy.getCircleDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
 																			// chatti"
@@ -109,6 +110,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	}
 	
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for Circle-Test database ==========" );
@@ -182,13 +184,14 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	}
 
 	@Test
+	@Ignore
 	public void testGetCirclePublicationsFromDatabaseYearly() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 4 - Get Circle publications for Circle-Year-Test ==========" );
 		// Circle circle = persistenceStrategy.getCircleDAO().getById(
 		// "e61d08f9-afd4-4600-9c16-78a62cdfbee0" );
 
-		List<Circle> circles = persistenceStrategy.getCircleDAO().getAll();
+		List<Circle> circles = (List<Circle>) persistenceStrategy.getCircleDAO().getAll();
 
 		if ( !circles.isEmpty() )
 			for ( Circle circle : circles )

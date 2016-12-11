@@ -35,24 +35,28 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	private PersistenceStrategy persistenceStrategy;
 
 	@Test
+	//@Ignore
 	public void testGetDataFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 0 - Fetch Authors from database ==========" );
 
-		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();
+		//List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();
+		
+		Author authors = persistenceStrategy.getAuthorDAO().getById("8df53180-10b3-4d24-ae58-944bc9a05864");
+
 
 		int count = 0;
-		if ( authors != null )
-			for ( Author author : authors )
+		//if ( authors != null )
+		//	for ( Author author : authors )
 			{
 				// System.out.println( "author id : " + author.getId() + " >
 				// author name : " + author.getName() );
 				// print one of the publication
-				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Authors/Authors/" + author.getId() + ".txt", "UTF-8" );
+				PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Authors/Authors/" + authors.getId() + ".txt", "UTF-8" );
 
-				if ( author.getPublications() != null )
+				if ( authors.getPublications() != null )
 				{
-					for ( Publication publication : author.getPublications() )
+					for ( Publication publication : authors.getPublications() )
 					{
 						// System.out.println( "publication id : " +
 						// publication.getId() + " > pub title: " +
@@ -107,18 +111,20 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for each Author-Test from database ==========" );
-		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
-	
-		if( !authors.isEmpty())
-			for (Author author:authors)
-			{	
-				for(Publication publication : author.getPublications()){
+		//List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
+		
+		Author authors = persistenceStrategy.getAuthorDAO().getById("8df53180-10b3-4d24-ae58-944bc9a05864");
+		//if( !authors.isEmpty())
+		//	for (Author author:authors)
+		//	{	
+				for(Publication publication : authors.getPublications()){
 					if ( publication.getAbstractText() != "null" )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Author-Test/" + author.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Author-Test/" + authors.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
 						writer.print( publication.getTitle() + " " );
 						writer.print( publication.getAbstractText() );
 						writer.println();
@@ -129,7 +135,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 						continue;
 					}
 				}
-			}
+		//	}
 	}
 	
 	@Test
@@ -175,25 +181,27 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	
 	
 	@Test
+	@Ignore
 	public void testGetDatabaseFromDatabaseOnSpecificYear2() throws IOException
 	{
-		System.out.println( "\n========== TEST 4 - Fetch publications per Author-Yearl-Test from database ==========" );
-		List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();// getByName(
+		System.out.println( "\n========== TEST 4 - Fetch publications per Author-Year-Test from database ==========" );
+		//List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();// getByName(
 																			// "mohamed
 																			// amine
 																			// chatti"
 																			// );//getById(
 																			// "e14fd198-1e54-449f-96aa-7e19d0eec488"
 																			// );
-		if ( !authors.isEmpty() )
-			for ( Author author : authors )
-			{
+		Author authors = persistenceStrategy.getAuthorDAO().getById("8df53180-10b3-4d24-ae58-944bc9a05864");
+		// if ( !authors.isEmpty() )
+		//	for ( Author author : authors )
+		//	{
 				for ( int year = 1980; year < 2017; year++ )
 				{
-					if ( !author.getPublicationsByYear( year ).isEmpty() )
+					if ( !authors.getPublicationsByYear( year ).isEmpty() )
 					{
-						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Author-Year-Test/" + author.getId().toString() + "/" + year + ".txt" );
-						for ( Publication publication : author.getPublicationsByYear( year ) )
+						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Author-Year-Test/" + authors.getId().toString() + "/" + year + ".txt" );
+						for ( Publication publication : authors.getPublicationsByYear( year ) )
 						{
 							writer.print( publication.getTitle() + " " );
 							writer.println( publication.getAbstractText() + " " );
@@ -201,6 +209,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 						writer.close();
 					}
 				}
-			}
+		//	}
 	}
 }

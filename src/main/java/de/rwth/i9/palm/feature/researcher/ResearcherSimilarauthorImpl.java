@@ -214,7 +214,7 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 			// check if the similarity is significant 
 			// The threshhold is decided heuristically 
 			double a = similarDetail.entrySet().iterator().next().getValue();
-			if ( a > 0.035){
+			if ( a > 0.029){
 				// add into list if the similarity 
 				similarAuthorList.add( similarAuthorMap );
 			}

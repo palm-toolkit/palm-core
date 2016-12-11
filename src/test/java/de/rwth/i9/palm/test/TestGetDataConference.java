@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
 import de.rwth.i9.palm.config.WebAppConfigTest;
+import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
@@ -138,6 +139,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 
 	@Test
+	@Ignore
 	public void testGetEventGroupPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for Event-Test from database ==========" );
@@ -172,6 +174,33 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 				}
 				writer.close();
 			}
+	}
+	
+	@Test
+	public void testGetDatabaseFromDatabase6() throws FileNotFoundException, UnsupportedEncodingException
+	{
+		System.out.println( "\n========== TEST 2 - Fetch publications for each Author-Test from database ==========" );
+		//List<Author> authors = persistenceStrategy.getAuthorDAO().getAll();//getByName( "mohamed amine chatti" );//getById( "e14fd198-1e54-449f-96aa-7e19d0eec488" );
+		
+		Event event = persistenceStrategy.getEventDAO().getById("8c4f5711-a75f-49aa-8479-c204bde8db80");
+		//if( !authors.isEmpty())
+		//	for (Author author:authors)
+		//	{	
+				for(Publication publication : event.getPublications()){
+					if ( publication.getAbstractText() != "null" )
+					{
+						PrintWriter writer = new PrintWriter( "C:/Users/Albi/Desktop/Event-Test/" + event.getId() + "/" + publication.getId() + ".txt", "UTF-8" );
+						writer.print( publication.getTitle() + " " );
+						writer.print( publication.getAbstractText() );
+						writer.println();
+						writer.close();
+					}
+					else
+					{
+						continue;
+					}
+				}
+		//	}
 	}
 
 	@Test

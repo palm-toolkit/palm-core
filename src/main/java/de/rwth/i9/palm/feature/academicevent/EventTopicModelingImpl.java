@@ -493,7 +493,8 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		// get the list of words for the event 
 		List<String> eventtopicWords = new ArrayList<String>();
 		for (String entity : similarEntities){
-			if(entity.split("->")[0].equals(event.getId()))
+			String piro = event.getEventGroup().getId().toString();
+			if(entity.split("->")[0].equals(piro))
 				eventtopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"EventGroups", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
 		}
 		
