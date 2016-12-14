@@ -105,7 +105,7 @@ public class VisualAnalyticsController
 		{
 			// create Sidebar Widget in Explore
 			Widget sidebarWidget = new Widget();
-			sidebarWidget.setTitle( "Sidebar" );
+			sidebarWidget.setTitle( "Categories" );
 			sidebarWidget.setUniqueName( "explore_sidebar" );
 			sidebarWidget.setWidgetType( WidgetType.EXPLORE );
 			sidebarWidget.setWidgetGroup( "sidebar" );
@@ -113,11 +113,11 @@ public class VisualAnalyticsController
 			sidebarWidget.setSourcePath( "../../explore/widget/exploreSidebar.ftl" );
 			sidebarWidget.setWidgetWidth( WidgetWidth.LARGE );
 			sidebarWidget.setColor( Color.YELLOW );
-			sidebarWidget.setInformation( "Visual Analytics widget for selecting an item" );
+			sidebarWidget.setInformation( "Category-wise select an item" );
 			sidebarWidget.setCloseEnabled( false );
 			sidebarWidget.setMinimizeEnabled( false );
 			sidebarWidget.setMoveableEnabled( false );
-			sidebarWidget.setHeaderVisible( false );
+			sidebarWidget.setHeaderVisible( true );
 			sidebarWidget.setWidgetStatus( WidgetStatus.DEFAULT );
 			sidebarWidget.setPosition( 0 );
 			persistenceStrategy.getWidgetDAO().persist( sidebarWidget );
@@ -132,7 +132,7 @@ public class VisualAnalyticsController
 			visualizationWidget.setSourcePath( "../../explore/widget/visualize.ftl" );
 			visualizationWidget.setWidgetWidth( WidgetWidth.MEDIUM );
 			visualizationWidget.setColor( Color.GREEN );
-			visualizationWidget.setInformation( "Visual Analytics widget for all visualizations" );
+			visualizationWidget.setInformation( "Workspace for all kinds of visualizations" );
 			visualizationWidget.setCloseEnabled( false );
 			visualizationWidget.setMinimizeEnabled( true );
 			visualizationWidget.setMoveableEnabled( true );
@@ -151,7 +151,7 @@ public class VisualAnalyticsController
 			filterWidget.setSourcePath( "../../explore/widget/filter.ftl" );
 			filterWidget.setWidgetWidth( WidgetWidth.SMALL );
 			filterWidget.setColor( Color.BLUE );
-			filterWidget.setInformation( "Visual Analytics widget for filters" );
+			filterWidget.setInformation( "Filter data in visualizations" );
 			filterWidget.setCloseEnabled( false );
 			filterWidget.setMinimizeEnabled( true );
 			filterWidget.setMoveableEnabled( true );
@@ -170,7 +170,7 @@ public class VisualAnalyticsController
 			searchWidget.setSourcePath( "../../explore/widget/search.ftl" );
 			searchWidget.setWidgetWidth( WidgetWidth.LARGE );
 			searchWidget.setColor( Color.RED );
-			searchWidget.setInformation( "Visual Analytics widget for specifying search criteria" );
+			searchWidget.setInformation( "Stage for setting up search criteria" );
 			searchWidget.setCloseEnabled( false );
 			searchWidget.setMinimizeEnabled( false );
 			searchWidget.setMoveableEnabled( false );
@@ -189,7 +189,7 @@ public class VisualAnalyticsController
 			helpWidget.setSourcePath( "../../explore/widget/infoVA.ftl" );
 			helpWidget.setWidgetWidth( WidgetWidth.LARGE );
 			helpWidget.setColor( Color.SOLID );
-			helpWidget.setInformation( "Visual Analytics widget for basic information" );
+			helpWidget.setInformation( "Basic information about Visual Analytics Explorer" );
 			helpWidget.setCloseEnabled( false );
 			helpWidget.setMinimizeEnabled( false );
 			helpWidget.setMoveableEnabled( false );
@@ -208,8 +208,8 @@ public class VisualAnalyticsController
 			historyWidget.setSourcePath( "../../explore/widget/history.ftl" );
 			historyWidget.setWidgetWidth( WidgetWidth.SMALL );
 			historyWidget.setColor( Color.GRAY );
-			historyWidget.setInformation( "Visual Analytics widget for history" );
-			historyWidget.setCloseEnabled( true );
+			historyWidget.setInformation( "Browser history of search items" );
+			historyWidget.setCloseEnabled( false );
 			historyWidget.setMinimizeEnabled( true );
 			historyWidget.setMoveableEnabled( true );
 			historyWidget.setHeaderVisible( true );
@@ -364,7 +364,7 @@ public class VisualAnalyticsController
 		if ( addedAuthor.equals( "yes" ) )
 			responseMap.put( "addedAuthor", addedAuthor );
 
-		Map<String, Object> authorsMap = researcherFeature.getResearcherSearch().getResearcherMapByQuery( query, queryType, startPage, maxresult, source, addedAuthor, fulltextSearch, persistResult );
+		Map<String, Object> authorsMap = researcherFeature.getResearcherSearch().getResearchersMapByQueryOrderByName( query, queryType, startPage, maxresult, source, addedAuthor, fulltextSearch, persistResult );
 
 		if ( authorsMap != null && (Integer) authorsMap.get( "totalCount" ) > 0 )
 		{
@@ -569,20 +569,13 @@ public class VisualAnalyticsController
 		List<Map<String, Object>> mapList = new ArrayList<Map<String, Object>>();
 		Map<String, Object> interestMap = persistenceStrategy.getInterestDAO().allTermsByPaging( query, page, maxresult );
 		List<Interest> interests = (List<Interest>) interestMap.get( "interests" );
-		List<String> allTopics = persistenceStrategy.getPublicationTopicDAO().allTopics();
 
 		if ( interests != null )
 		{
 			// intersection of topics and interests
 			List<Interest> combinedInterests = new ArrayList<Interest>();
-			for ( int i = 0; i < allTopics.size(); i++ )
-			{
 				for ( int j = 0; j < interests.size(); j++ )
 				{
-					float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( allTopics.get( i ), interests.get( j ).getTerm() );
-
-					if ( dist > 0.9f && !combinedInterests.contains( interests.get( j ) ) )
-					{
 						Map<String, Object> interestMapTemp = new HashMap<String, Object>();
 
 						combinedInterests.add( interests.get( j ) );
@@ -590,8 +583,6 @@ public class VisualAnalyticsController
 						interestMapTemp.put( "name", interests.get( j ).getTerm() );
 
 						mapList.add( interestMapTemp );
-					}
-				}
 			}
 		}
 		responseMap.put( "totalCount", interestMap.get( "totalCount" ) );

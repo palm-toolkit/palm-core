@@ -17,6 +17,6 @@ public interface ResearcherSearch
 	public Map<String, Object> printJsonOutput( Map<String, Object> responseMap, List<Author> researchers );
 
 	// VA
-	public Map<String, Object> getResearchersByQuery( String query, String queryType, String source, String fulltext, String fulltextSearch, boolean persist ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
+	public Map<String, Object> getResearchersMapByQueryOrderByName( String query, String queryType, Integer startPage, Integer maxresult, String source, String fulltext, String fulltextSearch, boolean persist ) throws IOException, InterruptedException, ExecutionException, org.apache.http.ParseException, OAuthSystemException, OAuthProblemException;
 
 }

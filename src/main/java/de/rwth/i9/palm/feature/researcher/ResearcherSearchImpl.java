@@ -49,6 +49,7 @@ public class ResearcherSearchImpl implements ResearcherSearch
 				authorMap = persistenceStrategy.getAuthorDAO().getAuthorWithPaging( query, addedAuthor, startPage, maxresult );
 			else
 			{
+				System.out.println( "INTERNAL ELSE" );
 				authorMap = persistenceStrategy.getAuthorDAO().getAuthorByFullTextSearchWithPaging( query, addedAuthor, startPage, maxresult );
 			}
 		}
@@ -187,41 +188,11 @@ public class ResearcherSearchImpl implements ResearcherSearch
 	}
 
 	@Override
-	public Map<String, Object> getResearchersByQuery( String query, String queryType, String source, String addedAuthor, String fulltextSearch, boolean persist ) throws IOException, InterruptedException, ExecutionException, ParseException, OAuthSystemException, OAuthProblemException
+	public Map<String, Object> getResearchersMapByQueryOrderByName( String query, String queryType, Integer startPage, Integer maxresult, String source, String addedAuthor, String fulltextSearch, boolean persist ) throws IOException, InterruptedException, ExecutionException, ParseException, OAuthSystemException, OAuthProblemException
 	{
 		// researchers list container
 		Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
-
-		// get authors from the datasource
-		if ( source.equals( "internal" ) )
-		{
-			// the authors is querying from database
-			if ( fulltextSearch.equals( "no" ) )
-				authorMap = persistenceStrategy.getAuthorDAO().getAuthorWithoutPaging( query, addedAuthor );
-			else
-			{
-				// authorMap =
-				// persistenceStrategy.getAuthorDAO().getAuthorByFullTextSearchWithPaging(
-				// query, addedAuthor, startPage, maxresult );
-			}
-		}
-		else if ( source.equals( "external" ) )
-		{
-			// TODO: the authors are querying from external (academic networks)
-
-		}
-		else if ( source.equals( "all" ) )
-		{
-			// the authors are combination from internal and external sources
-			if ( !query.equals( "" ) )
-			{
-				// collect author from network
-				// if ( isCollectAuthorFromNetworkNeeded( query ) )
-				List<Author> researcherList = researcherCollectionService.collectAuthorInformationFromNetwork( query, persist );
-				authorMap.put( "authors", researcherList );
-
-			}
-		}
+		authorMap = persistenceStrategy.getAuthorDAO().getAuthorWithPagingOrderByName( query, addedAuthor, startPage, maxresult );
 
 		return authorMap;
 	}
