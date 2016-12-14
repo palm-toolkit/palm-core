@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 	String path =  "C:/Users/Albi/Desktop/";
 
 	@Test
+	@Ignore
 	public void testGetCirclePublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 0 - Get publications for Circles ==========" );
@@ -63,8 +65,6 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 				writer.close();
 		}
 	}
-<<<<<<< HEAD
-=======
 	
 	@Test
 	@Ignore
@@ -195,5 +195,4 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 				}
 			}
 	}
->>>>>>> feature-topic-modelling
 }
