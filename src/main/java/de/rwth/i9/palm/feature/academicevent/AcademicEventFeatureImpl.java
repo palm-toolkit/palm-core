@@ -11,6 +11,9 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 	private EventInterest eventInterest;
 
 	@Autowired( required = false )
+	private EventTopicModeling eventTopicModeling;
+
+	@Autowired( required = false )
 	private EventMining eventMining;
 
 	@Autowired( required = false )
@@ -35,6 +38,15 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 			this.eventInterest = new EventInterestImpl();
 
 		return this.eventInterest;
+	}
+
+	@Override
+	public EventTopicModeling getEventTopicModeling()
+	{
+		if ( this.eventTopicModeling == null )
+			this.eventTopicModeling = new EventTopicModelingImpl();
+
+		return this.eventTopicModeling;
 	}
 
 	@Override

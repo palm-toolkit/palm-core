@@ -373,6 +373,18 @@ public class CircleController
 		return circleFeature.getCircleInterest().getCircleInterestById( circleId, isReplaceExistingResult );
 	}
 	
+	/**
+	 * 
+	 * @param circleId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 * @throws ParseException
+	 */
 	@RequestMapping( value = "/topicModel", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> circleTopicModel( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws InterruptedException, IOException, ExecutionException, URISyntaxException, ParseException
@@ -390,6 +402,13 @@ public class CircleController
 		return Collections.emptyMap();
 	}
 
+	/**
+	 * 
+	 * @param circleId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getCircleTopicComposition( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
@@ -402,6 +421,134 @@ public class CircleController
 			return circleFeature.getCircleTopicModeling().getStaticTopicModelingNgrams( circleId, isReplaceExistingResult );
 		}
 		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param circleId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getResearcherTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( circleId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get circle
+			Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+
+			return circleFeature.getCircleTopicModeling().getTopicModelUniCloud( circle, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param circleId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topicCompositionNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getResearcherTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( circleId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get circle
+			Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+
+			return circleFeature.getCircleTopicModeling().getTopicModelNCloud( circle, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/similarCircleList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getSimilarCircleList( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( circleId == null || circleId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circleId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get circle
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle not found in database" );
+			return responseMap;
+		}
+
+		// get recommended circles based on calculations
+		responseMap.putAll( circleFeature.getCircleTopicModeling().getSimilarCircles( circle, startPage, maxresult ) );
+
+		return responseMap;
+	}
+
+
+	/**
+	 * Get Similar circleMap of given circle
+	 * 
+	 * @param circleId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topicEvolution", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getTopicEvolution( @RequestParam( value = "id", required = false ) final String circleId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( circleId == null || circleId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circleId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get circle
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleId );
+
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle not found in database" );
+			return responseMap;
+		}
+
+		// get recommended circles based on calculations
+		responseMap.putAll( circleFeature.getCircleTopicModeling().getCircleTopicEvolutionTest( circle ) );
+
+		return responseMap;
 	}
 
 	/**

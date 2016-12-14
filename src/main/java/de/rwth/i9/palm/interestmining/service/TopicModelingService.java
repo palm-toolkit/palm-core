@@ -46,6 +46,11 @@ public class TopicModelingService
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
+<<<<<<< HEAD
+=======
+	private String path = "C:/Users/Albi/Desktop/";
+
+>>>>>>> feature-topic-modelling
 	public void calculateAuthorTopicModeling( Author author, boolean isReplaceExistingResult, boolean Static )
 	{
 
@@ -730,12 +735,16 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams;
 			try
 			{
+<<<<<<< HEAD
 				topicNgrams = palmAnalytics.getNGrams().getTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId() ), -1, 0.0, 7, 10, true );
+=======
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 10, 5, false, true, true );
+>>>>>>> feature-topic-modelling
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
 					{
-						String[] components = topicproportion.split( "_-_ " );
+						String[] components = topicproportion.split( "_-_" );
 						// termValueMap.put( "term", components[0] );
 						// termValueMap.put( "value", components[1] );
 						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
@@ -823,6 +832,7 @@ public class TopicModelingService
 			// case when Static = True
 			// prepare results for Donut :)
 			Map<String, Object> clusterResultMap = new LinkedHashMap<String, Object>();
+			clusterResultMap.put( "circleId", circle.getId().toString() );
 			clusterResultMap.put( "year", new SimpleDateFormat( "yyyy", Locale.ENGLISH ).format( new Date() ) );
 			clusterResultMap.put( "language", "english" );
 			clusterResultMap.put( "extractor", "TopicalNgram" );
@@ -832,12 +842,18 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams;
 			try
 			{
+<<<<<<< HEAD
 				topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( circle.getId() ), -1, 0.0, 7, 10, true );
+=======
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 10,5 , false, true, false );
+>>>>>>> feature-topic-modelling
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
 					{
-						String[] components = topicproportion.split( "_-_ " );
+						String[] components = topicproportion.split( "_-_" );
+						// termValueMap.put( "term", components[0] );
+						// termValueMap.put( "value", components[1] );
 						termValueMap.put( components[0], Double.parseDouble( components[1] ) );
 					}
 				}
@@ -848,8 +864,7 @@ public class TopicModelingService
 			}
 			clusterResultMap.put( "termvalues", termValueMap );
 			clusterResults.add( clusterResultMap );
-			}
-
+		}
 		// return results
 		return clusterResults;
 	}

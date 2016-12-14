@@ -3,6 +3,7 @@ package de.rwth.i9.palm.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -256,6 +257,149 @@ public class AcademicEventController
 		return academicEventFeature.getEventInterest().getEventInterestById( eventId, isReplaceExistingResult );
 	}
 
+	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicComposition( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( conferenceId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return academicEventFeature.getEventTopicModeling().getStaticTopicModelingNgrams( conferenceId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/topicCompositionEventGroup", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicCompositionEventGroup( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( conferenceId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return academicEventFeature.getEventTopicModeling().getStaticTopicModelingNgramsEventGroup( conferenceId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get event
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelUniCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/topicCompositionNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get event
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelNCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/similarEventList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getSimilarEventList( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( eventId == null || eventId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "eventId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get event
+		Event eventgroup = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( eventgroup == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "event not found in database" );
+			return responseMap;
+		}
+
+		// get recommended events based on calculations
+		responseMap.putAll( academicEventFeature.getEventTopicModeling().getSimilarEvents( eventgroup, startPage, maxresult ) );
+
+		return responseMap;
+	}
+
+	/**
+	 * Get Similar eventMap of given event
+	 * 
+	 * @param eventId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topicEvolution", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getTopicEvolution( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( eventId == null || eventId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "eventId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get event
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( event == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "event not found in database" );
+			return responseMap;
+		}
+
+		// get recommended events based on calculations
+		responseMap.putAll( academicEventFeature.getEventTopicModeling().getEventGroupTopicEvolutionTest( event ) );
+
+		return responseMap;
+	}
+
+
+
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationList( 
@@ -317,6 +461,56 @@ public class AcademicEventController
 			}
 			return responseMap;
 		}
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topicCompositionEventGroupUniCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get author
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelEventGroupUniCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/topicCompositionEventGroupNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get author
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelEventGroupNCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
 	}
 
 }

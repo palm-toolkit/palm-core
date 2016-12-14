@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -355,6 +356,93 @@ public class PublicationController
 		return publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, pid, maxRetrieve );
 	}
 	
+	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopicComposition( @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( publicationId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return publicationFeature.getPublicationTopicModeling().getTopicComposition( publicationId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( publicationId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			return publicationFeature.getPublicationTopicModeling().getTopicModelUniCloud( publicationId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	@RequestMapping( value = "/topicCompositionNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationTopicCompositionCloudNgrams( @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	{
+		if ( publicationId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			return publicationFeature.getPublicationTopicModeling().getTopicModelNCloud( publicationId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * Get Similar publications of given author
+	 * 
+	 * @param publications
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping( value = "/similarPublicationsList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getSimilarPublicationList( @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( publicationId == null || publicationId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "publicationId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get publication
+		Publication publication = persistenceStrategy.getPublicationDAO().getById( publicationId );
+
+		if ( publication == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "publication not found in database" );
+			return responseMap;
+		}
+
+		// get recommended publications based on calculations
+		responseMap.putAll( publicationFeature.getPublicationTopicModeling().getResearcherSimilarPublicationMap( publication, startPage, maxresult ) );
+
+		return responseMap;
+	}
+
 	/**
 	 * Get bibtex modelview
 	 * 
