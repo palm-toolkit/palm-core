@@ -26,11 +26,8 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-<<<<<<< HEAD
-=======
 	private String path = "C:/Users/Albi/Desktop/";
 
->>>>>>> feature-topic-modelling
 	@Override
 	public Map<String, Object> getResearcherSimilarAuthorMap( Author author, int startPage, int maxresult )
 	{
@@ -38,12 +35,8 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		List<String> similarAuthors = new ArrayList<String>();
-<<<<<<< HEAD
-		similarAuthors = palmAnalytics.getNGrams().similarEntities( author.getId(), maxresult );
-=======
+		
 		similarAuthors = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 20, 10, 3, false );
-		//similarEntities( author.getId(), maxresult, 3 );
->>>>>>> feature-topic-modelling
 
 		// Prepare set of similarAuthor HashSet;
 		Set<String> similarauthorSet = new HashSet<String>();

@@ -46,11 +46,7 @@ public class TopicModelingService
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-<<<<<<< HEAD
-=======
 	private String path = "C:/Users/Albi/Desktop/";
-
->>>>>>> feature-topic-modelling
 	public void calculateAuthorTopicModeling( Author author, boolean isReplaceExistingResult, boolean Static )
 	{
 
