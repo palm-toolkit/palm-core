@@ -23,6 +23,12 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 	private ResearcherSimilarauthor researcherSimilarauthor;
 
 	@Autowired( required = false )
+	private ResearcherTopicEvolutionTest researcherTopicEvolutionTest;
+
+	@Autowired( required = false )
+	private ResearcherTopicCompositionCloud researcherTopicCloud;
+
+	@Autowired( required = false )
 	private ResearcherInterest researcherInterest;
 	
 	@Autowired( required = false )
@@ -110,6 +116,24 @@ public class ResearcherFeatureImpl implements ResearcherFeature
 			this.researcherSimilarauthor = new ResearcherSimilarauthorImpl();
 
 		return this.researcherSimilarauthor;
+	}
+
+	@Override
+	public ResearcherTopicEvolutionTest getResearcherDynamicTopicModellingauthorTest()
+	{
+		if ( this.researcherTopicEvolutionTest == null )
+			this.researcherTopicEvolutionTest = new ResearcherTopicEvolutionImplTest();
+
+		return this.researcherTopicEvolutionTest;
+	}
+
+	@Override
+	public ResearcherTopicCompositionCloud getResearcherTopicModelingCloud()
+	{
+		if ( this.researcherTopicCloud == null )
+			this.researcherTopicCloud = new ResearcherTopicCompositionCloudImpl();
+
+		return this.researcherTopicCloud;
 	}
 
 	@Override
