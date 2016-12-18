@@ -16,6 +16,7 @@ import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.visualanalytics.service.VisualizationFeature;
 
 @Component
@@ -83,6 +84,11 @@ public class ListVisualizationImpl implements ListVisualization
 				pubDetails.put( "year", pub.getYear() );
 				pubDetails.put( "type", pub.getPublicationType() );
 				pubDetails.put( "date", pub.getPublicationDate() );
+				if ( pub.getPublicationFiles() != null && !pub.getPublicationFiles().isEmpty() )
+				{
+					PublicationFile pf = new ArrayList<PublicationFile>( pub.getPublicationFiles() ).get( 0 );
+					pubDetails.put( "url", pf.getUrl() );
+				}
 				pubDetailsList.add( pubDetails );
 			}
 

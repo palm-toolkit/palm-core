@@ -221,6 +221,63 @@ class Network
 							tempPubAuthors.add( publicationAuthor );
 						}
 					}
+					if ( type.equals( "publication" ) )
+					{
+						if ( selectedAuthors.contains( publicationAuthor ) )
+						{
+							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
+
+							if ( !nodes.contains( n ) )
+							{
+								nodes.add( n );
+								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
+								n.setAttribute( "authorId", publicationAuthor.getId() );
+								n.setLabel( publicationAuthor.getName() );
+								// if ( pubs.contains( publication ) )
+								// n.setSize( 0.5f );
+								// else
+								n.setSize( 0.1f );
+								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
+								undirectedGraph.addNode( n );
+							}
+							for ( int i = 0; i < tempPubAuthors.size(); i++ )
+							{
+								Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
+								if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
+								{
+									Node tempAuthorNode = graphModel.factory().newNode( tempPubAuthors.get( i ).getName() );
+									int indexTempNode = nodes.indexOf( tempAuthorNode );
+									int indexPubNode = nodes.indexOf( pubAuthorNode );
+									Boolean flag = false;
+
+									// check if an edge already exists
+									// between the 2 nodes
+									for ( Edge eTest : edges )
+									{
+										if ( ( eTest.getSource().equals( nodes.get( indexTempNode ) ) && eTest.getTarget().equals( nodes.get( indexPubNode ) ) ) || ( eTest.getSource().equals( nodes.get( indexPubNode ) ) && eTest.getTarget().equals( nodes.get( indexTempNode ) ) ) )
+										{
+											flag = true;
+											eTest.setWeight( eTest.getWeight() + 0.1 );
+										}
+									}
+									if ( !flag )
+									{
+										Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
+										edges.add( e );
+										e.setWeight( 0.1 );
+										e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
+										e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
+										e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i ).isAdded() );
+										e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
+										undirectedGraph.addEdge( e );
+									}
+
+								}
+							}
+							tempPubAuthors.add( publicationAuthor );
+						}
+					}
+
 					if ( type.equals( "topic" ) || type.equals( "circle" ) )
 					{
 
@@ -287,61 +344,69 @@ class Network
 			}
 		}
 		// in case of publications, explicitly find common authors
-		if ( type.equals( "publication" ) )
-		{
-			List<Author> publicationAuthors = selectedAuthors;
-			List<Author> tempPubAuthors = new ArrayList<Author>();
-
-			// iterating over authors of those publications
-			for ( Author publicationAuthor : publicationAuthors )
-			{
-				Node n = graphModel.factory().newNode( publicationAuthor.getName() );
-
-				if ( !nodes.contains( n ) )
-				{
-					nodes.add( n );
-					n.setAttribute( "isAdded", publicationAuthor.isAdded() );
-					n.setAttribute( "authorId", publicationAuthor.getId() );
-					n.setLabel( publicationAuthor.getName() );
-					n.setSize( 0.1f );
-					n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
-					undirectedGraph.addNode( n );
-				}
-				for ( int i = 0; i < tempPubAuthors.size(); i++ )
-				{
-					Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
-					if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
-					{
-						Node tempAuthorNode = graphModel.factory().newNode( tempPubAuthors.get( i ).getName() );
-						int indexTempNode = nodes.indexOf( tempAuthorNode );
-						int indexPubNode = nodes.indexOf( pubAuthorNode );
-						Boolean flag = false;
-						// check if an edge already exists
-						// between the 2 nodes
-						for ( Edge eTest : edges )
-						{
-							if ( ( eTest.getSource().equals( nodes.get( indexTempNode ) ) && eTest.getTarget().equals( nodes.get( indexPubNode ) ) ) || ( eTest.getSource().equals( nodes.get( indexPubNode ) ) && eTest.getTarget().equals( nodes.get( indexTempNode ) ) ) )
-							{
-								flag = true;
-								eTest.setWeight( eTest.getWeight() + 0.1 );
-							}
-						}
-						if ( !flag )
-						{
-							Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
-							edges.add( e );
-							e.setWeight( 0.1 );
-							e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
-							e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
-							e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i ).isAdded() );
-							e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
-							undirectedGraph.addEdge( e );
-						}
-					}
-				}
-				tempPubAuthors.add( publicationAuthor );
-			}
-		}
+		// if ( type.equals( "publication" ) )
+		// {
+		// List<Author> publicationAuthors = selectedAuthors;
+		// List<Author> tempPubAuthors = new ArrayList<Author>();
+		//
+		// // iterating over authors of those publications
+		// for ( Author publicationAuthor : publicationAuthors )
+		// {
+		// Node n = graphModel.factory().newNode( publicationAuthor.getName() );
+		//
+		// if ( !nodes.contains( n ) )
+		// {
+		// nodes.add( n );
+		// n.setAttribute( "isAdded", publicationAuthor.isAdded() );
+		// n.setAttribute( "authorId", publicationAuthor.getId() );
+		// n.setLabel( publicationAuthor.getName() );
+		// n.setSize( 0.1f );
+		// n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt(
+		// ( max - min ) + 1 ) + min );
+		// undirectedGraph.addNode( n );
+		// }
+		// for ( int i = 0; i < tempPubAuthors.size(); i++ )
+		// {
+		// Node pubAuthorNode = graphModel.factory().newNode(
+		// publicationAuthor.getName() );
+		// if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
+		// {
+		// Node tempAuthorNode = graphModel.factory().newNode(
+		// tempPubAuthors.get( i ).getName() );
+		// int indexTempNode = nodes.indexOf( tempAuthorNode );
+		// int indexPubNode = nodes.indexOf( pubAuthorNode );
+		// Boolean flag = false;
+		// // check if an edge already exists
+		// // between the 2 nodes
+		// for ( Edge eTest : edges )
+		// {
+		// if ( ( eTest.getSource().equals( nodes.get( indexTempNode ) ) &&
+		// eTest.getTarget().equals( nodes.get( indexPubNode ) ) ) || (
+		// eTest.getSource().equals( nodes.get( indexPubNode ) ) &&
+		// eTest.getTarget().equals( nodes.get( indexTempNode ) ) ) )
+		// {
+		// flag = true;
+		// eTest.setWeight( eTest.getWeight() + 0.1 );
+		// }
+		// }
+		// if ( !flag )
+		// {
+		// Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ),
+		// nodes.get( indexPubNode ), 0, 1, false );
+		// edges.add( e );
+		// e.setWeight( 0.1 );
+		// e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
+		// e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
+		// e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i
+		// ).isAdded() );
+		// e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
+		// undirectedGraph.addEdge( e );
+		// }
+		// }
+		// }
+		// tempPubAuthors.add( publicationAuthor );
+		// }
+		// }
 
 		if ( selectedAuthors.isEmpty() )
 		{

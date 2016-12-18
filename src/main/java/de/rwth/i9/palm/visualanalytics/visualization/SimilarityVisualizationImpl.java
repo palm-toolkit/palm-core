@@ -14,6 +14,8 @@ import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.DataMiningAuthor;
 import de.rwth.i9.palm.model.DataMiningEventGroup;
 import de.rwth.i9.palm.model.DataMiningPublication;
+import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -152,6 +154,7 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 				List<Double> truncSimilarityValues = new ArrayList<Double>();
 				List<String> publicationNames = new ArrayList<String>();
 				List<String> publicationsIds = new ArrayList<String>();
+				List<String> publicationsURLs = new ArrayList<String>();
 				List<Map<String, Double>> truncInterests = new ArrayList<Map<String, Double>>();
 
 				int count = 0;
@@ -165,11 +168,20 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 					truncSimilarityValues.add( similarityValues.get( i ) );
 					publicationNames.add( similarPublications.get( i ).getTitle() );
 					publicationsIds.add( similarPublications.get( i ).getId() );
+
+					Publication p = persistenceStrategy.getPublicationDAO().getById( similarPublications.get( i ).getId() );
+					if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
+					{
+						PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
+						publicationsURLs.add( pf.getUrl() );
+					}
+
 					truncInterests.add( interestMap.get( similarPublications.get( i ) ) );
 				}
 
 				visMap.put( "names", publicationNames );
 				visMap.put( "ids", publicationsIds );
+				visMap.put( "urls", publicationsURLs );
 				visMap.put( "similarity", truncSimilarityValues );
 				visMap.put( "interests", truncInterests );
 			}

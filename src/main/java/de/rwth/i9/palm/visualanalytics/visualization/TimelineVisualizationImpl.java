@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
 
 @Component
 public class TimelineVisualizationImpl implements TimelineVisualization
@@ -38,6 +39,13 @@ public class TimelineVisualizationImpl implements TimelineVisualization
 				pubDetails.put( "id", pub.getId() );
 				pubDetails.put( "title", pub.getTitle() );
 				pubDetails.put( "type", pub.getPublicationType() );
+
+				if ( pub.getPublicationFiles() != null && !pub.getPublicationFiles().isEmpty() )
+				{
+					PublicationFile pf = new ArrayList<PublicationFile>( pub.getPublicationFiles() ).get( 0 );
+					pubDetails.put( "url", pf.getUrl() );
+				}
+
 				if ( pub.getYear() != null )
 					pubDetails.put( "year", pub.getYear() );
 				else

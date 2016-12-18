@@ -16,12 +16,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
+import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
 public class GroupVisualizationImpl implements GroupVisualization
 {
 	@Autowired
 	private ClusteringService clusteringService;
+
+	@Autowired
+	private PersistenceStrategy persistenceStrategy;
 
 	private ObjectMapper mapper = new ObjectMapper();
 
@@ -127,6 +132,7 @@ public class GroupVisualizationImpl implements GroupVisualization
 				Iterator<String> objectsIterator = mapClusterPublication.keySet().iterator();
 				List<String> names = new ArrayList<String>();
 				List<String> ids = new ArrayList<String>();
+				List<String> urls = new ArrayList<String>();
 				Object jsonObject;
 				String jsonString;
 				Map<String, String> mapValues = new LinkedHashMap<String, String>();
@@ -146,8 +152,15 @@ public class GroupVisualizationImpl implements GroupVisualization
 					Iterator<String> iterator = mapValues.values().iterator();
 					while ( iterator.hasNext() )
 					{
-						ids.add( iterator.next() );
+						String id = iterator.next();
+						ids.add( id );
 						names.add( iterator.next() );
+						Publication p = persistenceStrategy.getPublicationDAO().getById( id );
+						if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
+						{
+							PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
+							urls.add( pf.getUrl() );
+						}
 					}
 				}
 
@@ -157,6 +170,7 @@ public class GroupVisualizationImpl implements GroupVisualization
 					Map<String, Object> responseMapTemp = new LinkedHashMap<String, Object>();
 					responseMapTemp.put( "id", ids.get( i ) );
 					responseMapTemp.put( "name", names.get( i ) );
+					responseMapTemp.put( "url", urls.get( i ) );
 					responseMapTemp.put( "cluster", clusters.get( i ) );
 					responseMapTemp.put( "nodeTerms", nodeTerms.get( ids.get( i ) ) );
 					responseMapTemp.put( "clusterTerms", clusterTerms.get( clusters.get( i ) ) );

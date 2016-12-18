@@ -29,6 +29,7 @@ import de.rwth.i9.palm.model.EventInterest;
 import de.rwth.i9.palm.model.EventInterestProfile;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.model.PublicationTopicFlat;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -670,6 +671,12 @@ public class VADataFetcher
 					Map<String, Object> items = new HashMap<String, Object>();
 					items.put( "name", p.getTitle() );
 					items.put( "id", p.getId() );
+					if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
+					{
+						System.out.println( p.getTitle() );
+						PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
+						items.put( "url", pf.getUrl() );
+					}
 					listItems.add( items );
 				}
 			}
@@ -1204,6 +1211,12 @@ public class VADataFetcher
 								Map<String, Object> items = new HashMap<String, Object>();
 								items.put( "name", p.getTitle() );
 								items.put( "id", p.getId() );
+								if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
+								{
+									System.out.println( p.getTitle() );
+									PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
+									items.put( "url", pf.getUrl() );
+								}
 								listItems.add( items );
 							}
 						}
@@ -1431,6 +1444,12 @@ public class VADataFetcher
 					Map<String, Object> items = new HashMap<String, Object>();
 					items.put( "name", p.getTitle() );
 					items.put( "id", p.getId() );
+					if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
+					{
+						System.out.println( p.getTitle() );
+						PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
+						items.put( "url", pf.getUrl() );
+					}
 					listItems.add( items );
 				}
 			}

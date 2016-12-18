@@ -124,59 +124,59 @@ public class VisualAnalyticsController
 
 			// create Visualization Widget in Explore
 			Widget visualizationWidget = new Widget();
-			visualizationWidget.setTitle( "Visualization" );
+			visualizationWidget.setTitle( "Visualizations Workspace" );
 			visualizationWidget.setUniqueName( "explore_visualize" );
 			visualizationWidget.setWidgetType( WidgetType.EXPLORE );
 			visualizationWidget.setWidgetGroup( "content" );
 			visualizationWidget.setWidgetSource( WidgetSource.INCLUDE );
 			visualizationWidget.setSourcePath( "../../explore/widget/visualize.ftl" );
 			visualizationWidget.setWidgetWidth( WidgetWidth.MEDIUM );
-			visualizationWidget.setColor( Color.GREEN );
+			visualizationWidget.setColor( Color.GRAY );
 			visualizationWidget.setInformation( "Workspace for all kinds of visualizations" );
 			visualizationWidget.setCloseEnabled( false );
 			visualizationWidget.setMinimizeEnabled( true );
 			visualizationWidget.setMoveableEnabled( true );
 			visualizationWidget.setHeaderVisible( true );
 			visualizationWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			visualizationWidget.setPosition( 3 );
+			visualizationWidget.setPosition( 2 );
 			persistenceStrategy.getWidgetDAO().persist( visualizationWidget );
 
 			// create Filter Widget in Explore
 			Widget filterWidget = new Widget();
-			filterWidget.setTitle( "Filters" );
+			filterWidget.setTitle( "Visualization Filters" );
 			filterWidget.setUniqueName( "explore_filter" );
 			filterWidget.setWidgetType( WidgetType.EXPLORE );
 			filterWidget.setWidgetGroup( "content" );
 			filterWidget.setWidgetSource( WidgetSource.INCLUDE );
 			filterWidget.setSourcePath( "../../explore/widget/filter.ftl" );
 			filterWidget.setWidgetWidth( WidgetWidth.SMALL );
-			filterWidget.setColor( Color.BLUE );
+			filterWidget.setColor( Color.GRAY );
 			filterWidget.setInformation( "Filter data in visualizations" );
 			filterWidget.setCloseEnabled( false );
 			filterWidget.setMinimizeEnabled( true );
 			filterWidget.setMoveableEnabled( true );
 			filterWidget.setHeaderVisible( true );
 			filterWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			filterWidget.setPosition( 9 );
+			filterWidget.setPosition( 4 );
 			persistenceStrategy.getWidgetDAO().persist( filterWidget );
 
 			// create Search Widget in Explore
 			Widget searchWidget = new Widget();
-			searchWidget.setTitle( "Search" );
+			searchWidget.setTitle( "Visualization Criteria" );
 			searchWidget.setUniqueName( "explore_search" );
 			searchWidget.setWidgetType( WidgetType.EXPLORE );
 			searchWidget.setWidgetGroup( "content" );
 			searchWidget.setWidgetSource( WidgetSource.INCLUDE );
 			searchWidget.setSourcePath( "../../explore/widget/search.ftl" );
 			searchWidget.setWidgetWidth( WidgetWidth.LARGE );
-			searchWidget.setColor( Color.RED );
+			searchWidget.setColor( Color.GRAY );
 			searchWidget.setInformation( "Stage for setting up search criteria" );
 			searchWidget.setCloseEnabled( false );
-			searchWidget.setMinimizeEnabled( false );
-			searchWidget.setMoveableEnabled( false );
-			searchWidget.setHeaderVisible( false );
+			searchWidget.setMinimizeEnabled( true );
+			searchWidget.setMoveableEnabled( true );
+			searchWidget.setHeaderVisible( true );
 			searchWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			searchWidget.setPosition( 3 );
+			searchWidget.setPosition( 1 );
 			persistenceStrategy.getWidgetDAO().persist( searchWidget );
 
 			// create Search Widget in Explore
@@ -207,14 +207,14 @@ public class VisualAnalyticsController
 			historyWidget.setWidgetSource( WidgetSource.INCLUDE );
 			historyWidget.setSourcePath( "../../explore/widget/history.ftl" );
 			historyWidget.setWidgetWidth( WidgetWidth.SMALL );
-			historyWidget.setColor( Color.GRAY );
+			historyWidget.setColor( Color.GREEN );
 			historyWidget.setInformation( "Browser history of search items" );
-			historyWidget.setCloseEnabled( false );
+			historyWidget.setCloseEnabled( true );
 			historyWidget.setMinimizeEnabled( true );
 			historyWidget.setMoveableEnabled( true );
 			historyWidget.setHeaderVisible( true );
 			historyWidget.setWidgetStatus( WidgetStatus.DEFAULT );
-			historyWidget.setPosition( 999 );
+			historyWidget.setPosition( 3 );
 			persistenceStrategy.getWidgetDAO().persist( historyWidget );
 
 		}
@@ -282,7 +282,7 @@ public class VisualAnalyticsController
 
 		if ( user != null )
 		{
-			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidgetByColor( user, WidgetType.EXPLORE, WidgetStatus.ACTIVE );
+			List<UserWidget> userWidgets = persistenceStrategy.getUserWidgetDAO().getWidget( user, WidgetType.EXPLORE, WidgetStatus.ACTIVE );
 			for ( UserWidget userWidget : userWidgets )
 			{
 				Widget widget = userWidget.getWidget();
@@ -295,7 +295,7 @@ public class VisualAnalyticsController
 			}
 		}
 		else
-			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidgetByColor( WidgetType.EXPLORE, WidgetStatus.DEFAULT ) );
+			widgets.addAll( persistenceStrategy.getWidgetDAO().getWidget( WidgetType.EXPLORE, WidgetStatus.DEFAULT ) );
 
 		// assign the model
 		model.addObject( "widgets", widgets );

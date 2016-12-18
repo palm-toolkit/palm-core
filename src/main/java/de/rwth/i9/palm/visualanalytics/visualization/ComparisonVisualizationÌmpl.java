@@ -22,6 +22,7 @@ import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationFile;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.visualanalytics.service.FilterFeature;
 
@@ -986,6 +987,11 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										Map<String, Object> items = new HashMap<String, Object>();
 										items.put( "name", p.getTitle() );
 										items.put( "id", p.getId() );
+										if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
+										{
+											PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
+											items.put( "url", pf.getUrl() );
+										}
 										tempListItems.add( items );
 									}
 								}
@@ -1017,6 +1023,11 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 								Map<String, Object> items = new HashMap<String, Object>();
 								items.put( "name", authorPublications.get( k ).getTitle() );
 								items.put( "id", authorPublications.get( k ).getId() );
+								if ( authorPublications.get( k ).getPublicationFiles() != null && !authorPublications.get( k ).getPublicationFiles().isEmpty() )
+								{
+									PublicationFile pf = new ArrayList<PublicationFile>( authorPublications.get( k ).getPublicationFiles() ).get( 0 );
+									items.put( "url", pf.getUrl() );
+								}
 								combinedListItems.add( items );
 								count.add( 0 );
 
@@ -1086,6 +1097,11 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										Map<String, Object> items = new HashMap<String, Object>();
 										items.put( "name", p.getTitle() );
 										items.put( "id", p.getId() );
+										if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
+										{
+											PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
+											items.put( "url", pf.getUrl() );
+										}
 										tempListItems.add( items );
 									}
 								}
@@ -1118,6 +1134,11 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 								Map<String, Object> items = new HashMap<String, Object>();
 								items.put( "name", interestPublications.get( k ).getTitle() );
 								items.put( "id", interestPublications.get( k ).getId() );
+								if ( interestPublications.get( k ).getPublicationFiles() != null && !interestPublications.get( k ).getPublicationFiles().isEmpty() )
+								{
+									PublicationFile pf = new ArrayList<PublicationFile>( interestPublications.get( k ).getPublicationFiles() ).get( 0 );
+									items.put( "url", pf.getUrl() );
+								}
 								combinedListItems.add( items );
 								count.add( 1 );
 							}
@@ -1185,6 +1206,11 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 										Map<String, Object> items = new HashMap<String, Object>();
 										items.put( "name", p.getTitle() );
 										items.put( "id", p.getId() );
+										if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
+										{
+											PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
+											items.put( "url", pf.getUrl() );
+										}
 										tempListItems.add( items );
 									}
 								}
@@ -1216,6 +1242,11 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 								Map<String, Object> items = new HashMap<String, Object>();
 								items.put( "name", circlePublications.get( k ).getTitle() );
 								items.put( "id", circlePublications.get( k ).getId() );
+								if ( circlePublications.get( k ).getPublicationFiles() != null && !circlePublications.get( k ).getPublicationFiles().isEmpty() )
+								{
+									PublicationFile pf = new ArrayList<PublicationFile>( circlePublications.get( k ).getPublicationFiles() ).get( 0 );
+									items.put( "url", pf.getUrl() );
+								}
 								combinedListItems.add( items );
 								count.add( 0 );
 							}
