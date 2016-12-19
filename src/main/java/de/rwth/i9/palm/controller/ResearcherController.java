@@ -377,7 +377,7 @@ public class ResearcherController
 
 	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getResearcherTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getResearcherTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
 	{
 		if ( authorId != null )
 		{
@@ -395,7 +395,7 @@ public class ResearcherController
 
 	@RequestMapping( value = "/topicCompositionNCloud", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getResearcherTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getResearcherTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
 	{
 		if ( authorId != null )
 		{
@@ -565,7 +565,7 @@ public class ResearcherController
 	 * @param startPage
 	 * @param maxresult
 	 * @param response
-	 * @return
+	 * @return NOT USED
 	 */
 	@RequestMapping( value = "/recommendedAuthorList", method = RequestMethod.GET )
 	@Transactional
@@ -610,7 +610,7 @@ public class ResearcherController
 	 * @param startPage
 	 * @param maxresult
 	 * @param response
-	 * @return
+	 * @return NOT USED
 	 */
 	@RequestMapping( value = "/similarAuthorList", method = RequestMethod.GET )
 	@Transactional
@@ -653,7 +653,7 @@ public class ResearcherController
 	 * @param startPage
 	 * @param maxresult
 	 * @param response
-	 * @return
+	 * @return NOT USED
 	 */
 	@RequestMapping( value = "/similarAuthorListTopicLevel", method = RequestMethod.GET )
 	@Transactional
@@ -697,10 +697,12 @@ public class ResearcherController
 	 * @param maxresult
 	 * @param response
 	 * @return
+	 * @throws IOException 
+	 * @throws NullPointerException 
 	 */
 	@RequestMapping( value = "/similarAuthorListTopicLevelRevised", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getSimilarAuthorListTopicLevelRevised( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getSimilarAuthorListTopicLevelRevised( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response) throws NullPointerException, IOException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();

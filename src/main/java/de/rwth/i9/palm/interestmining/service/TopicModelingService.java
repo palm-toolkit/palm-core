@@ -528,7 +528,7 @@ public class TopicModelingService
 			try
 			{
 				//topicNgrams = palmAnalytics.getNGrams().getTopTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId().toString() ), -1, 0.0, 5, 5, true );
-				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Author-Test", 20, 10, 7, false, true, true );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Author", 20, 10, 7, false, palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), true );
 				
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 			{

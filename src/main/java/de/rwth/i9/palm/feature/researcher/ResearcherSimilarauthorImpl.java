@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.feature.researcher;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -164,7 +165,7 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 	}
 
 @Override
-public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author author, int startPage, int maxresult ) throws NullPointerException
+public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author author, int startPage, int maxresult ) throws NullPointerException, IOException
 {
 	// researchers list container
 	Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -179,13 +180,13 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 	List<String> authortopicWords = new ArrayList<String>();
 	for (String entity : similarEntities){
 		if(entity.split("->")[0].equals(author.getId()))
-			authortopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author-Test", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+			authortopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author", entity.split("->")[0], 10, 10, 10,  palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), false ).keySet());
 	}
 	
 	// run for each of the entities of the list the weightedTopic Composition
 	for (String entity : similarEntities){
 		if(!entity.split("->")[0].equals(author.getId())){		
-			List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author-Test", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+			List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author", entity.split("->")[0], 10, 10, 10,  palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), false ).keySet());
 			
 			Map<String, Object> similarAuthorMap = new LinkedHashMap<String, Object>();
 

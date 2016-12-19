@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.feature.researcher;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -22,7 +23,7 @@ public class ResearcherTopicCompositionCloudImpl implements ResearcherTopicCompo
 	private String path = "C:/Users/Albi/Desktop/";
 
 	@Override
-	public Map<String, Object> getTopicModelUniCloud( Author author, boolean isReplaceExistingResult )
+	public Map<String, Object> getTopicModelUniCloud( Author author, boolean isReplaceExistingResult ) throws IOException
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -34,7 +35,7 @@ public class ResearcherTopicCompositionCloudImpl implements ResearcherTopicCompo
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Author-Test", author.getId().toString(), 5, 5, 5, true, true );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Author", author.getId().toString(), 5, 5, 5,  palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), true );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -63,7 +64,7 @@ public class ResearcherTopicCompositionCloudImpl implements ResearcherTopicCompo
 	}
 
 	@Override
-	public Map<String, Object> getTopicModelNCloud( Author author, boolean isReplaceExistingResult )
+	public Map<String, Object> getTopicModelNCloud( Author author, boolean isReplaceExistingResult ) throws IOException
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -75,7 +76,7 @@ public class ResearcherTopicCompositionCloudImpl implements ResearcherTopicCompo
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Author-Test", author.getId().toString(), 10, 10, 10, true, false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Author", author.getId().toString(), 10, 10, 10,  palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), false );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
