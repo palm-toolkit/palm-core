@@ -148,6 +148,7 @@ public class VADataFetcher
 		}
 		if ( type.equals( "topic" ) )
 		{
+			System.out.println( "\ncount: " + count );
 			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
 			{
@@ -159,23 +160,26 @@ public class VADataFetcher
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
 					Interest interest = persistenceStrategy.getInterestDAO().getById( idsList.get( i ) );
-
 					for ( DataMiningAuthor dma : DMAuthors )
 					{
 						Map<String, Double> interests = new HashMap<String, Double>();
 						interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
 						if ( interests.keySet().contains( interest.getTerm() ) )
 						{
-							Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
-							if ( !commonAuthors.contains( a ) )
+							System.out.println( dma.getName() + " : " + interests.get( interest.getTerm() ) );
+							if ( interests.get( interest.getTerm() ) > 0.3 )
 							{
-								commonAuthors.add( a );
-								count.add( 1 );
-							}
-							else
-							{
-								int index = commonAuthors.indexOf( a );
-								count.set( index, count.get( index ) + 1 );
+								Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
+								if ( !commonAuthors.contains( a ) )
+								{
+									commonAuthors.add( a );
+									count.add( 1 );
+								}
+								else
+								{
+									int index = commonAuthors.indexOf( a );
+									count.set( index, count.get( index ) + 1 );
+								}
 							}
 						}
 					}
@@ -288,6 +292,8 @@ public class VADataFetcher
 
 		for ( int i = 0; i < count.size(); i++ )
 		{
+			System.out.println( commonAuthors.get( i ).getName() + " : " + count.get( i ) );
+
 			if ( count.get( i ) < idsList.size() )
 			{
 				count.remove( i );
@@ -298,6 +304,8 @@ public class VADataFetcher
 		System.out.println( "common co: " + commonAuthors.size() );
 		if ( !publications.isEmpty() )
 		{
+
+			System.out.println( "pubs till herer!! " + publications.size() );
 			// get authors from the publications
 			List<Author> authors = new ArrayList<Author>();
 			for ( Publication p : publications )
@@ -307,6 +315,7 @@ public class VADataFetcher
 					if ( !authors.contains( a ) )
 					{
 						authors.add( a );
+						System.out.println( "-- " + a.getName() );
 					}
 				}
 			}
@@ -476,7 +485,7 @@ public class VADataFetcher
 							String topic = term.next();
 							float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, i.getTerm() );
 
-							if ( dist > 0.9f )
+							if ( dist > 0.8f )
 							{
 								if ( !selectedDMPublications.contains( dmp ) )
 								{
@@ -1061,16 +1070,19 @@ public class VADataFetcher
 			interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
 			if ( interests.keySet().contains( interest.getTerm() ) )
 			{
-				Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
-
-				if ( !interestAuthors.contains( a ) )
+				if ( interests.get( interest.getTerm() ) > 0.3 )
 				{
-					interestAuthors.add( a );
-					Map<String, Object> items = new HashMap<String, Object>();
-					items.put( "name", a.getName() );
-					items.put( "id", a.getId() );
-					items.put( "isAdded", a.isAdded() );
-					listItems.add( items );
+					Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
+
+					if ( !interestAuthors.contains( a ) )
+					{
+						interestAuthors.add( a );
+						Map<String, Object> items = new HashMap<String, Object>();
+						items.put( "name", a.getName() );
+						items.put( "id", a.getId() );
+						items.put( "isAdded", a.isAdded() );
+						listItems.add( items );
+					}
 				}
 			}
 		}
@@ -1184,7 +1196,7 @@ public class VADataFetcher
 					String topic = term.next();
 					float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, interest.getTerm() );
 
-					if ( dist > 0.9f )
+					if ( dist > 0.8f )
 					{
 						if ( !selectedDMPublications.contains( dmp ) )
 						{

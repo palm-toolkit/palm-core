@@ -29,40 +29,37 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 	@Autowired
 	private VADataFetcher dataFetcher;
 
+	@SuppressWarnings( "unchecked" )
 	public Map<String, Object> visualizeNetwork( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, String authoridForCoAuthors, String yearFilterPresent, List<Interest> filteredTopic, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-
+		System.out.println( "publications in netwrok: " + publications.size() );
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-			Author authorForCoAuthors = new Author();
-			if ( authoridForCoAuthors != null )
-			{
-				authorForCoAuthors = persistenceStrategy.getAuthorDAO().getById( authoridForCoAuthors );
-			}
-
+			// find authors from ids
 			List<Author> authorList = new ArrayList<Author>();
-			for ( String id : idsList )
-			{
-				authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
-			}
+			if ( type.equals( "researcher" ) )
+				for ( String id : idsList )
+					authorList.add( persistenceStrategy.getAuthorDAO().getById( id ) );
 
+			// fetch co-authors in case of researcher type and researchers for
+			// other types
 			Map<String, Object> map = dataFetcher.fetchCommonAuthors( type, publications, idsList, yearFilterPresent );
-			@SuppressWarnings( "unchecked" )
 			List<Author> selectedAuthors = (List<Author>) map.get( "commonAuthors" );
-			// System.out.println( "sel authors in network:" +
-			// selectedAuthors.size() + "\n" );
+
+			// if no filters are applied, fetch all publications of selected
+			// items
+			if ( publications.isEmpty() )
+				publications = dataFetcher.fetchAllPublications( type, idsList, authorList );
+
 
 			// verify if the researchers also have the selected interests, not
 			// just there publications
 			if ( !filteredTopic.isEmpty() )
 				selectedAuthors = dataFetcher.getAuthorsFromInterestFilter( filteredTopic, selectedAuthors );
 
-			if ( publications.isEmpty() )
-				publications = dataFetcher.fetchAllPublications( type, idsList, authorList );
-
-			visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, authorForCoAuthors, selectedAuthors, request ).get( "graphFile" ) );
+			visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, selectedAuthors, request ).get( "graphFile" ) );
 		}
 		return visMap;
 	}

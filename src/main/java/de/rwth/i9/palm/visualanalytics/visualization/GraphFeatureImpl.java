@@ -41,10 +41,8 @@ import de.rwth.i9.palm.model.Publication;
 
 class Network
 {
-	public void generateNetwork( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final Author authorForCoAuthors, final List<Author> selectedAuthors )
+	public void generateNetwork( final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final List<Author> selectedAuthors )
 	{
-		System.out.println( "authorLst: " + authorList.size() );
-		System.out.println( "selectedAuthors: " + selectedAuthors.size() );
 		Random rand = new Random();
 
 		int max = 100;
@@ -65,31 +63,20 @@ class Network
 		graphModel.getEdgeTable().addColumn( "sourceAuthorIsAdded", boolean.class );
 		graphModel.getEdgeTable().addColumn( "targetAuthorIsAdded", boolean.class );
 
-		// FilterController filterController =
-		// Lookup.getDefault().lookup( FilterController.class );
 		AppearanceController appearanceController = Lookup.getDefault().lookup( AppearanceController.class );
 		AppearanceModel appearanceModel = appearanceController.getModel();
-		// PreviewModel model = Lookup.getDefault().lookup(
-		// PreviewController.class ).getModel();
 
 		// Append as an undirected Graph
 		UndirectedGraph undirectedGraph = graphModel.getUndirectedGraph();
 		undirectedGraph.writeLock();
-
-		System.out.println( "authorPublications: " + authorPublications.size() );
 
 		List<Node> nodes = new ArrayList<Node>();
 		List<Edge> edges = new ArrayList<Edge>();
 		nodes.clear();
 		edges.clear();
 
-		// Set<Publication> pubs = new HashSet<Publication>();
-		// if ( authorForCoAuthors != null )
-		// {
-		// pubs = authorForCoAuthors.getPublications();
-		// authorPublications.addAll( pubs );
-		// }
-
+		// if list of researchers matching the search criteria and filters is
+		// not empty
 		if ( !selectedAuthors.isEmpty() )
 		{
 			// iterating over all publications of the authors
@@ -103,9 +90,8 @@ class Network
 				{
 					if ( type.equals( "researcher" ) )
 					{
-						// 2nd check, if the authors are not co-authors
-						// of
-						// each other but have common co-authors
+						// if publication author is either in the list of
+						// selected authors or in the search criteria
 						if ( selectedAuthors.contains( publicationAuthor ) || authorList.contains( publicationAuthor ) )
 						{
 							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
@@ -118,16 +104,15 @@ class Network
 							{
 								nodes.add( n );
 								n.setLabel( publicationAuthor.getName() );
-								// if ( pubs.contains( publication ) )
-								// n.setSize( 0.5f );
-								// else
 								n.setSize( 0.1f );
 								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
 								n.setAttribute( "authorId", publicationAuthor.getId() );
 								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
 								undirectedGraph.addNode( n );
-
 							}
+
+							// add edges if researchers have publications
+							// together
 							for ( int i = 0; i < tempPubAuthors.size(); i++ )
 							{
 								Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
@@ -150,7 +135,6 @@ class Network
 									}
 									if ( !flag )
 									{
-
 										Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ), nodes.get( indexPubNode ), 0, 1, false );
 										edges.add( e );
 										e.setWeight( 0.1 );
@@ -167,23 +151,29 @@ class Network
 					}
 					if ( type.equals( "conference" ) )
 					{
+						// if publication author is either in the list of
+						// selected authors
 						if ( selectedAuthors.contains( publicationAuthor ) )
 						{
 							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
 
+							// add the authors which are not already
+							// present
+							// in
+							// the nodes table
 							if ( !nodes.contains( n ) )
 							{
 								nodes.add( n );
 								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
 								n.setAttribute( "authorId", publicationAuthor.getId() );
 								n.setLabel( publicationAuthor.getName() );
-								// if ( pubs.contains( publication ) )
-								// n.setSize( 0.5f );
-								// else
 								n.setSize( 0.1f );
 								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
 								undirectedGraph.addNode( n );
 							}
+
+							// add edges if researchers have publications
+							// together
 							for ( int i = 0; i < tempPubAuthors.size(); i++ )
 							{
 								Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
@@ -223,23 +213,29 @@ class Network
 					}
 					if ( type.equals( "publication" ) )
 					{
+						// if publication author is either in the list of
+						// selected authors
 						if ( selectedAuthors.contains( publicationAuthor ) )
 						{
 							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
 
+							// add the authors which are not already
+							// present
+							// in
+							// the nodes table
 							if ( !nodes.contains( n ) )
 							{
 								nodes.add( n );
 								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
 								n.setAttribute( "authorId", publicationAuthor.getId() );
 								n.setLabel( publicationAuthor.getName() );
-								// if ( pubs.contains( publication ) )
-								// n.setSize( 0.5f );
-								// else
 								n.setSize( 0.1f );
 								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
 								undirectedGraph.addNode( n );
 							}
+
+							// add edges if researchers have publications
+							// together
 							for ( int i = 0; i < tempPubAuthors.size(); i++ )
 							{
 								Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
@@ -280,12 +276,12 @@ class Network
 
 					if ( type.equals( "topic" ) || type.equals( "circle" ) )
 					{
-
+						// if publication author is either in the list of
+						// selected authors
 						if ( selectedAuthors.contains( publicationAuthor ) )
 						{
-							// System.out.println( "TA:" +
-							// publicationAuthor.getName() );
 							Node n = graphModel.factory().newNode( publicationAuthor.getName() );
+
 							// add the authors which are not already
 							// present
 							// in
@@ -294,9 +290,6 @@ class Network
 							{
 								nodes.add( n );
 								n.setLabel( publicationAuthor.getName() );
-								// if ( pubs.contains( publication ) )
-								// n.setSize( 0.5f );
-								// else
 								n.setSize( 0.1f );
 								n.setAttribute( "isAdded", publicationAuthor.isAdded() );
 								n.setAttribute( "authorId", publicationAuthor.getId() );
@@ -304,6 +297,9 @@ class Network
 								undirectedGraph.addNode( n );
 
 							}
+
+							// add edges if researchers have publications
+							// together
 							for ( int i = 0; i < tempPubAuthors.size(); i++ )
 							{
 								Node pubAuthorNode = graphModel.factory().newNode( publicationAuthor.getName() );
@@ -343,104 +339,14 @@ class Network
 				}
 			}
 		}
-		// in case of publications, explicitly find common authors
-		// if ( type.equals( "publication" ) )
-		// {
-		// List<Author> publicationAuthors = selectedAuthors;
-		// List<Author> tempPubAuthors = new ArrayList<Author>();
-		//
-		// // iterating over authors of those publications
-		// for ( Author publicationAuthor : publicationAuthors )
-		// {
-		// Node n = graphModel.factory().newNode( publicationAuthor.getName() );
-		//
-		// if ( !nodes.contains( n ) )
-		// {
-		// nodes.add( n );
-		// n.setAttribute( "isAdded", publicationAuthor.isAdded() );
-		// n.setAttribute( "authorId", publicationAuthor.getId() );
-		// n.setLabel( publicationAuthor.getName() );
-		// n.setSize( 0.1f );
-		// n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt(
-		// ( max - min ) + 1 ) + min );
-		// undirectedGraph.addNode( n );
-		// }
-		// for ( int i = 0; i < tempPubAuthors.size(); i++ )
-		// {
-		// Node pubAuthorNode = graphModel.factory().newNode(
-		// publicationAuthor.getName() );
-		// if ( !tempPubAuthors.get( i ).equals( publicationAuthor ) )
-		// {
-		// Node tempAuthorNode = graphModel.factory().newNode(
-		// tempPubAuthors.get( i ).getName() );
-		// int indexTempNode = nodes.indexOf( tempAuthorNode );
-		// int indexPubNode = nodes.indexOf( pubAuthorNode );
-		// Boolean flag = false;
-		// // check if an edge already exists
-		// // between the 2 nodes
-		// for ( Edge eTest : edges )
-		// {
-		// if ( ( eTest.getSource().equals( nodes.get( indexTempNode ) ) &&
-		// eTest.getTarget().equals( nodes.get( indexPubNode ) ) ) || (
-		// eTest.getSource().equals( nodes.get( indexPubNode ) ) &&
-		// eTest.getTarget().equals( nodes.get( indexTempNode ) ) ) )
-		// {
-		// flag = true;
-		// eTest.setWeight( eTest.getWeight() + 0.1 );
-		// }
-		// }
-		// if ( !flag )
-		// {
-		// Edge e = graphModel.factory().newEdge( nodes.get( indexTempNode ),
-		// nodes.get( indexPubNode ), 0, 1, false );
-		// edges.add( e );
-		// e.setWeight( 0.1 );
-		// e.setAttribute( "sourceAuthorId", tempPubAuthors.get( i ).getId() );
-		// e.setAttribute( "targetAuthorId", publicationAuthor.getId() );
-		// e.setAttribute( "sourceAuthorIsAdded", tempPubAuthors.get( i
-		// ).isAdded() );
-		// e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
-		// undirectedGraph.addEdge( e );
-		// }
-		// }
-		// }
-		// tempPubAuthors.add( publicationAuthor );
-		// }
-		// }
 
 		if ( selectedAuthors.isEmpty() )
 		{
-			System.out.println( "selected authors: empty" );
-			// if ( type.equals( "circle" ) && idsList.size() > 1 )
-			// {
-			// for ( Author a : selectedAuthors )
-			// {
-			// Node n = graphModel.factory().newNode( a.getName() );
-			//
-			// if ( !nodes.contains( n ) )
-			// {
-			// nodes.add( n );
-			// n.setAttribute( "isAdded", a.isAdded() );
-			// n.setAttribute( "authorId", a.getId() );
-			// n.setLabel( a.getName() );
-			// n.setSize( 0.1f );
-			// n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min,
-			// rand.nextInt( ( max - min ) + 1 ) + min );
-			// undirectedGraph.addNode( n );
-			// }
-			// }
-			// }
-
-			System.out.println( type );
-			System.out.println( authorList.size() );
-			System.out.println( idsList.size() );
-
-			// find associations upto 2 levels, if authors are not
-			// co-authors
+			// find indirect associations upto 2 levels, if authors in search
+			// criteria are not
+			// co-authors of each other
 			if ( type.equals( "researcher" ) && authorList.size() == 2 )
 			{
-				System.out.println( "inside correct condition" );
-
 				// add nodes for main authors
 				for ( int f = 0; f < authorList.size(); f++ )
 				{
@@ -461,18 +367,13 @@ class Network
 				{
 					List<Author> coAuthors = new ArrayList<Author>();
 
+					// find all co-authors of a researcher
 					for ( Publication p : a.getPublications() )
-					{
 						for ( Author coA : p.getAuthors() )
-						{
 							if ( !coAuthors.contains( coA ) )
-							{
 								coAuthors.add( coA );
-							}
 
-						}
-					}
-
+					// add all co-authors to a common list
 					for ( int i = 0; i < coAuthors.size(); i++ )
 					{
 						if ( !commonAuthors.contains( coAuthors.get( i ) ) )
@@ -490,6 +391,8 @@ class Network
 					coAuthorsList.add( coAuthors );
 				}
 
+				// remove co-authors who are not common to researchers in the
+				// search criteria
 				for ( int i = 0; i < count.size(); i++ )
 				{
 					if ( count.get( i ) < authorList.size() )
@@ -500,6 +403,7 @@ class Network
 					}
 				}
 
+				// create nodes and edges between co-authors
 				for ( int i = 0; i < commonAuthors.size(); i++ )
 				{
 					Node n = graphModel.factory().newNode( commonAuthors.get( i ).getName() );
@@ -528,6 +432,9 @@ class Network
 						}
 					}
 				}
+
+				// if co-authors are also not connected, find connections
+				// between co-authors of co-authors
 				if ( commonAuthors.isEmpty() )
 				{
 					for ( int i = 1; i < coAuthorsList.size(); i++ )
@@ -610,16 +517,16 @@ class Network
 			}
 		}
 
-		System.out.println( "nodes size: " + nodes.size() );
+		// apply layout and ranking if there are any nodes present in graph
 		if ( nodes.size() != 0 )
 		{
+			// Set layout time according to number of nodes in the graph
 			int time = 2;
 			if ( !type.equals( "researcher" ) || !type.equals( "circle" ) || nodes.size() > 20 )
 				time = 20;
 			if ( nodes.size() > 1000 )
 				time = 40;
 
-			System.out.println( "time: " + time );
 			// Layout for 1 minute
 			AutoLayout autoLayout = new AutoLayout( time, TimeUnit.SECONDS );
 			autoLayout.setGraphModel( graphModel );
@@ -630,7 +537,6 @@ class Network
 			autoLayout.addLayout( forceAtlasLayout, 1.0f, new AutoLayout.DynamicProperty[] { repulsion, attraction } );
 			autoLayout.execute();
 
-			System.out.println( "layout done" );
 			// Get Centrality
 			GraphDistance distance = new GraphDistance();
 			distance.setDirected( false );
@@ -642,7 +548,8 @@ class Network
 			degreeTransformer.setColors( new Color[] { new Color( 0xed8c30 ), new Color( 0xdb1616 ) } );
 			degreeTransformer.setColorPositions( new float[] { 0f, 1f } );
 			appearanceController.transform( degreeRanking );
-			// purple 673888
+
+			// apply centrality ranking if number of nodes is > 1
 			if ( nodes.size() > 1 )
 			{
 				// Rank size by centrality/Harmonic Closeness
@@ -656,22 +563,9 @@ class Network
 					appearanceController.transform( centralityRanking );
 				}
 			}
-
-			System.out.println( "centrality done" );
-			// // Preview
-			// model.getProperties().putValue( PreviewProperty.SHOW_NODE_LABELS,
-			// Boolean.TRUE );
-			// model.getProperties().putValue( PreviewProperty.EDGE_COLOR, new
-			// EdgeColor( Color.GRAY ) );
-			// model.getProperties().putValue( PreviewProperty.EDGE_THICKNESS,
-			// new
-			// Float( 0.1f ) );
-			// model.getProperties().putValue( PreviewProperty.NODE_LABEL_FONT,
-			// model.getProperties().getFontValue(
-			// PreviewProperty.NODE_LABEL_FONT
-			// ).deriveFont( 8 ) );
 		}
-		// Export full graph
+
+		// Export graph
 		ExportController ec = Lookup.getDefault().lookup( ExportController.class );
 		try
 		{
@@ -681,6 +575,7 @@ class Network
 			{
 				try
 				{
+					// create gexf directory if it doesn't exist
 					gexfDir.mkdir();
 				}
 				catch ( SecurityException se )
@@ -692,10 +587,11 @@ class Network
 			final File f = new File( "src/main/webapp/resources/gexf/co-authors.gexf" );
 			ec.exportFile( f );
 
-			System.out.println( "exported" );
-			// String graphFile = f.getName();
+			// delete workspace after use
 			pc.deleteWorkspace( workspace );
 			undirectedGraph.writeUnlock();
+
+			// delete gexf file after 1 hour
 			new java.util.Timer().schedule( new java.util.TimerTask()
 			{
 				@Override
@@ -710,9 +606,7 @@ class Network
 			System.out.println( ex );
 			return;
 		}
-
 	}
-
 }
 
 @Component
@@ -722,7 +616,7 @@ public class GraphFeatureImpl implements GraphFeature
 	ExportController ec;
 
 	@Override
-	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, Author authorForCoAuthors, List<Author> selectedAuthors, HttpServletRequest request )
+	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, List<Author> selectedAuthors, HttpServletRequest request )
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
@@ -734,7 +628,7 @@ public class GraphFeatureImpl implements GraphFeature
 			// Create Thread Pool for parallel layout
 			ExecutorService executor = Executors.newFixedThreadPool( 1 );
 
-			Future<?> f = executor.submit( createRunnable( network, type, authorList, authorPublications, idsList, authorForCoAuthors, selectedAuthors ) );
+			Future<?> f = executor.submit( createRunnable( network, type, authorList, authorPublications, idsList, selectedAuthors ) );
 			try
 			{
 				f.get();
@@ -747,22 +641,10 @@ public class GraphFeatureImpl implements GraphFeature
 			executor.shutdown();
 
 			File file = new File( "src/main/webapp/resources/gexf/co-authors.gexf" );
-			System.out.println( "file:" + file.getName() );
-			// Random rand = new Random();
-			//
-			// int max = 10000;
-			// int min = 0;
 			long time = System.currentTimeMillis();
-			final File newFile = new File( "src/main/webapp/resources/gexf/" + time + ".gexf" );
-			System.out.println( newFile.getName() );
-			// while ( newFile.exists() )
-			// {
-			// newFile = new File( "src/main/webapp/resources/gexf/co-authors" +
-			// rand.nextInt( ( max - min ) + 1 ) + min + ".gexf" );
-			// System.out.println( "re " + newFile.getName() );
-			// }
 
-			// final File fileToExport = newFile;
+			// rename fixed filename to new created using timestamp
+			final File newFile = new File( "src/main/webapp/resources/gexf/" + time + ".gexf" );
 			file.renameTo( newFile );
 			new java.util.Timer().schedule( new java.util.TimerTask()
 			{
@@ -778,16 +660,17 @@ public class GraphFeatureImpl implements GraphFeature
 
 	}
 
-	private Runnable createRunnable( final Network network, final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final Author authorForCoAuthors, final List<Author> selectedAuthors )
+	private Runnable createRunnable( final Network network, final String type, final List<Author> authorList, final Set<Publication> authorPublications, final List<String> idsList, final List<Author> selectedAuthors )
 	{
 		return new Runnable()
 		{
 			@Override
 			public void run()
 			{
+				// ensure only one graph accesses the workspace at one time
 				synchronized (network)
 				{
-					network.generateNetwork( type, authorList, authorPublications, idsList, authorForCoAuthors, selectedAuthors );
+					network.generateNetwork( type, authorList, authorPublications, idsList, selectedAuthors );
 				}
 			}
 		};

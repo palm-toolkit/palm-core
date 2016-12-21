@@ -497,7 +497,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 									String topic = term.next();
 									float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, i.getTerm() );
 
-									if ( dist > 0.9f )
+									if ( dist > 0.8f )
 									{
 										if ( !publicationsWithTopic.contains( dmp ) )
 										{

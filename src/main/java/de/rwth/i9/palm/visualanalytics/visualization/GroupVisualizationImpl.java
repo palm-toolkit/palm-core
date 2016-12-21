@@ -161,6 +161,8 @@ public class GroupVisualizationImpl implements GroupVisualization
 							PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
 							urls.add( pf.getUrl() );
 						}
+						else
+							urls.add( "" );
 					}
 				}
 

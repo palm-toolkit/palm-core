@@ -186,8 +186,6 @@ public class FilterHelperImpl implements FilterHelper
 			if ( type.equals( "publication" ) )
 			{
 				publications = new HashSet<Publication>( publicationsList );
-				// System.out.println( "publications in typewise: " +
-				// publications.size() );
 			}
 			if ( type.equals( "topic" ) )
 			{
@@ -211,7 +209,7 @@ public class FilterHelperImpl implements FilterHelper
 								String topic = term.next();
 								float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, i.getTerm() );
 
-								if ( dist > 0.9f )
+								if ( dist > 0.8f )
 								{
 									if ( !selectedDMPublications.contains( dmp ) )
 									{
@@ -224,20 +222,21 @@ public class FilterHelperImpl implements FilterHelper
 										int index = selectedDMPublications.indexOf( dmp );
 										count.set( index, count.get( index ) + 1 );
 									}
+									break;
 								}
 							}
 						}
 					}
 				}
+
 				// find common publications for filter
-				if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) )
+				if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) || visType.equals( "conferences" ) )
 				{
-					// System.out.println( "cf:" + callingFunction );
-					// System.out.println( "vt:" + visType );
 					for ( int i = 0; i < count.size(); i++ )
 					{
 						if ( count.get( i ) < interestList.size() )
 						{
+							selectedDMPublications.remove( i );
 							count.remove( i );
 							pubIds.remove( i );
 							i--;
@@ -245,8 +244,6 @@ public class FilterHelperImpl implements FilterHelper
 					}
 				}
 				publications = new HashSet<Publication>( persistenceStrategy.getPublicationDAO().getPublicationByIds( pubIds ) );
-				// System.out.println( "publications count: " +
-				// publications.size() );
 			}
 			if ( type.equals( "circle" ) )
 			{
@@ -277,7 +274,7 @@ public class FilterHelperImpl implements FilterHelper
 						}
 					}
 					// find common publications for filter
-					if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) )
+					if ( callingFunction.equals( "forFilter" ) || visType.equals( "publications" ) || visType.equals( "conferences" ) )
 					{
 						for ( int i = 0; i < count.size(); i++ )
 						{

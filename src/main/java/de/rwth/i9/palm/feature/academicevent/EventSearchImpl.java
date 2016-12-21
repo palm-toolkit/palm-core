@@ -193,6 +193,11 @@ public class EventSearchImpl implements EventSearch
 			eventGroupMap.put( "totalCount", eventGroups.size() );
 			eventGroupMap.put( "eventGroups", eventGroups );
 		}
+		else
+		{
+			// Map<String, Object> eventGroupList = ;
+			eventGroupMap = persistenceStrategy.getEventGroupDAO().getEventGroupMapWithPaging( query, type, startPage, maxresult, addedVenue );
+		}
 
 		return eventGroupMap;
 	}

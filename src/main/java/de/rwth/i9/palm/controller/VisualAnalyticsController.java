@@ -405,7 +405,7 @@ public class VisualAnalyticsController
 		if ( type == null )
 			type = "all";
 		if ( source == null )
-			source = "all";
+			source = "";
 		if ( persist == null )
 			persist = "no";
 		if ( addedVenue == null )
@@ -926,8 +926,6 @@ public class VisualAnalyticsController
 			if ( type.equals( "circle" ) )
 				circleList = filterFeature.getFilterHelper().getCirclesFromIds( idsList, request );
 
-			// System.out.println( "pub list in vac: " +
-			// publicationList.size()
 			// );
 
 			if ( visType.equals( "researchers" ) && !type.equals( "publication" ) && filteredPublication.isEmpty() && filteredConference.isEmpty() && filteredTopic.isEmpty() && filteredCircle.isEmpty() && yearFilterPresent.equals( "false" ) )

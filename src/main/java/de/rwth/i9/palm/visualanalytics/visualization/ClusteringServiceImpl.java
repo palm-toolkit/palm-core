@@ -483,9 +483,6 @@ public class ClusteringServiceImpl implements ClusteringService
 		if ( algorithm == "" )
 			algorithm = "K-Means";
 
-		if ( repeatCallList != null )
-			System.out.println( repeatCallList.size() );
-
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		// List<Publication> publicationsList = new ArrayList<Publication>(
 		// publications );
@@ -528,7 +525,6 @@ public class ClusteringServiceImpl implements ClusteringService
 				}
 			}
 		}
-
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> allTopics = new ArrayList<String>();
 
@@ -545,7 +541,7 @@ public class ClusteringServiceImpl implements ClusteringService
 				{
 					String topic = term.next();
 					Double topicWeight = termWeight.next();
-					if ( !allTopics.contains( topic ) && topicWeight > 1.0 )
+					if ( !allTopics.contains( topic ) && topicWeight > 0.3 )
 					{
 						allTopics.add( topic );
 						attributes.add( new Attribute( topic ) );
