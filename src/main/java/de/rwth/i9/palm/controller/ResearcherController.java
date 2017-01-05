@@ -793,10 +793,11 @@ public class ResearcherController
 	 * @param maxresult
 	 * @param response
 	 * @return
+	 * @throws IOException 
 	 */
 	@RequestMapping( value = "/topicEvolution", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getTopicEvolution( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getTopicEvolution( @RequestParam( value = "id", required = false ) final String authorId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response) throws IOException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
