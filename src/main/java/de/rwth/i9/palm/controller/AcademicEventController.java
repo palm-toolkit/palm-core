@@ -257,9 +257,17 @@ public class AcademicEventController
 		return academicEventFeature.getEventInterest().getEventInterestById( eventId, isReplaceExistingResult );
 	}
 
+	/**
+	 * 
+	 * @param conferenceId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
 	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getEventTopicComposition( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getEventTopicComposition( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
 	{
 		if ( conferenceId != null )
 		{
@@ -271,9 +279,17 @@ public class AcademicEventController
 		return Collections.emptyMap();
 	}
 
+	/**
+	 * 
+	 * @param conferenceId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
 	@RequestMapping( value = "/topicCompositionEventGroup", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getEventTopicCompositionEventGroup( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getEventTopicCompositionEventGroup( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
 	{
 		if ( conferenceId != null )
 		{
@@ -285,9 +301,17 @@ public class AcademicEventController
 		return Collections.emptyMap();
 	}
 
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException 
+	 */
 	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getEventTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getEventTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
 	{
 		if ( eventId != null )
 		{
@@ -303,9 +327,17 @@ public class AcademicEventController
 		return Collections.emptyMap();
 	}
 
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException 
+	 */
 	@RequestMapping( value = "/topicCompositionNCloud", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getEventTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getEventTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
 	{
 		if ( eventId != null )
 		{
@@ -321,9 +353,18 @@ public class AcademicEventController
 		return Collections.emptyMap();
 	}
 
+	/**
+	 * 
+	 * @param eventId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 * @throws IOException 
+	 */
 	@RequestMapping( value = "/similarEventList", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getSimilarEventList( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getSimilarEventList( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response) throws IOException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -363,10 +404,11 @@ public class AcademicEventController
 	 * @param maxresult
 	 * @param response
 	 * @return
+	 * @throws IOException 
 	 */
 	@RequestMapping( value = "/topicEvolution", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getTopicEvolution( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getTopicEvolution( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response) throws IOException
 	{
 		// create JSON mapper for response
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();

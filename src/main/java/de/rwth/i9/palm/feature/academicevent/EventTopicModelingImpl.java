@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.feature.academicevent;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,7 +42,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getStaticTopicModelingNgrams( String eventId, boolean isReplaceExistingResult )
+	public Map<String, Object> getStaticTopicModelingNgrams( String eventId, boolean isReplaceExistingResult ) throws IOException
 	{
 
 		// Create JSON map with the responses
@@ -71,7 +72,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		algorithmResultNGrams.put( "profile", "Ngrams" );
 
 		// loop over all the results of algorithm and put the elements in List
-		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "Event-Test", 10, 10, 5, false, true, true ).entrySet() )
+		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( eventId, path, "Event", 10, 10, 5, false, palmAnalytics.getNGrams().dateCheckCriteria(path, "Event", eventId.toString()), true ).entrySet() )
 		{
 			List<Object> termValueResult = new ArrayList<Object>();
 			// Expected only one entry in this map with eventId
@@ -111,7 +112,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		return responseMap;
 	}
 
-	public Map<String, Object> getStaticTopicModelingNgramsEventGroup( String eventId, boolean isReplaceExistingResult )
+	public Map<String, Object> getStaticTopicModelingNgramsEventGroup( String eventId, boolean isReplaceExistingResult ) throws IOException
 	{
 
 		// Create JSON map with the responses
@@ -141,7 +142,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		algorithmResultNGrams.put( "profile", "Ngrams" );
 	
 		// loop over all the results of algorithm and put the elements in List
-		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( persistenceStrategy.getEventDAO().getById(eventId).getEventGroup().getId().toString() , path, "EventGroups", 10, 10, 5, false, true, true ).entrySet() )
+		for ( Entry<String, List<String>> topics : palmAnalytics.getNGrams().runTopicComposition( persistenceStrategy.getEventDAO().getById(eventId).getEventGroup().getId().toString() , path, "EventGroups", 10, 10, 5, false, palmAnalytics.getNGrams().dateCheckCriteria(path, "EventGroups", eventId.toString()), true ).entrySet() )
 		{
 			List<Object> termValueResult = new ArrayList<Object>();
 			// Expected only one entry in this map with eventId
@@ -182,7 +183,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getTopicModelUniCloud( Event event, boolean isReplaceExistingResult )
+	public Map<String, Object> getTopicModelUniCloud( Event event, boolean isReplaceExistingResult ) throws IOException
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -193,7 +194,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event-Test", event.getId().toString(), 10, 10, 10, true, true );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event", event.getId().toString(), 10, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria(path, "Event", event.getId().toString()), true );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -228,7 +229,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getTopicModelNCloud( Event event, boolean isReplaceExistingResult )
+	public Map<String, Object> getTopicModelNCloud( Event event, boolean isReplaceExistingResult ) throws IOException
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -240,7 +241,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event-Test", event.getId().toString(), 10, 10, 10, true, false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Event", event.getId().toString(), 10, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria(path, "Event", event.getId().toString()), false );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -335,7 +336,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	
 
 	@Override
-	public Map<String, Object> getEventGroupTopicEvolutionTest( Event event )
+	public Map<String, Object> getEventGroupTopicEvolutionTest( Event event ) throws IOException
 	{
 
 		// researchers list container
@@ -344,7 +345,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		HashMap<String, List<String>> topicevolution = new LinkedHashMap<String, List<String>>();
 
 		// getEvolutionofTopicOverTime( 0, 5, false );
-		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "EventGroupsClustered", event.getEventGroup().getId().toString(), 5, 10, 10, true, false, false );
+		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "EventGroupsClustered", event.getEventGroup().getId().toString(), 5, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria(path, "EventGroupsClustered", event.getId().toString()), false, false );
 		// Prepare set of similarAuthor HashSet;
 		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
 		String[] colors = { "0efff8", "ff7f0e", "0eff7f", "ffa70e", "ff7f5a", "d4991c", "ad937c", "ff430e", "ff0e8e", "0e8eff" };
@@ -480,13 +481,13 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getSimilarEvents(Event event, int startPage, int maxresult) {
+	public Map<String, Object> getSimilarEvents(Event event, int startPage, int maxresult) throws IOException {
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
 		// find the list of similar events
 		List<String> similarEntities = new ArrayList<String>();
-		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( event.getEventGroup().getId().toString(), "C:/Users/Albi/Desktop/", "Conferences", 50, 10, 3, false );
+		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( event.getEventGroup().getId().toString(), "C:/Users/Albi/Desktop/", "Conferences", 50, 10, 3, palmAnalytics.getNGrams().dateCheckCriteria(path, "Conferences", event.getId().toString()) );
 		
 		List<Map<String, Object>> similarEventList = new ArrayList<Map<String, Object>>();
 		
@@ -495,14 +496,14 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		for (String entity : similarEntities){
 			String piro = event.getEventGroup().getId().toString();
 			if(entity.split("->")[0].equals(piro))
-				eventtopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"EventGroups", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+				eventtopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"EventGroups", entity.split("->")[0], 10, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria(path, "EventGroups", event.getId().toString()), false ).keySet());
 		}
 		
 		// run for each of the entities of the list the weightedTopic Composition
 		for (String entity : similarEntities){
 			if(!entity.split("->")[0].equals(event.getId()))
 			{		
-				List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"EventGroups", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+				List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"EventGroups", entity.split("->")[0], 10, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria(path, "EventGroups", event.getId().toString()), false ).keySet());
 				
 				Map<String, Object> similarEventMap = new LinkedHashMap<String, Object>();
 
