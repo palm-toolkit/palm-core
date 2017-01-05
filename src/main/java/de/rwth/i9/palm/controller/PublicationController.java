@@ -370,6 +370,13 @@ public class PublicationController
 		return Collections.emptyMap();
 	}
 
+	/**
+	 * 
+	 * @param publicationId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String publicationId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)

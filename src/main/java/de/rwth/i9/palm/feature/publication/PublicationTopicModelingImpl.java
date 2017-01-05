@@ -140,7 +140,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		
 		List<Object> termValueResultunigrams = new ArrayList<Object>();
 		// loop over all the results of algorithm and put the elements in List
-		List<String> unigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities(  path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true, false).get(publicationId); 
+		List<String> unigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities(  path, "Author", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true, false).get(publicationId); 
 		
 		// method used to get the top topics (in this case 5)
 		unigrams = extractTopTopics(unigrams,5);
@@ -248,7 +248,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicCompositionforPublications( path, "Author-Test", publicationId, extractCoauthros( publicationId ), 5, 5, 5, true, true );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicCompositionforPublications( path, "Author", publicationId, extractCoauthros( publicationId ), 5, 5, 5, true, true );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -289,7 +289,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicCompositionforPublications( path, "Author-Test", publicationId, extractCoauthros( publicationId ), 5, 5, 5, true, false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicCompositionforPublications( path, "Author", publicationId, extractCoauthros( publicationId ), 5, 5, 5, true, false );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
