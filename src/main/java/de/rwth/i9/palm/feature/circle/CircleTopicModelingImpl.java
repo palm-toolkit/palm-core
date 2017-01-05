@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.feature.circle;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -111,7 +112,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getTopicModelUniCloud( Circle circle, boolean isReplaceResult )
+	public Map<String, Object> getTopicModelUniCloud( Circle circle, boolean isReplaceResult ) throws IOException
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -123,7 +124,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Circle-Test", circle.getId().toString(), 5, 5, 5, true, true );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Circle", circle.getId().toString(), 5, 5, 5, palmAnalytics.getNGrams().dateCheckCriteria(path, "Circle", circle.getId().toString()), true );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -152,7 +153,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getTopicModelNCloud( Circle circle, boolean isReplaceResult )
+	public Map<String, Object> getTopicModelNCloud( Circle circle, boolean isReplaceResult ) throws IOException
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -164,7 +165,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Circle-Test", circle.getId().toString(), 5, 5, 5, true, false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Circle", circle.getId().toString(), 5, 5, 5, palmAnalytics.getNGrams().dateCheckCriteria(path, "Circle", circle.getId().toString()), false );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -194,7 +195,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getCircleTopicEvolutionTest( Circle circle )
+	public Map<String, Object> getCircleTopicEvolutionTest( Circle circle ) throws IOException
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -202,7 +203,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 		HashMap<String, List<String>> topicevolution = new LinkedHashMap<String, List<String>>();
 
 		// getEvolutionofTopicOverTime( 0, 5, false );
-		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "Circle-Year-Test", circle.getId().toString(), 5, 10, 10, true, false, false );
+		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "Circle-Year", circle.getId().toString(), 5, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria(path, "Circle-Year", circle.getId().toString()), false, false );
 		// Prepare set of similarCircle HashSet;
 		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
 
@@ -304,7 +305,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getSimilarCircles(Circle circle, int startPage, int maxresult) {
+	public Map<String, Object> getSimilarCircles(Circle circle, int startPage, int maxresult) throws IOException {
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		
@@ -318,14 +319,14 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 		List<String> circletopicWords = new ArrayList<String>();
 		for (String entity : similarEntities){
 			if(entity.split("->")[0].equals(circle.getId()))
-				circletopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Circle-Test", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+				circletopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Circle", entity.split("->")[0], 10, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria(path, "Circle", circle.getId().toString()), false ).keySet());
 		}
 		
 		// run for each of the entities of the list the weightedTopic Composition
 		for (String entity : similarEntities){
 			if(!entity.split("->")[0].equals(circle.getId()))
 			{		
-				List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Circle-Test", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
+				List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Circle", entity.split("->")[0], 10, 10, 10, true, false ).keySet());
 				
 				Map<String, Object> similarCircleMap = new LinkedHashMap<String, Object>();
 

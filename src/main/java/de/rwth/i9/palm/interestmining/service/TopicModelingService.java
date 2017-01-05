@@ -640,7 +640,7 @@ public class TopicModelingService
 				// palmAnalytics.getNGrams().getTopTopicNgramsDocument(
 				// palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId()
 				// ), -1, 0.0, 5, 5, true );
-				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Author-Test", 20, 10, 5, false, true, false );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Author", 20, 10, 5, false, palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), false );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 					{
 					for ( String topicproportion : topicngrams.getValue() )
@@ -739,8 +739,8 @@ public class TopicModelingService
 			Map<String, Double> termValueMap = new HashMap<String, Double>();
 			Map<String, List<String>> topicNgrams = null;
 			try
-			{
-				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 10, 5, false, true, true );
+			{ 
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle", 20, 10, 5, false, palmAnalytics.getNGrams().dateCheckCriteria(path, "Circle", circle.getId().toString()), true );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
@@ -845,7 +845,7 @@ public class TopicModelingService
 			Map<String, List<String>> topicNgrams = null;
 			try
 			{
-				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle-Test", 20, 10,5 , false, true, false );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( circle.getId().toString(), path, "Circle", 20, 10,5 , false, palmAnalytics.getNGrams().dateCheckCriteria(path, "Circle", circle.getId().toString()), false );
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 				{
 					for ( String topicproportion : topicngrams.getValue() )
