@@ -511,10 +511,11 @@ public class AcademicEventController
 	 * @param updateResult
 	 * @param response
 	 * @return
+	 * @throws IOException 
 	 */
 	@RequestMapping( value = "/topicCompositionEventGroupUniCloud", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
 	{
 		if ( eventId != null )
 		{
@@ -536,10 +537,11 @@ public class AcademicEventController
 	 * @param updateResult
 	 * @param response
 	 * @return
+	 * @throws IOException 
 	 */
 	@RequestMapping( value = "/topicCompositionEventGroupNCloud", method = RequestMethod.GET )
 	@Transactional
-	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response)
+	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
 	{
 		if ( eventId != null )
 		{

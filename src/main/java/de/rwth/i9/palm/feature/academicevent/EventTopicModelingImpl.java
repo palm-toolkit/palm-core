@@ -391,7 +391,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getTopicModelEventGroupUniCloud( Event eventgroup, boolean isReplaceExistingResult )
+	public Map<String, Object> getTopicModelEventGroupUniCloud( Event eventgroup, boolean isReplaceExistingResult ) throws IOException
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -403,7 +403,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getEventGroup().getId().toString(), 5, 5, 5, true, true );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getEventGroup().getId().toString(), 5, 5, 5, palmAnalytics.getNGrams().dateCheckCriteria(path, "EventGroupsClustered", eventgroup.getId().toString()), true );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -438,7 +438,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	}
 
 	@Override
-	public Map<String, Object> getTopicModelEventGroupNCloud( Event eventgroup, boolean isReplaceExistingResult )
+	public Map<String, Object> getTopicModelEventGroupNCloud( Event eventgroup, boolean isReplaceExistingResult ) throws IOException
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -450,7 +450,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getEventGroup().getId().toString(), 5, 5, 5, true, false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "EventGroupsClustered", eventgroup.getEventGroup().getId().toString(), 5, 5, 5, palmAnalytics.getNGrams().dateCheckCriteria(path, "EventGroupsClustered", eventgroup.getId().toString()), false );
 
 		if ( topiccomposition.isEmpty() != true )
 		{

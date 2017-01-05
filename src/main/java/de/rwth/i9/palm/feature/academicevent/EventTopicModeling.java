@@ -24,7 +24,7 @@ public interface EventTopicModeling
 
 	public Map<String, Object> getEventGroupTopicEvolutionTest( Event event ) throws IOException;
 
-	public Map<String, Object> getTopicModelEventGroupUniCloud( Event event, boolean isReplaceExistingResult );
+	public Map<String, Object> getTopicModelEventGroupUniCloud( Event event, boolean isReplaceExistingResult ) throws IOException;
 
-	public Map<String, Object> getTopicModelEventGroupNCloud( Event event, boolean isReplaceExistingResult );
+	public Map<String, Object> getTopicModelEventGroupNCloud( Event event, boolean isReplaceExistingResult ) throws IOException;
 }
