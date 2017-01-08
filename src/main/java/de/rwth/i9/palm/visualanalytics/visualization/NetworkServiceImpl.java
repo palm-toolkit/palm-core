@@ -34,7 +34,7 @@ import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.gephi.statistics.plugin.GraphDistance;
 import org.openide.util.Lookup;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
@@ -524,8 +524,10 @@ class Network
 			int time = 2;
 			if ( !type.equals( "researcher" ) || !type.equals( "circle" ) || nodes.size() > 20 )
 				time = 20;
-			if ( nodes.size() > 1000 )
+			if ( nodes.size() > 500 )
 				time = 40;
+			if ( nodes.size() > 1000 )
+				time = 60;
 
 			// Layout for 1 minute
 			AutoLayout autoLayout = new AutoLayout( time, TimeUnit.SECONDS );
@@ -609,8 +611,8 @@ class Network
 	}
 }
 
-@Component
-public class GraphFeatureImpl implements GraphFeature
+@Service
+public class NetworkServiceImpl implements NetworkService
 {
 	Boolean completionFlag = true;
 	ExportController ec;

@@ -21,7 +21,7 @@ import de.rwth.i9.palm.persistence.PersistenceStrategy;
 public class NetworkVisualizationImpl implements NetworkVisualization
 {
 	@Autowired
-	private GraphFeature graphFeature;
+	private NetworkService networkService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
@@ -59,7 +59,7 @@ public class NetworkVisualizationImpl implements NetworkVisualization
 			if ( !filteredTopic.isEmpty() )
 				selectedAuthors = dataFetcher.getAuthorsFromInterestFilter( filteredTopic, selectedAuthors );
 
-			visMap.put( "graphFile", graphFeature.getGephiGraph( type, authorList, publications, idsList, selectedAuthors, request ).get( "graphFile" ) );
+			visMap.put( "graphFile", networkService.getGephiGraph( type, authorList, publications, idsList, selectedAuthors, request ).get( "graphFile" ) );
 		}
 		return visMap;
 	}

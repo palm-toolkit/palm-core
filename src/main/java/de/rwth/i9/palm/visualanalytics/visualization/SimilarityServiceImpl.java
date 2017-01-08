@@ -552,7 +552,6 @@ public class SimilarityServiceImpl implements SimilarityService
 						authorTopInterests.add( interest );
 					count++;
 				}
-
 			}
 
 			// check if author interests are present in the topic list, if
