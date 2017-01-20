@@ -175,7 +175,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 														}
 													}
 													Map<String, Object> values = new HashMap<String, Object>();
-													values.put( "Author", a.getName() );
+													values.put( "Name", a.getName() );
 													values.put( "Topic", actualInterest.getTerm() );
 													values.put( "TopicId", actualInterest.getId() );
 													values.put( "Year", year );
@@ -224,7 +224,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 
 												Map<String, Object> values = new HashMap<String, Object>();
 
-												values.put( "Author", a.getName() );
+												values.put( "Name", a.getName() );
 												values.put( "Topic", actualInterest.getTerm() );
 												values.put( "TopicId", actualInterest.getId() );
 												values.put( "Year", year );
@@ -377,7 +377,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 														}
 														Map<String, Object> values = new HashMap<String, Object>();
 
-														values.put( "Author", eg.getName() );
+														values.put( "Name", eg.getName() );
 														values.put( "Topic", actualInterest.getTerm() );
 														values.put( "TopicId", actualInterest.getId() );
 														values.put( "Year", year );
@@ -424,7 +424,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 
 													Map<String, Object> values = new HashMap<String, Object>();
 
-													values.put( "Author", eg.getName() );
+													values.put( "Name", eg.getName() );
 													values.put( "Topic", actualInterest.getTerm() );
 													values.put( "TopicId", actualInterest.getId() );
 													values.put( "Year", year );
@@ -650,7 +650,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 														}
 													}
 													Map<String, Object> values = new HashMap<String, Object>();
-													values.put( "Author", c.getName() );
+													values.put( "Name", c.getName() );
 													values.put( "Topic", actualInterest.getTerm() );
 													values.put( "TopicId", actualInterest.getId() );
 													values.put( "Year", year );
@@ -699,7 +699,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 
 												Map<String, Object> values = new HashMap<String, Object>();
 
-												values.put( "Author", c.getName() );
+												values.put( "Name", c.getName() );
 												values.put( "Topic", actualInterest.getTerm() );
 												values.put( "TopicId", actualInterest.getId() );
 												values.put( "Year", year );

@@ -574,15 +574,15 @@ public class VisualAnalyticsController
 		{
 			// intersection of topics and interests
 			List<Interest> combinedInterests = new ArrayList<Interest>();
-				for ( int j = 0; j < interests.size(); j++ )
-				{
-						Map<String, Object> interestMapTemp = new HashMap<String, Object>();
+			for ( int j = 0; j < interests.size(); j++ )
+			{
+				Map<String, Object> interestMapTemp = new HashMap<String, Object>();
 
-						combinedInterests.add( interests.get( j ) );
-						interestMapTemp.put( "id", interests.get( j ).getId() );
-						interestMapTemp.put( "name", interests.get( j ).getTerm() );
+				combinedInterests.add( interests.get( j ) );
+				interestMapTemp.put( "id", interests.get( j ).getId() );
+				interestMapTemp.put( "name", interests.get( j ).getTerm() );
 
-						mapList.add( interestMapTemp );
+				mapList.add( interestMapTemp );
 			}
 		}
 		responseMap.put( "totalCount", interestMap.get( "totalCount" ) );
@@ -905,8 +905,10 @@ public class VisualAnalyticsController
 				System.out.println( "timeFilterMap: " + timeFilterMap.toString() );
 				if ( timeFilterMap != null )
 				{
-					startYear = timeFilterMap.get( "startYear" ).toString();
-					endYear = timeFilterMap.get( "endYear" ).toString();
+					if ( timeFilterMap.get( "startYear" ) != null )
+						startYear = timeFilterMap.get( "startYear" ).toString();
+					if ( timeFilterMap.get( "endYear" ) != null )
+						endYear = timeFilterMap.get( "endYear" ).toString();
 				}
 			}
 
