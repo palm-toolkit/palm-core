@@ -26,8 +26,12 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
-
-	private String path = "C:/Users/Albi/Desktop/";
+	
+	// path on Windows
+	// private String path = "C:/Users/Albi/Desktop/";
+	
+	// path on Mac
+	private String path = "/Users/pirolena/Desktop/";
 
 	@Override
 	public Map<String, Object> getResearcherSimilarAuthorMap( Author author, int startPage, int maxresult )
@@ -37,7 +41,7 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 
 		List<String> similarAuthors = new ArrayList<String>();
 		
-		similarAuthors = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 20, 10, 3, false );
+		similarAuthors = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), path, "Authors", 20, 10, 3, false );
 
 		// Prepare set of similarAuthor HashSet;
 		Set<String> similarauthorSet = new HashSet<String>();
@@ -101,7 +105,7 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		Map<String, List<String>> similarAuthors = new LinkedHashMap<String, List<String>>();
-		similarAuthors = palmAnalytics.getNGrams().runSimilarEntitiesTopicLevel( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 50, 10, 3, false );
+		similarAuthors = palmAnalytics.getNGrams().runSimilarEntitiesTopicLevel( author.getId().toString(), path, "Authors", 50, 10, 3, false );
 
 		// get the id, degree of similarity, topics proportions
 		// put them into the map
@@ -172,7 +176,7 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 	
 	// find the list of similar authors
 	List<String> similarEntities = new ArrayList<String>();
-	similarEntities = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), "C:/Users/Albi/Desktop/", "Authors", 50, 10, 3, false );
+	similarEntities = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), path, "Authors", 50, 10, 3, false );
 	
 	List<Map<String, Object>> similarAuthorList = new ArrayList<Map<String, Object>>();
 	
