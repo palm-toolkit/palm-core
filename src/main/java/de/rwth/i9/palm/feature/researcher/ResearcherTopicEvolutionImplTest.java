@@ -21,10 +21,11 @@ public class ResearcherTopicEvolutionImplTest implements ResearcherTopicEvolutio
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	@Autowired
-	private PersistenceStrategy persistenceStrategy;
-
-	private String path = "C:/Users/Albi/Desktop/";
+	// path on Windows
+	// private String path = "C:/Users/Albi/Desktop/";
+	
+	// path on Mac
+	private String path = "/Users/pirolena/Desktop/";
 
 	@Override
 	public Map<String, Object> getResearcherTopicEvolutionTest( Author author ) throws IOException
