@@ -452,6 +452,7 @@ public class ResearcherController
 	public @ResponseBody Map<String, Object> getPublicationList( 
 			@RequestParam( value = "id", required = false ) final String authorId,
 			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "queryKeywords", required = false ) String queryKeywords, 
 			@RequestParam( value = "year", required = false ) String year,
 			@RequestParam( value = "orderBy", required = false ) String orderBy,
 			@RequestParam( value = "startPage", required = false ) Integer startPage, 
