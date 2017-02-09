@@ -28,8 +28,12 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
-
-	private String path = "C:/Users/Albi/Desktop/";
+	
+	// Windows
+	// private String path = "C:/Users/Albi/Desktop/";
+	
+	// Mac
+	private String path = "/Users/pirolena/Desktop/";
 
 	@Override
 	public Map<String, Object> getTopicModeling( String publicationId, boolean isReplaceExistingResult )
@@ -159,7 +163,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		topicModel.add( algorithmResultUniGrams );
 		
 		List<Object> termValueResultngrams = new ArrayList<Object>();
-		List<String> ngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false, false ).get( publicationId ) ;
+		List<String> ngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false, false ).get( publicationId ) ;
 		
 		// method used to get the top topics (in this case 5)
 		ngrams = extractTopTopics(ngrams,5);
