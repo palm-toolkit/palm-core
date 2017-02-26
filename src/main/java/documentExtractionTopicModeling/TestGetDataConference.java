@@ -7,20 +7,9 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
-import org.springframework.test.context.transaction.TransactionConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
-import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
-import de.rwth.i9.palm.config.WebAppConfigTest;
-import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;

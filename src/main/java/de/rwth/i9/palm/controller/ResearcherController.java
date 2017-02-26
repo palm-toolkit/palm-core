@@ -16,6 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.rwth.i9.palm.datasetcollect.service.PublicationCollectionService;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
@@ -512,6 +518,56 @@ public class ResearcherController
 		return researcherFeature.getResearcherTopPublication().getTopPublicationListByAuthorId( authorId, startPage, maxresult );
 	}
 
+	
+	@RequestMapping( value = "/papersByTopicAndAuthor", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> papersByTopicAndAuthor( 
+			@ModelAttribute("model") ModelMap model,
+			@RequestParam( value = "id", required = false ) final String authorId, 
+			@RequestParam( value = "topic", required = false ) final String  topic, 
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
+			final HttpServletResponse response) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ParseException, ExecutionException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( authorId == null || authorId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "authorId null" );
+			return responseMap;
+		}if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 30;
+			
+		List<Map<String, Object>> listTopicPapers = new ArrayList<Map<String, Object>>();
+		ObjectMapper mapper =new ObjectMapper();		
+		try {
+			JsonNode jsonNode = mapper.readTree(topic);
+			if (jsonNode.isArray()) {
+			    for (JsonNode objNode : jsonNode) {
+			    	Map<String, Object> element = new HashMap<String, Object>();
+			    	element.put("name", objNode.get("name").toString());
+			    	element.put("value", objNode.get("value").toString());
+			    	
+			    	List<Map<String, Object>> papersOnTopic = new ArrayList<Map<String, Object>>();
+			    	papersOnTopic = (List<Map<String, Object>>)researcherFeature.getResearcherTopPublication().getTopPublicationListByAuthorId( authorId, startPage, maxresult ).get("publications");
+			    	
+			    	element.put("papers", papersOnTopic);
+			        listTopicPapers.add(element);
+			    }
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		responseMap.put("topicPapers", listTopicPapers);
+
+		model.addAttribute("data", listTopicPapers);
+		return responseMap;
+
+	}
 	/**
 	 * Get coauthorMap of given author
 	 * @param authorId
@@ -552,12 +608,31 @@ public class ResearcherController
 			return responseMap;
 		}
 
-		// get coauthor calculation
+		responseMap.put("author", createAuthorMap(author));
 		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
-
+	
 		return responseMap;
 	}
 	
+	private Map<String, Object> createAuthorMap(Author author){
+		Map<String, Object> authorMap = new HashMap<String, Object>();
+		
+		authorMap.put("id", author.getId());
+		authorMap.put("name", author.getName());
+		authorMap.put("isAdded", author.isAdded());
+		
+		if ( author.getInstitution() != null ){
+			Map<String, String> affiliationData = new HashMap<String, String>();			
+			
+			affiliationData.put("institution", author.getInstitution().getName());
+			
+			if (author.getInstitution().getLocation() != null){
+				affiliationData.put("country", author.getInstitution().getLocation().getCountry().getName());
+			}						
+			authorMap.put( "affiliation", affiliationData );
+		}
+		return authorMap;
+	}
 	/**
 	 * Get Recommended authorMap of given author
 	 * 
