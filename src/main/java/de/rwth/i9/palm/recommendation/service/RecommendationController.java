@@ -46,46 +46,48 @@ public class RecommendationController {
 
 	private static final String LINK_NAME = "recommendation";
 
+	private String previousAlgo = null;
+	
 	@Autowired
 	private SecurityService securityService;
 
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	@Autowired
-	private SNAINRecommendationFeature recommendationFeature;
-	
-	@Autowired
-	private SNAC3RecommendationFeature c3recommendationFeature;
-	
-	@Autowired
-	private SNAC2RecommendationFeature c2recommendationFeature;
 
+	@Autowired
+	private RecommendationHandler recommendationHandler;
+	
 	private static int totalNo = 0;
 	
 	private String researcherId = null;
 	
 	@SuppressWarnings( "unchecked" )
 	@Transactional
-	@RequestMapping( value = "/check_recommendation_request", method = RequestMethod.GET )
+	@RequestMapping( value = "/interest_recommendation", method = RequestMethod.GET )
 	public @ResponseBody Map<String, Object> recommendationRequest( 
 			@RequestParam( value = "id", required = false ) String Id,
 			@RequestParam( value = "query", required = false ) String query,
-			@RequestParam( value = "author", required = false ) String author,
+			@RequestParam( value = "itemtype", required = false ) String itemtype,
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			final HttpServletResponse response )
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		List<Object> responseListRecommendation = new ArrayList<Object>();
-		if ( query != null )
-			researcherId = recommendationFeature.requesetAuthor( author, query );
+		List<Object> authors = null;
+		
+		if ( query != null && !query.isEmpty() )
+			authors = recommendationHandler.requesetAuthor( query, maxresult, itemtype );	//recommendationFeature.requesetAuthor( query, maxresult );
 		else
 			researcherId = null;
+		int count = 0;
+		if ( authors != null && !authors.isEmpty() )
+		{
+			responseMap.put( "interest_recommended", authors );
+			count = authors.size();
+		}	
 		
-		if ( researcherId != null && !researcherId.isEmpty() )
-			responseMap.put( "pub_recommendation", createResearcherNode( persistenceStrategy.getAuthorDAO().getById( researcherId ) ) );
-			
-		
-		responseMap.put( "count", responseListRecommendation.size() );
+		responseMap.put( "count", count );
 		responseMap.put( "status", "ok" );
 		return responseMap;
 	}
@@ -104,32 +106,15 @@ public class RecommendationController {
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 		List<Object> responseListRecommendation = new ArrayList<Object>();
 		
-		JSONArray arr = null;
-		try 
-		{
-			Author author = null;
-			if ( researcherId == null || researcherId.isEmpty() )
-				author = securityService.getUser().getAuthor();
-			else
-				author = persistenceStrategy.getAuthorDAO().getById( researcherId );
-		if ( recommendationFeature != null && query != null && query.equals( "interest" ) )
-		{
-			arr = recommendationFeature.computeSNAINSingleTree( author, stepNo, Id );
-		}
-		else if ( query != null && query.equals( "c3d" ) )
-		{
-			arr = c3recommendationFeature.computeSNAC3Recommendation( author );
-		}
-		else if ( query != null && query.equals( "c2d" ) )
-		{
-			arr = c2recommendationFeature.computeSNAC2Recommendation( author );
-		}
-		}
-		catch ( IOException | JSONException | SQLException | TasteException e )
-		{
-			
-		}
 		
+		Author author = null;
+		if ( researcherId == null || researcherId.isEmpty() )
+			author = securityService.getUser().getAuthor();
+		else
+			author = persistenceStrategy.getAuthorDAO().getById( researcherId );
+		
+		JSONArray arr = recommendationHandler.computeSingleTree( query, author, stepNo, Id );
+				
 		if ( arr != null )
 		{
 			responseMap.put( "single_tree_recommendation", printRecommendationResults(responseListRecommendation, arr.optJSONObject(0)) );
@@ -149,13 +134,17 @@ public class RecommendationController {
 			@RequestParam( value = "creatorId", required = false ) String creatorId,
 			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "page", required = false ) Integer page, 
+			@RequestParam( value = "selectedauthor", required = false ) String selectedauthor,
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "fulltextSearch", required = false ) String fulltextSearch, @RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response )
 	{
 		long time = System.currentTimeMillis();
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-		if( securityService != null ) 
+		if( securityService != null || ( requestStep == 0 && selectedauthor != null ) ) 
 		{
+			if ( requestStep == 0 )
+				researcherId = selectedauthor;
+			
 			Author author = null;
 			if ( researcherId == null || researcherId.isEmpty() )
 				author = securityService.getUser().getAuthor();
@@ -168,22 +157,30 @@ public class RecommendationController {
 				if ( requestStep == 0 )
 				{
 					responseMap.put( "pub_recommendation", createResearcherNode( author ) );
-				}
-				else {
 					
+					if ( previousAlgo != null && !previousAlgo.equalsIgnoreCase( query ) )
+					{
+						recommendationHandler.reset();
+					}
+				}
+				else 
+				{
+					previousAlgo = new String( query );
+					
+					arr = recommendationHandler.computeRecommendation( query, author, requestStep );
 					//get recommendations spcific to algorithm
-					if ( recommendationFeature != null && query != null && query.equals( "interest" ) )
+					/*if ( recommendationFeature != null && query != null && query.equals( "interest" ) )
 					{
 						arr = recommendationFeature.computeSNAINRecommendation( author, requestStep );
 					}
 					else if ( query != null && query.equals( "c3d" ) )
 					{
-						arr = c3recommendationFeature.computeSNAC3Recommendation( author );
+						arr = c3recommendationFeature.computeSNAC3Recommendation( author, requestStep );
 					}
 					else if ( query != null && query.equals( "c2d" ) )
 					{
 						arr = c2recommendationFeature.computeSNAC2Recommendation( author );
-					}
+					}*/
 				}
 								
 				//insert id/widget specific data
@@ -611,15 +608,18 @@ public class RecommendationController {
 		List<Object> nodeList = new LinkedList<>();
 		List<Object> linkList = new LinkedList<>();
 		
-		Map<String, Object> nodes = new LinkedHashMap<>();
-		nodes.put( "id", author.getId() );
-		nodes.put( "title", "Researcher" );
-		nodes.put( "details", author.getName() );
-		nodes.put( "group", 0 );
-		nodes.put( "type", 0 );
-		nodes.put( "size", 450 );
-		nodes.put( "icon", author.getPhotoUrl() );
-		nodeList.add( nodes );
+		if ( author != null ) 
+		{
+			Map<String, Object> nodes = new LinkedHashMap<>();
+			nodes.put( "id", author.getId() );
+			nodes.put( "title", "Researcher" );
+			nodes.put( "details", author.getName() );
+			nodes.put( "group", 0 );
+			nodes.put( "type", 0 );
+			nodes.put( "size", 450 );
+			nodes.put( "icon", author.getPhotoUrl() );
+			nodeList.add( nodes );
+		}
 		
 		Map<String, Object> recomm = new LinkedHashMap<>();
 		recomm.put("nodes", nodeList);

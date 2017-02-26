@@ -730,6 +730,7 @@ public class UtilService {
 		return sortedMap;
 	}
 	
+	
 	public static Map<String, Double> sortByComparator(
 			Map<String, Double> pageRankResult2) {
 		// Convert Map to List
@@ -742,12 +743,21 @@ public class UtilService {
 			}
 		});
 		// Convert sorted map back to a Map
-		Map<String, Double> sortedMap = new LinkedHashMap<>();
-		for (Iterator<Map.Entry<String, Double>> it = list.iterator(); it
+		Map<String, Double> sortedMap = new TreeMap<>( new Comparator<String>() {
+			@Override
+			public int compare( String o1, String o2 )
+			{
+				Comparable valueA = (Comparable) pageRankResult2.get(o1);
+				Comparable valueB = (Comparable) pageRankResult2.get(o2);
+				return valueB.compareTo(valueA);
+			}
+		} );
+		sortedMap.putAll( pageRankResult2 );
+		/*for (Iterator<Map.Entry<String, Double>> it = list.iterator(); it
 				.hasNext();) {
 			Map.Entry<String, Double> entry = it.next();
 			sortedMap.put(entry.getKey(), entry.getValue());
-		}
+		}*/
 		return sortedMap;
 	}
 	
@@ -819,13 +829,13 @@ public class UtilService {
 	 */
 	static JSONArray DegreeJsonCreator(Map<String, Integer> rDegree,
 			Map<String, String> rIDName3, String researcherID,
-			int maxDegreeofaNode) throws JSONException, SQLException,
+			int maxDegreeofaNode, UtilINImp imp) throws JSONException, SQLException,
 			IOException, TasteException {
 		JSONArray recBasedDegree = new JSONArray();
 		for (Entry<String, Integer> entry : rDegree.entrySet()) {
 			int NofcommonI = NofCommonInterests(researcherID, entry.getKey());
 			double JaccardSim = UtilService.FindJaccardSimilarity(researcherID,
-					entry.getKey());
+					entry.getKey(), imp);
 			// show double till only 2 decimal
 			double NormDegree = ((double) entry.getValue() / maxDegreeofaNode);
 			NormDegree = Math.round(NormDegree * 100);
@@ -905,13 +915,13 @@ public class UtilService {
 	}
 	public static JSONArray EigenvectorJsonCreator(
 			Map<String, Double> rIDEigenvector, Map<String, String> rIDName,
-			String researcherID) throws JSONException, SQLException, IOException,
+			String researcherID, UtilINImp imp) throws JSONException, SQLException, IOException,
 			TasteException {
 		JSONArray recBasedEigenvector = new JSONArray();
 		for (Entry<String, Double> entry : rIDEigenvector.entrySet()) {
 			int NofcommonI = NofCommonInterests(researcherID, entry.getKey());
 			double JaccardSim = UtilService.FindJaccardSimilarity(researcherID,
-					entry.getKey());
+					entry.getKey(), imp);
 			JSONObject obj = new JSONObject();
 			obj.put("rID", entry.getKey());
 			obj.put("Name", rIDName.get(entry.getKey()));
@@ -937,10 +947,10 @@ public class UtilService {
 	 * @throws SQLException
 	 */
 	public static JSONArray BetweennessJsonCreator( Map<String, String> rIDName,
-			Map<String, Double> rIDBet, String researcherID, UtilINImp util )
+			Map<String, Number> rIDBet, String researcherID, UtilINImp util )
 			throws JSONException, SQLException, IOException, TasteException {
 		JSONArray recBasedBet = new JSONArray();
-		for (Entry<String, Double> entry : rIDBet.entrySet()) {
+		for (Entry<String, Number> entry : rIDBet.entrySet()) {
 			int NofcommonI = util.getCommonInterests(researcherID, entry.getKey());
 			double JaccardSim = util.FindJaccardSimilarity(researcherID,
 					entry.getKey());
@@ -1019,13 +1029,13 @@ public class UtilService {
 		return sortedResult;
 	}
 	public static Map<String, Double> ComputeImportance(
-			Map<String, Double> rIDSNAMetrics, String researcherID)
+			Map<String, Double> rIDSNAMetrics, String researcherID, UtilINImp imp)
 			throws SQLException, IOException, TasteException {
 		Map<String, Double> importanceResult = new LinkedHashMap<String, Double>();
 		for (Entry<String, Double> entry : rIDSNAMetrics.entrySet()) {
 			Double CMetric = entry.getValue();
 			double JaccardSim = FindJaccardSimilarity(researcherID,
-					entry.getKey());
+					entry.getKey(), imp);
 			Double sum = (CMetric * 0.5) + (JaccardSim * 0.5);
 			importanceResult.put(entry.getKey(), sum);
 		}
@@ -1047,13 +1057,13 @@ public class UtilService {
 	 */
 	static Map<String, Double> ComputeImportance2(
 			Map<String, Integer> rIDSNAMetrics, String researcherID,
-			int maxDegreeofaNode) throws SQLException, IOException,
+			int maxDegreeofaNode, UtilINImp imp) throws SQLException, IOException,
 			TasteException {
 		Map<String, Double> importanceResult = new LinkedHashMap<String, Double>();
 		for (Entry<String, Integer> entry : rIDSNAMetrics.entrySet()) {
 			double CMetric = ((double) entry.getValue() / maxDegreeofaNode);
 			double JaccardSim = FindJaccardSimilarity(researcherID,
-					entry.getKey());
+					entry.getKey(), imp);
 			Double sum = (CMetric * 0.5) + (JaccardSim * 0.5);
 			importanceResult.put(entry.getKey(), sum);
 		}
@@ -1132,18 +1142,18 @@ public class UtilService {
 		double result = (double) intersect.size() / (double) union.size();
 		return result;
 	}
-	static double FindJaccardSimilarity(String ResearcherID1, String ResearcherID2) {
-		ArrayList<String> listR1 = getUniqueInterestNameOf1User(ResearcherID1);
-		ArrayList<String> listR2 = getUniqueInterestNameOf1User(ResearcherID2);
-		ArrayList<String> intersect = new ArrayList<String>();
-		ArrayList<String> union = new ArrayList<String>();
+	static double FindJaccardSimilarity(String ResearcherID1, String ResearcherID2, UtilINImp imp) {
+		List<Object> listR1 = imp.getAuthorTotalInterests( ResearcherID1 ); //getUniqueInterestNameOf1User(ResearcherID1);
+		List<Object> listR2 = imp.getAuthorTotalInterests( ResearcherID2 ); //getUniqueInterestNameOf1User(ResearcherID2);
+		ArrayList<Object> intersect = new ArrayList<Object>();
+		ArrayList<Object> union = new ArrayList<Object>();
 		intersect.clear();
 		intersect.addAll(listR1);
 		intersect.retainAll(listR2);
 		union.clear();
 		union.addAll(listR1);
 		union.addAll(listR2);
-		double result = (double) intersect.size() / (double) union.size();
+		double result = (double) intersect.size() / ( union.size() == 0 ? 1.0 : ( double ) union.size() );
 		return result;
 	}
 	
@@ -1181,7 +1191,11 @@ public class UtilService {
 		JSONArray jsonMainArr = mainJSON.getJSONArray("sResearchers");
 		for (int j = 0; j < jsonMainArr.length(); j++) {
 			JSONObject childJSONObject = jsonMainArr.getJSONObject(j);
-			String rID = childJSONObject.getString("rID");
+			String rID = null;
+			if ( childJSONObject.has( "rID" ) )
+				rID = childJSONObject.getString("rID");
+			else if ( childJSONObject.has( "AuthorID" ) )
+				rID = childJSONObject.getString("AuthorID");
 			rIDs.add(rID);
 		}
 		return rIDs;

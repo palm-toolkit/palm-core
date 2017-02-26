@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.mahout.cf.taste.common.TasteException;
@@ -44,6 +45,7 @@ import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.GraphModel;
 import org.gephi.graph.api.GraphView;
 import org.gephi.graph.api.Node;
+import org.gephi.graph.api.NodeIterable;
 import org.gephi.graph.api.Table;
 import org.gephi.graph.api.UndirectedGraph;
 import org.gephi.layout.plugin.AutoLayout;
@@ -92,6 +94,7 @@ import de.rwth.i9.palm.persistence.PublicationDAO;
 import de.rwth.i9.palm.persistence.relational.AuthorDAOHibernate;
 import de.rwth.i9.palm.persistence.relational.InterestProfileDAOHibernate;
 import de.rwth.i9.palm.recommendation.service.DbService;
+import de.rwth.i9.palm.recommendation.service.PublicationExtractionService;
 import de.rwth.i9.palm.recommendation.service.UtilIN;
 import de.rwth.i9.palm.recommendation.service.UtilService;
 import de.rwth.i9.palm.topicextraction.service.TopicExtractionService;
@@ -133,7 +136,7 @@ public class UtilINImp implements UtilIN {
 	public static final int _INTERST_NODE_CODE = 2;
 	public static final int _PUBLICATION_NODE_CODE = 3;
 	public static final int _DEFAULT_SIZE = 150;
-	
+
 	/**
 	 * @throws SQLException
 	 */
@@ -176,6 +179,21 @@ public class UtilINImp implements UtilIN {
 		co3DAuthors = new LinkedList<>();
 	}
 
+	public List<Object> getAuthorTotalInterests( String author )
+	{
+		List<Object> rList = new LinkedList<>();
+	 	Set<AuthorInterestProfile> list = persistenceStrategy.getAuthorDAO().getById( author ).getAuthorInterestProfiles();
+	 	for ( AuthorInterestProfile prof : list )
+	 	{
+	 		Set<AuthorInterest> ints = prof.getAuthorInterests();
+	 		for ( AuthorInterest aInt : ints )
+	 		{
+	 			rList.addAll( aInt.getTermWeights().values() );
+	 		}
+	 	}
+	 	return rList;
+	}
+	
 	/**
 	 * @param rIDs
 	 * @return
@@ -872,7 +890,7 @@ public class UtilINImp implements UtilIN {
 				coAuthorInterest.put( authorInterest );
 			}
 		}*/
-		
+
 		List<Object> profiles = sessionFactory.getCurrentSession()
 				.createSQLQuery( "CALL nugraha.InterestGraph(:authorID, :coauthors, :update)" )
 				.setParameter( "authorID", author )
@@ -1016,20 +1034,20 @@ public class UtilINImp implements UtilIN {
 			Workspace workspace = pc.getCurrentWorkspace();
 			workspace.add( model );
 			FilterController filterController = new FilterControllerImpl();//Lookup.getDefault().lookup( FilterController.class );	
-			
+
 			//DynamicRangeFilter dFilter = new DynamicRangeFilter( model );
 			//Query dQuery = filterController.createQuery( dFilter );
-			
+
 			AttributeRangeBuilder.AttributeRangeFilter.Node attreFilt = 
 					new AttributeRangeBuilder.AttributeRangeFilter.Node( groupCol );
 			attreFilt.init( model.getUndirectedGraph() );
 			attreFilt.setRange( new Range( 2, Integer.MAX_VALUE ) );
 			Query query = filterController.createQuery( attreFilt );
-	
+
 			//filterController.add( dQuery );
 			//filterController.add( query );
 			//filterController.setSubQuery( query, dQuery );
-			
+
 			GraphView view = filterController.filter( query );
 			graph = model.getUndirectedGraph( view );
 		}
@@ -1037,17 +1055,17 @@ public class UtilINImp implements UtilIN {
 		{
 			graph = model.getUndirectedGraph();
 		}
-		
+
 		ArrayList<String> coAuthorIDs = new ArrayList<>();
 		for ( Node node : graph.getNodes() )
 		{
 			if ( node != null ) 
 			{
 				if ( Integer.valueOf( String.valueOf( node.getAttribute( groupCol ) ) ) > 1 )
-				coAuthorIDs.add( String.valueOf( node.getId() ) );
+					coAuthorIDs.add( String.valueOf( node.getId() ) );
 			}
 		}
-		
+
 		// set coAuthors from JSONArray from previous step
 		/*if ( coAuthors != null && coAuthors.length() > 0 ) 
 		{
@@ -1071,10 +1089,10 @@ public class UtilINImp implements UtilIN {
 				}
 			}
 		}*/
-		
+
 		return coAuthorIDs;
 	}
-	
+
 	/**
 	 * Create Interest Based file
 	 * 
@@ -1089,9 +1107,9 @@ public class UtilINImp implements UtilIN {
 		ArrayList<String> coAuthorIDs = getCoAuthors( rID, model, false );
 		// clean snDataArray in this step
 		snDataArray.clear();
-		
-		
-		
+
+
+
 		// check if no co-Author inserted yet
 		if ( coAuthorIDs == null || coAuthorIDs.size() <= 0 )
 		{
@@ -1108,7 +1126,7 @@ public class UtilINImp implements UtilIN {
 		System.out.println( "Interest collection started." );
 		JSONArray coAuthorInterests = interestofCoFinder(rID, coAuthorIDs);
 		System.out.println( "Interest collection completed in: " + (System.currentTimeMillis() - time) );
-		
+
 
 		return coAuthorInterests;
 	}
@@ -1143,6 +1161,140 @@ public class UtilINImp implements UtilIN {
 			this.co3DAuthors.clear();
 		}
 		this.co3DAuthors = null;
+	}
+
+	public JSONArray get1DGraph( String researcherID )
+	{
+		AuthorDAO dao = persistenceStrategy.getAuthorDAO();
+		JSONArray authorNodes = new JSONArray();
+		JSONArray authorLinks = new JSONArray();
+		JSONArray arr = new JSONArray();
+
+		List<String> coAuthors = getCoAuthors( researcherID );
+
+		for ( String ids : coAuthors )
+		{
+			if ( !ids.equalsIgnoreCase( researcherID ) )
+			{
+				Author author = dao.getById( ids );
+				authorNodes.put( addNode( ids, author.getName(), "Author", 0, _AUTHOR_NODE_CODE, _DEFAULT_SIZE ) );
+				authorLinks.put( addAuthorLink( researcherID, ids ) );
+			}
+		}
+
+		JSONObject nodes = new JSONObject();
+		nodes.put( "nodes", authorNodes );
+		nodes.put( "links", authorLinks );
+		nodes.put( "count", authorNodes.length() );
+		arr.put( nodes );
+
+		return arr;
+	}
+
+	public JSONArray getNDCoAuthorsGraph ( String researcherID, JSONArray co1DCoAuthors, int dimentionNumber )
+	{
+		JSONObject obj = co1DCoAuthors.optJSONObject( 0 );
+		List<String> authND = new LinkedList<>();
+		Set<String> uniqueNodes = new LinkedHashSet<>();
+
+		JSONArray arr = new JSONArray();
+		JSONArray authorNodes = new JSONArray();
+		JSONArray authorLinks = new JSONArray();
+		AuthorDAO dao = persistenceStrategy.getAuthorDAO();
+
+		uniqueNodes.add( researcherID );
+
+		List result = sessionFactory.getCurrentSession()
+				.createSQLQuery( "CALL nugraha.CoAuthorGraph( :researcher )" )
+				.setParameter( "researcher", researcherID ).list();
+
+		if ( result != null && !result.isEmpty() )
+		{
+			String string = String.valueOf( result.get( 0 ) );
+			String[] coAuthors = string.split( ";" );
+			if ( coAuthors != null && coAuthors.length > 1 )
+			{
+				for ( int i = 0; i < coAuthors.length; i++ )
+				{
+					String[] ND = coAuthors[i].split( ":" );
+					if ( ND != null && ND.length > 1 )
+					{
+						Integer group = Integer.valueOf( ND[0] );
+						String[] links = ND[1].split( "," );
+
+						System.out.println( "Group: " + group );
+						if ( group <= dimentionNumber && group > 1 )
+						{
+							for ( int l = 0; links != null && l < links.length; l++ )
+							{
+								String[] link = links[l].split( "\\." );
+								if ( link != null && link.length > 1 )
+								{
+									for ( int index = 0; index < link.length; index++ )
+									{
+										if ( !uniqueNodes.contains( link[index] ) && group > 1 )
+										{
+											Author author = dao.getById( link[index] );
+											authorNodes.put( addNode( link[index], author.getName(), "Author", 
+													(group == 3 ? (group+1) : (group-1)), _AUTHOR_NODE_CODE, _DEFAULT_SIZE ) );
+											uniqueNodes.add( link[index] );
+										}
+									}
+									//ND coAuthor Links
+									authorLinks.put( addAuthorLink( link[0], link[1] ) );
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			//authorNodes.put( addNode( rID, researcher.getName(), "Author", 0, 0 ) );
+
+			//1D coAuthors
+			authND = insertCoAuthorGraph( 0, authorNodes, authorLinks, uniqueNodes, new ArrayList<>( Arrays.asList( new String[]{ researcherID } ) ) );
+			//if ( authND.size() > 50 ) authND = authND.subList( 0, 50 );
+			//2D coAuthors
+			authorNodes = null; authorLinks = null;
+			authorNodes = new JSONArray(); authorLinks = new JSONArray();
+			authND = insertCoAuthorGraph( 1, authorNodes, authorLinks, uniqueNodes, authND );
+			//if ( authND.size() > 50 ) authND = authND.subList( 0, 50 );
+			//3D coAuthors
+			if ( dimentionNumber > 2 )
+				authND = insertCoAuthorGraph( 4, authorNodes, authorLinks, uniqueNodes, authND );
+		}
+
+		/*if ( obj != null )
+		{
+			arr = obj.optJSONArray( "nodes" );
+			for ( int i = 0; i < arr.length(); i++ )
+			{
+				JSONObject node = arr.optJSONObject( i );
+				if ( node != null )
+				{
+					String id = node.optString( "id", null );
+					if ( id != null )
+					{
+						authND.add( id );
+						uniqueNodes.add( id );
+					}
+				}
+			}
+		}
+
+		//authND = insertCoAuthorGraph( 0, authorNodes, authorLinks, uniqueNodes, new ArrayList<>( Arrays.asList( new String[]{ researcherID } ) ) );
+		authND = insertCoAuthorGraph( 1, authorNodes, authorLinks, uniqueNodes, authND );
+		authND = insertCoAuthorGraph( 2, authorNodes, authorLinks, uniqueNodes, authND );*/
+
+		JSONObject nodes = new JSONObject();
+		nodes.put( "nodes", authorNodes );
+		nodes.put( "links", authorLinks );
+		nodes.put( "count", authorNodes.length() );
+		arr.put( nodes );
+
+		return arr;
 	}
 
 	@Override
@@ -1204,13 +1356,13 @@ public class UtilINImp implements UtilIN {
 		Author researcher = dao.getById( rID );
 		JSONArray authorNodes = new JSONArray();
 		JSONArray authorLinks = new JSONArray();
-		
+
 		uniqueNodes.add( rID );
-		
+
 		List result = sessionFactory.getCurrentSession()
 				.createSQLQuery( "CALL nugraha.CoAuthorGraph( :researcher )" )
-			.setParameter( "researcher", rID ).list();
-		
+				.setParameter( "researcher", rID ).list();
+
 		if ( result != null && !result.isEmpty() )
 		{
 			String string = String.valueOf( result.get( 0 ) );
@@ -1234,7 +1386,8 @@ public class UtilINImp implements UtilIN {
 									if ( !uniqueNodes.contains( link[index] ) )
 									{
 										Author author = dao.getById( link[index] );
-										authorNodes.put( addNode( link[index], author.getName(), "Author", (group-1), _AUTHOR_NODE_CODE, _DEFAULT_SIZE ) );
+										authorNodes.put( addNode( link[index], author.getName(), "Author", 
+												( group == 3 ? (group+1) : (group-1) ), _AUTHOR_NODE_CODE, _DEFAULT_SIZE ) );
 										uniqueNodes.add( link[index] );
 									}
 								}
@@ -1249,7 +1402,7 @@ public class UtilINImp implements UtilIN {
 		else
 		{
 			//authorNodes.put( addNode( rID, researcher.getName(), "Author", 0, 0 ) );
-			
+
 			//1D coAuthors
 			List<String> authND = insertCoAuthorGraph( 0, authorNodes, authorLinks, uniqueNodes, new ArrayList<>( Arrays.asList( new String[]{ rID } ) ) );
 			//if ( authND.size() > 50 ) authND = authND.subList( 0, 50 );
@@ -1259,9 +1412,9 @@ public class UtilINImp implements UtilIN {
 			authND = insertCoAuthorGraph( 1, authorNodes, authorLinks, uniqueNodes, authND );
 			//if ( authND.size() > 50 ) authND = authND.subList( 0, 50 );
 			//3D coAuthors
-			authND = insertCoAuthorGraph( 2, authorNodes, authorLinks, uniqueNodes, authND );
+			authND = insertCoAuthorGraph( 4, authorNodes, authorLinks, uniqueNodes, authND );
 		}
-		
+
 		JSONObject nodes = new JSONObject();
 		nodes.put( "nodes", authorNodes );
 		nodes.put( "links", authorLinks );
@@ -1284,7 +1437,7 @@ public class UtilINImp implements UtilIN {
 			graphModel = workspace.getLookup().getDefault()
 					.lookup(GraphController.class).getGraphModel();
 		}
-		
+
 		Table table = graphModel.getNodeTable();
 		Column stepCol = table.getColumn( "stepNo" );
 		if ( stepCol == null )
@@ -1301,8 +1454,8 @@ public class UtilINImp implements UtilIN {
 		Column sizeCol = table.getColumn( "size" );
 		if ( sizeCol == null )
 			sizeCol = table.addColumn( "size", Integer.class );
-		
-		
+
+
 		JSONObject obj = new JSONObject();
 		obj.put( "id", node.getId() );
 		obj.put( "details", node.getLabel() );
@@ -1329,10 +1482,10 @@ public class UtilINImp implements UtilIN {
 		System.out.println( "X and Y: " + node.x() + "  -  " + node.y() );*/
 		obj.put( "x", node.x() );
 		obj.put( "y", node.y() );
-		
+
 		return obj;
 	}
-	
+
 	public JSONArray getStepGraph( GraphModel graphModel, int stepNo )
 	{
 		UndirectedGraph graph = graphModel.getUndirectedGraphVisible();
@@ -1340,7 +1493,7 @@ public class UtilINImp implements UtilIN {
 		JSONArray authorNodes = new JSONArray();
 		JSONArray authorLinks = new JSONArray();
 		//int iterations = (int) Math.pow(graph.getNodeCount(), 2);
-		
+
 
 		for ( Node node : graph.getNodes() )
 		{
@@ -1350,12 +1503,12 @@ public class UtilINImp implements UtilIN {
 
 		System.out.println( "Nodes: " + graphModel.getUndirectedGraphVisible().getNodeCount() );
 		System.out.println( "Edges: " + graphModel.getUndirectedGraphVisible().getEdgeCount() );
-		
+
 		for ( Edge edge : graph.getEdges() )
 		{
 			authorLinks.put( addAuthorLink( ( ( String ) edge.getSource().getId() ), ( ( String ) edge.getTarget().getId() ) ) );
 		}
-		
+
 		JSONObject nodes = new JSONObject();
 		nodes.put( "nodes", authorNodes );
 		nodes.put( "links", authorLinks );
@@ -1364,7 +1517,7 @@ public class UtilINImp implements UtilIN {
 
 		return arr;
 	}
-	
+
 	public JSONArray createInterestGraph( JSONArray interestArray )
 	{
 		JSONArray arr = new JSONArray();
@@ -1401,7 +1554,7 @@ public class UtilINImp implements UtilIN {
 						}
 					}
 					authorLinks.put( addAuthorLink( ns[ 0 ], ns[ 1 ] ) );
-					
+
 					// connecting author with interest
 					authorLinks.put( addAuthorLink( author, ns[0] ) );
 					authorLinks.put( addAuthorLink( author, ns[1] ) );
@@ -1427,7 +1580,7 @@ public class UtilINImp implements UtilIN {
 		/*for ( Author author : authors )
 		{
 			String r1D = author.getId();
-			
+
 			Set<Publication> pubsND = author.getPublications();
 			for ( Publication pubND : pubsND )
 			{
@@ -1444,7 +1597,7 @@ public class UtilINImp implements UtilIN {
 							coAuthors.add( authND );
 							uniqueNodes.add( rND );
 						}
-						
+
 						//ND coAuthor Links
 						authorLinks.put( addAuthorLink( r1D, rND ) );
 					}
@@ -1467,14 +1620,14 @@ public class UtilINImp implements UtilIN {
 				String authorId = String.valueOf( objects[0] ); 
 				String coAuthorId = String.valueOf( objects[1] );
 				String coAuthorName = String.valueOf( objects[2] );
-				
+
 				if ( !uniqueNodes.contains( coAuthorId ) )
 				{
 					authorNodes.put( addNode( coAuthorId, coAuthorName, "Author", group, _AUTHOR_NODE_CODE, _DEFAULT_SIZE ) );
 					coAuthors.add( coAuthorId );
 					uniqueNodes.add( coAuthorId );
 				}
-				
+
 				//ND coAuthor Links
 				authorLinks.put( addAuthorLink( authorId, coAuthorId ) );
 			}
@@ -1922,7 +2075,26 @@ public class UtilINImp implements UtilIN {
 
 		List<String> list = sessionFactory.getCurrentSession().createSQLQuery( "call nugraha.GetTopResearcherIds(:authorsIds,:term)" )
 				.setTimeout( 60 ).setParameter( "authorsIds", authors ).setParameter( "term", Interest ).list();
-		return ((list == null || list.isEmpty()) ? null : list.get( list.size() - 1 ) );
+		return ((list == null || list.isEmpty()) ? null : list.get( 0 ) );
+	}
+
+	public List<String> topRofIFinderString( ArrayList<String> allCoIds, String Interest, int maxResults )
+			throws JSONException, IOException, SQLException {
+		String authors = allCoIds.toString().replace( "[", "" ).replace( "]", "" )
+				.replaceAll( ", ", "\',\'" );
+
+		List<String> list = sessionFactory.getCurrentSession().createSQLQuery( "call nugraha.GetTopResearcherIds(:authorsIds,:term)" )
+				.setTimeout( 60 ).setParameter( "authorsIds", authors ).setParameter( "term", Interest ).list();
+
+		if ( list != null && !list.isEmpty() )
+		{
+			if ( list.size() > maxResults )
+				return list.subList( 0, maxResults );
+			else
+				return list;
+		}
+
+		return null;
 	}
 
 	public int getCommonInterests( String rID1, String rID2 )
@@ -2016,18 +2188,18 @@ public class UtilINImp implements UtilIN {
 		// System.out.println("interest list array :"+FinalJsonArray);
 		return FinalJsonArray;
 	}
-	
+
 	public JSONArray addPubsOfIToJson ( JSONArray cfCResult,
-			ArrayList<String> rIDs, Map<String, Integer> iNames, PublicationExtractionService service )
+			ArrayList<String> rIDs, Map<String, Number> iNames, PublicationExtractionService service )
 	{
 		//System.out.println( "Names list: " + iNames.size() + " - " + rIDs.size() );
-		
+
 		JSONArray publicationsResult = new JSONArray();
 		String query = "SELECT DISTINCT pub.id, pub.title, pub.authorText, pub.abstractText, pub.keywordText FROM publication pub " +
 				"LEFT JOIN publication_author pub_auth ON pub.id=pub_auth.publication_id " +
 				"WHERE (INSTR(pub.title, :term) OR INSTR(pub.abstractText, :term) OR INSTR(pub.keywordText, :term)) AND " +
 				"pub_auth.author_id IN (:authorIds) ORDER BY pub_auth.position_ DESC";
-		
+
 		List<Future<JSONArray>> results = new LinkedList<>();
 		List<String> interestItems = new LinkedList<>( iNames.keySet() );
 		for (int i = 0; i < interestItems.size(); i++) 
@@ -2039,8 +2211,8 @@ public class UtilINImp implements UtilIN {
 					.setParameterList( "authorIds", rIDs ).list();*/
 			try
 			{
-				
-				results.add( service.getPublicationData( rIDs, interestItems.get( i ), iNames.get( interestItems.get( i ) ) ) );
+
+				results.add( service.getPublicationData( rIDs, interestItems.get( i ), ( ( Integer ) iNames.get( interestItems.get( i ) ) ) ) );
 			}
 			catch (InterruptedException e)
 			{
@@ -2130,19 +2302,18 @@ public class UtilINImp implements UtilIN {
 		{
 			try
 			{
-				JSONArray pubOfIJsonArray = resultItem.get();
+				JSONArray pubOfIJsonArray = resultItem.get(1, TimeUnit.MINUTES);
 				JSONObject pubofIObj = new JSONObject();
 				pubofIObj.put("publicationsOfI" + (index++), pubOfIJsonArray);
 				cfCResult.put(pubofIObj);
 				publicationsResult.put( pubOfIJsonArray );
-				System.out.println( "Publication: " + pubOfIJsonArray );
 			}
-			catch (InterruptedException | ExecutionException e)
+			catch (InterruptedException | ExecutionException | TimeoutException e)
 			{
 				System.out.println( "Publication error: " + e.getMessage() );
 			}
 		}
-		
+
 		return publicationsResult;
 	}
 
@@ -2184,42 +2355,105 @@ public class UtilINImp implements UtilIN {
 	{
 		JSONArray authorNodes = new JSONArray();
 		JSONArray authorLinks = new JSONArray();
-		
+
 		for ( int i = 0; i < degreeJson.length(); i++ )
 		{
 			JSONObject obj = degreeJson.optJSONObject( i );
-			
+
 			if ( obj != null )
 			{
 				String termID = obj.optString( "ID" );
 				String term = obj.optString( "itemName" );
 				int termDegree = obj.optInt( "DegreeValue" );
-				
+
 				authorNodes.put( addNode( termID, (term + "</br>Degree: " + termDegree), "Interest", termDegree, _INTERST_NODE_CODE, _DEFAULT_SIZE ) );
 			}
 		}
-		
+
 		JSONObject json = new JSONObject();
 		json.put( "nodes", authorNodes );
 		json.put( "links", authorLinks );
 		json.put( "count", authorNodes.length() );
-		
+
 		JSONArray arr = new JSONArray();
 		arr.put( json );
 		return arr;
 	}
-	
+
+	public JSONArray createTopNAuthorsGraph( JSONArray step3Authors )
+	{
+		JSONArray authorNodes = new JSONArray();
+		JSONArray authorLinks = new JSONArray();
+
+		// inserting top authors
+		for ( int i = 0; i < step3Authors.length(); i++ )
+		{
+			JSONObject obj = step3Authors.optJSONObject( i );
+			if ( obj != null )
+			{
+				String authorId = obj.optString( "rID", "" );
+				String authorName = obj.optString( "rName", "" );
+				String termName = obj.optString( "ExpertIn", "" );
+				//int interests = obj.optInt( "NofCommonInterest", 0 );
+				long jFactor = obj.optLong( "SimInPercent", 0 );
+
+				//inserting author node.
+				authorNodes.put( addNode( authorId, (authorName + "</br>Degree: " + jFactor), "Author", ((int)jFactor), _AUTHOR_NODE_CODE, _DEFAULT_SIZE ) );
+			}
+		}
+
+		JSONObject json = new JSONObject();
+		json.put( "nodes", authorNodes );
+		json.put( "links", authorLinks );
+		json.put( "count", authorNodes.length() );
+
+		JSONArray arr = new JSONArray();
+		arr.put( json );
+		return arr;
+	}
+
+	public JSONArray createTopInterestGraph( JSONArray topInterest )
+	{
+		JSONArray authorNodes = new JSONArray();
+		JSONArray authorLinks = new JSONArray();
+
+		for ( int i = 0; i < topInterest.length(); i++ )
+		{
+			JSONObject obj = topInterest.optJSONObject( i );
+
+			if ( obj != null )
+			{
+				String id = obj.optString( "ID" );
+				String term = obj.optString( "itemName" );
+				String authorId = obj.optString( "AuthorID" );
+				double value = obj.optDouble( "DegreeValue", 1.0 );
+
+				authorNodes.put( addNode( id, ( term + "</br>Degree: " + value ), "Interest", ( ( int ) value ), _INTERST_NODE_CODE, _DEFAULT_SIZE ) );
+				authorLinks.put( addAuthorLink( authorId, id ) );
+			}
+		}
+
+		JSONObject json = new JSONObject();
+		json.put( "nodes", authorNodes );
+		json.put( "links", authorLinks );
+		json.put( "count", authorNodes.length() );
+
+		JSONArray arr = new JSONArray();
+		arr.put( json );
+		return arr;
+	}
+
 	public JSONArray createTop10AuthorsGraph( JSONArray topAuthors, JSONArray topInterest ) 
 	{
 		JSONArray authorNodes = new JSONArray();
 		JSONArray authorLinks = new JSONArray();
-		
+
 		Map<String, String> interestMap = new LinkedMap();
 		//getting top interests
 		for ( int i = 0; i < topInterest.length(); i++ )
 		{
 			JSONObject obj = topInterest.optJSONObject( i );
-			
+
 			if ( obj != null )
 			{
 				String termID = obj.optString( "ID" );
@@ -2228,7 +2462,7 @@ public class UtilINImp implements UtilIN {
 				interestMap.put( term, termID );
 			}
 		}
-		
+
 		// inserting top authors
 		for ( int i = 0; i < topAuthors.length(); i++ )
 		{
@@ -2240,7 +2474,7 @@ public class UtilINImp implements UtilIN {
 				String termName = obj.optString( "ExpertIn", "" );
 				//int interests = obj.optInt( "NofCommonInterest", 0 );
 				double jFactor = obj.optDouble( "SimInPercent", 0.0 );
-				
+
 				//inserting author node.
 				authorNodes.put( addNode( authorId, (authorName + "</br>Degree: " + jFactor), "Author", ((int)jFactor), _AUTHOR_NODE_CODE, _DEFAULT_SIZE ) );
 				authorLinks.put( addAuthorLink( authorId, interestMap.get( termName ) ) );
@@ -2264,12 +2498,126 @@ public class UtilINImp implements UtilIN {
 				}
 			}
 		}
-		
+
 		JSONObject json = new JSONObject();
 		json.put( "nodes", authorNodes );
 		json.put( "links", authorLinks );
 		json.put( "count", authorNodes.length() );
+
+		JSONArray arr = new JSONArray();
+		arr.put( json );
+		return arr;
+	}
+
+	public JSONArray createCoAuthorPublicationGraph( JSONArray publications, JSONArray topAuthors, JSONArray interestsDegree, JSONArray interestLinks )
+	{
+		JSONArray authorNodes = new JSONArray();
+		JSONArray authorLinks = new JSONArray();
+
+		List<String> authors = new LinkedList<>();
+		//getting top authors
+		JSONObject graph = topAuthors.optJSONObject( 0 );
+		if ( graph != null )
+		{
+			JSONArray nodes = graph.optJSONArray( "nodes" );
+			JSONArray links = graph.optJSONArray( "links" );
+
+			authorNodes = nodes;
+			authorLinks = links;
+		}
+
+		graph = interestLinks.optJSONObject( 0 );
+		if ( graph != null )
+		{
+			JSONArray links = graph.optJSONArray( "links" );
+
+			for ( int i = 0; i < links.length(); i++ )
+			{
+				JSONObject obj = links.optJSONObject( i );
+				authorLinks.put( obj );
+			}
+		}
 		
+		Map<String, String> interestMap = new LinkedMap();
+		for ( int i = 0; i < interestsDegree.length(); i++ )
+		{
+			JSONObject obj = interestsDegree.optJSONObject( i );
+
+			if ( obj != null )
+			{
+				String termID = obj.optString( "ID" );
+				String term = obj.optString( "itemName" );
+				int termDegree = obj.optInt( "DegreeValue" )+1;
+				interestMap.put( term, termID );
+
+				authorNodes.put( addNode( termID, (term + "</br>Degree: " + termDegree), "Interest", termDegree, _INTERST_NODE_CODE, _DEFAULT_SIZE ) );
+			}
+		}
+
+		/*Map<String, List<String>> authorMap = new LinkedMap();
+		for ( String term : interestMap.keySet() )
+		{
+			String termId = interestMap.get( term );
+			for ( int i = 0; i < authorLinks.length(); i++ )
+			{
+				String intLink = null;
+				JSONObject authorlink = authorLinks.optJSONObject( i );
+				if ( termId.equals( authorlink.optString( "source", "" ) ) )
+				{
+					intLink = authorlink.optString( "target" );
+				}
+				else if ( termId.equals( authorlink.optString( "target", "" ) ) )
+				{
+					intLink = authorlink.optString( "source" );
+				}
+
+				if ( intLink != null )
+				{
+					List<String> authorsList = authorMap.get( term );
+					if ( authorsList == null )
+						authorsList = new LinkedList<>();
+					authorsList.add( intLink );
+					authorMap.put( term, authorsList );
+				}
+			}
+		}*/
+
+		for ( int i = 0; i < publications.length(); i++ )
+		{
+			JSONArray pubI = publications.optJSONArray( i );
+			for ( int j = 0; j < pubI.length(); j++ )
+			{
+				JSONObject obj = pubI.optJSONObject( j );
+				if ( obj != null )
+				{
+					String termName = obj.optString( "iName");
+					String pubID = obj.optString( "pID"); 
+					String pubTitle = obj.optString( "pTitle");
+					String pubAuthor = obj.optString( "pAuthors");
+					String pubAbstract = obj.optString( "pAbstract");
+					String pubkeyword = obj.optString( "pKeywords");
+					int termValue = obj.optInt( "iValue", 0 ) + 1;
+
+					authorNodes.put( addNode( pubID, ( pubTitle + "</br>Degree: " + termValue), "Publication", termValue, _PUBLICATION_NODE_CODE, _DEFAULT_SIZE ) );
+					authorLinks.put( addAuthorLink( pubID, interestMap.get( termName ) ) );
+
+					String[] coAuthors = pubAuthor.split( "," );
+					if ( coAuthors != null )
+					{
+						for ( String author : coAuthors )
+						{
+							authorLinks.put( addAuthorLink( pubID, author ) );
+						}
+					}
+				}
+			}
+		}
+
+		JSONObject json = new JSONObject();
+		json.put( "nodes", authorNodes );
+		json.put( "links", authorLinks );
+		json.put( "count", authorNodes.length() );
+
 		JSONArray arr = new JSONArray();
 		arr.put( json );
 		return arr;
@@ -2279,7 +2627,7 @@ public class UtilINImp implements UtilIN {
 	{
 		JSONArray authorNodes = new JSONArray();
 		JSONArray authorLinks = new JSONArray();
-		
+
 		List<String> authors = new LinkedList<>();
 		//getting top authors
 		JSONObject graph = topAuthors.optJSONObject( 0 );
@@ -2287,10 +2635,10 @@ public class UtilINImp implements UtilIN {
 		{
 			JSONArray nodes = graph.optJSONArray( "nodes" );
 			JSONArray links = graph.optJSONArray( "links" );
-			
+
 			//authorNodes = nodes;
 			authorLinks = links;
-			
+
 			for ( int i = 0; i < nodes.length(); i++ )
 			{
 				JSONObject obj = nodes.optJSONObject( i );
@@ -2298,23 +2646,23 @@ public class UtilINImp implements UtilIN {
 				authors.add( id );
 			}
 		}
-		
+
 		Map<String, String> interestMap = new LinkedMap();
 		for ( int i = 0; i < interestsDegree.length(); i++ )
 		{
 			JSONObject obj = interestsDegree.optJSONObject( i );
-			
+
 			if ( obj != null )
 			{
 				String termID = obj.optString( "ID" );
 				String term = obj.optString( "itemName" );
 				int termDegree = obj.optInt( "DegreeValue" );
 				interestMap.put( term, termID );
-				
+
 				authorNodes.put( addNode( termID, (term + "</br>Degree: " + termDegree), "Interest", termDegree, _INTERST_NODE_CODE, _DEFAULT_SIZE ) );
 			}
 		}
-		
+
 		Map<String, List<String>> authorMap = new LinkedMap();
 		for ( String term : interestMap.keySet() )
 		{
@@ -2331,7 +2679,7 @@ public class UtilINImp implements UtilIN {
 				{
 					intLink = authorlink.optString( "source" );
 				}
-				
+
 				if ( intLink != null )
 				{
 					List<String> authorsList = authorMap.get( term );
@@ -2342,7 +2690,7 @@ public class UtilINImp implements UtilIN {
 				}
 			}
 		}
-		
+
 		for ( int i = 0; i < publications.length(); i++ )
 		{
 			JSONArray pubI = publications.optJSONArray( i );
@@ -2357,15 +2705,16 @@ public class UtilINImp implements UtilIN {
 					String pubAuthor = obj.optString( "pAuthors");
 					String pubAbstract = obj.optString( "pAbstract");
 					String pubkeyword = obj.optString( "pKeywords");
-					int termValue = obj.optInt( "iValue", 0 );
-					
+					int termValue = obj.optInt( "iValue", 1 );
+					if( termValue == 0 ) termValue = 1;
+
 					authorNodes.put( addNode( pubID, ( pubTitle + "</br>Degree: " + termValue), "Publication", termValue, _PUBLICATION_NODE_CODE, _DEFAULT_SIZE ) );
 					authorLinks.put( addAuthorLink( pubID, interestMap.get( termName ) ) );
-					
-					List<String> authorsList = authorMap.get( termName );
-					if ( authorsList != null )
+
+					String[] coAuthors = pubAuthor.split( "," );
+					if ( coAuthors != null )
 					{
-						for ( String author : authorsList )
+						for ( String author : coAuthors )
 						{
 							authorLinks.put( addAuthorLink( pubID, author ) );
 						}
@@ -2373,17 +2722,17 @@ public class UtilINImp implements UtilIN {
 				}
 			}
 		}
-		
+
 		JSONObject json = new JSONObject();
 		json.put( "nodes", authorNodes );
 		json.put( "links", authorLinks );
 		json.put( "count", authorNodes.length() );
-		
+
 		JSONArray arr = new JSONArray();
 		arr.put( json );
 		return arr;
 	}
-	
+
 	public JSONArray DegreeJsonCreator( Map<String, Integer> rDegree,
 			Map<String, String> rIDName3, String researcherID,
 			int maxDegreeofaNode ) throws JSONException, SQLException,

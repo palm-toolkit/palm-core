@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -50,8 +51,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.model.Author;
+import de.rwth.i9.palm.persistence.AuthorDAO;
 import de.rwth.i9.palm.persistence.InterestDAO;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
+import de.rwth.i9.palm.recommendation.service.GenericRecommendation;
 import de.rwth.i9.palm.recommendation.service.SNAINRecommendationFeature;
 import de.rwth.i9.palm.recommendation.service.UtilIN;
 import de.rwth.i9.palm.recommendation.service.UtilINImp;
@@ -59,52 +62,26 @@ import de.rwth.i9.palm.recommendation.service.UtilService;
 import de.rwth.i9.palm.topicextraction.service.TopicExtractionService;
 
 @Service
-public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeature {
-
-
-	private Map<String, Integer> degreeInterestIDs = new LinkedHashMap<>();
-
-	@Autowired
-	private PersistenceStrategy persistenceStrategy;
-
-	@Autowired
-	private TopicExtractionService topicExtractionService;
-
-	@Autowired
-	private SessionFactory sessionFactory;
-
-	@Autowired
-	private PublicationExtractionService pubService;
-
-	//store list of coAuthors: step 1
-	private JSONArray coAuthors = null;
-
-	//store list for graph interest: step 2
-	private JSONArray coAuthorInterest = null;
-	private JSONArray coAuthorInterestResult = null;
+public class SNAINRecommendationFeatureImpl extends GenericRecommendation {
 
 	//store end results: step 3
-	private JSONArray degreeTopNInterests = null;
 	private JSONArray degreeTopNInterestResult = null;
 
-	//store end results: step 4
-	private JSONArray finalResults = null;	
-
-	//store list of top 10 authors: step 5
-	private JSONArray top10CoAuthors = null;
-
-	//store list of authors: step 5
+		//store list of authors: step 5
 	private JSONArray topCoAuthorsGraph = null;
 
-	//store list of publications: step 6
-	private JSONArray topPublication = null;
-
-	private GraphModel[] treeGraph = null;
-
-
-	//store the author Id to psersist 3 steps.
-	private /*static*/ String currentAuthor = null;
-
+	private GenericRecommendation superClass;
+	
+	public SNAINRecommendationFeatureImpl()
+	{
+		this( null );
+	}
+	
+	public SNAINRecommendationFeatureImpl( GenericRecommendation superClass )
+	{
+		this.superClass = superClass;
+	}
+	
 	/**
 	 * Compute Betweenness on interest network
 	 * 
@@ -121,10 +98,10 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 			throws JSONException, SQLException, UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException {
 		Map<String, Integer> DegreeResults = new TreeMap<String, Integer>();
 		// Initiate a project - and therefore a workspace
-		ProjectController pc = Lookup.getDefault().lookup(
+		/*ProjectController pc = Lookup.getDefault().lookup(
 				ProjectController.class);
 		pc.newProject();
-		Workspace workspace = pc.getCurrentWorkspace();
+		Workspace workspace = pc.getCurrentWorkspace();*/
 
 		// Get graph model and attribute model of current workspace
 		/*GraphModel gm = workspace.getLookup().getDefault()
@@ -152,8 +129,6 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		// Append imported data to GraphAPI
 		importController.process(container, new DefaultProcessor(), workspace);*/
 		UndirectedGraph graph = gm.getUndirectedGraph();
-
-		UtilINImp util = new UtilINImp( persistenceStrategy, topicExtractionService, sessionFactory );
 
 		insertGraph(graph, gm);
 
@@ -185,7 +160,7 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		LinkedList<Object> interests = new LinkedList<>();
 		Map<String, String> itemNames = new LinkedHashMap<>();
 
-		Map<String, Object> result = util.getAuthorInterestById( researcherID, false );
+		Map<String, Object> result = superClass.getUtil().getAuthorInterestById( researcherID, false );
 		if ( result.get( "status" ).equals( "Ok" ) ) {
 			interests = ( LinkedList<Object> ) result.get( "interest" );
 
@@ -208,8 +183,8 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 			iIDsof1R.add(UtilService.get1InterestID(interestIDTableMap,
 					iNamesof1R.get(k)));
 		}*/
-		degreeInterestIDs.clear();
-		InterestDAO dao = persistenceStrategy.getInterestDAO();
+		superClass.getNetworkCentrality().clear();
+		InterestDAO dao = superClass.getPersistenceStrategy().getInterestDAO();
 		int i = 0;
 		for (Entry<String, Integer> entry : sortedMap.entrySet()) {
 			// DO not add users interests that already worked on a paper with the active
@@ -224,7 +199,7 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 				itemNames.put( entry.getKey(), term );
 				//rIDs.add(entry.getKey());
 				rIDDegree.put(entry.getKey(), entry.getValue());
-				degreeInterestIDs.put( term, entry.getValue() );
+				superClass.getNetworkCentrality().put( term, entry.getValue() );
 				i++;
 			}
 		}
@@ -242,9 +217,9 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		Map<String, Node> nodes = new LinkedHashMap<>();
 		//BufferedReader br = new BufferedReader(new FileReader(file));
 		//while((line = br.readLine()) != null) 
-		for ( int intID = 0; intID < coAuthorInterest.length(); intID++ )
+		for ( int intID = 0; intID < superClass.getStep2().length(); intID++ )
 		{
-			JSONObject authorInterests = coAuthorInterest.optJSONObject( intID );
+			JSONObject authorInterests = superClass.getStep2().optJSONObject( intID );
 			JSONArray interests = authorInterests.optJSONArray( "interests" );
 
 			for ( int interest = 0; interest < interests.length(); interest++ )
@@ -292,14 +267,13 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 	private JSONArray rRecommenderOfDegree( String researcherID )
 			throws JSONException, IOException, SQLException {
 		JSONArray recR = new JSONArray();
-		UtilINImp util = new UtilINImp( persistenceStrategy, topicExtractionService, sessionFactory );
-		ArrayList<String> allCoIds = util.getCoAuthors( researcherID, treeGraph[1], true );
+		ArrayList<String> allCoIds = superClass.getUtil().getCoAuthors( researcherID, superClass.getTreeGraph()[1], true );
 		ArrayList<String> removedIds = new ArrayList<>();
 		//System.out.println( "BetweennessNames size: " + BetweennessNames.size() );
 		//allCoIds = UtilC3d.find3dIndirectRIds(researcherID);
-		List<String> interestItems = new LinkedList<>( degreeInterestIDs.keySet() );
+		List<String> interestItems = new LinkedList<>( superClass.getNetworkCentrality().keySet() );
 		for (int i = 0; i < interestItems.size() && i < 10; i++) {
-			String rID = util.topRofIFinderString( allCoIds, interestItems.get(i) );
+			String rID = superClass.getUtil().topRofIFinderString( allCoIds, interestItems.get(i) );
 
 			if( rID == null || rID.isEmpty() || rID.equals( researcherID ) )
 			{
@@ -310,15 +284,15 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 				}
 			}
 
-			String rName = persistenceStrategy.getAuthorDAO().getById( rID ).getName();
-			int NofcommonI = util.getCommonInterests(researcherID, rID);
-			double JaccardSim = util.FindJaccardSimilarity(researcherID, rID);
+			String rName = superClass.getPersistenceStrategy().getAuthorDAO().getById( rID ).getName();
+			int NofcommonI = superClass.getUtil().getCommonInterests(researcherID, rID);
+			double JaccardSim = superClass.getUtil().FindJaccardSimilarity(researcherID, rID);
 			JSONObject obj = new JSONObject();
 			obj.put("rID", rID);
 			obj.put("rName", rName);
-			obj.put("ExpertIn", degreeInterestIDs.get(i));
+			obj.put("ExpertIn", superClass.getNetworkCentrality().get(i));
 			obj.put("NofCommonInterest", NofcommonI);
-			obj.put("SimInPercent", ( degreeInterestIDs.get( interestItems.get( i ) ) + NofcommonI ) ); //JaccardSim * 100 );
+			obj.put("SimInPercent", ( ( ( Integer ) superClass.getNetworkCentrality().get( interestItems.get( i ) ) ) + NofcommonI ) ); //JaccardSim * 100 );
 			recR.put(obj);
 			for ( int j = 0; j < allCoIds.size(); j++ ) 
 			{
@@ -331,247 +305,6 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		return recR;
 	}
 
-	private void insertResearcherNode( Author researcher )
-	{
-		if ( treeGraph == null )
-		{
-			treeGraph = new GraphModel[6];
-			treeGraph[0] = GraphModel.Factory.newInstance();
-			treeGraph[1] = GraphModel.Factory.newInstance();
-			treeGraph[2] = GraphModel.Factory.newInstance();
-			treeGraph[3] = GraphModel.Factory.newInstance();
-			treeGraph[4] = GraphModel.Factory.newInstance();
-			treeGraph[5] = GraphModel.Factory.newInstance();
-		}
-
-		Table table = treeGraph[0].getNodeTable();
-		Column stepCol = table.addColumn( "stepNo", Integer.class );
-		Column groupCol = table.addColumn( "group", Integer.class );
-		Column titleCol = table.addColumn( "title", String.class );
-		Column typeCol = table.addColumn( "type", Integer.class );
-		Column sizeCol = table.addColumn( "size", Integer.class );
-
-		Node graphNode = treeGraph[0].factory().newNode( researcher.getId() );
-		graphNode.setAttribute( stepCol, 0 );
-		graphNode.setAttribute( groupCol, 0 );
-		graphNode.setAttribute( titleCol, "Researcher" );
-		graphNode.setAttribute( typeCol, 0 );
-		graphNode.setAttribute( sizeCol, 450 );
-		graphNode.setLabel( researcher.getName() );
-		treeGraph[0].getUndirectedGraphVisible().addNode( graphNode );
-	}
-
-	private JSONObject getGraphLink( org.gephi.graph.api.Edge edge )
-	{
-		JSONObject obj = new JSONObject();
-		obj.put( "source", edge.getSource().getId() );
-		obj.put( "target", edge.getTarget().getId() );
-		return obj;
-	}
-
-	@Async
-	public void updateGraphNode( JSONArray graphNodes, JSONArray prevGraphNodes, int stepNo )
-	{	
-		if ( treeGraph == null )
-		{
-			treeGraph = new GraphModel[6];
-			treeGraph[0] = GraphModel.Factory.newInstance();
-			treeGraph[1] = GraphModel.Factory.newInstance();
-			treeGraph[2] = GraphModel.Factory.newInstance();
-			treeGraph[3] = GraphModel.Factory.newInstance();
-			treeGraph[4] = GraphModel.Factory.newInstance();
-			treeGraph[5] = GraphModel.Factory.newInstance();
-		}
-
-		UndirectedGraph graph = treeGraph[stepNo].getUndirectedGraphVisible();
-		Set<String> uniqueIds = new LinkedHashSet<String>();
-
-		//extracting previous step nodes
-		if ( prevGraphNodes != null && prevGraphNodes.length() > 0 )
-		{
-			JSONObject obj = prevGraphNodes.optJSONObject( 0 );
-			JSONArray nodes = obj.optJSONArray( "nodes" );
-
-			//inserting nodes into graph
-			if ( nodes != null && nodes.length() > 0 )
-			{
-				for ( int i = 0; i < nodes.length(); i++ )
-				{
-					JSONObject node = nodes.optJSONObject( i );
-					if ( node != null )
-					{
-						String id = node.optString( "id" );
-						String title = node.optString( "title" );
-						String details = node.optString( "details" );
-						int group = node.optInt( "group", 0 );
-						int type = node.optInt( "type", 0 );
-						int size = node.optInt( "size", 150 );
-
-						Table table = treeGraph[stepNo].getNodeTable();
-						Column stepCol = table.getColumn( "stepNo" );
-						if ( stepCol == null )
-							stepCol = table.addColumn( "stepNo", Integer.class );
-						Column groupCol = table.getColumn( "group" );
-						if ( groupCol == null )
-							groupCol = table.addColumn( "group", Integer.class );
-						Column titleCol = table.getColumn( "title" );
-						if ( titleCol == null )
-							titleCol = table.addColumn( "title", String.class );
-						Column typeCol = table.getColumn( "type" );
-						if ( typeCol == null )
-							typeCol = table.addColumn( "type", Integer.class );
-						Column sizeCol = table.getColumn( "size" );
-						if ( sizeCol == null )
-							sizeCol = table.addColumn( "size", Integer.class );
-
-						Node graphNode = treeGraph[stepNo].factory().newNode( id );
-						graphNode.setAttribute( stepCol, stepNo );
-						graphNode.setAttribute( groupCol, group );
-						graphNode.setAttribute( titleCol, title );
-						graphNode.setAttribute( typeCol, type );
-						graphNode.setAttribute( sizeCol, size );
-						graphNode.setLabel( details );
-						graphNode.setSize( size );
-
-						try {
-							graph.addNode( graphNode );
-							uniqueIds.add( id );
-						}
-						catch ( IllegalArgumentException e )
-						{}
-					}
-				}
-			}
-		}
-
-		//extracting current step data
-		if ( graphNodes != null && graphNodes.length() > 0 )
-		{
-			JSONObject obj = graphNodes.optJSONObject( 0 );
-			JSONArray nodes = obj.optJSONArray( "nodes" );
-			JSONArray links = obj.optJSONArray( "links" );
-
-			//inserting nodes into graph
-			if ( nodes != null && nodes.length() > 0 )
-			{
-				for ( int i = 0; i < nodes.length(); i++ )
-				{
-					JSONObject node = nodes.optJSONObject( i );
-					if ( node != null )
-					{
-						String id = node.optString( "id" );
-						String title = node.optString( "title" );
-						String details = node.optString( "details" );
-						int group = node.optInt( "group", 0 );
-						int type = node.optInt( "type", 0 );
-						int size = node.optInt( "size", 150 );
-
-						Table table = treeGraph[stepNo].getNodeTable();
-						Column stepCol = table.getColumn( "stepNo" );
-						if ( stepCol == null )
-							stepCol = table.addColumn( "stepNo", Integer.class );
-						Column groupCol = table.getColumn( "group" );
-						if ( groupCol == null )
-							groupCol = table.addColumn( "group", Integer.class );
-						Column titleCol = table.getColumn( "title" );
-						if ( titleCol == null )
-							titleCol = table.addColumn( "title", String.class );
-						Column typeCol = table.getColumn( "type" );
-						if ( typeCol == null )
-							typeCol = table.addColumn( "type", Integer.class );
-						Column sizeCol = table.getColumn( "size" );
-						if ( sizeCol == null )
-							sizeCol = table.addColumn( "size", Integer.class );
-
-						Node graphNode = treeGraph[stepNo].factory().newNode( id );
-						graphNode.setAttribute( stepCol, stepNo );
-						graphNode.setAttribute( groupCol, group );
-						graphNode.setAttribute( titleCol, title );
-						graphNode.setAttribute( typeCol, type );
-						graphNode.setAttribute( sizeCol, size );
-						graphNode.setSize( size );
-						graphNode.setLabel( details );
-
-						try {
-							if ( !uniqueIds.contains( id ) )
-							{
-								graph.addNode( graphNode );
-								uniqueIds.add( id );
-							}
-						}
-						catch ( IllegalArgumentException e )
-						{}
-					}
-				}
-			}
-
-			//inserting links into graph
-			if ( links != null && links.length() > 0 )
-			{
-				for ( int i = 0; i < links.length(); i++ )
-				{
-					JSONObject link = links.optJSONObject( i );
-					if ( link != null )
-					{
-						String source = link.optString( "source" );
-						String target = link.optString( "target" );
-						Edge edge = treeGraph[stepNo].factory().newEdge( 
-								graph.getNode( source ), graph.getNode( target ), false);
-						if ( source == null || target == null || source.isEmpty() || target.isEmpty() )
-						{}
-						else if ( !graph.contains( edge ) && uniqueIds.contains( source ) && uniqueIds.contains( target ) )
-						{
-							try {
-								graph.addEdge( edge );
-							} catch ( Exception e ) {
-								System.out.println( "links: " + link );
-							}
-						}
-					}
-				}
-			}
-
-			//calculating the positions
-			AutoLayout autoLayout = new AutoLayout( 1, TimeUnit.MINUTES );
-			YifanHuLayout firstLayout = new YifanHuLayout( null, new StepDisplacement( 1.0f ) );
-			OpenOrdLayout fourthLayout = new OpenOrdLayout( new OpenOrdLayoutBuilder() );
-			ForceAtlasLayout secondLayout = new ForceAtlasLayout( null );
-
-			/*autoLayout.setGraphModel( graphModel );
-			AutoLayout.DynamicProperty adjustBySizeProperty = AutoLayout.createDynamicProperty("forceAtlas.adjustSizes.name", Boolean.TRUE, 0.1f);//True after 10% of layout time
-		    AutoLayout.DynamicProperty repulsionProperty = AutoLayout.createDynamicProperty("forceAtlas.repulsionStrength.name", new Double(500.), 0f);//500 for the complete period
-		    autoLayout.addLayout(firstLayout, 0.5f);
-		    autoLayout.addLayout(secondLayout, 0.5f, new AutoLayout.DynamicProperty[]{adjustBySizeProperty, repulsionProperty});
-		    //autoLayout.addLayout( fourthLayout, 0.5f );
-		    autoLayout.execute();
-			autoLayout.addLayout( firstLayout, 0.5f );
-			autoLayout.addLayout( fourthLayout, 0.5f );*/
-			fourthLayout.resetPropertiesValues();
-			//fourthLayout.setCooldownStage( 17 );
-			//fourthLayout.setLiquidStage( 7 );
-			//fourthLayout.setCrunchStage( 5 );
-			//fourthLayout.setExpansionStage( 20 );
-			//fourthLayout.setNumIterations( 300 );
-			fourthLayout.setGraphModel( treeGraph[stepNo] );
-
-			fourthLayout.initAlgo();
-
-			/*for ( Node node : graph.getNodes() ) 
-			{
-				node.setX( 1.0f );
-				node.setY( 1.0f );
-			}*/
-
-			for(int i = 0; i < 400 && fourthLayout.canAlgo(); i++) {
-				fourthLayout.goAlgo();
-			}
-
-			//autoLayout.execute();
-		}
-
-		System.out.println( "After count: " + graph.getNodeCount() );
-	}
-
 	/**
 	 * Main step, send JSON file to controller
 	 * 
@@ -582,11 +315,10 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 	 * @throws TasteException
 	 * @throws SQLException
 	 */
-	@Override
 	public JSONArray computeSNAINRecommendation( Author researcher, int stepNo ) 
 			throws JSONException, SQLException, IOException, TasteException {
 
-		if ( researcher == null || researcher == null )
+		/*if ( researcher == null || researcher == null )
 		{
 			return new JSONArray();
 		}
@@ -602,14 +334,10 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		if ( stepNo == 1 )
 		{
 			if ( currentAuthor == null || !currentAuthor.equals( researcherID ) || 
-					coAuthors == null || coAuthors.length() < 1 )
+					step1 == null || step1.length() < 1 )
 			{
-				treeGraph = null;
 				currentAuthor = researcherID;
-				coAuthors = util.get3DCoAuthorsGraph( researcherID );
-				coAuthorInterest = null;
-				degreeTopNInterests = null;
-				top10CoAuthors = null;
+				step1 = util.get3DCoAuthorsGraph( researcherID );
 
 				//creating temprary step0 graph
 				insertResearcherNode( researcher );
@@ -620,7 +348,7 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 				tempObj.put( "nodes", nodes );
 				tempArray.put( tempObj );
 
-				updateGraphNode( coAuthors, tempArray, stepNo );
+				updateGraphNode( step1, tempArray, stepNo );
 			}
 			//return coAuthors;
 			return util.getStepGraph( treeGraph[stepNo], stepNo );
@@ -628,13 +356,13 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		else if ( stepNo == 2 )
 		{
 			if ( currentAuthor == null || !currentAuthor.equals( researcherID ) || 
-					coAuthorInterest == null || coAuthorInterest.length() < 1 )
+					step2 == null || step2.length() < 1 )
 			{
 				currentAuthor = new String( researcherID );
-				coAuthorInterest = util.interestSNFileCreator( researcherID, treeGraph[1] );
-				System.out.println( "SNFileCreator size: " + coAuthorInterest.length() );
-				coAuthorInterestResult = util.createInterestGraph( coAuthorInterest );
-				updateGraphNode( coAuthorInterestResult, coAuthors, stepNo );
+				step2 = util.interestSNFileCreator( researcherID, treeGraph[1] );
+				System.out.println( "SNFileCreator size: " + step2.length() );
+				JSONArray coAuthorInterestResult = util.createInterestGraph( step2 );
+				updateGraphNode( coAuthorInterestResult, step1, stepNo );
 			}
 
 			//return coAuthorInterestResult;
@@ -643,12 +371,12 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		else if ( stepNo == 3 )
 		{
 			if ( currentAuthor == null || !currentAuthor.equals( researcherID ) || 
-					degreeTopNInterests == null || degreeTopNInterests.length() < 1 )
+					step3 == null || step3.length() < 1 )
 			{
 				try
 				{
-					degreeTopNInterests = computeBetweenness(researcherID);
-					degreeTopNInterestResult = util.createDegreeGraph( degreeTopNInterests );
+					step3 = computeBetweenness(researcherID);
+					degreeTopNInterestResult = util.createDegreeGraph( step3 );
 					updateGraphNode( degreeTopNInterestResult, null, stepNo );
 
 					//inserting coAuthors
@@ -688,7 +416,7 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 							}
 						}
 					}
-					/*Column typeCol = treeGraph[stepNo-1].getNodeTable().getColumn( "type" );
+					Column typeCol = treeGraph[stepNo-1].getNodeTable().getColumn( "type" );
 					if ( typeCol == null )
 						typeCol = treeGraph[stepNo-1].getNodeTable().addColumn( "type", Integer.class );
 					currentGraph.writeLock();
@@ -720,17 +448,17 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 							if ( newNode != null && currentGraph.getEdge( node, newNode ) == null )
 								currentGraph.addEdge( treeGraph[stepNo].factory().newEdge( node, newNode, false ) );
 						}
-					}*/
+					}
 					currentGraph.writeUnlock();
 					//currentGraph.writeUnlock();
 					//calculating the positions
-					/*OpenOrdLayout fourthLayout = new OpenOrdLayout( new OpenOrdLayoutBuilder() );
+					OpenOrdLayout fourthLayout = new OpenOrdLayout( new OpenOrdLayoutBuilder() );
 					fourthLayout.resetPropertiesValues();
 					fourthLayout.setGraphModel( treeGraph[stepNo] );
 					fourthLayout.initAlgo();
 					for(int i = 0; i < 50 && fourthLayout.canAlgo(); i++) {
 						fourthLayout.goAlgo();
-					}*/
+					}
 				}
 				catch (InterruptedException | URISyntaxException | ExecutionException e)
 				{
@@ -742,7 +470,7 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 			//return degreeTopNInterestResult;
 			return util.getStepGraph( treeGraph[stepNo], stepNo );
 		}
-		/*else if ( stepNo == 4 )
+		else if ( stepNo == 4 )
 		{
 			if ( currentAuthor != null && currentAuthor.equals( researcherID ) &&
 					finalResults != null && finalResults.length() > 0 )
@@ -761,11 +489,11 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}*/
+		}
 
-		recItems = degreeTopNInterests;
+		recItems = step3;
 
-		/*
+		
 
 		try
 		{
@@ -776,7 +504,7 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}*/
+		}
 
 		JSONArray DegreeRecResult = new JSONArray();
 		JSONObject DegreeRecItemsObj = new JSONObject();
@@ -785,15 +513,15 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		if ( stepNo == 4 )
 		{
 			if ( currentAuthor == null || !currentAuthor.equals( researcherID ) || 
-					top10CoAuthors == null || top10CoAuthors.length() < 1 )
+					step5 == null || step5.length() < 1 )
 			{
-				top10CoAuthors = rRecommenderOfDegree( researcherID );
+				step5 = rRecommenderOfDegree( researcherID );
 				topCoAuthorsGraph = null;
 			}
 
 			if ( topCoAuthorsGraph == null || topCoAuthorsGraph.length() < 1 )
 			{
-				topCoAuthorsGraph = util.createTop10AuthorsGraph( top10CoAuthors, degreeTopNInterests );
+				topCoAuthorsGraph = util.createTop10AuthorsGraph( step5, step3 );
 				updateGraphNode( topCoAuthorsGraph, degreeTopNInterestResult, stepNo );
 			}
 			//return topCoAuthorsGraph;
@@ -806,9 +534,9 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		{
 			boolean shouldSetGraph = false;
 			if ( currentAuthor == null || !currentAuthor.equals( researcherID ) || 
-					topPublication == null || topPublication.length() < 1 )
+					step6 == null || step6.length() < 1 )
 			{
-				JSONArray recR = top10CoAuthors;
+				JSONArray recR = step5;
 				//System.out.println( "Calculated betweenness completed." );
 				JSONObject recRObj = new JSONObject();
 				recRObj.put( "sResearchers", recR );
@@ -821,10 +549,10 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 				//ArrayList<String> iNames = UtilService
 				//		.FindINamesInFinalJson(DegreeRecResult);
 				//System.out.println( "Find researcher name completed." );
-				topPublication = util.addPubsOfIToJson( 
-						DegreeRecResult, researcherIDs, degreeInterestIDs, pubService );
+				step6 = util.addPubsOfIToJson( 
+						DegreeRecResult, researcherIDs, networkCentrality, pubService );
 				shouldSetGraph = true;
-				JSONArray publicationGraph = util.createPublicationGraph( topPublication, topCoAuthorsGraph, degreeTopNInterests );
+				JSONArray publicationGraph = util.createPublicationGraph( step6, topCoAuthorsGraph, step3 );
 				if ( shouldSetGraph )
 					updateGraphNode( publicationGraph, topCoAuthorsGraph, stepNo );
 			}
@@ -833,148 +561,20 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 			return util.getStepGraph( treeGraph[stepNo], stepNo );
 		}
 
-		JSONArray DegreeRecFinalResult = topPublication;
+		JSONArray DegreeRecFinalResult = step6;
 		// start Common interest Json
-		finalResults = util
+		step4 = util
 				.addCommonInterestListToJson(DegreeRecFinalResult, researcherIDs, researcherID );
-		return finalResults; //degreeResult;
-	}
-
-	private List<String> getStepNodes( int stepNo, String researcher, JSONObject json, Map<Integer, List<String>> uniqueIds, int increment,
-			boolean shouldInsertNodes, boolean clonseItr, Map<Integer, List<String>> ids )
-	{
-		if ( treeGraph == null || treeGraph.length <= 0 || stepNo >= treeGraph.length || stepNo < 0 )
+		return step4; //degreeResult;
+*/	
 			return null;
-
-		UtilINImp util = new UtilINImp( persistenceStrategy, topicExtractionService, sessionFactory );
-
-		//initializing graph json
-		JSONArray authorNodes = new JSONArray();
-		JSONArray authorLinks = new JSONArray();
-		if ( json == null )
-			json = new JSONObject();
-		else
-		{
-			if ( json.has( "nodes" ) )
-				authorNodes = json.optJSONArray( "nodes" );
-			if ( json.has( "links" ) )
-				authorLinks = json.optJSONArray( "links" );
 		}
-
-		//LinkedList<String> uniqueIds = new LinkedList<>();
-		boolean checkCoAuthors = false;
-		int neighborStep = stepNo;
-		LinkedList<String> otherIds = new LinkedList<>();
-		LinkedList<String> stepUniqueIds = new LinkedList<>();
-		List<String> nodesIds = ids.get( stepNo );
-
-		if ( stepNo == 0 ) {
-			authorNodes.put( util.getGraphNode( treeGraph[0].getUndirectedGraph().getNode( researcher ), treeGraph[0] ) );
-		}
-		else
-			while ( !nodesIds.isEmpty() )
-			{
-				String nodesId = nodesIds.remove( 0 );
-
-				if ( increment > 0 && stepNo != 5 ) {
-					neighborStep = stepNo + 1;
-					checkCoAuthors = true;
-				}
-				else
-				{
-					neighborStep = stepNo;
-					checkCoAuthors = true;
-				}
-				Node node = treeGraph[stepNo].getUndirectedGraph().getNode( nodesId );
-
-				if ( /*!uniqueIds.contains( nodesId ) &&*/ node != null )
-				{
-					JSONObject obj = util.getGraphNode( node, treeGraph[stepNo] );
-					if ( obj != null && shouldInsertNodes && !node.getId().equals( researcher ) )
-					{
-						List<String> list = uniqueIds.get( stepNo );
-						list.add( nodesId );
-						authorNodes.put( obj );
-					}
-				}
-				//if ( ( ( Integer ) node.getAttribute( stepCol ) ) == stepNo || shouldContinue )
-				//{
-				if ( node != null )
-				{
-					NodeIterable nodeNeighbor = treeGraph[neighborStep].getUndirectedGraph().getNeighbors( node );
-					Iterator<Node> iterator = nodeNeighbor.iterator();
-					while ( iterator.hasNext() )
-					{
-						Node neighbor = iterator.next();
-						if ( !uniqueIds.get( neighborStep ).contains( neighbor.getId() ) )
-						{
-							//don't insert any node other then interest for step 3
-							boolean shouldInsert = true;
-
-							if ( checkCoAuthors && ( Integer.valueOf( String.valueOf( neighbor.getAttribute( "type" ) ) ) != UtilINImp._INTERST_NODE_CODE ) )
-								shouldInsert = false;
-							else if ( !checkCoAuthors && neighborStep == 2 && ( Integer.valueOf( String.valueOf( neighbor.getAttribute( "type" ) ) ) != UtilINImp._AUTHOR_NODE_CODE ) )
-								shouldInsert = false;
-
-							if ( shouldInsert )
-							{
-
-								//JSONObject link = getGraphLink( treeGraph[stepNo].getUndirectedGraph().getEdge( node, neighbor ) );
-								JSONObject link = new JSONObject();
-								link.put( "source", node.getId() );
-								link.put( "target", neighbor.getId() );
-								if ( link != null )
-								{
-									authorLinks.put( link );
-								}
-
-								if ( ( neighborStep == 5 && Integer.valueOf( String.valueOf( neighbor.getAttribute( "type" ) ) ) != UtilINImp._PUBLICATION_NODE_CODE ) ||
-										( ( neighborStep == 4 || neighborStep == 1 ) && Integer.valueOf( String.valueOf( neighbor.getAttribute( "type" ) ) ) != UtilINImp._AUTHOR_NODE_CODE ) ||
-										( ( neighborStep == 3 || neighborStep == 2 )&& Integer.valueOf( String.valueOf( neighbor.getAttribute( "type" ) ) ) != UtilINImp._INTERST_NODE_CODE )
-										) {
-									otherIds.push( String.valueOf( neighbor.getId() ) );
-								}
-								else 
-								{
-									stepUniqueIds.add( String.valueOf( neighbor.getId() ) );
-								}
-
-								/*if ( stepNo == 1 )
-								{
-									JSONObject nNode = util.getGraphNode( neighbor, treeGraph[stepNo] );
-									if ( nNode != null )
-									{
-										authorNodes.put( nNode );
-									}
-									nodesIds.add( String.valueOf( neighbor.getId() ) );
-								}*/
-							}
-						}
-					}
-					//}			
-				}
-			}
-
-		json.put( "nodes", authorNodes );
-		json.put( "links", authorLinks );
-
-		if ( !otherIds.isEmpty() && stepUniqueIds.isEmpty() && !clonseItr ) 
-		{
-			ids.get( neighborStep ).addAll( otherIds );
-			return getStepNodes( neighborStep, researcher, json, uniqueIds, increment, false, true, ids );
-		}
-
-		System.out.println( "StepNodes: " + stepNo + "  -  " + authorNodes.length() );
-
-		return stepUniqueIds;
-	}
 
 	private boolean createSingleTreeStep( int currentStep, int coAuthorSteps, Map<Integer, List<String>> stepIds, Map<Integer, List<String>> uniqueIds, JSONObject json )
 	{
-		if ( treeGraph == null || treeGraph.length <= 0 || currentStep >= treeGraph.length || currentStep < 0 )
+		if ( superClass.getTreeGraph() == null || superClass.getTreeGraph().length <= 0 || currentStep >= superClass.getTreeGraph().length || currentStep < 0 )
 			return false;
 
-		UtilINImp util = new UtilINImp( persistenceStrategy, topicExtractionService, sessionFactory );
 		List<String> nodesIds = stepIds.get( currentStep );
 
 		//initializing graph json
@@ -994,18 +594,21 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		{
 			String nodesId = nodesIds.remove( 0 );
 			
-			Node node = treeGraph[ currentStep ].getUndirectedGraph().getNode( nodesId );
+			Node node = superClass.getTreeGraph()[ currentStep ].getUndirectedGraph().getNode( nodesId );
 
 			if ( node != null )
 			{
 				//inserting node JSON
-				JSONObject obj = util.getGraphNode( node, treeGraph[ currentStep ] );
+				JSONObject obj = superClass.getUtil().getGraphNode( node, superClass.getTreeGraph()[ currentStep ] );
 				if ( obj != null && !uniqueIds.get( currentStep ).contains( nodesId ) /*&& !node.getId().equals( researcher )*/ )
 				{
-					obj.put( "id", obj.opt( "id" ) + ":" + currentStep );
+					if ( obj.opt( "id" ).equals( superClass.getCurrentAuthor() ) ) {
+						obj.put( "id", obj.opt( "id" ) + ":0" );
+						obj.put( "stepNo", 0 );
+					}
+					else
+						obj.put( "id", obj.opt( "id" ) + ":" + currentStep );
 					String details = obj.optString( "details" );
-					if ( details != null && details.contains( "</br>" ) )
-						details = details.substring( 0, details.indexOf( "</br>" ) );
 					obj.put( "details", details );
 					authorNodes.put( obj );
 					List<String> list = uniqueIds.get( currentStep );
@@ -1016,24 +619,31 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 				int neighborAdded = 0;
 				int neighborStep = currentStep + 1;
 				int insertId = currentStep + 1;
-				boolean checkStep = neighborStep < treeGraph.length && stepIds.get( neighborStep ) != null;
+				boolean checkStep = neighborStep < superClass.getTreeGraph().length && stepIds.get( neighborStep ) != null;
 				for ( int i = 0; i < 2; i++ )
 				{
 					if ( checkStep )
 					{
-						Node currentNode = treeGraph[neighborStep].getUndirectedGraph().getNode( node.getId() );
+						Node currentNode = superClass.getTreeGraph()[neighborStep].getUndirectedGraph().getNode( node.getId() );
 						if ( currentNode != null )
 						{
-							NodeIterable nodeNeighbor = treeGraph[neighborStep].getUndirectedGraph().getNeighbors( currentNode );
+							NodeIterable nodeNeighbor = superClass.getTreeGraph()[neighborStep].getUndirectedGraph().getNeighbors( currentNode );
 							Iterator<Node> iterator = nodeNeighbor.iterator();
 							while ( iterator.hasNext() )
 							{
 								Node neighbor = iterator.next();
 								boolean coAuthorsCheck = true;
-								if ( Integer.valueOf( String.valueOf( neighbor.getAttribute( "type" ) ) ) == UtilINImp._AUTHOR_NODE_CODE && currentStep == 1 ) {
-									coAuthorsCheck = Integer.valueOf( String.valueOf( neighbor.getAttribute( "group" ) ) ) == coAuthorSteps &
-														neighborAdded < 1;
-									insertId = 1;
+								if ( Integer.valueOf( String.valueOf( neighbor.getAttribute( "type" ) ) ) == UtilINImp._AUTHOR_NODE_CODE ) {
+									if ( currentStep == 1 )
+									{
+										coAuthorsCheck = Integer.valueOf( String.valueOf( neighbor.getAttribute( "group" ) ) ) <= coAuthorSteps &
+															neighborAdded < 1;
+										insertId = 1;
+									}
+									if ( currentStep == 2 )
+									{
+										coAuthorsCheck = Integer.valueOf( String.valueOf( neighbor.getAttribute( "group" ) ) ) > 0;
+									}
 								}
 								
 								if ( !uniqueIds.get( neighborStep ).contains( neighbor.getId() ) && ( coAuthorsCheck ) )
@@ -1118,8 +728,189 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 	}
 
 	@Override
-	public JSONArray computeSNAINSingleTree( Author researcher, int stepNo, String id ) 
-	{		
+	protected void recommendationStep1( Author researcher, UtilINImp util )
+	{
+		String researcherID = researcher.getId();
+		
+		superClass.setStep1( util.get3DCoAuthorsGraph( researcherID ) );
+		
+		JSONArray tempArray = new JSONArray();
+		JSONObject tempObj = new JSONObject();
+		JSONArray nodes = new JSONArray();
+		//nodes.put( util.getGraphNode( treeGraph[0].getUndirectedGraphVisible().getNode( researcher.getId() ), treeGraph[0] ) );
+		GraphModel model = superClass.getTreeGraph()[0];
+		nodes.put( util.getGraphNode( model.getUndirectedGraphVisible().getNode( researcherID ), model ) );
+		tempObj.put( "nodes", nodes );
+		tempArray.put( tempObj );
+
+		superClass.updateGraphNode( superClass.getStep1(), tempArray, 1 );
+	}
+
+	@Override
+	protected void recommendationStep2( Author researcher, UtilINImp util )
+	{
+		String researcherID = researcher.getId();
+		try
+		{
+			superClass.setStep2( util.interestSNFileCreator( researcherID, superClass.getTreeGraph()[1] ) );
+			JSONArray coAuthorInterestResult = util.createInterestGraph( superClass.getStep2() );
+			superClass.updateGraphNode( coAuthorInterestResult, superClass.getStep1(), 2 );
+		}
+		catch (SQLException | IOException e)
+		{
+		}
+	}
+
+	@Override
+	protected void recommendationStep3( Author researcher, UtilINImp util )
+	{
+		String researcherID = researcher.getId();
+		
+		try
+		{
+			superClass.setStep3( computeBetweenness( researcherID ) );
+			
+			degreeTopNInterestResult = util.createDegreeGraph( superClass.getStep3() );
+			superClass.updateGraphNode( degreeTopNInterestResult, null, 3 );
+	
+			//inserting coAuthors
+			UndirectedGraph currentGraph = superClass.getTreeGraph()[3].getUndirectedGraph();
+			UndirectedGraph prevGraph = superClass.getTreeGraph()[2].getUndirectedGraph();
+	
+			currentGraph.writeLock();
+			for ( Node node : currentGraph.getNodes() )
+			{
+				//get neighbors
+				NodeIterable neighbors = prevGraph.getNeighbors( prevGraph.getNode( node.getId() ) );
+				for ( Node neighbor : neighbors )
+				{
+					//if node doesn't exist in the graph
+					if ( Integer.valueOf( String.valueOf( neighbor.getAttribute( "type" ) ) ) == 2 )
+					{
+						if ( currentGraph.getNode( neighbor.getId() ) == null )
+						{
+							Node newNode = superClass.getTreeGraph()[3].factory().newNode( neighbor.getId() );
+							newNode.setLabel( neighbor.getLabel() );
+							newNode.setSize( 150 );
+							newNode.setX( neighbor.x() );
+							newNode.setY( neighbor.y() );
+							String[] allColumns = { 
+									new String( "stepNo" ),
+									new String( "group" ),
+									new String( "title" ),
+									new String( "type" ),
+									new String( "size" ) };
+							for ( String col : allColumns )
+								newNode.setAttribute( col, neighbor.getAttribute( col ) );
+							currentGraph.addNode( newNode );
+						}
+						if ( currentGraph.getNode( neighbor.getId() ) != null && 
+								currentGraph.getEdge( node, currentGraph.getNode( neighbor.getId() ) ) == null )
+							currentGraph.addEdge( superClass.getTreeGraph()[3].factory().newEdge( node, currentGraph.getNode( neighbor.getId() ), false ) );
+					}
+				}
+			}
+			/*Column typeCol = superClass.getTreeGraph()[2].getNodeTable().getColumn( "type" );
+			if ( typeCol == null )
+				typeCol = superClass.getTreeGraph()[2].getNodeTable().addColumn( "type", Integer.class );
+			currentGraph.writeLock();
+			for ( Node node : currentGraph.getNodes() )
+			{
+				Node preNode = prevGraph.getNode( node.getId() );
+				for ( Node neighbor : prevGraph.getNeighbors( preNode ) )
+				{
+					Node test = currentGraph.getNode( neighbor.getId() );
+					Node newNode = null;
+					if ( test == null && Integer.valueOf( String.valueOf( neighbor.getAttribute( typeCol ) ) ) == 1 )
+					{
+						newNode = superClass.getTreeGraph()[3].factory().newNode( neighbor.getId() );
+						newNode.setLabel( neighbor.getLabel() );
+						newNode.setSize( 150 );
+						newNode.setX( neighbor.x() );
+						newNode.setY( neighbor.y() );
+						Table table = superClass.getTreeGraph()[3].getNodeTable();
+						Column[] allColumns = { 
+								( table.getColumn( "stepNo" ) == null ? superClass.getTreeGraph()[3].getNodeTable().addColumn( "stepNo", Integer.class ) : table.getColumn( "stepNo" ) ),
+								( table.getColumn( "group" ) == null ? superClass.getTreeGraph()[3].getNodeTable().addColumn( "group", Integer.class ) : table.getColumn( "group" ) ),
+								( table.getColumn( "title" ) == null ? superClass.getTreeGraph()[3].getNodeTable().addColumn( "title", String.class ) : table.getColumn( "title" ) ),
+								( table.getColumn( "type" ) == null ? superClass.getTreeGraph()[3].getNodeTable().addColumn( "type", Integer.class ) : table.getColumn( "type" ) ),
+								( table.getColumn( "size" ) == null ? superClass.getTreeGraph()[3].getNodeTable().addColumn( "size", Integer.class ) : table.getColumn( "size" ) ) };
+						for ( Column col : allColumns )
+							newNode.setAttribute( col, neighbor.getAttribute( superClass.getTreeGraph()[2].getNodeTable().getColumn( col.getId() ) ) );
+						currentGraph.addNode( newNode );
+					}
+					if ( newNode != null && currentGraph.getEdge( node, newNode ) == null )
+						currentGraph.addEdge( superClass.getTreeGraph()[3].factory().newEdge( node, newNode, false ) );
+				}
+			}*/
+			currentGraph.writeUnlock();
+			//currentGraph.writeUnlock();
+			//calculating the positions
+			OpenOrdLayout fourthLayout = new OpenOrdLayout( new OpenOrdLayoutBuilder() );
+			fourthLayout.resetPropertiesValues();
+			fourthLayout.setGraphModel( superClass.getTreeGraph()[3] );
+			fourthLayout.initAlgo();
+			for(int i = 0; i < 50 && fourthLayout.canAlgo(); i++) {
+				fourthLayout.goAlgo();
+			}
+		}
+		catch (JSONException | UnsupportedEncodingException | SQLException | InterruptedException | URISyntaxException | ExecutionException e)
+		{
+		}
+	}
+
+	@Override
+	protected void recommendationStep4( Author researcher, UtilINImp util )
+	{
+		String researcherID = researcher.getId(); 
+		
+		try
+		{
+			superClass.setStep4( rRecommenderOfDegree( researcherID ) );
+			topCoAuthorsGraph = util.createTop10AuthorsGraph( superClass.getStep4(), superClass.getStep3() );
+			superClass.updateGraphNode( topCoAuthorsGraph, degreeTopNInterestResult, 4 );
+		}
+		catch (JSONException | IOException | SQLException e)
+		{
+		}
+	}
+
+	@Override
+	protected void recommendationStep5( Author researcher, UtilINImp util )
+	{
+		JSONArray DegreeRecResult = new JSONArray();
+		JSONObject DegreeRecItemsObj = new JSONObject();
+		
+		DegreeRecItemsObj.put( "rItems", superClass.getStep3() );
+		
+		JSONArray recR = superClass.getStep4();
+		//System.out.println( "Calculated betweenness completed." );
+		JSONObject recRObj = new JSONObject();
+		recRObj.put( "sResearchers", recR );
+		DegreeRecResult.put( recRObj );
+		DegreeRecResult.put( DegreeRecItemsObj );
+		// start paper recommendation based recommended researchers
+		ArrayList<String> researcherIDs = UtilService
+				.FindRIdsInFinalJson(DegreeRecResult);
+		//System.out.println( "Find researcher ids JSON completed." );
+		//ArrayList<String> iNames = UtilService
+		//		.FindINamesInFinalJson(DegreeRecResult);
+		//System.out.println( "Find researcher name completed." );
+		superClass.setStep5( util.addPubsOfIToJson( 
+				DegreeRecResult, researcherIDs, superClass.getNetworkCentrality(), superClass.getPubService() ) );
+		JSONArray publicationGraph = util.createPublicationGraph( superClass.getStep5(), topCoAuthorsGraph, superClass.getStep3() );
+		superClass.updateGraphNode( publicationGraph, topCoAuthorsGraph, 5 );
+	}
+
+	@Override
+	protected void recommendationStep6( Author researcher, UtilINImp util )
+	{
+	}
+
+	@Override
+	protected JSONArray computeSingleTree( Author researcher, int stepNo, String id )
+	{
+		
 		JSONObject nodesJSON = new JSONObject();
 		ArrayList<String> coAuthorsList = new ArrayList<>();
 		Map<Integer, List<String>> uniqueIds = new LinkedHashMap<>();
@@ -1143,8 +934,8 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		int step = stepNo;
 		int increment = 1;
 
-		int coAuthorSteps = 2;
-		for ( int i = 0; i < treeGraph.length; i++ )
+		int coAuthorSteps = 1;
+		for ( int i = 0; i < superClass.getTreeGraph().length; i++ )
 		{
 			step += increment;
 			//List<String> tempIds = getStepNodes( step, researcher.getId(), nodesJSON, uniqueIds, increment, true, false, graphIds );
@@ -1165,7 +956,7 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 				List<String> ids = graphIds.get( 0 );
 				ids.remove( researcher.getId() );
 				coAuthorsList.addAll( ids );
-				if ( coAuthorSteps > 1 )
+				if ( coAuthorSteps > 0 )
 				{
 					graphIds.put( 1, ids );
 					coAuthorSteps--; step++; i--; 
@@ -1179,13 +970,35 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		}
 
 		//inserting researcher id and its links
-		UndirectedGraph graph = treeGraph[ 1 ].getUndirectedGraph();
+		UndirectedGraph graph = superClass.getTreeGraph()[ 1 ].getUndirectedGraph();
 		JSONArray authorNodes = nodesJSON.optJSONArray( "nodes" );
 		JSONArray authorLinks = nodesJSON.optJSONArray( "links" );
 		Node node = graph.getNode( researcher.getId() );
 		UtilINImp util = new UtilINImp( );
 
-		for ( String aId : coAuthorsList )
+		for ( int i = 0; i < authorLinks.length(); i++ )
+		{
+			JSONObject link = authorLinks.optJSONObject( i );
+			if ( link != null )
+			{
+				boolean changed = false;
+				if ( link.optString( "source" ).equals( researcher.getId() + ":1" ) )
+				{
+					link.put( "source", researcher.getId() + ":0" );
+					changed = true;
+				}
+				if ( link.optString( "target" ).equals( researcher.getId() + ":1" ) )
+				{
+					link.put( "target", researcher.getId() + ":0" );
+					changed = true;
+				}
+				if ( changed )
+				{
+					authorLinks.put( i, link );
+				}
+			}
+		}
+		/*for ( String aId : coAuthorsList )
 		{
 			Node coNode = graph.getNode( aId );
 			if ( coNode != null )
@@ -1202,7 +1015,7 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 				}
 			}
 		}
-		authorNodes.put( util.getGraphNode( treeGraph[ 0 ].getUndirectedGraph().getNode( researcher.getId() ), treeGraph[ 0 ] ) );
+		authorNodes.put( util.getGraphNode( treeGraph[ 0 ].getUndirectedGraph().getNode( researcher.getId() ), treeGraph[ 0 ] ) );*/
 		nodesJSON.put( "nodes", authorNodes );
 		nodesJSON.put( "links", authorLinks );
 		
@@ -1210,37 +1023,5 @@ public class SNAINRecommendationFeatureImpl implements SNAINRecommendationFeatur
 		JSONArray array = new JSONArray();
 		array.put( nodesJSON );
 		return array;
-	}
-
-	@Override
-	public String requesetAuthor( String authorName, String interest )
-	{
-		if ( interest != null && !interest.isEmpty() )
-		{
-			UtilINImp util = new UtilINImp( persistenceStrategy, topicExtractionService, sessionFactory );
-			List<Author> list = persistenceStrategy.getAuthorDAO().getAll();
-			ArrayList<String> authors = new ArrayList<>();
-			for ( Author auth : list )
-			{
-				authors.add( auth.getId() );
-			}
-
-			ArrayList<String> subList1 = new ArrayList<>( authors.subList( 0, (authors.size()/2) ) );
-			ArrayList<String> subList2 = new ArrayList<>( authors.subList( (authors.size()/2) , authors.size() ) );
-			String rID1, rID2;
-			try
-			{
-				rID1 = util.topRofIFinderString( subList1, interest );
-				rID2 = util.topRofIFinderString( subList2, interest );
-				String rID = util.topRofIFinderString( new ArrayList<>(Arrays.asList( rID1, rID2 )), interest );
-				return rID;
-			}
-			catch (JSONException | IOException | SQLException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return null;
 	}
 }

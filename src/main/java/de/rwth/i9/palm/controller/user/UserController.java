@@ -85,6 +85,8 @@ public class UserController
 			widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-bookmark-circle" );
 		else if ( bookmarkType.equals( "recommendation" ) )
 			widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-bookmark-recommendation" );
+		else if ( bookmarkType.equals( "recommendation_system_1" ) )
+			widgets = persistenceStrategy.getWidgetDAO().getActiveWidgetByWidgetTypeAndGroup( WidgetType.USER, "user-bookmark-recommendation-system" );
 		// assign the model
 		model.addObject( "widgets", widgets );
 

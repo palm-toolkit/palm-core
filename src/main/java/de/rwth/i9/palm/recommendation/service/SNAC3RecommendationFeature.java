@@ -11,6 +11,6 @@ import de.rwth.i9.palm.model.Author;
 
 public interface SNAC3RecommendationFeature
 {
-	public JSONArray computeSNAC3Recommendation( Author researcher )
+	public JSONArray computeSNAC3Recommendation( Author researcher, int stepNo )
 			throws JSONException, SQLException, IOException, TasteException;
 }

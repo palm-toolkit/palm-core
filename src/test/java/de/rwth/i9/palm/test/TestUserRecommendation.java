@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -45,6 +46,9 @@ import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.persistence.PublicationDAO;
 import de.rwth.i9.palm.persistence.UserDAO;
+import de.rwth.i9.palm.recommendation.service.GenericRecommendation;
+import de.rwth.i9.palm.recommendation.service.RecommendationHandler;
+import de.rwth.i9.palm.recommendation.service.GenericRecommendation;
 import de.rwth.i9.palm.recommendation.service.SNAC2RecommendationFeature;
 import de.rwth.i9.palm.recommendation.service.SNAC3RecommendationFeature;
 import de.rwth.i9.palm.recommendation.service.SNAINRecommendationFeature;
@@ -77,7 +81,7 @@ public class TestUserRecommendation extends AbstractTransactionalJUnit4SpringCon
 	private ResearcherFeature researcherFeature;
 	
 	@Autowired
-	private SNAINRecommendationFeature recommendations;
+	private RecommendationHandler genRec;
 	
 	//@Autowired
 	//private PalmAnalytics palmAnalytics;
@@ -87,7 +91,7 @@ public class TestUserRecommendation extends AbstractTransactionalJUnit4SpringCon
 	@Test
 	public void testSNAC3RecommendationsSystem()
 	{
-		Author auth = persistenceStrategy.getAuthorDAO().getById( "a879aa00-0b87-427b-8e4c-9eee6c961fdf" );
+		Author auth = persistenceStrategy.getAuthorDAO().getById( "c442983a-0099-4d6d-89b1-6cfc57fa6138" );
 		System.out.println( "Name: " + auth.getName() );
 
 		String query = "select t1.author_id, t2.author_id from publication_author t1 " +
@@ -223,18 +227,82 @@ public class TestUserRecommendation extends AbstractTransactionalJUnit4SpringCon
 					.setParameter( "researcher", "a879aa00-0b87-427b-8e4c-9eee6c961fdf" );*/
 			//List result = quer.list();
 			//System.out.println( "Value: " + result.size() + "  -  " + result );
-			String Q = "SELECT DISTINCT pub.id, pub.title, pub.authorText, pub.abstractText, pub.keywordText FROM publication pub " +
-					"LEFT JOIN publication_author pub_auth ON pub.id=pub_auth.publication_id " +
-					"WHERE (INSTR(pub.title, :term) OR INSTR(pub.abstractText, :term) OR INSTR(pub.keywordText, :term)) AND " +
-					"pub_auth.author_id IN (:authorIds) ORDER BY pub_auth.position_ DESC";
+			/*StringBuilder mainQuery = new StringBuilder();
+			mainQuery.append( "SELECT DISTINCT " );
+			mainQuery.append( "pub.id, pub.title, pub.authorText, pub.abstractText, pub.keywordText, " );
+			mainQuery.append( "(SELECT GROUP_CONCAT(id,'') FROM nugraha.author WHERE name REGEXP REPLACE(pub.authorText, ',', '|') AND id IN (:author)) AS authorIds " );
+
+			StringBuilder stringBuilder = new StringBuilder();
+			stringBuilder.append( "FROM publication pub " );
+
+			stringBuilder.append( "LEFT JOIN publication_author pub_auth ON pub.id=pub_auth.publication_id " );
+			stringBuilder.append( "WHERE (INSTR(pub.title, :term) OR INSTR(pub.abstractText, :term) OR INSTR(pub.keywordText, :term)) " );
+			stringBuilder.append( "AND pub_auth.author_id IN (:author) " );
+			stringBuilder.append( "ORDER BY pub_auth.position_ DESC" );
+			
 			List<Object[]> pubs = sessionFactory.getCurrentSession()
 					//.createQuery( "FROM PublicationAuthor" )
-					.createSQLQuery( Q )
-					.setParameter( "term", "learning" )
-					.setParameterList( "authorIds", Arrays.asList( "a879aa00-0b87-427b-8e4c-9eee6c961fdf" ) ).list();
+					.createSQLQuery( mainQuery.toString() + stringBuilder.toString() )
+					.setParameter( "term", "intelligent tutoring system" )
+					.setParameterList( "author", Arrays.asList( coAuthorIDs.replace( "[", "" ).replace( "]", "" )
+							.split(", ") ) ).list();
+			JSONArray array = new JSONArray();
+			List<String> authors = new LinkedList<>(Arrays.asList( coAuthorIDs.replace( "[", "" ).replace( "]", "" )
+					.split(", ") ));
+			for ( Object[] publication : pubs )
+			{
+				//Publication publication = pubDao.getById( pubID.toString() );
+
+				String id = String.valueOf( publication[0] );
+				String title = String.valueOf( publication[1] );
+				String author = String.valueOf( publication[5] );
+				String abstrac = String.valueOf( publication[3] );
+				String keyword = String.valueOf( publication[4] );
+				JSONObject obj = new JSONObject();
+				obj.put( "pID", id); //publication.getId() );
+				obj.put( "pTitle", title); //publication.getTitle() );
+				obj.put( "pAuthors", author);//publication.getAuthors().toString().replace( "[", "" ).replace( "]", "" ));
+				obj.put( "pAbstract", abstrac);//publication.getAbstractText() );
+				obj.put( "pKeywords", keyword);//publication.getKeywordText() );
+				array.put( obj );
+			}
+			System.out.println( "pubs: " + array );
+			System.out.println( "Total time: " + (System.currentTimeMillis() - time) );*/
 			
-			System.out.println( "pubs: " + pubs.size() );
-			System.out.println( "Total time: " + (System.currentTimeMillis() - time) );
+			genRec.requesetAuthor( "Ulrik", 10, "author" );
+			/*JSONArray arr = genRec.computeRecommendation( "c3d", auth, 1 );
+			if ( arr != null )
+				System.out.println( "Array 1: " + arr );
+			else
+				System.out.println( "Array 1 is null." );
+			
+
+			arr = genRec.computeRecommendation( "c3d", auth, 2 );
+			if ( arr != null )
+				System.out.println( "Array 2: " + arr.length() );
+			else
+				System.out.println( "Array 2 is null." );
+			
+
+			arr = genRec.computeRecommendation( "c3d", auth, 3 );
+			if ( arr != null )
+				System.out.println( "Array 3: " + arr.length() );
+			else
+				System.out.println( "Array 3 is null." );			
+
+			
+			arr = genRec.computeRecommendation( "c3d", auth, 4 );
+			if ( arr != null )
+				System.out.println( "Array 4: " + arr );
+			else
+				System.out.println( "Array 4 is null." );
+
+			
+			arr = genRec.computeRecommendation( "c3d", auth, 5 );
+			if ( arr != null )
+				System.out.println( "Array 5: " + arr );
+			else
+				System.out.println( "Array 5 is null." );*/
 		}
 		catch (JSONException /*| SQLException | IOException | TasteException*/ e)
 		{

@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.recommendation.service;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -38,10 +39,16 @@ public class PublicationExtractionServiceImp implements PublicationExtractionSer
 
 			String id = String.valueOf( publication[0] );
 			String title = String.valueOf( publication[1] );
-			String author = String.valueOf( publication[2] );
+			String author = String.valueOf( publication[5] );
 			String abstrac = String.valueOf( publication[3] );
 			String keyword = String.valueOf( publication[4] );
 
+			if ( author == null || author.isEmpty() )
+			{
+				System.out.println( "One miss for : " + interestItem );
+				continue;
+			}				
+			
 			JSONObject obj = new JSONObject();
 			obj.put( "iName", interestItem);
 			obj.put( "pID", id); //publication.getId() );
@@ -51,7 +58,6 @@ public class PublicationExtractionServiceImp implements PublicationExtractionSer
 			obj.put( "pKeywords", keyword);//publication.getKeywordText() );
 			obj.put( "iValue", termValue );
 			array.put( obj );
-			break;
 		}
 		
 		return new AsyncResult<JSONArray>( array );

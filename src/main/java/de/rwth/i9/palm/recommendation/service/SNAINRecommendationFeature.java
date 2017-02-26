@@ -2,6 +2,7 @@ package de.rwth.i9.palm.recommendation.service;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.json.JSONArray;
@@ -16,5 +17,5 @@ public interface SNAINRecommendationFeature {
 	
 	public JSONArray computeSNAINSingleTree( Author researcher, int stepNo, String id );
 	
-	public String requesetAuthor( String authorName, String interest );
+	public List<Object> requesetAuthor( String interest, int maxResults );
 }
