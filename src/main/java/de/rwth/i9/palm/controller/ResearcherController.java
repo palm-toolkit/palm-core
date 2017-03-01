@@ -1,10 +1,12 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,14 +18,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -547,7 +548,7 @@ public class ResearcherController
 			JsonNode jsonNode = mapper.readTree(topic);
 			if (jsonNode.isArray()) {
 			    for (JsonNode objNode : jsonNode) {
-			    	Map<String, Object> element = new HashMap<String, Object>();
+					Map<String, Object> element = new LinkedHashMap<String, Object>();
 			    	element.put("name", objNode.get("name").toString());
 			    	element.put("value", objNode.get("value").toString());
 			    	

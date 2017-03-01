@@ -298,6 +298,7 @@ public class CircleController
 		}
 
 		// get coauthor calculation
+		responseMap.put( "status", "ok" );
 		responseMap.putAll( circleFeature.getCircleResearcher().getCircleResearcherMap( circle ) );
 
 		return responseMap;
@@ -308,6 +309,11 @@ public class CircleController
 	public @ResponseBody Map<String, Object> getCirclePublication( 
 			@RequestParam( value = "id", required = false ) final String circleid,
 			@RequestParam( value = "uri", required = false ) final String uri, 
+			@RequestParam( value = "query", required = false ) String query, 
+			@RequestParam( value = "year", required = false ) String year, 
+			@RequestParam( value = "startPage", required = false ) Integer startPage,
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response)
 	{
 		// create JSON mapper for response
@@ -328,8 +334,67 @@ public class CircleController
 			return responseMap;
 		}
 
+
 		// get coauthor calculation
-		responseMap.putAll( circleFeature.getCirclePublication().getCirclePublicationMap( circle ) );
+		responseMap.put( "status", "ok" );
+		responseMap.put( "circle", circleFeature.getCircleDetail().getCircleDetailById( circleid, false, false ).get( "circle" ) );
+		
+		if ( query == null ) 		query 	  = "";
+		if ( year == null )			year 	  = "all";
+		if ( startPage == null )	startPage = 0;
+		if ( maxresult == null )	maxresult = 50;
+		if ( orderBy == null )		orderBy   = "date";
+		
+		responseMap.putAll( circleFeature.getCirclePublication().getCirclePublicationByCircleId( circleid, query, year, startPage, maxresult, orderBy ) );
+
+		return responseMap;
+	}
+
+	@RequestMapping( value = "/memberPublicationList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getCircleMemberPublication( 
+			@RequestParam( value = "id", required = false ) final String circleid,
+			@RequestParam( value = "uri", required = false ) final String uri, 
+			@RequestParam( value = "author_id", required = false ) String author_id,
+			@RequestParam( value = "query", required = false ) String query, @RequestParam( value = "year", required = false ) String year, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "orderBy", required = false ) String orderBy,
+			final HttpServletResponse response)
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( circleid == null || circleid.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circleid null" );
+			return responseMap;
+		}
+
+		// get circle
+		Circle circle = persistenceStrategy.getCircleDAO().getById( circleid );
+		if ( circle == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "circle not found in database" );
+			return responseMap;
+		}
+
+		// get coauthor calculation
+		responseMap.put( "status", "ok" );
+		responseMap.put( "circle", circleFeature.getCircleDetail().getCircleDetailById( circleid, false, false ).get( "circle" ) );
+		
+		if ( query == null )
+			query = "";
+		if ( year == null )
+			year = "all";
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 50;
+		if ( orderBy == null )
+			orderBy = "date";
+		if ( author_id == null )
+			author_id = "";
+		
+		responseMap.putAll( circleFeature.getCirclePublication().getCircleMemberPublication( circleid, author_id, query, year, startPage, maxresult, orderBy ) );
 
 		return responseMap;
 	}
