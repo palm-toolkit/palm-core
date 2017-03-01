@@ -18,4 +18,6 @@ public interface AcademicEventFeature
 
 	public EventSearch getEventSearch();
 
+	public EventTopicModeling getEventTopicModeling();
+
 }

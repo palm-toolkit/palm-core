@@ -43,6 +43,12 @@
 			</exclusion>
 		</exclusions>
 	</dependency>
+	
+	<dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+        </dependency>
 	<!--
 	    Core utilities used by other modules.
 	    Define this if you use Spring Utility APIs (org.springframework.core.*/org.springframework.util.*)
@@ -199,7 +205,7 @@
 	  <groupId>org.springframework</groupId>
 	  <artifactId>spring-test</artifactId>
 	  <version>${org.springframework.version}</version>
-	  <scope>test</scope>
+<!-- 	  <scope>test</scope> -->
 	</dependency>
 	
 	<!-- Required for spring controller junit tests, due to use of jspTagLib for security -->

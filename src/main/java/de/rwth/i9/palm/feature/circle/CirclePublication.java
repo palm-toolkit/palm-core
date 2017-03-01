@@ -9,4 +9,6 @@ public interface CirclePublication
 	public Map<String, Object> getCirclePublicationMap( Circle circle );
 
 	public Map<String, Object> getCirclePublicationByCircleId( String circleId, String query, String year, Integer startPage, Integer maxresult, String orderBy );
+
+	public Map<String, Object> getCircleMemberPublication( String circleId, String author_id, String query, String year, Integer startPage, Integer maxresult, String orderBy );
 }
