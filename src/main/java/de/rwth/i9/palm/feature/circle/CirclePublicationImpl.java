@@ -155,7 +155,7 @@ public class CirclePublicationImpl implements CirclePublication
 		// get publication list
 		if ( !query.equals( "" ) || !year.equals( "all" ) || startPage != null || maxresult != null )
 		{
-			Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( query, "all", targetCircle, null, startPage, maxresult, year, orderBy );
+			Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( query, "all", targetCircle, startPage, maxresult, year, orderBy );
 			publications = (List<Publication>) publicationsMap.get( "publications" );
 		}
 		else

@@ -274,6 +274,46 @@ public class PublicationController
 		return responseMap;
 	}
 	
+	/**
+	 * Get the basic statistic (publication type, language, topics etc) from a
+	 * publication
+	 * 
+	 * @param id
+	 *            of publication
+	 * @param uri
+	 * @param response
+	 * @return JSON Map
+	 * @throws InterruptedException
+	 * @throws IOException
+	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 */
+	@RequestMapping( value = "/basicInformationAndTopics", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getPublicationBasicInformationAndTopics( @RequestParam( value = "id", required = false ) final String id, @RequestParam( value = "uri", required = false ) final String uri, final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException
+	{
+
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		responseMap.put( "basicinfo", publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id ) );
+		responseMap.put( "topics", getPublicationTopic( id, null, null, response ) );
+
+		// check whether publication is already booked or not
+		User user = securityService.getUser();
+		if ( user != null )
+		{
+			Publication publication = persistenceStrategy.getPublicationDAO().getById( id );
+			if ( publication == null )
+				return responseMap;
+
+			UserPublicationBookmark upb = persistenceStrategy.getUserPublicationBookmarkDAO().getByUserAndPublication( user, publication );
+			if ( upb != null )
+				responseMap.put( "booked", true );
+			else
+				responseMap.put( "booked", false );
+		}
+		return responseMap;
+	}
+
 	@RequestMapping( value = "/pdfHtmlExtract", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> doPdfHtmlExtraction( 

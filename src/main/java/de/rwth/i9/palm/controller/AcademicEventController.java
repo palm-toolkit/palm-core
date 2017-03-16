@@ -1,6 +1,7 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,6 +39,7 @@ import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
+import de.rwth.i9.palm.util.IdentifierFactory;
 
 @Controller
 @RequestMapping( value = "/venue" )
@@ -451,6 +453,22 @@ public class AcademicEventController
 			final HttpServletResponse response)
 	{
 		return academicEventFeature.getEventPublication().getPublicationListByEventId( eventId, query, publicationId );
+	}
+
+	@RequestMapping( value = "/publicationTopList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getTopPublicationList( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "publicationId", required = false ) final String publicationId, @RequestParam( value = "pid", required = false ) String pid, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "orderBy", required = false ) String orderBy,
+
+			final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+	{
+		if ( maxresult == null )
+			maxresult = 10;
+		if ( orderBy == null )
+			orderBy = "citation";
+		if ( pid == null )
+			pid = IdentifierFactory.getNextDefaultIdentifier();
+
+		return academicEventFeature.getEventPublication().getPublicationTopListByEventId( eventId, pid, maxresult, orderBy );
 	}
 
 	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )
