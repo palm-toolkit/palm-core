@@ -86,7 +86,8 @@ public class VisualAnalyticsController
 	 * @return
 	 * @throws InterruptedException
 	 * 
-	 * Use explore/createVAWidgets to create Visual Analytics Widgets
+	 *             Use explore/createVAWidgets to create Visual Analytics
+	 *             Widgets
 	 * 
 	 */
 	@Transactional
@@ -930,8 +931,6 @@ public class VisualAnalyticsController
 		else
 		{
 			Set<Publication> publications = new HashSet<Publication>();
-			// if ( dataSetIds == null || dataSetIds.isEmpty() )
-			// {
 			if ( visTab == "" || visTab.equals( "" ) )
 				if ( visType.equals( "researchers" ) )
 					visTab = "Network";
@@ -942,53 +941,30 @@ public class VisualAnalyticsController
 			if ( visType.equals( "topics" ) )
 				visTab = "Bubbles";
 
-			if ( checkedPubValues.equals( "" ) )
-			{
-			}
-			else
+			if ( checkedPubValues != "" )
 			{
 				pubFilterList = new ArrayList<String>( Arrays.asList( checkedPubValues.split( "," ) ) );
 				for ( int i = 0; i < pubFilterList.size(); i++ )
-				{
 					filteredPublication.add( persistenceStrategy.getPublicationDAO().getById( pubFilterList.get( i ) ) );
-				}
 			}
-
-			if ( checkedConfValues.equals( "" ) )
-			{
-			}
-			else
+			if ( checkedConfValues != "" )
 			{
 				confFilterList = new ArrayList<String>( Arrays.asList( checkedConfValues.split( "," ) ) );
 				for ( int i = 0; i < confFilterList.size(); i++ )
-				{
 					filteredConference.add( persistenceStrategy.getEventGroupDAO().getById( confFilterList.get( i ) ) );
-				}
 			}
-
-			if ( checkedTopValues.equals( "" ) )
-			{
-			}
-			else
+			if ( checkedTopValues != "" )
 			{
 				topFilterList = new ArrayList<String>( Arrays.asList( checkedTopValues.split( "," ) ) );
 				for ( int i = 0; i < topFilterList.size(); i++ )
-				{
 					filteredTopic.add( persistenceStrategy.getInterestDAO().getById( topFilterList.get( i ) ) );
-				}
 			}
-			if ( checkedCirValues.equals( "" ) )
-			{
-			}
-			else
+			if ( checkedCirValues != "" )
 			{
 				cirFilterList = new ArrayList<String>( Arrays.asList( checkedCirValues.split( "," ) ) );
 				for ( int i = 0; i < cirFilterList.size(); i++ )
-				{
 					filteredCircle.add( persistenceStrategy.getCircleDAO().getById( cirFilterList.get( i ) ) );
-				}
 			}
-
 			if ( !startYear.equals( "0" ) )
 			{
 				if ( !yearFilterPresent.equals( "true" ) && idList.length() != 0 )
