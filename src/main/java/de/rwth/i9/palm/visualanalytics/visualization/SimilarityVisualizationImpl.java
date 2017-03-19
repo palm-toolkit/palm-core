@@ -79,7 +79,6 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 		}
 		else
 			return (Map<String, Object>) visMap.put( "names", null );
-
 	}
 
 	@SuppressWarnings( "unchecked" )
@@ -145,12 +144,9 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 			if ( map != null )
 			{
 				Map<DataMiningPublication, Map<String, Double>> interestMap = (Map<DataMiningPublication, Map<String, Double>>) map.get( "interestMap" );
-
 				Map<DataMiningPublication, Double> scoreMap = (Map<DataMiningPublication, Double>) map.get( "scoreMap" );
-
 				List<Double> similarityValues = new ArrayList<Double>( scoreMap.values() );
 				List<DataMiningPublication> similarPublications = new ArrayList<DataMiningPublication>( scoreMap.keySet() );
-
 				List<Double> truncSimilarityValues = new ArrayList<Double>();
 				List<String> publicationNames = new ArrayList<String>();
 				List<String> publicationsIds = new ArrayList<String>();
@@ -178,7 +174,6 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 
 					truncInterests.add( interestMap.get( similarPublications.get( i ) ) );
 				}
-
 				visMap.put( "names", publicationNames );
 				visMap.put( "ids", publicationsIds );
 				visMap.put( "urls", publicationsURLs );
@@ -189,7 +184,6 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 		}
 		else
 			return (Map<String, Object>) visMap.put( "names", null );
-
 	}
 
 	@Override
@@ -201,13 +195,10 @@ public class SimilarityVisualizationImpl implements SimilarityVisualization
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
 			Map<String, Object> map = similarityService.similarTopics( idsList );
-
 			visMap.put( "names", map.get( "names" ) );
 			visMap.put( "ids", map.get( "ids" ) );
 			visMap.put( "similarity", map.get( "similarity" ) );
 		}
 		return visMap;
-
 	}
-
 }

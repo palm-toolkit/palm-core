@@ -11,5 +11,15 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface LocationsVisualization
 {
+	/**
+	 * @param type
+	 * @param publications
+	 * @param idsList
+	 * @param startYear
+	 * @param endYear
+	 * @param filteredTopic
+	 * @param request
+	 * @return
+	 */
 	public Map<String, Object> visualizeLocations( String type, Set<Publication> publications, List<String> idsList, String startYear, String endYear, List<Interest> filteredTopic, HttpServletRequest request );
 }

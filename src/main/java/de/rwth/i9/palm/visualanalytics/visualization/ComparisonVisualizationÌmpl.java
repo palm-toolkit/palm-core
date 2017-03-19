@@ -99,6 +99,7 @@ public class ComparisonVisualizationÌmpl implements ComparisonVisualization
 						}
 					}
 				}
+
 				// common to all
 				if ( idsList.size() > 2 )
 				{

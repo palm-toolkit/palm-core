@@ -50,21 +50,17 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
 					for ( PublicationTopic pubTopic : publicationTopics )
 					{
-						List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
 						List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 						for ( int i = 0; i < topics.size(); i++ )
 						{
 							if ( !allTopics.contains( topics.get( i ) ) )
-							{
 								allTopics.add( topics.get( i ) );
-							}
 						}
 					}
 				}
 			}
 			if ( type.equals( "researcher" ) )
 			{
-
 				List<Interest> authorInterests = new ArrayList<Interest>();
 				List<Double> authorInterestWeights = new ArrayList<Double>();
 				List<List<Author>> interestAuthors = new ArrayList<List<Author>>();
@@ -89,16 +85,13 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 								for ( int i = 0; i < topics.size(); i++ )
 								{
 									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
-									{
 										allTopics.add( topics.get( i ) );
-									}
 								}
 							}
 						}
 					}
 
 					Map<String, List<Interest>> yearWiseInterests = new HashMap<String, List<Interest>>();
-
 					Map<Interest, Double> interestWeightMap = new HashMap<Interest, Double>();
 					Set<AuthorInterestProfile> authorInterestProfiles = a.getAuthorInterestProfiles();
 					for ( AuthorInterestProfile aip : authorInterestProfiles )
@@ -124,16 +117,11 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 										calendar.setTime( ai.getYear() );
 										String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 										if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
-										{
 											validYear = true;
-										}
 										else
-										{
 											if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-											{
 												validYear = false;
-											}
-										}
+
 										if ( validYear )
 										{
 
@@ -231,7 +219,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 							}
 						}
 					}
-
 					authorInterestList.add( interestWeightMap );
 				}
 
@@ -266,7 +253,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 						listObjects.add( randArray );
 					}
 				}
-
 				visMap.put( "list", listObjects );
 			}
 			if ( type.equals( "conference" ) )
@@ -298,9 +284,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 									for ( int i = 0; i < topics.size(); i++ )
 									{
 										if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
-										{
 											allTopics.add( topics.get( i ) );
-										}
 									}
 								}
 							}
@@ -341,19 +325,13 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 											calendar.setTime( ei.getYear() );
 											String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 											if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
-											{
 												validYear = true;
-											}
 											else
-											{
 												if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-												{
 													validYear = false;
-												}
-											}
+
 											if ( validYear )
 											{
-
 												List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
 												List<List<Interest>> yWIVal = new ArrayList<List<Interest>>( yearWiseInterests.values() );
 												if ( yWI.contains( year ) )
@@ -388,9 +366,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 															interestWeightMap.put( actualInterest, w + weight );
 														}
 														else
-														{
 															interestWeightMap.put( actualInterest, weight );
-														}
 													}
 													else
 													{
@@ -495,15 +471,10 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 				List<Interest> allInterestsInDB = persistenceStrategy.getInterestDAO().allTerms();
 
 				List<String> allPublicationInterests = new ArrayList<String>();
-				// List<String> allPublicationInterestIds = new
-				// ArrayList<String>();
 				for ( Interest interest : allInterestsInDB )
 				{
 					if ( !allPublicationInterests.contains( interest.getTerm() ) )
-					{
 						allPublicationInterests.add( interest.getTerm() );
-						// allPublicationInterestIds.add( interest.getId() );
-					}
 				}
 
 				List<String> publicationTopics = new ArrayList<String>();
@@ -540,16 +511,11 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 								Boolean validYear = true;
 								String year = p.getYear();
 								if ( startYear.equals( "0" ) || startYear.equals( "" ) )
-								{
 									validYear = true;
-								}
 								else
-								{
 									if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-									{
 										validYear = false;
-									}
-								}
+
 								if ( validYear )
 								{
 									List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
@@ -722,9 +688,7 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 								for ( int i = 0; i < topics.size(); i++ )
 								{
 									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
-									{
 										allTopics.add( topics.get( i ) );
-									}
 								}
 							}
 						}
@@ -757,16 +721,11 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 										calendar.setTime( ci.getYear() );
 										String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 										if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
-										{
 											validYear = true;
-										}
 										else
-										{
 											if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-											{
 												validYear = false;
-											}
-										}
+
 										if ( validYear )
 										{
 											List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
@@ -856,7 +815,6 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 												else
 													interestWeightMap.put( actualInterest, weight );
 											}
-
 										}
 									}
 								}
@@ -898,11 +856,9 @@ public class BubblesVisualizationImpl implements BubblesVisualization
 						listObjects.add( randArray );
 					}
 				}
-
 				visMap.put( "list", listObjects );
 			}
 		}
 		return visMap;
 	}
-
 }

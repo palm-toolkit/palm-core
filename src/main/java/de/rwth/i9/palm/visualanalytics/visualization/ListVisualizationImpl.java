@@ -47,17 +47,7 @@ public class ListVisualizationImpl implements ListVisualization
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-		{
-			// if ( type.equals( "conference" ) )
 			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, false ) );
-
-			// if ( type.equals( "researcher" ) || type.equals( "publication" )
-			// ||
-			// type.equals( "topic" ) || type.equals( "circle" ) )
-			// visMap.putAll(
-			// researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents(
-			// publications, false ) );
-		}
 		return visMap;
 	}
 
@@ -91,7 +81,6 @@ public class ListVisualizationImpl implements ListVisualization
 				}
 				pubDetailsList.add( pubDetails );
 			}
-
 			visMap.put( "pubDetailsList", pubDetailsList );
 		}
 		return visMap;
@@ -104,10 +93,8 @@ public class ListVisualizationImpl implements ListVisualization
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-		{
 			visMap = visualizationFeature.getVisBubbles().visualizeBubbles( type, idsList, publications, startYear, endYear, yearFilterPresent, request );
-		}
+
 		return visMap;
 	}
-
 }

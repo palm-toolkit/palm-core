@@ -10,5 +10,15 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface BubblesVisualization
 {
+	/**
+	 * @param type
+	 * @param idsList
+	 * @param publications
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @param request
+	 * @return
+	 */
 	public Map<String, Object> visualizeBubbles( String type, List<String> idsList, Set<Publication> publications, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request );
 }

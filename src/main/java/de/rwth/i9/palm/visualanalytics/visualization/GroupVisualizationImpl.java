@@ -43,6 +43,7 @@ public class GroupVisualizationImpl implements GroupVisualization
 			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
 			Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
 			Map<String, Integer> mapClusterAuthor = (Map<String, Integer>) clusteringResultMap.get( "clusterMap" );
+
 			if ( mapClusterAuthor != null )
 			{
 				Iterator<Integer> clusterIterator = mapClusterAuthor.values().iterator();
@@ -124,9 +125,7 @@ public class GroupVisualizationImpl implements GroupVisualization
 				Iterator<Integer> clusterIterator = mapClusterPublication.values().iterator();
 				List<Integer> clusters = new ArrayList<Integer>();
 				while ( clusterIterator.hasNext() )
-				{
 					clusters.add( clusterIterator.next() );
-				}
 
 				// 1st Level Keys i.e information about author
 				Iterator<String> objectsIterator = mapClusterPublication.keySet().iterator();
@@ -198,12 +197,10 @@ public class GroupVisualizationImpl implements GroupVisualization
 	public Map<String, Object> visualizeConferencesGroup( String type, String visType, Set<Publication> publications, List<Interest> filteredTopic, List<String> idsList, List<String> repeatCallList, String algo, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal, HttpServletRequest request )
 	{
 		Map<String, Object> visMap = new LinkedHashMap<String, Object>();
-		System.out.println( request.getSession().getAttribute( "objectType" ) );
-		System.out.println( type );
+
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) )
 		{
-			System.out.println( "coming in group" );
 			Map<String, Object> clusteringResultMap = clusteringService.clusterConferences( algo, publications, filteredTopic, type, visType, idsList, repeatCallList, seedVal, noOfClustersVal, foldsVal, iterationsVal );
 			Map<String, List<String>> clusterTerms = (Map<String, List<String>>) clusteringResultMap.get( "clusterTerms" );
 			Map<String, List<String>> nodeTerms = (Map<String, List<String>>) clusteringResultMap.get( "nodeTerms" );
@@ -213,9 +210,7 @@ public class GroupVisualizationImpl implements GroupVisualization
 				Iterator<Integer> clusterIterator = mapClusterConference.values().iterator();
 				List<Integer> clusters = new ArrayList<Integer>();
 				while ( clusterIterator.hasNext() )
-				{
 					clusters.add( clusterIterator.next() );
-				}
 
 				// 1st Level Keys i.e information about author
 				Iterator<String> objectsIterator = mapClusterConference.keySet().iterator();
@@ -271,7 +266,6 @@ public class GroupVisualizationImpl implements GroupVisualization
 		}
 		else
 			return (Map<String, Object>) visMap.put( "conferences", "none" );
-
 	}
 
 	@Override

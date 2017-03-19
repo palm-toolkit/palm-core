@@ -46,7 +46,6 @@ import weka.core.Instances;
 @Service
 public class ClusteringServiceImpl implements ClusteringService
 {
-	long startTime = System.currentTimeMillis();
 	private ObjectMapper mapper = new ObjectMapper();
 
 	@Autowired
@@ -79,13 +78,11 @@ public class ClusteringServiceImpl implements ClusteringService
 		if ( algorithm == "" )
 			algorithm = "K-Means";
 
-		if ( repeatCallList != null )
-			System.out.println( repeatCallList.size() );
-
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		List<DataMiningAuthor> coAuthors = new ArrayList<DataMiningAuthor>();
 		List<DataMiningEventGroup> conferencesFromSelection = new ArrayList<DataMiningEventGroup>();
 		List<DataMiningPublication> publicationsFromSelection = new ArrayList<DataMiningPublication>();
+
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
@@ -141,9 +138,6 @@ public class ClusteringServiceImpl implements ClusteringService
 					else
 						coAuthorList.add( coAuthor );
 				}
-				System.out.println( coAuthorList.size() + " :coAL" );
-				Long midTime = ( System.currentTimeMillis() - startTime ) / 1000;
-				System.out.println( "Step 1: " + midTime );
 
 				List<DataMiningAuthor> authors = persistenceStrategy.getAuthorDAO().getDataMiningObjects(); // all
 																											// database
@@ -175,26 +169,27 @@ public class ClusteringServiceImpl implements ClusteringService
 					}
 				}
 			}
-			System.out.println( "coA: " + coAuthors.size() );
+
 			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 			List<String> allInterests = new ArrayList<String>();
-
 			for ( DataMiningAuthor a : coAuthors )
 			{
-				Map<String, Double> interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
-				int interestCount = 0;
-				Iterator<String> interestTerm = interests.keySet().iterator();
-				Iterator<Double> interestTermWeight = interests.values().iterator();
-				while ( interestTerm.hasNext() && interestTermWeight.hasNext() && interestCount < 11 )
+				if ( a.getAuthor_interest_flat() != null )
 				{
-					String interest = ( interestTerm.next() );
-					Double weight = ( interestTermWeight.next() );
-					if ( !allInterests.contains( interest ) && weight > 1.0 )
+					Map<String, Double> interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
+					int interestCount = 0;
+					Iterator<String> interestTerm = interests.keySet().iterator();
+					Iterator<Double> interestTermWeight = interests.values().iterator();
+					while ( interestTerm.hasNext() && interestTermWeight.hasNext() && interestCount < 11 )
 					{
-						allInterests.add( interest );
-						attributes.add( new Attribute( interest ) );
-						System.out.println( new Attribute( interest ).toString() );
-						interestCount++;
+						String interest = ( interestTerm.next() );
+						Double weight = ( interestTermWeight.next() );
+						if ( !allInterests.contains( interest ) && weight > 1.0 )
+						{
+							allInterests.add( interest );
+							attributes.add( new Attribute( interest ) );
+							interestCount++;
+						}
 					}
 				}
 			}
@@ -208,30 +203,31 @@ public class ClusteringServiceImpl implements ClusteringService
 				List<String> authorInterests = new ArrayList<String>();
 				List<Double> authorInterestWeights = new ArrayList<Double>();
 				Map<String, Double> interests = new HashMap<String, Double>();
-				interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
-				interests = MapSorter.sortByValue( interests );
 
-				int count = 0;
-				List<String> authorTopInterests = new ArrayList<String>();
-				Iterator<String> interestTerm = interests.keySet().iterator();
-				Iterator<Double> interestTermWeight = interests.values().iterator();
-				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+				if ( a.getAuthor_interest_flat() != null )
 				{
-					String interest = ( interestTerm.next() );
-					Double weight = interestTermWeight.next();
-					if ( !authorInterests.contains( interest ) )
+					interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
+					interests = MapSorter.sortByValue( interests );
+					int count = 0;
+					List<String> authorTopInterests = new ArrayList<String>();
+					Iterator<String> interestTerm = interests.keySet().iterator();
+					Iterator<Double> interestTermWeight = interests.values().iterator();
+					while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 					{
-						authorInterests.add( interest );
-						authorInterestWeights.add( weight );
-						if ( count < 8 )
-							authorTopInterests.add( interest );
-						count++;
+						String interest = ( interestTerm.next() );
+						Double weight = interestTermWeight.next();
+						if ( !authorInterests.contains( interest ) )
+						{
+							authorInterests.add( interest );
+							authorInterestWeights.add( weight );
+							if ( count < 8 )
+								authorTopInterests.add( interest );
+							count++;
+						}
 					}
 
+					nodeTerms.put( a.getId(), authorTopInterests );
 				}
-
-				nodeTerms.put( a.getId(), authorTopInterests );
-
 				for ( int s = 0; s < allInterests.size(); s++ )
 				{
 					if ( authorInterests.contains( allInterests.get( s ) ) )
@@ -247,7 +243,6 @@ public class ClusteringServiceImpl implements ClusteringService
 					}
 				}
 				data.add( i );
-				System.out.println( data.get( counter ).toString() );
 				counter++;
 			}
 
@@ -268,7 +263,6 @@ public class ClusteringServiceImpl implements ClusteringService
 	@Override
 	public Map<String, Object> clusterConferences( String algorithm, Set<Publication> publications, List<Interest> filteredTopic, String type, String visType, List<String> idsList, List<String> repeatCallList, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal )
 	{
-		System.out.println( "coming in cluster" );
 		if ( seedVal == "" )
 			seedVal = "10";
 		if ( noOfClustersVal == "" )
@@ -279,9 +273,6 @@ public class ClusteringServiceImpl implements ClusteringService
 			iterationsVal = "10";
 		if ( algorithm == "" )
 			algorithm = "K-Means";
-
-		if ( repeatCallList != null )
-			System.out.println( repeatCallList.size() );
 
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -295,7 +286,6 @@ public class ClusteringServiceImpl implements ClusteringService
 
 		if ( repeatCallList == null || repeatCallList.isEmpty() )
 		{
-			System.out.println( "if" );
 			List<Publication> publicationsList = new ArrayList<Publication>( publications );
 			List<EventGroup> eventGroups = new ArrayList<EventGroup>();
 
@@ -306,12 +296,8 @@ public class ClusteringServiceImpl implements ClusteringService
 				{
 					EventGroup eventGroup = e.getEventGroup();
 					if ( eventGroup != null )
-					{
 						if ( !eventGroups.contains( eventGroup ) )
-						{
 							eventGroups.add( eventGroup );
-						}
-					}
 				}
 			}
 
@@ -341,22 +327,28 @@ public class ClusteringServiceImpl implements ClusteringService
 						// filter
 						if ( !filteredTopic.isEmpty() )
 						{
-							Map<String, Double> interests = InterestParser.parseInterestString( dmc.getEventGroup_interest_flat().getInterests() );
-							Set<String> interestTerms = interests.keySet();
-							if ( interestTerms.containsAll( interestStrings ) )
-								flag = true;
-							else
-								flag = false;
+							if ( dmc.getEventGroup_interest_flat() != null )
+							{
+								Map<String, Double> interests = InterestParser.parseInterestString( dmc.getEventGroup_interest_flat().getInterests() );
+								Set<String> interestTerms = interests.keySet();
+								if ( interestTerms.containsAll( interestStrings ) )
+									flag = true;
+								else
+									flag = false;
+							}
 						}
 						// add conference only if it has the selected interests
 						if ( type.equals( "topic" ) )
 						{
-							Map<String, Double> interests = InterestParser.parseInterestString( dmc.getEventGroup_interest_flat().getInterests() );
-							Set<String> interestTerms = interests.keySet();
-							if ( interestTerms.containsAll( interestStrings ) )
-								flag = true;
-							else
-								flag = false;
+							if ( dmc.getEventGroup_interest_flat() != null )
+							{
+								Map<String, Double> interests = InterestParser.parseInterestString( dmc.getEventGroup_interest_flat().getInterests() );
+								Set<String> interestTerms = interests.keySet();
+								if ( interestTerms.containsAll( interestStrings ) )
+									flag = true;
+								else
+									flag = false;
+							}
 						}
 
 						if ( flag )
@@ -370,7 +362,6 @@ public class ClusteringServiceImpl implements ClusteringService
 		}
 		else
 		{
-			System.out.println( "else" );
 			for ( DataMiningEventGroup dmc : allConferences )
 			{
 				for ( int i = 0; i < repeatCallList.size(); i++ )
@@ -383,27 +374,31 @@ public class ClusteringServiceImpl implements ClusteringService
 				}
 			}
 		}
+
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> allInterests = new ArrayList<String>();
 
 		for ( DataMiningEventGroup dmeg : conferencesFromSelection )
 		{
-			Map<String, Double> interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
-
-			Iterator<String> interestTerm = interests.keySet().iterator();
-			Iterator<Double> interestTermWeight = interests.values().iterator();
-			while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+			if ( dmeg.getEventGroup_interest_flat() != null )
 			{
-				String interest = ( interestTerm.next() );
-				Double interestWeight = ( interestTermWeight.next() );
-				if ( !allInterests.contains( interest ) && interestWeight > 1.0 )
+				Map<String, Double> interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
+
+				Iterator<String> interestTerm = interests.keySet().iterator();
+				Iterator<Double> interestTermWeight = interests.values().iterator();
+				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 				{
-					allInterests.add( interest );
-					attributes.add( new Attribute( interest ) );
+					String interest = ( interestTerm.next() );
+					Double interestWeight = ( interestTermWeight.next() );
+					if ( !allInterests.contains( interest ) && interestWeight > 1.0 )
+					{
+						allInterests.add( interest );
+						attributes.add( new Attribute( interest ) );
+					}
 				}
 			}
 		}
-		System.out.println( "attr" + attributes.size() );
+
 		// Assign interests of authors to topics of publications..
 		Instances data = new Instances( "eventGroups", attributes, conferencesFromSelection.size() );
 
@@ -413,46 +408,44 @@ public class ClusteringServiceImpl implements ClusteringService
 			List<String> eventGroupInterests = new ArrayList<String>();
 			List<Double> eventGroupInterestWeights = new ArrayList<Double>();
 			Map<String, Double> interests = new HashMap<String, Double>();
-			interests = InterestParser.parseInterestString( eg.getEventGroup_interest_flat().getInterests() );
-			interests = MapSorter.sortByValue( interests );
-
-			int count = 0;
-			List<String> eventGroupTopInterests = new ArrayList<String>();
-			Iterator<String> interestTerm = interests.keySet().iterator();
-			Iterator<Double> interestTermWeight = interests.values().iterator();
-			while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+			if ( eg.getEventGroup_interest_flat() != null )
 			{
-				String interest = ( interestTerm.next() );
-				Double weight = interestTermWeight.next();
-				if ( !eventGroupInterests.contains( interest ) )
+				interests = InterestParser.parseInterestString( eg.getEventGroup_interest_flat().getInterests() );
+				interests = MapSorter.sortByValue( interests );
+
+				int count = 0;
+				List<String> eventGroupTopInterests = new ArrayList<String>();
+				Iterator<String> interestTerm = interests.keySet().iterator();
+				Iterator<Double> interestTermWeight = interests.values().iterator();
+				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 				{
-					eventGroupInterests.add( interest );
-					eventGroupInterestWeights.add( weight );
-					if ( count < 8 )
-						eventGroupTopInterests.add( interest );
-					count++;
+					String interest = ( interestTerm.next() );
+					Double weight = interestTermWeight.next();
+					if ( !eventGroupInterests.contains( interest ) )
+					{
+						eventGroupInterests.add( interest );
+						eventGroupInterestWeights.add( weight );
+						if ( count < 8 )
+							eventGroupTopInterests.add( interest );
+						count++;
+					}
+
 				}
 
+				nodeTerms.put( eg.getId(), eventGroupTopInterests );
 			}
-
-			nodeTerms.put( eg.getId(), eventGroupTopInterests );
-
 			// check if author interests are present in the topic list, if
 			// yes,
 			// their weights are taken into account for clustering
 			for ( int s = 0; s < allInterests.size(); s++ )
 			{
 				if ( eventGroupInterests.contains( allInterests.get( s ) ) )
-				{
 					if ( eventGroupInterestWeights.get( eventGroupInterests.indexOf( allInterests.get( s ) ) ) > 1 )
 						i.setValue( attributes.get( s ), eventGroupInterestWeights.get( eventGroupInterests.indexOf( allInterests.get( s ) ) ) );
 					else
 						i.setValue( attributes.get( s ), 0 );
-				}
 				else
-				{
 					i.setValue( attributes.get( s ), 0 );
-				}
 			}
 			data.add( i );
 		}
@@ -484,8 +477,6 @@ public class ClusteringServiceImpl implements ClusteringService
 			algorithm = "K-Means";
 
 		Map<String, Object> resultMap = new HashMap<String, Object>();
-		// List<Publication> publicationsList = new ArrayList<Publication>(
-		// publications );
 		Map<String, Integer> clusterMap = new HashMap<String, Integer>();
 		Map<Integer, List<String>> clusterTerms = new HashMap<Integer, List<String>>();
 		Map<String, List<String>> nodeTerms = new HashMap<String, List<String>>();
@@ -621,10 +612,8 @@ public class ClusteringServiceImpl implements ClusteringService
 
 	public <T> Map<String, Object> applyAlgorithm( String type, String visType, String algorithm, List<Attribute> attributes, String seedVal, String noOfClustersVal, String foldsVal, String iterationsVal, Instances data, Map<String, Integer> clusterMap, Map<Integer, List<String>> clusterTerms, List<DataMiningAuthor> coAuthors, List<DataMiningEventGroup> conferencesFromSelection, List<DataMiningPublication> publicationsFromSelection )
 	{
-
 		try
 		{
-			System.out.println( algorithm + " algo" );
 			// applying the clustering algorithm
 			if ( algorithm.equals( "X-Means" ) && attributes.size() > 0 )
 			{
@@ -647,9 +636,6 @@ public class ClusteringServiceImpl implements ClusteringService
 					List<String> terms = new ArrayList<String>();
 					Integer numAttr = instances.get( instanceCounter ).numAttributes();
 
-					// Integer fetchCount = 10;
-					// if ( numAttr < 10 )
-					// fetchCount = numAttr;
 					for ( int i = 0; i < numAttr; i++ )
 					{
 						if ( max.size() < 10 )
@@ -673,7 +659,6 @@ public class ClusteringServiceImpl implements ClusteringService
 							}
 						}
 					}
-
 					clusterTerms.put( instanceCounter, terms );
 				}
 
@@ -681,7 +666,6 @@ public class ClusteringServiceImpl implements ClusteringService
 
 			if ( algorithm.equals( "K-Means" ) && attributes.size() > 0 )
 			{
-				System.out.println( "seedVal: " + seedVal );
 				SimpleKMeans result = WekaKMeans.run( seedVal, noOfClustersVal, data );
 
 				for ( int ind = 0; ind < data.size(); ind++ )
@@ -708,7 +692,6 @@ public class ClusteringServiceImpl implements ClusteringService
 							max.add( instances.get( instanceCounter ).value( i ) );
 							maxIndex.add( i );
 							terms.add( instances.get( instanceCounter ).attribute( maxIndex.get( i ) ).name() );
-
 						}
 						else
 						{
@@ -724,7 +707,6 @@ public class ClusteringServiceImpl implements ClusteringService
 							}
 						}
 					}
-
 					clusterTerms.put( instanceCounter, terms );
 				}
 
@@ -758,7 +740,6 @@ public class ClusteringServiceImpl implements ClusteringService
 							max.add( instances.get( instanceCounter ).value( i ) );
 							maxIndex.add( i );
 							terms.add( instances.get( instanceCounter ).attribute( maxIndex.get( i ) ).name() );
-
 						}
 						else
 						{
@@ -774,7 +755,6 @@ public class ClusteringServiceImpl implements ClusteringService
 							}
 						}
 					}
-
 					clusterTerms.put( instanceCounter, terms );
 				}
 

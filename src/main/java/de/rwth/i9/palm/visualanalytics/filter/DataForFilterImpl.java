@@ -13,9 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-//import de.rwth.i9.palm.feature.academicevent.AcademicEventFeature;
 import de.rwth.i9.palm.feature.circle.CircleFeature;
-import de.rwth.i9.palm.helper.VADataFetcher;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
@@ -43,12 +41,14 @@ public class DataForFilterImpl implements DataForFilter
 	@Autowired
 	private CircleFeature circleFeature;
 
-	@Autowired
-	private VADataFetcher dataFetcher;
-
-	// @Autowired
-	// private AcademicEventFeature eventFeature;
-
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.DataForFilter#publicationFilter(
+	 * java.util.List, java.lang.String, java.lang.String,
+	 * javax.servlet.http.HttpServletRequest)
+	 */
 	public Map<String, Object> publicationFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
 		Map<String, Object> publicationsMap = new HashMap<String, Object>();
@@ -57,37 +57,37 @@ public class DataForFilterImpl implements DataForFilter
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
 			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
-
 			ArrayList<Map<String, Object>> publicationDetailsList = new ArrayList<Map<String, Object>>();
-
 			for ( int i = 0; i < publications.size(); i++ )
 			{
 				Map<String, Object> publicationDetail = new LinkedHashMap<String, Object>();
-
 				publicationDetail.put( "id", publications.get( i ).getId() );
 				publicationDetail.put( "name", publications.get( i ).getTitle() );
-
 				publicationDetailsList.add( publicationDetail );
 			}
-
 			publicationsMap.put( "publicationsList", publicationDetailsList );
 		}
 		return publicationsMap;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.DataForFilter#conferenceFilter(
+	 * java.util.List, java.lang.String, java.lang.String,
+	 * javax.servlet.http.HttpServletRequest)
+	 */
 	public Map<String, Object> conferenceFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
-
 		Map<String, Object> eventsMap = new HashMap<String, Object>();
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
 			List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
-
 			ArrayList<Map<String, Object>> eventDetailsList = new ArrayList<Map<String, Object>>();
 			List<String> tempIds = new ArrayList<String>();
-
 			for ( int i = 0; i < publications.size(); i++ )
 			{
 				if ( publications.get( i ).getEvent() != null )
@@ -105,12 +105,18 @@ public class DataForFilterImpl implements DataForFilter
 					}
 				}
 			}
-
 			eventsMap.put( "eventsList", eventDetailsList );
 		}
 		return eventsMap;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.DataForFilter#circleFilter(java.
+	 * util.List, java.lang.String, java.lang.String)
+	 */
 	@SuppressWarnings( "unchecked" )
 	public Map<String, Object> circleFilter( List<String> idsList, String type, String visType )
 	{
@@ -136,12 +142,17 @@ public class DataForFilterImpl implements DataForFilter
 		responseMap.put( "orderBy", orderBy );
 
 		Map<String, Object> circleMap = circleFeature.getCircleSearch().getCircleListByResearchers( idsList, orderBy );
-
 		return circleFeature.getCircleSearch().printJsonOutput( responseMap, (List<Circle>) circleMap.get( "circles" ) );
-
 	}
 
-	@SuppressWarnings( "unchecked" )
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.DataForFilter#topicFilter(java.
+	 * util.List, java.lang.String, java.lang.String,
+	 * javax.servlet.http.HttpServletRequest)
+	 */
 	public Map<String, Object> topicFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
 		Map<String, Object> topicsMap = new HashMap<String, Object>();
@@ -150,10 +161,8 @@ public class DataForFilterImpl implements DataForFilter
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
 			List<Map<String, Object>> topicDetailsList = new ArrayList<Map<String, Object>>();
-
 			if ( type.equals( "researcher" ) )
 			{
-				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 				List<String> allAuthorInterests = new ArrayList<String>();
 				List<Integer> count = new ArrayList<Integer>();
 
@@ -192,8 +201,6 @@ public class DataForFilterImpl implements DataForFilter
 						}
 					}
 				}
-				System.out.println( commonPublications.size() + " size" );
-
 
 				if ( ( commonPublications != null && !commonPublications.isEmpty() ) || idsList.size() < 2 )
 				{
@@ -213,9 +220,7 @@ public class DataForFilterImpl implements DataForFilter
 								for ( int i = 0; i < topics.size(); i++ )
 								{
 									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
-									{
 										allTopics.add( topics.get( i ) );
-									}
 								}
 							}
 						}
@@ -265,9 +270,7 @@ public class DataForFilterImpl implements DataForFilter
 								items.put( "name", interestTopicNames.get( k ) );
 								items.put( "id", interestTopicIds.get( k ) );
 								topicDetailsList.add( items );
-
 								count.add( 0 );
-
 							}
 							else
 								count.set( allAuthorInterests.indexOf( interestTopicNames.get( k ) ), count.get( allAuthorInterests.indexOf( interestTopicNames.get( k ) ) ) + 1 );
@@ -288,7 +291,6 @@ public class DataForFilterImpl implements DataForFilter
 			}
 			if ( type.equals( "conference" ) )
 			{
-				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 				List<String> allConferenceInterests = new ArrayList<String>();
 				List<Integer> count = new ArrayList<Integer>();
 
@@ -312,9 +314,7 @@ public class DataForFilterImpl implements DataForFilter
 								for ( int i = 0; i < topics.size(); i++ )
 								{
 									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
-									{
 										allTopics.add( topics.get( i ) );
-									}
 								}
 							}
 						}
@@ -367,9 +367,7 @@ public class DataForFilterImpl implements DataForFilter
 							items.put( "name", interestTopicNames.get( k ) );
 							items.put( "id", interestTopicIds.get( k ) );
 							topicDetailsList.add( items );
-
 							count.add( 0 );
-
 						}
 						else
 							count.set( allConferenceInterests.indexOf( interestTopicNames.get( k ) ), count.get( allConferenceInterests.indexOf( interestTopicNames.get( k ) ) ) + 1 );
@@ -389,9 +387,7 @@ public class DataForFilterImpl implements DataForFilter
 			if ( type.equals( "publication" ) )
 			{
 				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
-
 				List<Interest> allInterestsInDB = persistenceStrategy.getInterestDAO().allTerms();
-
 				List<String> allPublicationInterests = new ArrayList<String>();
 				List<String> allPublicationInterestIds = new ArrayList<String>();
 				for ( Interest interest : allInterestsInDB )
@@ -406,7 +402,6 @@ public class DataForFilterImpl implements DataForFilter
 				List<String> allTopics = new ArrayList<String>();
 				for ( Publication pub : publications )
 				{
-					// System.out.println( "pub title: " + pub.getTitle() );
 					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
 					for ( PublicationTopic pubTopic : publicationTopics )
 					{
@@ -426,8 +421,6 @@ public class DataForFilterImpl implements DataForFilter
 										topicDetail.put( "id", allPublicationInterestIds.get( index ) );
 										topicDetail.put( "name", termValues.get( j ) );
 										topicDetailsList.add( topicDetail );
-										// System.out.println( " topic w s: " +
-										// termValues.get( j ) );
 									}
 									else if ( allPublicationInterests.contains( termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) ) )
 									{
@@ -436,31 +429,23 @@ public class DataForFilterImpl implements DataForFilter
 										topicDetail.put( "id", allPublicationInterestIds.get( index ) );
 										topicDetail.put( "name", termValues.get( j ).substring( 0, termValues.get( j ).length() - 1 ) );
 										topicDetailsList.add( topicDetail );
-										// System.out.println( " topic w/ s: " +
-										// termValues.get( j ).substring( 0,
-										// termValues.get( j ).length() - 1 ) );
 									}
 								}
 							}
 						}
 					}
 				}
-
 			}
 			if ( type.equals( "circle" ) )
 			{
-				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
 				List<String> allCircleInterests = new ArrayList<String>();
-				// List<String> allCircleInterestIds = new ArrayList<String>();
 				List<Integer> count = new ArrayList<Integer>();
 
 				// find all the topics from the circles
 				for ( String id : idsList )
 				{
 					List<String> allTopics = new ArrayList<String>();
-
 					Circle circle = persistenceStrategy.getCircleDAO().getById( id );
-
 					List<Publication> pubs = new ArrayList<Publication>( circle.getPublications() );
 					for ( Publication p : pubs )
 					{
@@ -472,16 +457,13 @@ public class DataForFilterImpl implements DataForFilter
 							for ( int i = 0; i < topics.size(); i++ )
 							{
 								if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
-								{
 									allTopics.add( topics.get( i ) );
-								}
 							}
 						}
 					}
 
 					List<String> interestTopicNames = new ArrayList<String>();
 					List<String> interestTopicIds = new ArrayList<String>();
-
 					Set<CircleInterestProfile> circleInterestProfiles = circle.getCircleInterestProfiles();
 					for ( CircleInterestProfile cip : circleInterestProfiles )
 					{
@@ -523,9 +505,7 @@ public class DataForFilterImpl implements DataForFilter
 							items.put( "name", interestTopicNames.get( k ) );
 							items.put( "id", interestTopicIds.get( k ) );
 							topicDetailsList.add( items );
-
 							count.add( 0 );
-
 						}
 						else
 							count.set( allCircleInterests.indexOf( interestTopicNames.get( k ) ), count.get( allCircleInterests.indexOf( interestTopicNames.get( k ) ) ) + 1 );
@@ -548,6 +528,14 @@ public class DataForFilterImpl implements DataForFilter
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.DataForFilter#timeFilter(java.util
+	 * .List, java.lang.String, java.lang.String,
+	 * javax.servlet.http.HttpServletRequest)
+	 */
 	public Map<String, Object> timeFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
 		Map<String, Object> timeMap = new HashMap<String, Object>();
@@ -564,7 +552,6 @@ public class DataForFilterImpl implements DataForFilter
 				List<Integer> endYearsOfConferences = new ArrayList<Integer>();
 				for ( String id : idsList )
 				{
-
 					startYear = 0;
 					endYear = 0;
 					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( id );
@@ -578,13 +565,11 @@ public class DataForFilterImpl implements DataForFilter
 							if ( p.getYear() != null )
 							{
 								int year = Integer.parseInt( p.getYear() );
-
 								if ( startYear == 0 && endYear == 0 )
 								{
 									startYear = year;
 									endYear = year;
 								}
-
 								if ( year > endYear )
 									endYear = year;
 								if ( year < startYear )
@@ -607,13 +592,11 @@ public class DataForFilterImpl implements DataForFilter
 			else
 			{
 				List<Publication> publications = filterHelper.getPublicationsForFilter( idsList, type, visType, request );
-
 				for ( int i = 0; i < publications.size(); i++ )
 				{
 					if ( publications.get( i ).getYear() != null )
 					{
 						int year = Integer.parseInt( publications.get( i ).getYear() );
-
 						if ( startYear == 0 && endYear == 0 )
 						{
 							startYear = year;
@@ -631,5 +614,4 @@ public class DataForFilterImpl implements DataForFilter
 		}
 		return timeMap;
 	}
-
 }

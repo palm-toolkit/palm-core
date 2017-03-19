@@ -64,16 +64,6 @@ public class TimelineVisualizationImpl implements TimelineVisualization
 					}
 					if ( pubType != null )
 					{
-						// int val = 0;
-						// if ( categoryPubs.get( "UNKNOWN" ) != null )
-						// {
-						// val = categoryPubs.get( "UNKNOWN" );
-						// categoryPubs.remove( "UNKNOWN" );
-						// }
-						// categoryPubs.put( "UNKNOWN", val + 1 );
-						// }
-						// else
-						// {
 						int val = 0;
 						if ( categoryPubs.get( pubType.toString() ) != null )
 						{

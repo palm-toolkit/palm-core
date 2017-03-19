@@ -26,9 +26,8 @@ public class LocationsVisualizationImpl implements LocationsVisualization
 
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-		{
 			visMap.putAll( researcherFeature.getResearcherAcademicEventTree().getResearcherAllAcademicEvents( publications, true ) );
-		}
+
 		return visMap;
 	}
 }

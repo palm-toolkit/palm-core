@@ -10,5 +10,11 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface TimelineVisualization
 {
+	/**
+	 * @param idsList
+	 * @param publications
+	 * @param request
+	 * @return
+	 */
 	public Map<String, Object> visualizeTimeline( List<String> idsList, Set<Publication> publications, HttpServletRequest request );
 }

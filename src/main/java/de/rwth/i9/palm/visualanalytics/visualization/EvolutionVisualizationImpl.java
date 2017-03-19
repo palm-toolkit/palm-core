@@ -50,7 +50,6 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) && idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
 		{
-
 			List<String> allTopics = new ArrayList<String>();
 			if ( yearFilterPresent.equals( "true" ) )
 			{
@@ -59,14 +58,11 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 					Set<PublicationTopic> publicationTopics = pub.getPublicationTopics();
 					for ( PublicationTopic pubTopic : publicationTopics )
 					{
-						List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
 						List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 						for ( int i = 0; i < topics.size(); i++ )
 						{
 							if ( !allTopics.contains( topics.get( i ) ) )
-							{
 								allTopics.add( topics.get( i ) );
-							}
 						}
 					}
 				}
@@ -101,9 +97,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 								for ( int i = 0; i < topics.size(); i++ )
 								{
 									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
-									{
 										allTopics.add( topics.get( i ) );
-									}
 								}
 							}
 						}
@@ -134,16 +128,11 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 										calendar.setTime( ai.getYear() );
 										String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 										if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
-										{
 											validYear = true;
-										}
 										else
-										{
 											if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-											{
 												validYear = false;
-											}
-										}
+
 										if ( validYear )
 										{
 											List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
@@ -299,9 +288,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 									for ( int i = 0; i < topics.size(); i++ )
 									{
 										if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
-										{
 											allTopics.add( topics.get( i ) );
-										}
 									}
 								}
 							}
@@ -336,16 +323,11 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 											calendar.setTime( ei.getYear() );
 											String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 											if ( startYear.equals( "0" ) || startYear.equals( "" ) )
-											{
 												validYear = true;
-											}
 											else
-											{
 												if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-												{
 													validYear = false;
-												}
-											}
+
 											if ( validYear )
 											{
 												List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
@@ -450,7 +432,6 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 						interestConferences.remove( i );
 						i--;
 					}
-
 				}
 				for ( int i = 0; i < mapList.size(); i++ )
 				{
@@ -498,12 +479,8 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 									float dist = palmAnalytics.getTextCompare().getDistanceByLuceneLevenshteinDistance( topic, i.getTerm() );
 
 									if ( dist > 0.8f )
-									{
 										if ( !publicationsWithTopic.contains( dmp ) )
-										{
 											publicationsWithTopic.add( dmp );
-										}
-									}
 								}
 							}
 						}
@@ -578,9 +555,7 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 								for ( int i = 0; i < topics.size(); i++ )
 								{
 									if ( !allTopics.contains( topics.get( i ) ) && topicWeights.get( i ) > 0.3 )
-									{
 										allTopics.add( topics.get( i ) );
-									}
 								}
 							}
 						}
@@ -610,16 +585,11 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 										calendar.setTime( ci.getYear() );
 										String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 										if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
-										{
 											validYear = true;
-										}
 										else
-										{
 											if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-											{
 												validYear = false;
-											}
-										}
+
 										if ( validYear )
 										{
 											List<String> yWI = new ArrayList<String>( yearWiseInterests.keySet() );
@@ -740,13 +710,10 @@ public class EvolutionVisualizationImpl implements EvolutionVisualization
 						i--;
 					}
 				}
-
 				visMap.put( "list", mapList );
 				visMap.put( "topicIdMap", topicIdMap );
-
 			}
 		}
 		return visMap;
-
 	}
 }

@@ -267,7 +267,6 @@ class Network
 										e.setAttribute( "targetAuthorIsAdded", publicationAuthor.isAdded() );
 										undirectedGraph.addEdge( e );
 									}
-
 								}
 							}
 							tempPubAuthors.add( publicationAuthor );
@@ -295,7 +294,6 @@ class Network
 								n.setAttribute( "authorId", publicationAuthor.getId() );
 								n.setPosition( rand.nextInt( ( max - min ) + 1 ) + min, rand.nextInt( ( max - min ) + 1 ) + min );
 								undirectedGraph.addNode( n );
-
 							}
 
 							// add edges if researchers have publications

@@ -11,5 +11,14 @@ import de.rwth.i9.palm.model.Publication;
 
 public interface NetworkService
 {
+	/**
+	 * @param type
+	 * @param authorList
+	 * @param authorPublications
+	 * @param idsList
+	 * @param selectedAuthors
+	 * @param request
+	 * @return
+	 */
 	public Map<String, Object> getGephiGraph( String type, List<Author> authorList, Set<Publication> authorPublications, List<String> idsList, List<Author> selectedAuthors, HttpServletRequest request );
 }

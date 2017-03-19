@@ -58,13 +58,12 @@ public class SimilarityServiceImpl implements SimilarityService
 				if ( dma.getName().equals( authorList.get( 0 ).getName() ) )
 				{
 					mainAuthors.add( dma );
-					authorInterests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
+					if ( dma.getAuthor_interest_flat() != null )
+						authorInterests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
 				}
 			}
-
 			interests = new ArrayList<String>( authorInterests.keySet() );
 		}
-
 		else
 		{
 
@@ -76,22 +75,24 @@ public class SimilarityServiceImpl implements SimilarityService
 					if ( dma.getName().equals( a.getName() ) )
 					{
 						mainAuthors.add( dma );
-						Map<String, Double> tempInterests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
-
-						List<String> keys = new ArrayList<String>( tempInterests.keySet() );
-						for ( int i = 0; i < tempInterests.size(); i++ )
+						if ( dma.getAuthor_interest_flat() != null )
 						{
-							if ( !interests.contains( keys.get( i ) ) )
-							{
-								interests.add( keys.get( i ) );
-								count.add( 1 );
-							}
-							else
-							{
-								Integer index = interests.indexOf( keys.get( i ) );
-								Integer prevVal = count.get( index );
-								count.set( index, prevVal + 1 );
+							Map<String, Double> tempInterests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
 
+							List<String> keys = new ArrayList<String>( tempInterests.keySet() );
+							for ( int i = 0; i < tempInterests.size(); i++ )
+							{
+								if ( !interests.contains( keys.get( i ) ) )
+								{
+									interests.add( keys.get( i ) );
+									count.add( 1 );
+								}
+								else
+								{
+									Integer index = interests.indexOf( keys.get( i ) );
+									Integer prevVal = count.get( index );
+									count.set( index, prevVal + 1 );
+								}
 							}
 						}
 					}
@@ -117,11 +118,11 @@ public class SimilarityServiceImpl implements SimilarityService
 		{
 			if ( !mainAuthors.contains( a ) )
 			{
-				othersInterests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
+				if ( a.getAuthor_interest_flat() != null )
+					othersInterests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
 				for ( int i = 0; i < interests.size(); i++ )
 				{
 					String term = interests.get( i );
-
 					if ( othersInterests.containsKey( term ) )
 					{
 						if ( scoreMap.containsKey( a ) )
@@ -134,10 +135,6 @@ public class SimilarityServiceImpl implements SimilarityService
 							Map<String, Double> interest = interestMap.get( a );
 							interest.put( term, othersInterests.get( term ) );
 							interestMap.put( a, interest );
-
-							// to score as per weights
-							// scoreMap.put( a, val + othersInterests.get( term
-							// ) );
 						}
 						else
 						{
@@ -146,14 +143,10 @@ public class SimilarityServiceImpl implements SimilarityService
 							Map<String, Double> interest = new HashMap<String, Double>();
 							interest.put( term, othersInterests.get( term ) );
 							interestMap.put( a, interest );
-
-							// to score as per weights
-							// scoreMap.put( a, othersInterests.get( term ) );
 						}
 					}
 				}
 			}
-
 		}
 
 		Map<DataMiningAuthor, Double> sortedScoreMap = MapSorter.sortByAuthor( scoreMap );
@@ -192,13 +185,12 @@ public class SimilarityServiceImpl implements SimilarityService
 				if ( dmeg.getName().equalsIgnoreCase( mainEvent ) )
 				{
 					mainEventGroups.add( dmeg );
-					eventInterests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
+					if ( dmeg.getEventGroup_interest_flat() != null )
+						eventInterests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
 				}
 			}
-
 			interests = new ArrayList<String>( eventInterests.keySet() );
 		}
-
 		else
 		{
 			List<Integer> count = new ArrayList<Integer>();
@@ -213,20 +205,23 @@ public class SimilarityServiceImpl implements SimilarityService
 					{
 						mainEventGroups.add( dmeg );
 
-						Map<String, Double> tempInterests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
-						List<String> keys = new ArrayList<String>( tempInterests.keySet() );
-						for ( int i = 0; i < tempInterests.size(); i++ )
+						if ( dmeg.getEventGroup_interest_flat() != null )
 						{
-							if ( !interests.contains( keys.get( i ) ) )
+							Map<String, Double> tempInterests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
+							List<String> keys = new ArrayList<String>( tempInterests.keySet() );
+							for ( int i = 0; i < tempInterests.size(); i++ )
 							{
-								interests.add( keys.get( i ) );
-								count.add( 1 );
-							}
-							else
-							{
-								Integer index = interests.indexOf( keys.get( i ) );
-								Integer prevVal = count.get( index );
-								count.set( index, prevVal + 1 );
+								if ( !interests.contains( keys.get( i ) ) )
+								{
+									interests.add( keys.get( i ) );
+									count.add( 1 );
+								}
+								else
+								{
+									Integer index = interests.indexOf( keys.get( i ) );
+									Integer prevVal = count.get( index );
+									count.set( index, prevVal + 1 );
+								}
 							}
 						}
 					}
@@ -242,7 +237,6 @@ public class SimilarityServiceImpl implements SimilarityService
 					i--;
 				}
 			}
-
 		}
 
 		Map<DataMiningEventGroup, Double> scoreMap = new HashMap<DataMiningEventGroup, Double>();
@@ -252,10 +246,11 @@ public class SimilarityServiceImpl implements SimilarityService
 		{
 			if ( !mainEventGroups.contains( eg ) )
 			{
-				if ( !eg.getEventGroup_interest_flat().getInterests().isEmpty() )
-					othersInterests = InterestParser.parseInterestString( eg.getEventGroup_interest_flat().getInterests() );
-				else
-					othersInterests = new HashMap<String, Double>();
+				if ( eg.getEventGroup_interest_flat() != null )
+					if ( !eg.getEventGroup_interest_flat().getInterests().isEmpty() )
+						othersInterests = InterestParser.parseInterestString( eg.getEventGroup_interest_flat().getInterests() );
+					else
+						othersInterests = new HashMap<String, Double>();
 
 				for ( int i = 0; i < interests.size(); i++ )
 				{
@@ -273,10 +268,6 @@ public class SimilarityServiceImpl implements SimilarityService
 							Map<String, Double> interest = interestMap.get( eg );
 							interest.put( term, othersInterests.get( term ) );
 							interestMap.put( eg, interest );
-
-							// to score as per weights
-							// scoreMap.put( a, val + othersInterests.get( term
-							// ) );
 						}
 						else
 						{
@@ -285,9 +276,6 @@ public class SimilarityServiceImpl implements SimilarityService
 							Map<String, Double> interest = new HashMap<String, Double>();
 							interest.put( term, othersInterests.get( term ) );
 							interestMap.put( eg, interest );
-
-							// to score as per weights
-							// scoreMap.put( a, othersInterests.get( term ) );
 						}
 					}
 				}
@@ -296,7 +284,6 @@ public class SimilarityServiceImpl implements SimilarityService
 		}
 
 		Map<DataMiningEventGroup, Double> sortedScoreMap = MapSorter.sortByEventGroup( scoreMap );
-
 		Map<DataMiningEventGroup, Map<String, Double>> sortedInterestMap = new HashMap<DataMiningEventGroup, Map<String, Double>>();
 		for ( int i = 0; i < interestMap.size(); i++ )
 		{
@@ -334,7 +321,6 @@ public class SimilarityServiceImpl implements SimilarityService
 					publicationTopics = InterestParser.parseInterestString( dmp.getPublication_topic_flat().getTopics() );
 				}
 			}
-
 			topics = new ArrayList<String>( publicationTopics.keySet() );
 		}
 
@@ -365,7 +351,6 @@ public class SimilarityServiceImpl implements SimilarityService
 								Integer index = topics.indexOf( keys.get( i ) );
 								Integer prevVal = count.get( index );
 								count.set( index, prevVal + 1 );
-
 							}
 						}
 					}
@@ -400,10 +385,8 @@ public class SimilarityServiceImpl implements SimilarityService
 				for ( int i = 0; i < topics.size(); i++ )
 				{
 					String term = topics.get( i );
-
 					if ( othersTopics.containsKey( term ) )
 					{
-
 						if ( scoreMap.containsKey( p ) )
 						{
 							Double val = scoreMap.get( p );
@@ -414,10 +397,6 @@ public class SimilarityServiceImpl implements SimilarityService
 							Map<String, Double> interest = topicMap.get( p );
 							interest.put( term, othersTopics.get( term ) );
 							topicMap.put( p, interest );
-
-							// to score as per weights
-							// scoreMap.put( a, val + othersInterests.get( term
-							// ) );
 						}
 						else
 						{
@@ -426,9 +405,6 @@ public class SimilarityServiceImpl implements SimilarityService
 							Map<String, Double> interest = new HashMap<String, Double>();
 							interest.put( term, othersTopics.get( term ) );
 							topicMap.put( p, interest );
-
-							// to score as per weights
-							// scoreMap.put( a, othersInterests.get( term ) );
 						}
 					}
 				}
@@ -447,9 +423,7 @@ public class SimilarityServiceImpl implements SimilarityService
 		Map<String, Object> finalMap = new HashMap<String, Object>();
 		finalMap.put( "scoreMap", sortedScoreMap );
 		finalMap.put( "interestMap", sortedInterestMap );
-
 		return finalMap;
-
 	}
 
 	@Override
@@ -471,24 +445,25 @@ public class SimilarityServiceImpl implements SimilarityService
 		List<DataMiningAuthor> interestingAuthors = new ArrayList<DataMiningAuthor>();
 		for ( DataMiningAuthor dma : DMAuthors )
 		{
-			Map<String, Double> interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
-
-			// all interests for the author who has the selected interest(s)
-			if ( interests.keySet().contains( selectedInterest.getTerm() ) )
+			if ( dma.getAuthor_interest_flat() != null )
 			{
-				Iterator<String> interestTerm = interests.keySet().iterator();
-				Iterator<Double> interestTermWeight = interests.values().iterator();
-				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+				Map<String, Double> interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
+
+				// all interests for the author who has the selected interest(s)
+				if ( interests.keySet().contains( selectedInterest.getTerm() ) )
 				{
-					String interest = interestTerm.next();
-					Double weight = interestTermWeight.next();
-					if ( !allInterests.contains( interest ) && weight > 0.8 && !interest.equals( selectedInterest.getTerm() ) )
+					Iterator<String> interestTerm = interests.keySet().iterator();
+					Iterator<Double> interestTermWeight = interests.values().iterator();
+					while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 					{
-						allInterests.add( interest );
-						attributes.add( new Attribute( interest, my_nominal_values ) );
-						if ( !interestingAuthors.contains( dma ) )
+						String interest = interestTerm.next();
+						Double weight = interestTermWeight.next();
+						if ( !allInterests.contains( interest ) && weight > 0.8 && !interest.equals( selectedInterest.getTerm() ) )
 						{
-							interestingAuthors.add( dma );
+							allInterests.add( interest );
+							attributes.add( new Attribute( interest, my_nominal_values ) );
+							if ( !interestingAuthors.contains( dma ) )
+								interestingAuthors.add( dma );
 						}
 					}
 				}
@@ -498,24 +473,25 @@ public class SimilarityServiceImpl implements SimilarityService
 		List<DataMiningEventGroup> interestingConferences = new ArrayList<DataMiningEventGroup>();
 		for ( DataMiningEventGroup dmeg : DMEventGroups )
 		{
-			Map<String, Double> interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
-
-			// all interests for the author who has the selected interest(s)
-			if ( interests.keySet().contains( selectedInterest.getTerm() ) )
+			if ( dmeg.getEventGroup_interest_flat() != null )
 			{
-				Iterator<String> interestTerm = interests.keySet().iterator();
-				Iterator<Double> interestTermWeight = interests.values().iterator();
-				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+				Map<String, Double> interests = InterestParser.parseInterestString( dmeg.getEventGroup_interest_flat().getInterests() );
+
+				// all interests for the author who has the selected interest(s)
+				if ( interests.keySet().contains( selectedInterest.getTerm() ) )
 				{
-					String interest = interestTerm.next();
-					Double weight = interestTermWeight.next();
-					if ( !allInterests.contains( interest ) && weight > 0.8 && !interest.equals( selectedInterest.getTerm() ) )
+					Iterator<String> interestTerm = interests.keySet().iterator();
+					Iterator<Double> interestTermWeight = interests.values().iterator();
+					while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 					{
-						allInterests.add( interest );
-						attributes.add( new Attribute( interest, my_nominal_values ) );
-						if ( !interestingConferences.contains( dmeg ) )
+						String interest = interestTerm.next();
+						Double weight = interestTermWeight.next();
+						if ( !allInterests.contains( interest ) && weight > 0.8 && !interest.equals( selectedInterest.getTerm() ) )
 						{
-							interestingConferences.add( dmeg );
+							allInterests.add( interest );
+							attributes.add( new Attribute( interest, my_nominal_values ) );
+							if ( !interestingConferences.contains( dmeg ) )
+								interestingConferences.add( dmeg );
 						}
 					}
 				}
@@ -533,36 +509,36 @@ public class SimilarityServiceImpl implements SimilarityService
 			List<String> authorInterests = new ArrayList<String>();
 			List<Double> authorInterestWeights = new ArrayList<Double>();
 			Map<String, Double> interests = new HashMap<String, Double>();
-			interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
-			interests = MapSorter.sortByValue( interests );
-
-			int count = 0;
-			List<String> authorTopInterests = new ArrayList<String>();
-			Iterator<String> interestTerm = interests.keySet().iterator();
-			Iterator<Double> interestTermWeight = interests.values().iterator();
-			while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+			if ( a.getAuthor_interest_flat() != null )
 			{
-				String interest = ( interestTerm.next() );
-				Double weight = interestTermWeight.next();
-				if ( !authorInterests.contains( interest ) )
+				interests = InterestParser.parseInterestString( a.getAuthor_interest_flat().getInterests() );
+				interests = MapSorter.sortByValue( interests );
+
+				int count = 0;
+				List<String> authorTopInterests = new ArrayList<String>();
+				Iterator<String> interestTerm = interests.keySet().iterator();
+				Iterator<Double> interestTermWeight = interests.values().iterator();
+				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 				{
-					authorInterests.add( interest );
-					authorInterestWeights.add( weight );
-					if ( count < 8 )
-						authorTopInterests.add( interest );
-					count++;
+					String interest = ( interestTerm.next() );
+					Double weight = interestTermWeight.next();
+					if ( !authorInterests.contains( interest ) )
+					{
+						authorInterests.add( interest );
+						authorInterestWeights.add( weight );
+						if ( count < 8 )
+							authorTopInterests.add( interest );
+						count++;
+					}
 				}
 			}
-
 			// check if author interests are present in the topic list, if
 			// yes,
 			// true, else false
 			for ( int s = 0; s < allInterests.size(); s++ )
 			{
 				if ( authorInterests.contains( allInterests.get( s ) ) )
-				{
 					i.setValue( attributes.get( s ), "true" );
-				}
 			}
 			data.add( i );
 		}
@@ -573,25 +549,28 @@ public class SimilarityServiceImpl implements SimilarityService
 			List<String> authorInterests = new ArrayList<String>();
 			List<Double> authorInterestWeights = new ArrayList<Double>();
 			Map<String, Double> interests = new HashMap<String, Double>();
-			interests = InterestParser.parseInterestString( eg.getEventGroup_interest_flat().getInterests() );
-			interests = MapSorter.sortByValue( interests );
-			int count = 0;
-			List<String> authorTopInterests = new ArrayList<String>();
-			Iterator<String> interestTerm = interests.keySet().iterator();
-			Iterator<Double> interestTermWeight = interests.values().iterator();
-			while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
+			if ( eg.getEventGroup_interest_flat() != null )
 			{
-				String interest = ( interestTerm.next() );
-				Double weight = interestTermWeight.next();
-				if ( !authorInterests.contains( interest ) )
+				interests = InterestParser.parseInterestString( eg.getEventGroup_interest_flat().getInterests() );
+				interests = MapSorter.sortByValue( interests );
+				int count = 0;
+				List<String> authorTopInterests = new ArrayList<String>();
+				Iterator<String> interestTerm = interests.keySet().iterator();
+				Iterator<Double> interestTermWeight = interests.values().iterator();
+				while ( interestTerm.hasNext() && interestTermWeight.hasNext() )
 				{
-					authorInterests.add( interest );
-					authorInterestWeights.add( weight );
-					if ( count < 8 )
-						authorTopInterests.add( interest );
-					count++;
-				}
+					String interest = ( interestTerm.next() );
+					Double weight = interestTermWeight.next();
+					if ( !authorInterests.contains( interest ) )
+					{
+						authorInterests.add( interest );
+						authorInterestWeights.add( weight );
+						if ( count < 8 )
+							authorTopInterests.add( interest );
+						count++;
+					}
 
+				}
 			}
 
 			// check if author interests are present in the topic list, if
@@ -600,9 +579,7 @@ public class SimilarityServiceImpl implements SimilarityService
 			for ( int s = 0; s < allInterests.size(); s++ )
 			{
 				if ( authorInterests.contains( allInterests.get( s ) ) )
-				{
 					i.setValue( attributes.get( s ), "true" );
-				}
 			}
 			data.add( i );
 		}
@@ -615,12 +592,7 @@ public class SimilarityServiceImpl implements SimilarityService
 		try
 		{
 			result = apriori.run( data );
-
-			System.out.println( result );
-			System.out.println( "\n==============================\n" );
-
 			List<AssociationRule> arules = result.getAssociationRules().getRules();
-
 			List<String> selectedInterests = new ArrayList<String>();
 			for ( String id : idsList )
 			{
@@ -656,7 +628,6 @@ public class SimilarityServiceImpl implements SimilarityService
 						break;
 				}
 			}
-			System.out.println( bestMatchingTerms.size() );
 
 			if ( bestMatchingTerms.isEmpty() )
 			{
@@ -671,12 +642,6 @@ public class SimilarityServiceImpl implements SimilarityService
 
 					if ( asrTerms.containsAll( selectedInterests ) )
 					{
-						// Item a = new ArrayList<Item>( ar.getConsequence()
-						// ).get(
-						// 0 );
-						// if ( a.getAttribute().name().equalsIgnoreCase(
-						// selectedInterest.getTerm() ) )
-						// {
 						List<Item> consequenceList = new ArrayList<Item>( ar.getConsequence() );
 						if ( bestMatchingTerms.size() < 20 )
 						{

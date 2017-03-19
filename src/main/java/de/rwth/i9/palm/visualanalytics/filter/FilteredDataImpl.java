@@ -25,24 +25,28 @@ public class FilteredDataImpl implements FilteredData
 	@Autowired
 	private FilterHelper filterHelper;
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see de.rwth.i9.palm.visualanalytics.filter.FilteredData#
+	 * getFilteredPublications(java.lang.String, java.lang.String,
+	 * java.util.List, java.util.List, java.util.List, java.util.List,
+	 * java.util.List, java.util.List, java.util.List, java.util.List,
+	 * java.util.List, java.lang.String, java.lang.String, java.lang.String,
+	 * javax.servlet.http.HttpServletRequest)
+	 */
 	public Set<Publication> getFilteredPublications( String type, String visType, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationList, List<Interest> interestList, List<Circle> circleList, List<Publication> filteredPublication, List<EventGroup> filteredConference, List<Interest> filteredTopic, List<Circle> filteredCircle, String startYear, String endYear, String yearFilterPresent, HttpServletRequest request )
 	{
 		Set<Publication> authorPublications = new HashSet<Publication>();
 
-		// System.out.println( "pubs in get filtered: " + publicationList.size()
-		// );
 		// proceed only if it a part of the current request
 		if ( type.equals( request.getSession().getAttribute( "objectType" ) ) )
 		{
 
 			if ( !filteredPublication.isEmpty() )
-			{
 				authorPublications = new HashSet<Publication>( filteredPublication );
-			}
 			else
-			{
 				authorPublications = filterHelper.typeWisePublications( "filtered", type, visType, authorList, eventGroupList, publicationList, interestList, circleList, request );
-			}
 
 			List<Publication> publicationsTemp = new ArrayList<Publication>( authorPublications );
 			if ( yearFilterPresent.equals( "true" ) )
@@ -80,7 +84,7 @@ public class FilteredDataImpl implements FilteredData
 				}
 			}
 			authorPublications = new HashSet<Publication>( publicationsTemp );
-			// System.out.println( "pub temp: " + publicationsTemp.size() );
+
 			// conference filter
 			List<Publication> conferencePublications = new ArrayList<Publication>();
 			if ( filteredConference != null && !filteredConference.isEmpty() )
@@ -94,9 +98,7 @@ public class FilteredDataImpl implements FilteredData
 						for ( int k = 0; k < eventPublications.size(); k++ )
 						{
 							if ( !conferencePublications.contains( eventPublications.get( k ) ) )
-							{
 								conferencePublications.add( eventPublications.get( k ) );
-							}
 						}
 					}
 				}
@@ -125,27 +127,16 @@ public class FilteredDataImpl implements FilteredData
 					{
 						Map<String, Double> termValues = pt.getTermValues();
 						List<String> terms = new ArrayList<String>( termValues.keySet() );
-						// System.out.println( "\n" + terms.toString() );
 						List<String> interests = new ArrayList<String>();
 						for ( Interest interest : filteredTopic )
 						{
 							if ( terms.contains( interest.getTerm() ) )
-							{
-								// System.out.println( "interest w/ s: " +
-								// interest.getTerm() );
 								interests.add( interest.getTerm() );
-							}
 							if ( terms.contains( interest.getTerm() + "s" ) )
-							{
-								// System.out.println( "interest w s: " +
-								// interest.getTerm() + "s" );
 								interests.add( interest.getTerm() + "s" );
-							}
 						}
 						if ( interests.size() == filteredTopic.size() )
-						{
 							topicPublications.add( authorPublication );
-						}
 					}
 				}
 				authorPublications = topicPublications;
@@ -161,9 +152,7 @@ public class FilteredDataImpl implements FilteredData
 					for ( Publication p : publications )
 					{
 						if ( !circlePublications.contains( p ) )
-						{
 							circlePublications.add( p );
-						}
 					}
 				}
 				List<Publication> tempPubList = new ArrayList<Publication>( authorPublications );

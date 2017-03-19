@@ -43,6 +43,13 @@ public class VADataFetcher
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
+	/**
+	 * @param type
+	 * @param publications
+	 * @param idsList
+	 * @param yearFilterPresent
+	 * @return
+	 */
 	public Map<String, Object> fetchCommonAuthors( String type, Set<Publication> publications, List<String> idsList, String yearFilterPresent )
 	{
 
@@ -54,9 +61,7 @@ public class VADataFetcher
 		{
 			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
-			{
 				System.out.println( "no match!" );
-			}
 			else
 			{
 				for ( Publication p : publications )
@@ -81,9 +86,7 @@ public class VADataFetcher
 		{
 			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
-			{
 				System.out.println( "no match!" );
-			}
 			else
 			{
 				Map<String, Object> coAuthorCollaborationMaps = new HashMap<String, Object>();
@@ -100,12 +103,8 @@ public class VADataFetcher
 					{
 						Boolean flag = true;
 						if ( !publications.isEmpty() )
-						{
 							if ( !publications.contains( p ) )
 								flag = false;
-							// else
-							// flag = true;
-						}
 						if ( flag )
 						{
 							for ( Author pubAuthor : p.getAuthors() )
@@ -116,14 +115,11 @@ public class VADataFetcher
 									coAuthorCollaborationCountMap.put( pubAuthor.getId(), 1 );
 								}
 								else
-								{
 									coAuthorCollaborationCountMap.put( pubAuthor.getId(), coAuthorCollaborationCountMap.get( pubAuthor.getId() ) + 1 );
-								}
 								if ( totalCollaborationCount.get( pubAuthor.getId() ) == null )
 									totalCollaborationCount.put( pubAuthor.getId(), 1 );
 								else
 									totalCollaborationCount.put( pubAuthor.getId(), totalCollaborationCount.get( pubAuthor.getId() ) + 1 );
-
 							}
 						}
 					}
@@ -137,9 +133,7 @@ public class VADataFetcher
 							count.add( 1 );
 						}
 						else
-						{
 							count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
-						}
 					}
 				}
 				coAuthorCollaborationMaps.put( "totalCollaborationCount", totalCollaborationCount );
@@ -148,12 +142,9 @@ public class VADataFetcher
 		}
 		if ( type.equals( "topic" ) )
 		{
-			System.out.println( "\ncount: " + count );
 			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
-			{
 				System.out.println( "no match!" );
-			}
 			else
 			{
 				List<DataMiningAuthor> DMAuthors = persistenceStrategy.getAuthorDAO().getDataMiningObjects();
@@ -166,7 +157,6 @@ public class VADataFetcher
 						interests = InterestParser.parseInterestString( dma.getAuthor_interest_flat().getInterests() );
 						if ( interests.keySet().contains( interest.getTerm() ) )
 						{
-							System.out.println( dma.getName() + " : " + interests.get( interest.getTerm() ) );
 							if ( interests.get( interest.getTerm() ) > 0.3 )
 							{
 								Author a = persistenceStrategy.getAuthorDAO().getById( dma.getId() );
@@ -190,22 +180,17 @@ public class VADataFetcher
 		{
 			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
-			{
 				System.out.println( "no match!" );
-			}
 			else
 			{
-
 				Map<String, Object> authorCollaborationMaps = new HashMap<String, Object>();
 				Map<String, Integer> totalCollaborationCount = new HashMap<String, Integer>();
 
 				for ( int i = 0; i < idsList.size(); i++ )
 				{
 					Map<String, Integer> authorCollaborationCountMap = new HashMap<String, Integer>();
-
 					EventGroup eg = persistenceStrategy.getEventGroupDAO().getById( idsList.get( i ) );
 					List<Author> eventAuthors = new ArrayList<Author>();
-
 					List<Event> events = eg.getEvents();
 					for ( Event e : events )
 					{
@@ -214,12 +199,8 @@ public class VADataFetcher
 						{
 							Boolean flag = true;
 							if ( !publications.isEmpty() )
-							{
 								if ( !publications.contains( p ) )
 									flag = false;
-								// else
-								// flag = true;
-							}
 							if ( flag )
 							{
 								List<Author> authors = p.getAuthors();
@@ -231,9 +212,7 @@ public class VADataFetcher
 										authorCollaborationCountMap.put( a.getId(), 1 );
 									}
 									else
-									{
 										authorCollaborationCountMap.put( a.getId(), authorCollaborationCountMap.get( a.getId() ) + 1 );
-									}
 									if ( totalCollaborationCount.get( a.getId() ) == null )
 										totalCollaborationCount.put( a.getId(), 1 );
 									else
@@ -253,9 +232,7 @@ public class VADataFetcher
 							count.add( 1 );
 						}
 						else
-						{
 							count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
-						}
 					}
 				}
 				authorCollaborationMaps.put( "totalCollaborationCount", totalCollaborationCount );
@@ -266,9 +243,7 @@ public class VADataFetcher
 		{
 			// if the filter criteria doesn't match any publications
 			if ( yearFilterPresent.equals( "true" ) && publications.isEmpty() )
-			{
 				System.out.println( "no match!" );
-			}
 			else
 			{
 				for ( int i = 0; i < idsList.size(); i++ )
@@ -282,9 +257,7 @@ public class VADataFetcher
 							count.add( 1 );
 						}
 						else
-						{
 							count.set( commonAuthors.indexOf( a ), count.get( commonAuthors.indexOf( a ) ) + 1 );
-						}
 					}
 				}
 			}
@@ -292,8 +265,6 @@ public class VADataFetcher
 
 		for ( int i = 0; i < count.size(); i++ )
 		{
-			System.out.println( commonAuthors.get( i ).getName() + " : " + count.get( i ) );
-
 			if ( count.get( i ) < idsList.size() )
 			{
 				count.remove( i );
@@ -301,11 +272,8 @@ public class VADataFetcher
 				i--;
 			}
 		}
-		System.out.println( "common co: " + commonAuthors.size() );
 		if ( !publications.isEmpty() )
 		{
-
-			System.out.println( "pubs till herer!! " + publications.size() );
 			// get authors from the publications
 			List<Author> authors = new ArrayList<Author>();
 			for ( Publication p : publications )
@@ -313,10 +281,7 @@ public class VADataFetcher
 				for ( Author a : p.getAuthors() )
 				{
 					if ( !authors.contains( a ) )
-					{
 						authors.add( a );
-						System.out.println( "-- " + a.getName() );
-					}
 				}
 			}
 
@@ -329,13 +294,17 @@ public class VADataFetcher
 					i--;
 				}
 			}
-
 		}
-		System.out.println( "common co2: " + commonAuthors.size() );
+
 		finalMap.put( "commonAuthors", commonAuthors );
 		return finalMap;
 	}
 
+	/**
+	 * @param filteredTopic
+	 * @param selectedAuthors
+	 * @return
+	 */
 	public List<Author> getAuthorsFromInterestFilter( List<Interest> filteredTopic, List<Author> selectedAuthors )
 	{
 		List<Author> interestAuthors = new ArrayList<Author>();
@@ -377,40 +346,39 @@ public class VADataFetcher
 				interestAuthors.remove( i );
 				i--;
 			}
-			// else
-			// System.out.println( interestAuthors.get( i ).getName() );
 		}
 
 		for ( int i = 0; i < selectedAuthors.size(); i++ )
 		{
 			if ( !interestAuthors.contains( selectedAuthors.get( i ) ) )
 			{
-				// System.out.println( "del: " + selectedAuthors.get( i
-				// ).getName() );
 				selectedAuthors.remove( i );
 				i--;
 			}
 		}
+
 		return selectedAuthors;
 	}
 
+	/**
+	 * @param type
+	 * @param idsList
+	 * @param authorList
+	 * @return
+	 */
 	public Set<Publication> fetchAllPublications( String type, List<String> idsList, List<Author> authorList )
 	{
 		Set<Publication> publications = new HashSet<Publication>();
 		if ( type.equals( "researcher" ) )
-		{
 			for ( Author a : authorList )
-			{
 				publications.addAll( a.getPublications() );
-			}
-		}
+
 		if ( type.equals( "conference" ) )
 		{
 			List<EventGroup> eventGroupList = new ArrayList<EventGroup>();
 			for ( String id : idsList )
-			{
 				eventGroupList.add( persistenceStrategy.getEventGroupDAO().getById( id ) );
-			}
+
 			// if there are more than one conferences in consideration
 			if ( idsList.size() > 1 )
 			{
@@ -422,12 +390,8 @@ public class VADataFetcher
 					{
 						List<Publication> eventGroupPublications = e.getPublications();
 						for ( int j = 0; j < eventGroupPublications.size(); j++ )
-						{
 							if ( !eventGroupPublicationsList.contains( eventGroupPublications.get( j ) ) && ( eventGroupPublications.get( j ).getYear() != null || eventGroupPublications.get( j ).getPublicationDate() != null ) )
-							{
 								eventGroupPublicationsList.add( eventGroupPublications.get( j ) );
-							}
-						}
 					}
 				}
 				publications = new HashSet<Publication>( eventGroupPublicationsList );
@@ -438,6 +402,7 @@ public class VADataFetcher
 
 				// set of conditions!!
 				if ( eventGroupList.get( 0 ) != null )
+				{
 					if ( eventGroupList.get( 0 ).getEvents() != null )
 					{
 						List<Event> groupEvents = eventGroupList.get( 0 ).getEvents();
@@ -456,6 +421,7 @@ public class VADataFetcher
 							}
 						}
 					}
+				}
 			}
 
 		}
@@ -466,9 +432,7 @@ public class VADataFetcher
 			List<String> pubIds = new ArrayList<String>();
 			List<Interest> interestList = new ArrayList<Interest>();
 			for ( String id : idsList )
-			{
 				interestList.add( persistenceStrategy.getInterestDAO().getById( id ) );
-			}
 			for ( Interest i : interestList )
 			{
 				for ( DataMiningPublication dmp : allDMPublications )
@@ -517,13 +481,8 @@ public class VADataFetcher
 					for ( int j = 0; j < tempPubList.size(); j++ )
 					{
 						if ( tempPubList.get( j ).getYear() != null || tempPubList.get( j ).getPublicationDate() != null )
-						{
 							if ( !circlePublicationsList.contains( tempPubList.get( j ) ) )
-							{
 								circlePublicationsList.add( tempPubList.get( j ) );
-							}
-						}
-
 					}
 				}
 				publications = new HashSet<Publication>( circlePublicationsList );
@@ -537,9 +496,7 @@ public class VADataFetcher
 					{
 						// to not consider publication if year is null
 						if ( pubs.get( c ).getYear() != null || pubs.get( c ).getPublicationDate() != null )
-						{
 							publications.add( pubs.get( c ) );
-						}
 					}
 				}
 			}
@@ -548,7 +505,16 @@ public class VADataFetcher
 		return publications;
 	}
 
-	// Object : Researcher, Visualization Type : Co-authors
+	/**
+	 * @param author
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Researcher, Visualization Type : Co-authors
+	 * 
+	 */
 	public Map<String, Object> fetchCoAuthorForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
 	{
 		Set<Publication> authorPublications = author.getPublications();
@@ -558,18 +524,12 @@ public class VADataFetcher
 		{
 			Boolean flag = false;
 			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-			{
 				flag = true;
-			}
 			else
 			{
 				if ( p.getYear() != null )
-				{
 					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
 						flag = true;
-					}
-				}
 			}
 			if ( flag )
 			{
@@ -595,7 +555,16 @@ public class VADataFetcher
 		return map;
 	}
 
-	// Object : Researcher, Visualization Type : Conferences
+	/**
+	 * @param author
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Researcher, Visualization Type : Conferences
+	 * 
+	 */
 	public Map<String, Object> fetchConferencesForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
 	{
 		Set<Publication> authorPublications = author.getPublications();
@@ -605,18 +574,12 @@ public class VADataFetcher
 		{
 			Boolean flag = false;
 			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-			{
 				flag = true;
-			}
 			else
 			{
 				if ( p.getYear() != null )
-				{
 					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
 						flag = true;
-					}
-				}
 			}
 
 			if ( flag )
@@ -625,7 +588,6 @@ public class VADataFetcher
 				{
 					if ( p.getEvent().getEventGroup() != null )
 					{
-
 						EventGroup eventGroup = p.getEvent().getEventGroup();
 						if ( !authorEventGroups.contains( eventGroup ) )
 						{
@@ -647,7 +609,16 @@ public class VADataFetcher
 		return map;
 	}
 
-	// Object : Researcher, Visualization Type : Publications
+	/**
+	 * @param author
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Researcher, Visualization Type : Publications
+	 * 
+	 */
 	public Map<String, Object> fetchPublicationsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
 	{
 		Set<Publication> publications = author.getPublications();
@@ -658,18 +629,12 @@ public class VADataFetcher
 		{
 			Boolean flag = false;
 			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-			{
 				flag = true;
-			}
 			else
 			{
 				if ( p.getYear() != null )
-				{
 					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
 						flag = true;
-					}
-				}
 			}
 
 			if ( flag )
@@ -682,7 +647,6 @@ public class VADataFetcher
 					items.put( "id", p.getId() );
 					if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
 					{
-						System.out.println( p.getTitle() );
 						PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
 						items.put( "url", pf.getUrl() );
 					}
@@ -690,13 +654,23 @@ public class VADataFetcher
 				}
 			}
 		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "authorPublications", authorPublications );
 		map.put( "listItems", listItems );
 		return map;
 	}
 
-	// Object : Researcher, Visualization Type : Topics
+	/**
+	 * @param author
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Researcher, Visualization Type : Topics
+	 * 
+	 */
 	public Map<String, Object> fetchTopicsForAuthors( Author author, String startYear, String endYear, String yearFilterPresent )
 	{
 		List<String> allTopics = new ArrayList<String>();
@@ -711,9 +685,7 @@ public class VADataFetcher
 				for ( int j = 0; j < topics.size(); j++ )
 				{
 					if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
-					{
 						allTopics.add( topics.get( j ) );
-					}
 				}
 			}
 		}
@@ -746,15 +718,11 @@ public class VADataFetcher
 							calendar.setTime( ai.getYear() );
 							String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 							if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
-							{
 								validYear = true;
-							}
 							else
 							{
 								if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-								{
 									validYear = false;
-								}
 							}
 							if ( validYear )
 							{
@@ -768,14 +736,13 @@ public class VADataFetcher
 									items.put( "id", actualInterest.getId() );
 									listItems.add( items );
 								}
-
 							}
 						}
 					}
-
 				}
 			}
 		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestTopicIds", interestTopicIds );
 		map.put( "interestTopicNames", interestTopicNames );
@@ -783,7 +750,16 @@ public class VADataFetcher
 		return map;
 	}
 
-	// Object : Conference, Visualization Type : Researchers
+	/**
+	 * @param events
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Conference, Visualization Type : Researchers
+	 * 
+	 */
 	public Map<String, Object> fetchResearchersForConferences( List<Event> events, String startYear, String endYear, String yearFilterPresent )
 	{
 		List<Publication> eventGroupPubs = new ArrayList<Publication>();
@@ -792,12 +768,8 @@ public class VADataFetcher
 		{
 			List<Publication> eventPublications = e.getPublications();
 			for ( Publication p : eventPublications )
-			{
 				if ( !eventGroupPubs.contains( p ) )
-				{
 					eventGroupPubs.add( p );
-				}
-			}
 		}
 		List<Author> publicationAuthors = new ArrayList<Author>();
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
@@ -805,18 +777,12 @@ public class VADataFetcher
 		{
 			Boolean flag = false;
 			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-			{
 				flag = true;
-			}
 			else
 			{
 				if ( p.getYear() != null )
-				{
 					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
 						flag = true;
-					}
-				}
 			}
 			if ( flag )
 			{
@@ -842,7 +808,16 @@ public class VADataFetcher
 		return map;
 	}
 
-	// Object : Conference, Visualization Type : Topics
+	/**
+	 * @param events
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Conference, Visualization Type : Topics
+	 * 
+	 */
 	public Map<String, Object> fetchTopicsForConferences( List<Event> events, String startYear, String endYear, String yearFilterPresent )
 	{
 		List<String> allTopics = new ArrayList<String>();
@@ -857,12 +832,8 @@ public class VADataFetcher
 					List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
 					List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 					for ( int j = 0; j < topics.size(); j++ )
-					{
 						if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
-						{
 							allTopics.add( topics.get( j ) );
-						}
-					}
 				}
 			}
 		}
@@ -897,16 +868,9 @@ public class VADataFetcher
 								calendar.setTime( ei.getYear() );
 								String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 								if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
-								{
 									validYear = true;
-								}
-								else
-								{
-									if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-									{
-										validYear = false;
-									}
-								}
+								else if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+									validYear = false;
 								if ( validYear )
 								{
 									if ( !interestTopicNames.contains( interest ) )
@@ -926,6 +890,7 @@ public class VADataFetcher
 				}
 			}
 		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestTopicIds", interestTopicIds );
 		map.put( "interestTopicNames", interestTopicNames );
@@ -933,25 +898,28 @@ public class VADataFetcher
 		return map;
 	}
 
-	// Object : Publication, Visualization Type : Researchers
+	/**
+	 * @param p
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Publication, Visualization Type : Researchers
+	 * 
+	 */
 	public Map<String, Object> fetchResearchersForPublications( Publication p, String startYear, String endYear, String yearFilterPresent )
 	{
 		List<Author> publicationAuthors = new ArrayList<Author>();
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
 		Boolean flag = false;
 		if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-		{
 			flag = true;
-		}
 		else
 		{
 			if ( p.getYear() != null )
-			{
 				if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-				{
 					flag = true;
-				}
-			}
 		}
 		if ( flag )
 		{
@@ -977,7 +945,17 @@ public class VADataFetcher
 
 	}
 
-	// Object : Publication, Visualization Type : Topics
+	/**
+	 * @param allInterestsInDB
+	 * @param p
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Publication, Visualization Type : Topics
+	 * 
+	 */
 	public Map<String, Object> fetchTopicsForPublications( List<Interest> allInterestsInDB, Publication p, String startYear, String endYear, String yearFilterPresent )
 	{
 
@@ -999,18 +977,12 @@ public class VADataFetcher
 
 		Boolean flag = false;
 		if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-		{
 			flag = true;
-		}
 		else
 		{
 			if ( p.getYear() != null )
-			{
 				if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-				{
 					flag = true;
-				}
-			}
 		}
 
 		if ( flag )
@@ -1052,6 +1024,7 @@ public class VADataFetcher
 				}
 			}
 		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestTopicIds", interestTopicIds );
 		map.put( "interestTopicNames", interestTopicNames );
@@ -1059,7 +1032,16 @@ public class VADataFetcher
 		return map;
 	}
 
-	// Object : Topic, Visualization Type : Researchers
+	/**
+	 * @param interest
+	 * @param DMAuthors
+	 * @param publicationAuthors
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Topic, Visualization Type : Researchers
+	 * 
+	 */
 	public Map<String, Object> fetchResearchersForTopics( Interest interest, List<DataMiningAuthor> DMAuthors, List<Author> publicationAuthors, String yearFilterPresent )
 	{
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
@@ -1131,7 +1113,16 @@ public class VADataFetcher
 		return map;
 	}
 
-	// Object : Topic, Visualization Type : Conferences
+	/**
+	 * @param interest
+	 * @param DMEventGroups
+	 * @param publicationEventGroups
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Topic, Visualization Type : Conferences
+	 * 
+	 */
 	public Map<String, Object> fetchConferencesForTopics( Interest interest, List<DataMiningEventGroup> DMEventGroups, List<EventGroup> publicationEventGroups, String yearFilterPresent )
 	{
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
@@ -1169,13 +1160,24 @@ public class VADataFetcher
 				}
 			}
 		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestEventGroups", interestEventGroups );
 		map.put( "listItems", listItems );
 		return map;
 	}
 
-	// Object : Topic, Visualization Type : Publications
+	/**
+	 * @param interest
+	 * @param allDMPublications
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Topic, Visualization Type : Publications
+	 * 
+	 */
 	public Map<String, Object> fetchPublicationsForTopics( Interest interest, List<DataMiningPublication> allDMPublications, String startYear, String endYear, String yearFilterPresent )
 	{
 		List<Map<String, Object>> listItems = new ArrayList<Map<String, Object>>();
@@ -1204,18 +1206,12 @@ public class VADataFetcher
 							Publication p = persistenceStrategy.getPublicationDAO().getById( dmp.getId() );
 							Boolean flag = false;
 							if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-							{
 								flag = true;
-							}
 							else
 							{
 								if ( p.getYear() != null )
-								{
 									if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-									{
 										flag = true;
-									}
-								}
 							}
 							if ( flag )
 							{
@@ -1225,7 +1221,6 @@ public class VADataFetcher
 								items.put( "id", p.getId() );
 								if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
 								{
-									System.out.println( p.getTitle() );
 									PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
 									items.put( "url", pf.getUrl() );
 								}
@@ -1236,13 +1231,23 @@ public class VADataFetcher
 				}
 			}
 		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestPublications", interestPublications );
 		map.put( "listItems", listItems );
 		return map;
 	}
 
-	// Object : Circle, Visualization Type : Researchers
+	/**
+	 * @param circle
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Circle, Visualization Type : Researchers
+	 * 
+	 */
 	public Map<String, Object> fetchResearchersForCircles( Circle circle, String startYear, String endYear, String yearFilterPresent )
 	{
 		Set<Publication> circlePublications = circle.getPublications();
@@ -1253,18 +1258,12 @@ public class VADataFetcher
 		{
 			Boolean flag = false;
 			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-			{
 				flag = true;
-			}
 			else
 			{
 				if ( p.getYear() != null )
-				{
 					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
 						flag = true;
-					}
-				}
 			}
 			if ( flag )
 			{
@@ -1290,7 +1289,16 @@ public class VADataFetcher
 		return map;
 	}
 
-	// Object : Circle, Visualization Type : Conferences
+	/**
+	 * @param circle
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Circle, Visualization Type : Conferences
+	 * 
+	 */
 	public Map<String, Object> fetchConferencesForCircles( Circle circle, String startYear, String endYear, String yearFilterPresent )
 	{
 		Set<Publication> circlePublications = circle.getPublications();
@@ -1300,18 +1308,12 @@ public class VADataFetcher
 		{
 			Boolean flag = false;
 			if ( startYear.equals( "" ) || startYear.equals( "0" ) || yearFilterPresent.equals( "false" ) )
-			{
 				flag = true;
-			}
 			else
 			{
 				if ( p.getYear() != null )
-				{
 					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
 						flag = true;
-					}
-				}
 			}
 			if ( flag )
 			{
@@ -1333,13 +1335,23 @@ public class VADataFetcher
 				}
 			}
 		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "circleEventGroups", circleEventGroups );
 		map.put( "listItems", listItems );
 		return map;
 	}
 
-	// Object : Circle, Visualization Type : Topics
+	/**
+	 * @param circle
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Circle, Visualization Type : Topics
+	 * 
+	 */
 	public Map<String, Object> fetchTopicsForCircles( Circle circle, String startYear, String endYear, String yearFilterPresent )
 	{
 		List<String> allTopics = new ArrayList<String>();
@@ -1352,12 +1364,8 @@ public class VADataFetcher
 				List<Double> topicWeights = new ArrayList<Double>( pubTopic.getTermValues().values() );
 				List<String> topics = new ArrayList<String>( pubTopic.getTermValues().keySet() );
 				for ( int j = 0; j < topics.size(); j++ )
-				{
 					if ( !allTopics.contains( topics.get( j ) ) && topicWeights.get( j ) > 0.3 )
-					{
 						allTopics.add( topics.get( j ) );
-					}
-				}
 			}
 		}
 		List<String> interestTopicNames = new ArrayList<String>();
@@ -1387,16 +1395,9 @@ public class VADataFetcher
 							calendar.setTime( ci.getYear() );
 							String year = Integer.toString( calendar.get( Calendar.YEAR ) );
 							if ( startYear.equals( "0" ) || startYear.equals( "" ) || yearFilterPresent.equals( "false" ) )
-							{
 								validYear = true;
-							}
-							else
-							{
-								if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
-								{
-									validYear = false;
-								}
-							}
+							else if ( Integer.parseInt( year ) < Integer.parseInt( startYear ) || Integer.parseInt( year ) > Integer.parseInt( endYear ) )
+								validYear = false;
 							if ( validYear )
 							{
 								if ( !interestTopicNames.contains( interest ) )
@@ -1412,10 +1413,10 @@ public class VADataFetcher
 							}
 						}
 					}
-
 				}
 			}
 		}
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put( "interestTopicIds", interestTopicIds );
 		map.put( "interestTopicNames", interestTopicNames );
@@ -1423,7 +1424,16 @@ public class VADataFetcher
 		return map;
 	}
 
-	// Object : Circle, Visualization Type : Publications
+	/**
+	 * @param circle
+	 * @param startYear
+	 * @param endYear
+	 * @param yearFilterPresent
+	 * @return
+	 * 
+	 * 		Object : Circle, Visualization Type : Publications
+	 * 
+	 */
 	public Map<String, Object> fetchPublicationsForCircles( Circle circle, String startYear, String endYear, String yearFilterPresent )
 	{
 		Set<Publication> circlePublications = circle.getPublications();
@@ -1434,18 +1444,12 @@ public class VADataFetcher
 		{
 			Boolean flag = false;
 			if ( startYear.equals( "" ) || startYear.equals( "0" ) )
-			{
 				flag = true;
-			}
 			else
 			{
 				if ( p.getYear() != null || p.getPublicationDate() != null )
-				{
 					if ( ( Integer.parseInt( p.getYear() ) >= Integer.parseInt( startYear ) && Integer.parseInt( p.getYear() ) <= Integer.parseInt( endYear ) ) )
-					{
 						flag = true;
-					}
-				}
 			}
 
 			if ( flag )
@@ -1458,7 +1462,6 @@ public class VADataFetcher
 					items.put( "id", p.getId() );
 					if ( p.getPublicationFiles() != null && !p.getPublicationFiles().isEmpty() )
 					{
-						System.out.println( p.getTitle() );
 						PublicationFile pf = new ArrayList<PublicationFile>( p.getPublicationFiles() ).get( 0 );
 						items.put( "url", pf.getUrl() );
 					}
@@ -1471,5 +1474,4 @@ public class VADataFetcher
 		map.put( "listItems", listItems );
 		return map;
 	}
-
 }

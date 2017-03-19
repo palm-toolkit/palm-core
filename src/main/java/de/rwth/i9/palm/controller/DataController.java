@@ -139,8 +139,8 @@ public class DataController
 	}
 
 	@Transactional
-	@RequestMapping( value = "/updateflattables/all", method = RequestMethod.GET )
-	public @ResponseBody String updateFlatTables()
+	@RequestMapping( value = "/createflattables/all", method = RequestMethod.GET )
+	public @ResponseBody String createflattables()
 	{
 		updateFlatAuthor();
 		updateFlatConference();
@@ -149,10 +149,9 @@ public class DataController
 	}
 
 	@Transactional
-	@RequestMapping( value = "/updateflattables/authors", method = RequestMethod.GET )
+	@RequestMapping( value = "/createflattables/authors", method = RequestMethod.GET )
 	public void updateFlatAuthor()
 	{
-		System.out.println( "will start updating flat author table" );
 		List<Author> authors = persistenceStrategy.getAuthorDAO().getAllAuthors();
 		int j = 1;
 		for ( Author author : authors )
@@ -161,7 +160,6 @@ public class DataController
 			{
 				AuthorInterestFlat authorInterestFlat = persistenceStrategy.getAuthorInterestFlatDAO().getById( author.getId() );
 				persistenceStrategy.getAuthorInterestFlatDAO().delete( authorInterestFlat );
-				// continue;
 			}
 			Map<String, Double> authorInterests = new HashMap<String, Double>();
 			for ( AuthorInterestProfile aip : author.getAuthorInterestProfiles() )
@@ -172,10 +170,8 @@ public class DataController
 					for ( Interest i : termWeights.keySet() )
 					{
 						Double value = authorInterests.containsKey( i.getTerm() ) ? authorInterests.get( i.getTerm() ) : 0;
-
 						String sValue = (String) String.format( "%.1f", value );
 						Double truncValue = Double.parseDouble( sValue );
-
 						String sWeight = (String) String.format( "%.1f", termWeights.get( i ) );
 						Double truncWeight = Double.parseDouble( sWeight );
 
@@ -195,7 +191,6 @@ public class DataController
 			aif.setAuthor_id( author.getId() );
 			aif.setInterests( sortedMap.toString().replaceAll( "[\\{\\}]", "" ) );
 			persistenceStrategy.getAuthorInterestFlatDAO().persist( aif );
-			System.out.println( "Added no " + j );
 			j++;
 		}
 
@@ -203,10 +198,9 @@ public class DataController
 	}
 
 	@Transactional
-	@RequestMapping( value = "/updateflattables/events", method = RequestMethod.GET )
+	@RequestMapping( value = "/createflattables/events", method = RequestMethod.GET )
 	public void updateFlatConference()
 	{
-		System.out.println( "will start updating flat academic event table" );
 		List<EventGroup> eventGroupList = persistenceStrategy.getEventGroupDAO().getEventGroupListWithoutPaging( "", "", "" );
 		int j = 1;
 		for ( EventGroup eg : eventGroupList )
@@ -215,7 +209,6 @@ public class DataController
 			{
 				EventGroupInterestFlat eventGroupInterestFlat = persistenceStrategy.getEventGroupInterestFlatDAO().getById( eg.getId() );
 				persistenceStrategy.getEventGroupInterestFlatDAO().delete( eventGroupInterestFlat );
-				// continue;
 			}
 			List<Event> events = eg.getEvents();
 			Map<String, Double> eventGroupTopics = new HashMap<String, Double>();
@@ -223,7 +216,6 @@ public class DataController
 			for ( Event e : events )
 			{
 				Set<EventInterestProfile> eips = e.getEventInterestProfiles();
-
 				for ( EventInterestProfile eip : eips )
 				{
 					Set<EventInterest> eventInterests = eip.getEventInterests();
@@ -231,8 +223,6 @@ public class DataController
 					{
 						Map<Interest, Double> termWeights = ei.getTermWeights();
 						List<Interest> interests = new ArrayList<Interest>( termWeights.keySet() );
-						// List<Double> interestWeights = new
-						// ArrayList<Double>(termWeights.values());
 						for ( Interest i : interests )
 						{
 							Double value = eventGroupTopics.containsKey( i.getTerm() ) ? eventGroupTopics.get( i.getTerm() ) : 0;
@@ -247,15 +237,11 @@ public class DataController
 								eventGroupTopics.put( i.getTerm(), truncWeight );
 							else
 							{
-								System.out.println( i.getTerm() );
 								eventGroupTopics.remove( i );
 								eventGroupTopics.put( i.getTerm(), truncValue + truncWeight );
 							}
-							System.out.println( truncValue + " : " + truncWeight );
 						}
-
 					}
-
 				}
 			}
 			Map<String, Double> sortedMap = MapSorter.sortByValue( eventGroupTopics );
@@ -263,16 +249,14 @@ public class DataController
 			eif.setEventGroup_id( eg.getId() );
 			eif.setInterests( sortedMap.toString().replaceAll( "[\\{\\}]", "" ) );
 			persistenceStrategy.getEventGroupInterestFlatDAO().persist( eif );
-			System.out.println( "Added no " + j );
 			j++;
-
 		}
 
 		System.out.println( "Updated flat event group table." );
 	}
 
 	@Transactional
-	@RequestMapping( value = "/updateflattables/publications", method = RequestMethod.GET )
+	@RequestMapping( value = "/createflattables/publications", method = RequestMethod.GET )
 	public void updateFlatPublication()
 	{
 		List<DataMiningPublication> publications = persistenceStrategy.getPublicationDAO().getDataMiningObjects();
@@ -283,7 +267,6 @@ public class DataController
 			{
 				PublicationTopicFlat publicationTopicFlat = persistenceStrategy.getPublicationTopicFlatDAO().getById( publication.getId() );
 				persistenceStrategy.getPublicationTopicFlatDAO().delete( publicationTopicFlat );
-				// continue;
 			}
 			Map<String, Double> publicationTopics = new HashMap<String, Double>();
 			for ( PublicationTopic pt : publication.getPublicationTopics() )
@@ -299,11 +282,55 @@ public class DataController
 			ptf.setPublication_id( publication.getId() );
 			ptf.setTopics( sortedMap.toString().replaceAll( "[\\{\\}]", "" ) );
 			persistenceStrategy.getPublicationTopicFlatDAO().persist( ptf );
-			System.out.println( "Added no " + j );
 			j++;
 		}
 
 		System.out.println( "Updated flat publication tables" );
 	}
 
+	@Transactional
+	@RequestMapping( value = "/updateflattables/authors", method = RequestMethod.GET )
+	public void updateFlatNewAuthor()
+	{
+		List<Author> authors = persistenceStrategy.getAuthorDAO().getAllAuthors();
+		int j = 1;
+		for ( Author author : authors )
+		{
+			if ( persistenceStrategy.getAuthorInterestFlatDAO().authorIdExists( author.getId() ) )
+				continue;
+			Map<String, Double> authorInterests = new HashMap<String, Double>();
+			for ( AuthorInterestProfile aip : author.getAuthorInterestProfiles() )
+			{
+				for ( AuthorInterest ai : aip.getAuthorInterests() )
+				{
+					Map<Interest, Double> termWeights = ai.getTermWeights();
+					for ( Interest i : termWeights.keySet() )
+					{
+						Double value = authorInterests.containsKey( i.getTerm() ) ? authorInterests.get( i.getTerm() ) : 0;
+						String sValue = (String) String.format( "%.1f", value );
+						Double truncValue = Double.parseDouble( sValue );
+						String sWeight = (String) String.format( "%.1f", termWeights.get( i ) );
+						Double truncWeight = Double.parseDouble( sWeight );
+
+						if ( !authorInterests.keySet().contains( i.getTerm() ) )
+							authorInterests.put( i.getTerm(), truncWeight );
+						else
+						{
+							authorInterests.remove( i );
+							authorInterests.put( i.getTerm(), truncValue + truncWeight );
+						}
+					}
+				}
+			}
+
+			Map<String, Double> sortedMap = MapSorter.sortByValue( authorInterests );
+			AuthorInterestFlat aif = new AuthorInterestFlat();
+			aif.setAuthor_id( author.getId() );
+			aif.setInterests( sortedMap.toString().replaceAll( "[\\{\\}]", "" ) );
+			persistenceStrategy.getAuthorInterestFlatDAO().persist( aif );
+			j++;
+		}
+
+		System.out.println( "Updated flat author table." );
+	}
 }

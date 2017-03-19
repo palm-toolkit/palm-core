@@ -33,6 +33,13 @@ public class FilterHelperImpl implements FilterHelper
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see de.rwth.i9.palm.visualanalytics.filter.FilterHelper#
+	 * getPublicationsForFilter(java.util.List, java.lang.String,
+	 * java.lang.String, javax.servlet.http.HttpServletRequest)
+	 */
 	public List<Publication> getPublicationsForFilter( List<String> idsList, String type, String visType, HttpServletRequest request )
 	{
 		List<Publication> publications = new ArrayList<Publication>();
@@ -45,6 +52,7 @@ public class FilterHelperImpl implements FilterHelper
 			List<Publication> publicationsList = new ArrayList<Publication>();
 			List<Interest> interestsList = new ArrayList<Interest>();
 			List<Circle> circlesList = new ArrayList<Circle>();
+
 			if ( type.equals( "researcher" ) )
 				authors = getAuthorsFromIds( idsList, request );
 			if ( type.equals( "conference" ) )
@@ -63,6 +71,15 @@ public class FilterHelperImpl implements FilterHelper
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.FilterHelper#typeWisePublications(
+	 * java.lang.String, java.lang.String, java.lang.String, java.util.List,
+	 * java.util.List, java.util.List, java.util.List, java.util.List,
+	 * javax.servlet.http.HttpServletRequest)
+	 */
 	public Set<Publication> typeWisePublications( String callingFunction, String type, String visType, List<Author> authorList, List<EventGroup> eventGroupList, List<Publication> publicationsList, List<Interest> interestList, List<Circle> circleList, HttpServletRequest request )
 	{
 		Set<Publication> publications = new HashSet<Publication>();
@@ -87,7 +104,6 @@ public class FilterHelperImpl implements FilterHelper
 							{
 								if ( !authorPublicationsList.contains( tempPubList.get( j ) ) )
 								{
-
 									authorPublicationsList.add( tempPubList.get( j ) );
 									count.add( 0 );
 								}
@@ -125,11 +141,8 @@ public class FilterHelperImpl implements FilterHelper
 						{
 							// to not consider publication if year is null
 							if ( pubs.get( c ).getYear() != null || pubs.get( c ).getPublicationDate() != null )
-							{
 								publications.add( pubs.get( c ) );
-							}
 						}
-
 					}
 				}
 			}
@@ -148,9 +161,7 @@ public class FilterHelperImpl implements FilterHelper
 							for ( int j = 0; j < eventGroupPublications.size(); j++ )
 							{
 								if ( !eventGroupPublicationsList.contains( eventGroupPublications.get( j ) ) && ( eventGroupPublications.get( j ).getYear() != null || eventGroupPublications.get( j ).getPublicationDate() != null ) )
-								{
 									eventGroupPublicationsList.add( eventGroupPublications.get( j ) );
-								}
 							}
 						}
 					}
@@ -294,14 +305,9 @@ public class FilterHelperImpl implements FilterHelper
 					{
 						List<Publication> pubs = new ArrayList<Publication>( circleList.get( 0 ).getPublications() );
 						for ( int c = 0; c < pubs.size(); c++ )
-						{
 							// to not consider publication if year is null
 							if ( pubs.get( c ).getYear() != null || pubs.get( c ).getPublicationDate() != null )
-							{
 								publications.add( pubs.get( c ) );
-							}
-						}
-
 					}
 				}
 			}
@@ -309,6 +315,13 @@ public class FilterHelperImpl implements FilterHelper
 		return publications;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.FilterHelper#getAuthorsFromIds(
+	 * java.util.List, javax.servlet.http.HttpServletRequest)
+	 */
 	public List<Author> getAuthorsFromIds( List<String> idsList, HttpServletRequest request )
 	{
 		// get Author List
@@ -316,16 +329,19 @@ public class FilterHelperImpl implements FilterHelper
 
 		// proceed only if it a part of the current request
 		if ( idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-		{
 			for ( int itemIndex = 0; itemIndex < idsList.size(); itemIndex++ )
-			{
 				authorList.add( persistenceStrategy.getAuthorDAO().getById( idsList.get( itemIndex ) ) );
-			}
-		}
 		return authorList;
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.FilterHelper#getConferencesFromIds
+	 * (java.util.List, javax.servlet.http.HttpServletRequest)
+	 */
 	public List<EventGroup> getConferencesFromIds( List<String> idsList, HttpServletRequest request )
 	{
 		// get Event List
@@ -333,16 +349,19 @@ public class FilterHelperImpl implements FilterHelper
 
 		// proceed only if it a part of the current request
 		if ( idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-		{
 			for ( int itemIndex = 0; itemIndex < idsList.size(); itemIndex++ )
-			{
 				eventGroupList.add( persistenceStrategy.getEventGroupDAO().getById( idsList.get( itemIndex ) ) );
-			}
-		}
 		return eventGroupList;
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see de.rwth.i9.palm.visualanalytics.filter.FilterHelper#
+	 * getPublicationsFromIds(java.util.List,
+	 * javax.servlet.http.HttpServletRequest)
+	 */
 	public List<Publication> getPublicationsFromIds( List<String> idsList, HttpServletRequest request )
 	{
 		// get Publication List
@@ -350,16 +369,19 @@ public class FilterHelperImpl implements FilterHelper
 
 		// proceed only if it a part of the current request
 		if ( idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-		{
 			for ( int itemIndex = 0; itemIndex < idsList.size(); itemIndex++ )
-			{
 				publicationList.add( persistenceStrategy.getPublicationDAO().getById( idsList.get( itemIndex ) ) );
-			}
-		}
 		return publicationList;
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.FilterHelper#getInterestsFromIds(
+	 * java.util.List, javax.servlet.http.HttpServletRequest)
+	 */
 	public List<Interest> getInterestsFromIds( List<String> idsList, HttpServletRequest request )
 	{
 		// get Interest List
@@ -367,16 +389,19 @@ public class FilterHelperImpl implements FilterHelper
 
 		// proceed only if it a part of the current request
 		if ( idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-		{
 			for ( int itemIndex = 0; itemIndex < idsList.size(); itemIndex++ )
-			{
 				interestList.add( persistenceStrategy.getInterestDAO().getById( idsList.get( itemIndex ) ) );
-			}
-		}
 		return interestList;
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * de.rwth.i9.palm.visualanalytics.filter.FilterHelper#getCirclesFromIds(
+	 * java.util.List, javax.servlet.http.HttpServletRequest)
+	 */
 	public List<Circle> getCirclesFromIds( List<String> idsList, HttpServletRequest request )
 	{
 		// get Circle List
@@ -384,14 +409,8 @@ public class FilterHelperImpl implements FilterHelper
 
 		// proceed only if it a part of the current request
 		if ( idsList.equals( request.getSession().getAttribute( "idsList" ) ) )
-		{
 			for ( int itemIndex = 0; itemIndex < idsList.size(); itemIndex++ )
-			{
 				circleList.add( persistenceStrategy.getCircleDAO().getById( idsList.get( itemIndex ) ) );
-			}
-		}
 		return circleList;
-
 	}
-
 }
