@@ -31,7 +31,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	private String path = "C:/Users/Albi/Desktop/";
+	private String path = "C:/Users/Administrator/Desktop/";
 
 	/**
 	 * This is the first method used to show the widget Simple LDA
@@ -252,7 +252,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		List<String> similarCircles = new ArrayList<String>();
-		similarCircles = palmAnalytics.getNGrams().runSimilarEntities( circle.getId().toString(), "C:/Users/Albi/Desktop/", "Circles", 20, 4, 3, true );
+		similarCircles = palmAnalytics.getNGrams().runSimilarEntities( circle.getId().toString(), "C:/Users/Administrator/Desktop/", "Circles", 20, 4, 3, true );
 		// similarEntities( circle.getId(), maxresult, 3 );
 
 		// Prepare set of similarCircle HashSet;
@@ -311,7 +311,7 @@ public class CircleTopicModelingImpl implements CircleTopicModeling
 		
 		// find the list of similar circles
 		List<String> similarEntities = new ArrayList<String>();
-		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( circle.getId().toString(), "C:/Users/Albi/Desktop/", "Circles", 10, 10, 3, true );
+		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( circle.getId().toString(), "C:/Users/Administrator/Desktop/", "Circles", 10, 10, 3, true );
 		
 		List<Map<String, Object>> similarCircleList = new ArrayList<Map<String, Object>>();
 		

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Author;
-import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
 public class ResearcherTopicEvolutionImplTest implements ResearcherTopicEvolutionTest
@@ -22,10 +21,10 @@ public class ResearcherTopicEvolutionImplTest implements ResearcherTopicEvolutio
 	private PalmAnalytics palmAnalytics;
 
 	// path on Windows
-	// private String path = "C:/Users/Albi/Desktop/";
+	private String path = "C:/Users/Administrator/Desktop/";
 	
 	// path on Mac
-	private String path = "/Users/pirolena/Desktop/";
+	// private String path = "/Users/pirolena/Desktop/";
 
 	@Override
 	public Map<String, Object> getResearcherTopicEvolutionTest( Author author ) throws IOException

@@ -71,6 +71,19 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 			if( citedBy != null && citedBy.length() > 10)
 				eachAuthorMap.put( "citedby", citedBy.substring( "Cited by".length() ).trim() );
 
+			String authURL = authorListNode.select( "a" ).first().absUrl( "href" ) + "&view_op=list_works";
+			Document authDocument = PublicationCollectionHelper.getDocumentWithJsoup( authURL, 5000, getGoogleScholarCookie( source ) );
+
+			if ( authDocument != null )
+			{
+				Elements authorDetailsNodes = authDocument.select( HtmlSelectorConstant.GS_INDICES_ROW_LIST );
+
+				if ( authorDetailsNodes.size() != 0 )
+				{
+					// get author hindex
+					eachAuthorMap.put( "hindex", authorDetailsNodes.get( 2 ).select( "td" ).get( 1 ).text() );
+				}
+			}
 			authorList.add( eachAuthorMap );
 		}
 
@@ -176,10 +189,15 @@ public class GoogleScholarPublicationCollection extends PublicationCollection
 
 		for ( Element publicationDetail : publicationDetailsRows )
 		{
-			publicationDetailMaps.put( publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_LABEL ).text(), publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_VALUE ).text() );
 			if ( publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_LABEL ).text().equals( "Total citations" ) )
 			{
+				String citations = publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_VALUE ).select( "a" ).text();
+				publicationDetailMaps.put( "citedby", citations.split( " " )[2] );
 				// TODO: record publication citation yearly
+			}
+			else
+			{
+				publicationDetailMaps.put( publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_LABEL ).text(), publicationDetail.select( HtmlSelectorConstant.GS_PUBLICATION_DETAIL_PROP_VALUE ).text() );
 			}
 		}
 

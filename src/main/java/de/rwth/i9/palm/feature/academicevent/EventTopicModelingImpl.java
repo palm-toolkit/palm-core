@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
 import de.rwth.i9.palm.model.Event;
-import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -29,7 +28,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	private String path = "C:/Users/Albi/Desktop/";
+	private String path = "C:/Users/Administrator/Desktop/";
 
 	/**
 	 * This is the first method used to show the widget Simple LDA
@@ -280,7 +279,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		List<String> similarEvents = new ArrayList<String>();
-		similarEvents = palmAnalytics.getNGrams().runSimilarEntities( event.getId().toString(), "C:/Users/Albi/Desktop/", "Conferences", 20, 10, 3, true );
+		similarEvents = palmAnalytics.getNGrams().runSimilarEntities( event.getId().toString(), "C:/Users/Administrator/Desktop/", "Conferences", 20, 10, 3, true );
 		// similarEntities( event.getId(), maxresult, 3 );
 
 		// Prepare set of similarEvent HashSet;
@@ -487,7 +486,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 		
 		// find the list of similar events
 		List<String> similarEntities = new ArrayList<String>();
-		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( event.getEventGroup().getId().toString(), "C:/Users/Albi/Desktop/", "Conferences", 50, 10, 3, palmAnalytics.getNGrams().dateCheckCriteria(path, "Conferences", event.getId().toString()) );
+		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( event.getEventGroup().getId().toString(), "C:/Users/Administrator/Desktop/", "Conferences", 50, 10, 3, palmAnalytics.getNGrams().dateCheckCriteria( path, "Conferences", event.getId().toString() ) );
 		
 		List<Map<String, Object>> similarEventList = new ArrayList<Map<String, Object>>();
 		

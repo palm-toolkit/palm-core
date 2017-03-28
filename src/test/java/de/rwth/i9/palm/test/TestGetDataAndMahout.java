@@ -39,7 +39,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 	
-	String path =  "C:/Users/Albi/Desktop/";
+	String path = "C:/Users/Administrator/Desktop/";
 
 	@Autowired // actually this one is for the API, so I guess you don't need to
 				// use this

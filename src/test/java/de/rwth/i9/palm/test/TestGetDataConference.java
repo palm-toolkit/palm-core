@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
 import de.rwth.i9.palm.config.WebAppConfigTest;
-import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.EventGroup;
 import de.rwth.i9.palm.model.Publication;
@@ -36,7 +35,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 	
-	String path =  "C:/Users/Albi/Desktop/";
+	String path = "C:/Users/Administrator/Desktop/";
 
 	@Test
 	@Ignore

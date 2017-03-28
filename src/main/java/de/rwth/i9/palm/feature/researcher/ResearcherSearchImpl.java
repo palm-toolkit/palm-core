@@ -122,6 +122,8 @@ public class ResearcherSearchImpl implements ResearcherSearch
 				researcherMap.put( "aff", researcher.getInstitution().getName() );
 			if ( researcher.getCitedBy() > 0 )
 				researcherMap.put( "citedBy", Integer.toString( researcher.getCitedBy() ) );
+			if ( researcher.getHindex() > 0 )
+				researcherMap.put( "hindex", Integer.toString( researcher.getHindex() ) );
 
 			if ( researcher.getPublicationAuthors() != null )
 				researcherMap.put( "publicationsNumber", researcher.getNoPublication() );

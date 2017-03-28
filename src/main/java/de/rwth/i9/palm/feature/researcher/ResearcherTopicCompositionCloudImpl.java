@@ -21,10 +21,10 @@ public class ResearcherTopicCompositionCloudImpl implements ResearcherTopicCompo
 	private PalmAnalytics palmAnalytics;
 	
 	// path on Windows
-	// private String path = "C:/Users/Albi/Desktop/";
+	private String path = "C:/Users/Administrator/Desktop/";
 	
 	// path on Mac
-	private String path = "/Users/pirolena/Desktop/";
+	// private String path = "/Users/pirolena/Desktop/";
 
 	@Override
 	public Map<String, Object> getTopicModelUniCloud( Author author, boolean isReplaceExistingResult ) throws IOException

@@ -21,7 +21,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 	
-	String path =  "C:/Users/Albi/Desktop/";
+	String path = "C:/Users/Administrator/Desktop/";
 
 	public void testGetEventPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{

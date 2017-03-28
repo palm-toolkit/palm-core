@@ -42,6 +42,7 @@ import de.rwth.i9.palm.model.PublicationSource;
 import de.rwth.i9.palm.model.PublicationType;
 import de.rwth.i9.palm.model.Source;
 import de.rwth.i9.palm.model.SourceMethod;
+import de.rwth.i9.palm.model.SourceProperty;
 import de.rwth.i9.palm.model.SourceType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.ApplicationService;
@@ -218,6 +219,9 @@ public class PublicationCollectionService
 			// set flag on author to indicate that publication details
 			// extraction are needed
 			author.setFetchPublicationDetail( true );
+			if ( author.getNoPublication() < selectedPublications.size() )
+				author.setNoPublication( selectedPublications.size() );
+
 			persistenceStrategy.getAuthorDAO().persist( author );
 		}
 
@@ -646,10 +650,25 @@ public class PublicationCollectionService
 
 				}
 
+				try
+				{
 				// assign publication authors
 				this.assignAuthors( publication, publicationSource, author, sourceMap, true );
-
+				}
+				catch ( Exception e )
+				{
+					System.out.println( "ERROR in assignAuthors" );
+					e.printStackTrace();
+				}
+				try
+				{
 				publication.addPublicationSource( publicationSource );
+				}
+				catch ( Exception e )
+				{
+					System.out.println( "ERROR in addPublicationSource" );
+					e.printStackTrace();
+				}
 
 				// check print
 //					for ( Entry<String, String> eachPublicationDetail : publicationMap.entrySet() )
@@ -832,12 +851,12 @@ public class PublicationCollectionService
 		int randomDelayThreshold = 0;
 		Random rand = new Random();
 		// get randomize delay for google scholar
-		String delayString = sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ).getSourcePropertyByIdentifiers( "request", "random_delay" ).getValue();
+		SourceProperty delayString = sourceMap.get( SourceType.GOOGLESCHOLAR.toString() ).getSourcePropertyByIdentifiers( "request", "random_delay" );
 		if ( delayString != null )
 		{
 			try
 			{
-				randomDelayThreshold = Integer.parseInt( delayString );
+				randomDelayThreshold = Integer.parseInt( delayString.getValue() );
 			}
 			catch ( Exception e )
 			{

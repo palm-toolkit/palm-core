@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
+
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
@@ -19,7 +20,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 	
-	String path =  "C:/Users/Albi/Desktop/";
+	String path = "C:/Users/Administrator/Desktop/";
 
 	public void testGetDataFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{

@@ -28,10 +28,10 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 	private PersistenceStrategy persistenceStrategy;
 	
 	// path on Windows
-	// private String path = "C:/Users/Albi/Desktop/";
+	private String path = "C:/Users/Administrator/Desktop/";
 	
 	// path on Mac
-	private String path = "/Users/pirolena/Desktop/";
+	// private String path = "/Users/pirolena/Desktop/";
 
 	@Override
 	public Map<String, Object> getResearcherSimilarAuthorMap( Author author, int startPage, int maxresult )

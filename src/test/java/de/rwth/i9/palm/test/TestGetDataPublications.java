@@ -1,13 +1,10 @@
 package de.rwth.i9.palm.test;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -36,7 +33,7 @@ public class TestGetDataPublications extends AbstractTransactionalJUnit4SpringCo
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 	
-	String path =  "C:/Users/Albi/Desktop/";
+	String path = "C:/Users/Administrator/Desktop/";
 
 	private final static Logger log = LoggerFactory.getLogger( TestGetDataPublications.class );
 

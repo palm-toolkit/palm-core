@@ -46,10 +46,10 @@ public class TopicModelingService
 	private PalmAnalytics palmAnalytics;
 	
 	// path on Windows
-	// private String path = "C:/Users/Albi/Desktop/";
+	private String path = "C:/Users/Administrator/Desktop/";
 	
 	// path on Mac
-	private String path = "/Users/pirolena/Desktop/";
+	// private String path = "/Users/pirolena/Desktop/";
 
 	public void calculateAuthorTopicModeling( Author author, boolean isReplaceExistingResult, boolean Static )
 	{
