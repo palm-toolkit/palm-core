@@ -631,6 +631,7 @@ public class ResearcherController
 				affiliationData.put("country", author.getInstitution().getLocation().getCountry().getName());
 			}						
 			authorMap.put( "affiliation", affiliationData );
+			authorMap.put( "hindex", author.getHindex() );
 		}
 		return authorMap;
 	}

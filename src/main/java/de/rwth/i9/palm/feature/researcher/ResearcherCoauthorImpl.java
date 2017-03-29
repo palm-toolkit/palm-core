@@ -62,6 +62,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 			Map<String, Object> coAuthorMap = new LinkedHashMap<String, Object>();
 			coAuthorMap.put( "id", coAuthor.getId() );
 			coAuthorMap.put( "name", coAuthor.getName() );
+			coAuthorMap.put( "hindex", coAuthor.getHindex() );
 			if ( coAuthor.getInstitution() != null ){
 				Map<String, String> affiliationData = new HashMap<String, String>();
 				
@@ -72,6 +73,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 				}
 							
 				coAuthorMap.put( "affiliation", affiliationData );
+
 			}
 			if( coAuthor.getPhotoUrl() != null )
 				coAuthorMap.put( "photo", coAuthor.getPhotoUrl() );
