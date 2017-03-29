@@ -107,7 +107,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 
 					try
 					{
-						theDir.mkdir();
+						theDir.mkdirs();
 						result = true;
 					}
 					catch ( SecurityException se )
@@ -201,7 +201,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 
 					try
 					{
-						theDir.mkdir();
+						theDir.mkdirs();
 						result = true;
 					}
 					catch ( SecurityException se )
@@ -269,7 +269,7 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 
 					try
 					{
-						theDir.mkdir();
+						theDir.mkdirs();
 						result = true;
 					}
 					catch ( SecurityException se )

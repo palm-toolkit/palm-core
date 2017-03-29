@@ -45,11 +45,13 @@ import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.gephi.statistics.plugin.GraphDistance;
 import org.openide.util.Lookup;
+import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 
+@Component
 public class GraphFeatureImpl implements GraphFeature
 {
 	@Override

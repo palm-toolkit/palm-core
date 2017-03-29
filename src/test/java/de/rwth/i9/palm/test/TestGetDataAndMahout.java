@@ -128,7 +128,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 
 					try
 					{
-						theDir.mkdir();
+						theDir.mkdirs();
 						result = true;
 					}
 					catch ( SecurityException se )
@@ -187,7 +187,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 
 					try
 					{
-						theDir.mkdir();
+						theDir.mkdirs();
 						result = true;
 					}
 					catch ( SecurityException se )

@@ -86,7 +86,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 
 					try
 					{
-						theDir.mkdir();
+						theDir.mkdirs();
 						result = true;
 					}
 					catch ( SecurityException se )
@@ -149,7 +149,7 @@ public class TestGetDataCircle extends AbstractTransactionalJUnit4SpringContextT
 
 					try
 					{
-						theDir.mkdir();
+						theDir.mkdirs();
 						result = true;
 					}
 					catch ( SecurityException se )
