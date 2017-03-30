@@ -16,6 +16,7 @@ import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationTopic;
 
 public class ResearcherCoauthorImpl implements ResearcherCoauthor
 {
@@ -31,8 +32,11 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 			return responseMap;
 		}
 
+		//prepare a list of map object containing coauthor common publications
+		Map<String, List<Map<String, Object>>> coAuthorCollaborationPublicationMap = new HashMap<String, List<Map<String, Object>>>();
+		
 		// prepare a list of map object containing coauthor properties and
-		Map<String, Integer> coAuthorCollaborationCountMap = new HashMap<String, Integer>();
+		Map<String, Integer> coAuthorCollaborationCountMap = new HashMap<String, Integer>();		
 		// Prepare set of coauthor HashSet;
 		Set<Author> coauthorSet = new HashSet<Author>();
 		// number of collaboration
@@ -50,6 +54,12 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 					coAuthorCollaborationCountMap.put( coAuthor.getId(), 1 );
 				else
 					coAuthorCollaborationCountMap.put( coAuthor.getId(), coAuthorCollaborationCountMap.get( coAuthor.getId() ) + 1 );
+			
+				List<Map<String, Object>> publications = coAuthorCollaborationPublicationMap.get( coAuthor.getId() );
+				if ( publications == null )
+					publications = new ArrayList<Map<String, Object>>();
+				publications.add( this.getPublicationDetails( publication ) );
+				coAuthorCollaborationPublicationMap.put( coAuthor.getId(), publications );
 			}
 		}
 
@@ -73,14 +83,17 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 				}
 							
 				coAuthorMap.put( "affiliation", affiliationData );
-
 			}
+			
 			if( coAuthor.getPhotoUrl() != null )
 				coAuthorMap.put( "photo", coAuthor.getPhotoUrl() );
 			coAuthorMap.put( "isAdded", coAuthor.isAdded() );
 			coAuthorMap.put( "coauthorTimes", coAuthorCollaborationCountMap.get( coAuthor.getId() ) );
-			coAuthorMap.put( "commonInterests", getCommonInterests(author, coAuthor) );
-			
+			coAuthorMap.put( "commonInterests", getCommonInterests( author, coAuthor ) );
+
+			if ( !coAuthorCollaborationPublicationMap.get( coAuthor.getId() ).isEmpty() )
+				coAuthorMap.put( "commonPublications", coAuthorCollaborationPublicationMap.get( coAuthor.getId() ) );
+
 			// add into list
 			coAuthorList.add( coAuthorMap );
 		}
@@ -155,6 +168,44 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		return authorInterestResult;
 	}
 	
+	private Map<String, Object> getPublicationDetails( Publication publication )
+	{
+		Map<String, Object> publicationDetails = new HashMap<String, Object>();
+		if ( publication.getTitle() != null )
+			publicationDetails.put( "title", publication.getTitle() );
+		if ( publication.getYear() != null )
+			publicationDetails.put( "date", publication.getYear() );
+
+		publicationDetails.put( "type", publication.getPublicationType() );
+		publicationDetails.put( "abstract", publication.getAbstractText() );
+		publicationDetails.put( "cited", publication.getCitedBy() );
+
+		// publication coauthors
+		List<Map<String, Object>> coauthors = new ArrayList<Map<String, Object>>();
+		if ( publication.getCoAuthors() != null )
+			for ( Author coauthor : publication.getCoAuthors() )
+			{
+				Map<String, Object> coauthorMap = new HashMap<String, Object>();
+				coauthorMap.put( "name", coauthor.getName() );
+				coauthors.add( coauthorMap );
+			}
+		publicationDetails.put( "coauthor", coauthors );
+
+		// publication topics
+		List<Map<String, Object>> topics = new ArrayList<Map<String, Object>>();
+		if ( publication.getPublicationTopics() != null )
+			for ( PublicationTopic publicationTopic : publication.getPublicationTopics() )
+			{
+				Map<String, Object> publicationTopicMap = new HashMap<String, Object>();
+				publicationTopicMap.put( "termstring", publicationTopic.getTermString() );
+				publicationTopicMap.put( "termvalues", publicationTopic.getTermValues() );
+				topics.add( publicationTopicMap );
+			}
+		publicationDetails.put( "topics", topics );
+
+		return publicationDetails;
+	}
+
 	private boolean listContains(Map<String, Object> element, List<Map<String, Object>> list){
 		for ( Map<String, Object> elem : list){
 			if (elem.containsValue(element.get("id")))
