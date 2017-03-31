@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
+import de.rwth.i9.palm.analytics.util.TopicMiningConstants;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
@@ -28,7 +29,7 @@ public class EventTopicModelingImpl implements EventTopicModeling
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 
-	private String path = "C:/Users/Administrator/Desktop/";
+	private String path = TopicMiningConstants.USER_DESKTOP_PATH;
 
 	/**
 	 * This is the first method used to show the widget Simple LDA

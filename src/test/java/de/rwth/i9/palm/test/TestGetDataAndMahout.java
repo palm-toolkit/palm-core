@@ -22,6 +22,7 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
+import de.rwth.i9.palm.analytics.util.TopicMiningConstants;
 import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
 import de.rwth.i9.palm.config.WebAppConfigTest;
 import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
@@ -39,7 +40,7 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 	
-	String path = "C:/Users/Administrator/Desktop/";
+	String path = TopicMiningConstants.USER_DESKTOP_PATH;
 
 	@Autowired // actually this one is for the API, so I guess you don't need to
 				// use this

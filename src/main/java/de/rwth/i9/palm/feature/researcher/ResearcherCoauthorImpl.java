@@ -82,14 +82,14 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 					affiliationData.put("country", coAuthor.getInstitution().getLocation().getCountry().getName());
 				}
 							
-				coAuthorMap.put( "affiliation", affiliationData );
+				coAuthorMap.put( "aff", affiliationData );
 			}
 			
 			if( coAuthor.getPhotoUrl() != null )
 				coAuthorMap.put( "photo", coAuthor.getPhotoUrl() );
 			coAuthorMap.put( "isAdded", coAuthor.isAdded() );
 			coAuthorMap.put( "coauthorTimes", coAuthorCollaborationCountMap.get( coAuthor.getId() ) );
-			coAuthorMap.put( "commonInterests", getCommonInterests( author, coAuthor ) );
+			coAuthorMap.put( "commonInterests", this.getCommonInterests( author, coAuthor ) );
 
 			if ( !coAuthorCollaborationPublicationMap.get( coAuthor.getId() ).isEmpty() )
 				coAuthorMap.put( "commonPublications", coAuthorCollaborationPublicationMap.get( coAuthor.getId() ) );
@@ -168,7 +168,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		return authorInterestResult;
 	}
 	
-	private Map<String, Object> getPublicationDetails( Publication publication )
+	public Map<String, Object> getPublicationDetails( Publication publication )
 	{
 		Map<String, Object> publicationDetails = new HashMap<String, Object>();
 		if ( publication.getTitle() != null )
@@ -176,6 +176,7 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		if ( publication.getYear() != null )
 			publicationDetails.put( "date", publication.getYear() );
 
+		publicationDetails.put( "id", publication.getId() );
 		publicationDetails.put( "type", publication.getPublicationType() );
 		publicationDetails.put( "abstract", publication.getAbstractText() );
 		publicationDetails.put( "cited", publication.getCitedBy() );

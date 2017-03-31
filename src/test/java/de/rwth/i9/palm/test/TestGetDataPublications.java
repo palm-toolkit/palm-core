@@ -17,6 +17,7 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.rwth.i9.palm.analytics.util.TopicMiningConstants;
 import de.rwth.i9.palm.config.DatabaseConfigCoreTest;
 import de.rwth.i9.palm.config.WebAppConfigTest;
 import de.rwth.i9.palm.model.Author;
@@ -33,7 +34,7 @@ public class TestGetDataPublications extends AbstractTransactionalJUnit4SpringCo
 	@Autowired
 	private PersistenceStrategy persistenceStrategy;
 	
-	String path = "C:/Users/Administrator/Desktop/";
+	String path = TopicMiningConstants.USER_DESKTOP_PATH;
 
 	private final static Logger log = LoggerFactory.getLogger( TestGetDataPublications.class );
 

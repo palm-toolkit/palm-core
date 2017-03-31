@@ -630,9 +630,10 @@ public class ResearcherController
 			if (author.getInstitution().getLocation() != null){
 				affiliationData.put("country", author.getInstitution().getLocation().getCountry().getName());
 			}						
-			authorMap.put( "affiliation", affiliationData );
-			authorMap.put( "hindex", author.getHindex() );
+			authorMap.put( "aff", affiliationData );
 		}
+		authorMap.put( "hindex", author.getHindex() );
+
 		return authorMap;
 	}
 	/**

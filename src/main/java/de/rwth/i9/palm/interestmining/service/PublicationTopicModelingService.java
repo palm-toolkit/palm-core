@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
+import de.rwth.i9.palm.analytics.util.TopicMiningConstants;
 import de.rwth.i9.palm.helper.comparator.CircleTopicModelingByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorTopicModeling;
@@ -45,7 +46,7 @@ public class PublicationTopicModelingService
 	@Autowired
 	private PalmAnalytics palmAnalytics;
 
-	private String path = "C:/Users/Administrator/Desktop/";
+	private String path = TopicMiningConstants.USER_DESKTOP_PATH;
 
 	public void calculateAuthorTopicModeling( Author author, boolean isReplaceExistingResult, boolean Static )
 	{

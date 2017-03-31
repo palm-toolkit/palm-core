@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import de.rwth.i9.palm.analytics.algorithm.dynamicLDA.ParallelTopicModel;
 import de.rwth.i9.palm.analytics.api.PalmAnalytics;
+import de.rwth.i9.palm.analytics.util.TopicMiningConstants;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Controller
@@ -31,7 +32,7 @@ public class ManageTopicModelingController
 	@RequestMapping( method = RequestMethod.GET )
 	public @ResponseBody String allReindex()									 
 	{
-		ParallelTopicModel ptm = palmAnalytics.getDynamicTopicModel().createModel( "C:\\Users\\Albi\\Desktop\\Years\\", "Years", 11, 10 );
+		ParallelTopicModel ptm = palmAnalytics.getDynamicTopicModel().createModel( TopicMiningConstants.USER_YEARS_FOLDER_PATH, "Years", 11, 10 );
 
 		List<String> topics = palmAnalytics.getDynamicTopicModel().getListTopics( 10 );
 		

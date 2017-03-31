@@ -148,7 +148,7 @@ public class MendeleyPublicationCollection extends PublicationCollection
 				authorDetailMap.put( "institutionCountry", institutionNode.path( "country" ).textValue() );
 		}
 		if ( !authorNode.path( "research_interests" ).isMissingNode() )
-			authorDetailMap.put( "researchInterests", authorNode.path( "esearch_interests" ).textValue() );
+			authorDetailMap.put( "researchInterests", authorNode.path( "research_interests" ).textValue() );
 		if ( !authorNode.path( "academic_status" ).isMissingNode() )
 			authorDetailMap.put( "academicStatus", authorNode.path( "academic_status" ).textValue() );
 		if ( !authorNode.path( "discipline" ).isMissingNode() )
