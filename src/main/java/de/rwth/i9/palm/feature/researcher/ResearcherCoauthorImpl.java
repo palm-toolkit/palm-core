@@ -1,5 +1,6 @@
 package de.rwth.i9.palm.feature.researcher;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,7 +11,8 @@ import java.util.Map;
 import java.util.Set;
 
 import de.rwth.i9.palm.helper.comparator.AuthorInterestProfileByProfileNameLengthComparator;
-import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationComparator;
+import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationsAndNameComparator;
+import de.rwth.i9.palm.helper.comparator.PublicationMapByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
@@ -21,7 +23,7 @@ import de.rwth.i9.palm.model.PublicationTopic;
 public class ResearcherCoauthorImpl implements ResearcherCoauthor
 {
 	@Override
-	public Map<String, Object> getResearcherCoAuthorMap( Author author, int startPage, int maxauthorInterestResult )
+	public Map<String, Object> getResearcherCoAuthorMap( Author author, int startPage, int maxCoauthorsResult, int maxauthorInterestResult )
 	{
 		// researchers list container
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
@@ -31,15 +33,15 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 			responseMap.put( "count", 0 );
 			return responseMap;
 		}
-
 		//prepare a list of map object containing coauthor common publications
 		Map<String, List<Map<String, Object>>> coAuthorCollaborationPublicationMap = new HashMap<String, List<Map<String, Object>>>();
 		
 		// prepare a list of map object containing coauthor properties and
 		Map<String, Integer> coAuthorCollaborationCountMap = new HashMap<String, Integer>();		
+
 		// Prepare set of coauthor HashSet;
 		Set<Author> coauthorSet = new HashSet<Author>();
-		// number of collaboration
+
 		for ( Publication publication : author.getPublications() )
 		{
 			for ( Author coAuthor : publication.getAuthors() )
@@ -50,14 +52,20 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 
 				coauthorSet.add( coAuthor );
 
+				// nr collaborations
 				if ( coAuthorCollaborationCountMap.get( coAuthor.getId() ) == null )
+				{
 					coAuthorCollaborationCountMap.put( coAuthor.getId(), 1 );
+				}
 				else
 					coAuthorCollaborationCountMap.put( coAuthor.getId(), coAuthorCollaborationCountMap.get( coAuthor.getId() ) + 1 );
 			
+				// common publications
 				List<Map<String, Object>> publications = coAuthorCollaborationPublicationMap.get( coAuthor.getId() );
+
 				if ( publications == null )
 					publications = new ArrayList<Map<String, Object>>();
+
 				publications.add( this.getPublicationDetails( publication ) );
 				coAuthorCollaborationPublicationMap.put( coAuthor.getId(), publications );
 			}
@@ -88,17 +96,21 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 			if( coAuthor.getPhotoUrl() != null )
 				coAuthorMap.put( "photo", coAuthor.getPhotoUrl() );
 			coAuthorMap.put( "isAdded", coAuthor.isAdded() );
+			coAuthorMap.put( "status", coAuthor.getAcademicStatus() );
 			coAuthorMap.put( "coauthorTimes", coAuthorCollaborationCountMap.get( coAuthor.getId() ) );
 			coAuthorMap.put( "commonInterests", this.getCommonInterests( author, coAuthor ) );
 
 			if ( !coAuthorCollaborationPublicationMap.get( coAuthor.getId() ).isEmpty() )
+			{
+				Collections.sort( coAuthorCollaborationPublicationMap.get( coAuthor.getId() ), new PublicationMapByDateComparator() );
 				coAuthorMap.put( "commonPublications", coAuthorCollaborationPublicationMap.get( coAuthor.getId() ) );
+			}
 
 			// add into list
 			coAuthorList.add( coAuthorMap );
 		}
 		
-		Collections.sort( coAuthorList, new CoAuthorByNumberOfCollaborationComparator() );
+		Collections.sort( coAuthorList, new CoAuthorByNumberOfCollaborationsAndNameComparator() );
 
 		// prepare list of object map containing coAuthor details
 		List<Map<String, Object>> coAuthorListPaging = new ArrayList<Map<String, Object>>();
@@ -111,17 +123,18 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 				coAuthorListPaging.add( coAuthor );
 			}
 		}
-
-		// remove unnecessary authorInterestResult
-
 		// put coauthor to responseMap
 		responseMap.put( "countTotal", coAuthorList.size() );
 		responseMap.put( "count", coAuthorListPaging.size() );
-		responseMap.put( "coAuthors", coAuthorListPaging );
+
+		if ( maxCoauthorsResult < coAuthorList.size() )
+			responseMap.put( "coAuthors", coAuthorList.subList( 0, maxCoauthorsResult ) );
+		else
+			responseMap.put( "coAuthors", coAuthorList );
 
 		return responseMap;
 	}
-	
+
 	public List<Map<String, Object>> getCommonInterests(Author author, Author coAuthor){
 		List<Map<String, Object>> interestsListAuthor   = getInterests( author ) ;
 		List<Map<String, Object>> interestsListCoauthor = getInterests( coAuthor );		
@@ -173,13 +186,23 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 		Map<String, Object> publicationDetails = new HashMap<String, Object>();
 		if ( publication.getTitle() != null )
 			publicationDetails.put( "title", publication.getTitle() );
-		if ( publication.getYear() != null )
-			publicationDetails.put( "date", publication.getYear() );
+
+		if ( publication.getPublicationDate() != null )
+		{
+			SimpleDateFormat sdf = new SimpleDateFormat( publication.getPublicationDateFormat() );
+			publicationDetails.put( "date", sdf.format( publication.getPublicationDate() ) );
+			publicationDetails.put( "dateFormat", publication.getPublicationDateFormat() );
+		}
 
 		publicationDetails.put( "id", publication.getId() );
 		publicationDetails.put( "type", publication.getPublicationType() );
 		publicationDetails.put( "abstract", publication.getAbstractText() );
 		publicationDetails.put( "cited", publication.getCitedBy() );
+
+		if ( publication.getAbstractText() != null || publication.getKeywordText() != null )
+			publicationDetails.put( "contentExist", true );
+		else
+			publicationDetails.put( "contentExist", false );
 
 		// publication coauthors
 		List<Map<String, Object>> coauthors = new ArrayList<Map<String, Object>>();

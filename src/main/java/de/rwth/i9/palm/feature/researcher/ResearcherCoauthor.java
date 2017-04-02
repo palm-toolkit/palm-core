@@ -6,6 +6,6 @@ import de.rwth.i9.palm.model.Author;
 
 public interface ResearcherCoauthor
 {
-	public Map<String, Object> getResearcherCoAuthorMap( Author author, int startPage, int maxresult );
+	public Map<String, Object> getResearcherCoAuthorMap( Author author, int startPage, int maxresultCoauthor, int maxresultTopics );
 
 }

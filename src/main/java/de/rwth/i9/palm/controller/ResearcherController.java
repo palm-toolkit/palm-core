@@ -610,7 +610,7 @@ public class ResearcherController
 		}
 
 		responseMap.put("author", createAuthorMap(author));
-		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
+		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult, 40 ) );
 	
 		return responseMap;
 	}
