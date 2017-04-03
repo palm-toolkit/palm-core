@@ -22,6 +22,9 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 	@Autowired( required = false )
 	private EventSearch eventSearch;
 
+	@Autowired( required = false )
+	private EventTopResearcher eventTopResearcher;
+
 	@Override
 	public EventBasicStatistic getEventBasicStatistic()
 	{
@@ -74,5 +77,13 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 			this.eventSearch = new EventSearchImpl();
 
 		return this.eventSearch;
+	}
+
+	@Override
+	public EventTopResearcher getEventResearcher()
+	{
+		if ( this.eventTopResearcher == null )
+			this.eventTopResearcher = new EventTopResearcherImpl();
+		return this.eventTopResearcher;
 	}
 }

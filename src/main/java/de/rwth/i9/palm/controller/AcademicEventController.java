@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -575,4 +576,45 @@ public class AcademicEventController
 		return Collections.emptyMap();
 	}
 
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
+	 * @throws IOException
+	 */
+	@RequestMapping( value = "/topResearchers", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopResearchers( 
+			@RequestParam( value = "id", required = false ) final String eventId, 
+			@RequestParam( value = "publicationId", required = false ) final String publicationId,
+			@RequestParam( value = "pid", required = false ) String pid, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
+			final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+
+	{
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		
+		// get venue
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( event == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "researcher not found in database" );
+			return responseMap;
+		}
+		
+		if ( orderBy == null)
+			orderBy = "nrPublications";
+		
+		responseMap.putAll( academicEventFeature.getEventResearcher().getResearcherTopListByEventId( eventId, pid, maxresult, orderBy ) );
+		return responseMap;
+	}
 }
