@@ -2,6 +2,7 @@ package de.rwth.i9.palm.feature.academicevent;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Event;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationTopic;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -25,7 +27,7 @@ public class EventTopResearcherImpl implements EventTopResearcher
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> getResearcherTopListByEventId( String eventId, String pid, Integer maxresult, String orderBy ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+	public Map<String, Object> getResearcherTopListByEventId( String query, String eventId, String pid, Integer maxresult, String orderBy ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
 	{
 		Map<String, Object> responseMap = new HashMap<String, Object>();
 
@@ -50,6 +52,7 @@ public class EventTopResearcherImpl implements EventTopResearcher
 
 		// get data name
 		String title = event.getEventGroup().getName();
+
 		if ( event.getEventGroup().getNotation() != null && !title.equals( event.getEventGroup().getNotation() ) )
 			title = event.getEventGroup().getNotation();
 
@@ -59,51 +62,102 @@ public class EventTopResearcherImpl implements EventTopResearcher
 
 		responseMap.put( "event", eventMapQuery );
 
+		// get event participants
 		List<Map<String, Object>> eventParticipantsMap = new ArrayList<Map<String, Object>>();
+		Map<String, Object> participantsMap = persistenceStrategy.getEventDAO().getParticipantsEvent( query, event, null, maxresult, orderBy );
+		List<Author> participantsList = (List<Author>) participantsMap.get( "participants" );
 
-		for ( Publication publication : eventPublications )
+		for ( Author participant : participantsList )
 		{
-			List<Author> publicationAuthors = publication.getAuthors();
-			if ( publicationAuthors == null || publicationAuthors.isEmpty() )
-				continue;
-
-			for ( Author author : publicationAuthors )
+			Map<String, Object> authorMap = new HashMap<String, Object>();
+			authorMap.put( "id", participant.getId() );
+			authorMap.put( "name", participant.getName() );
+			authorMap.put( "hindex", participant.getHindex() );
+			if ( participant.getInstitution() != null )
 			{
-				Map<String, Object> authorMap = new HashMap<String, Object>();
-				authorMap.put( "id", author.getId() );
-				authorMap.put( "name", author.getName() );
-				authorMap.put( "hindex", author.getHindex() );
-				if ( author.getInstitution() != null )
+				Map<String, String> affiliationData = new HashMap<String, String>();
+
+				affiliationData.put( "institution", participant.getInstitution().getName() );
+
+				if ( participant.getInstitution().getLocation() != null )
 				{
-					Map<String, String> affiliationData = new HashMap<String, String>();
-
-					affiliationData.put( "institution", author.getInstitution().getName() );
-
-					if ( author.getInstitution().getLocation() != null )
-					{
-						affiliationData.put( "country", author.getInstitution().getLocation().getCountry().getName() );
-					}
-
-					authorMap.put( "aff", affiliationData );
+					affiliationData.put( "country", participant.getInstitution().getLocation().getCountry().getName() );
 				}
 
-				if ( author.getPhotoUrl() != null )
-					authorMap.put( "photo", author.getPhotoUrl() );
-
-				authorMap.put( "isAdded", author.isAdded() );
-				authorMap.put( "status", author.getAcademicStatus() );
-
-				if ( authorMap.get( "eventNrPublications" ) == null )
-					authorMap.put( "eventNrPublications", 1 );
-				else
-					authorMap.put( "eventNrPublications", (int) authorMap.get( "eventNrPublications" ) + 1 );
-
-				eventParticipantsMap.add( authorMap );
+				authorMap.put( "aff", affiliationData );
 			}
+
+			if ( participant.getPhotoUrl() != null )
+				authorMap.put( "photo", participant.getPhotoUrl() );
+
+			authorMap.put( "isAdded", participant.isAdded() );
+			authorMap.put( "status", participant.getAcademicStatus() );
+
+			Map<String, Object> authorPublicationEventMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( "", "all", participant, event, null, null, "all", "citation" );
+			List<Publication> authorPublicationEventList = (List<Publication>) authorPublicationEventMap.get( "publications" );
+
+			List<Map<String, Object>> publicationsMap = new ArrayList<Map<String, Object>>();
+			for ( Publication publication : authorPublicationEventList )
+			{
+				publicationsMap.add( this.getPublicationDetails( publication ) );
+			}
+			authorMap.put( "publications", publicationsMap );
+			authorMap.put( "nrPublicationsEvent", authorPublicationEventList.size() );
+
+			eventParticipantsMap.add( authorMap );
 		}
 
 		responseMap.put( "participants", eventParticipantsMap );
 
 		return responseMap;
+	}
+
+	public Map<String, Object> getPublicationDetails( Publication publication )
+	{
+		Map<String, Object> publicationDetails = new HashMap<String, Object>();
+		if ( publication.getTitle() != null )
+			publicationDetails.put( "title", publication.getTitle() );
+
+		if ( publication.getPublicationDate() != null )
+		{
+			SimpleDateFormat sdf = new SimpleDateFormat( publication.getPublicationDateFormat() );
+			publicationDetails.put( "date", sdf.format( publication.getPublicationDate() ) );
+			publicationDetails.put( "dateFormat", publication.getPublicationDateFormat() );
+		}
+
+		publicationDetails.put( "id", publication.getId() );
+		publicationDetails.put( "type", publication.getPublicationType() );
+		publicationDetails.put( "abstract", publication.getAbstractText() );
+		publicationDetails.put( "cited", publication.getCitedBy() );
+
+		if ( publication.getAbstractText() != null || publication.getKeywordText() != null )
+			publicationDetails.put( "contentExist", true );
+		else
+			publicationDetails.put( "contentExist", false );
+
+		// publication coauthors
+		List<Map<String, Object>> coauthors = new ArrayList<Map<String, Object>>();
+		if ( publication.getCoAuthors() != null )
+			for ( Author coauthor : publication.getCoAuthors() )
+			{
+				Map<String, Object> coauthorMap = new HashMap<String, Object>();
+				coauthorMap.put( "name", coauthor.getName() );
+				coauthors.add( coauthorMap );
+			}
+		publicationDetails.put( "coauthor", coauthors );
+
+		// publication topics
+		List<Map<String, Object>> topics = new ArrayList<Map<String, Object>>();
+		if ( publication.getPublicationTopics() != null )
+			for ( PublicationTopic publicationTopic : publication.getPublicationTopics() )
+			{
+				Map<String, Object> publicationTopicMap = new HashMap<String, Object>();
+				publicationTopicMap.put( "termstring", publicationTopic.getTermString() );
+				publicationTopicMap.put( "termvalues", publicationTopic.getTermValues() );
+				topics.add( publicationTopicMap );
+			}
+		publicationDetails.put( "topics", topics );
+
+		return publicationDetails;
 	}
 }

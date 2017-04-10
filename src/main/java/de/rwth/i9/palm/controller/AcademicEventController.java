@@ -591,6 +591,7 @@ public class AcademicEventController
 	@RequestMapping( value = "/topResearchers", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getEventTopResearchers( 
+			@RequestParam( value = "query", required = false ) String query,
 			@RequestParam( value = "id", required = false ) final String eventId, 
 			@RequestParam( value = "publicationId", required = false ) final String publicationId,
 			@RequestParam( value = "pid", required = false ) String pid, 
@@ -611,10 +612,13 @@ public class AcademicEventController
 			return responseMap;
 		}
 		
+		if ( query == null )
+			query = "";
+
 		if ( orderBy == null)
 			orderBy = "nrPublications";
 		
-		responseMap.putAll( academicEventFeature.getEventResearcher().getResearcherTopListByEventId( eventId, pid, maxresult, orderBy ) );
+		responseMap.putAll( academicEventFeature.getEventResearcher().getResearcherTopListByEventId( query, eventId, pid, maxresult, orderBy ) );
 		return responseMap;
 	}
 }
