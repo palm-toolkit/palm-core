@@ -7,5 +7,5 @@ import java.util.concurrent.ExecutionException;
 
 public interface EventTopResearcher
 {
-	public Map<String, Object> getResearcherTopListByEventId( String query, String eventId, String pid, Integer maxresult, String orderBy ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException;
+	public Map<String, Object> getResearcherListByEventId( String query, String eventId, String pid, Integer maxresult, String orderBy ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException;
 }

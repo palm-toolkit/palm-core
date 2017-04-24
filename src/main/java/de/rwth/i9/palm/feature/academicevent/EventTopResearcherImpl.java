@@ -27,7 +27,7 @@ public class EventTopResearcherImpl implements EventTopResearcher
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public Map<String, Object> getResearcherTopListByEventId( String query, String eventId, String pid, Integer maxresult, String orderBy ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+	public Map<String, Object> getResearcherListByEventId( String query, String eventId, String pid, Integer maxresult, String orderBy ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
 	{
 		Map<String, Object> responseMap = new HashMap<String, Object>();
 
@@ -96,13 +96,19 @@ public class EventTopResearcherImpl implements EventTopResearcher
 			Map<String, Object> authorPublicationEventMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( "", "all", participant, event, null, null, "all", "citation" );
 			List<Publication> authorPublicationEventList = (List<Publication>) authorPublicationEventMap.get( "publications" );
 
-			List<Map<String, Object>> publicationsMap = new ArrayList<Map<String, Object>>();
+			int eventPublCitations = 0;
+			List<Map<String, Object>> publicationsMapList = new ArrayList<Map<String, Object>>();
+
 			for ( Publication publication : authorPublicationEventList )
 			{
-				publicationsMap.add( this.getPublicationDetails( publication ) );
+				publicationsMapList.add( this.getPublicationDetails( publication ) );
+				eventPublCitations += publication.getCitedBy();
 			}
-			authorMap.put( "publications", publicationsMap );
-			authorMap.put( "nrPublicationsEvent", authorPublicationEventList.size() );
+			authorMap.put( "publications", publicationsMapList );
+			authorMap.put( "publicationsCitations", eventPublCitations );
+			authorMap.put( "publicationsNumber", authorPublicationEventList.size() );
+
+			authorMap.put( "citedBy", participant.getCitedBy() );
 
 			eventParticipantsMap.add( authorMap );
 		}

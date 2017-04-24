@@ -588,6 +588,45 @@ public class AcademicEventController
 	 * @throws UnsupportedEncodingException
 	 * @throws IOException
 	 */
+	@RequestMapping( value = "/researchers", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventResearchers( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "publicationId", required = false ) final String publicationId, @RequestParam( value = "pid", required = false ) String pid, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "orderBy", required = false ) String orderBy, final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+
+	{
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+
+		// get venue
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( event == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "researcher not found in database" );
+			return responseMap;
+		}
+
+		if ( query == null )
+			query = "";
+
+		if ( orderBy == null )
+			orderBy = "nrPublications";
+
+		responseMap.putAll( academicEventFeature.getEventResearcher().getResearcherListByEventId( query, eventId, pid, maxresult, orderBy ) );
+		return responseMap;
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
+	 * @throws IOException
+	 */
 	@RequestMapping( value = "/topResearchers", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getEventTopResearchers( 
@@ -615,10 +654,13 @@ public class AcademicEventController
 		if ( query == null )
 			query = "";
 
-		if ( orderBy == null)
+		if ( orderBy == null )
 			orderBy = "nrPublications";
 		
-		responseMap.putAll( academicEventFeature.getEventResearcher().getResearcherTopListByEventId( query, eventId, pid, maxresult, orderBy ) );
+		if ( maxresult == null )
+			maxresult = 20;
+
+		responseMap.putAll( academicEventFeature.getEventResearcher().getResearcherListByEventId( query, eventId, pid, maxresult, orderBy ) );
 		return responseMap;
 	}
 }
