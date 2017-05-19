@@ -130,11 +130,8 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 			{
 				Map<String, Object> topicproportions = new LinkedHashMap<String, Object>();
 				topicproportions.put( "name", topic.split( "_-_" )[0] );
-					topicproportions.put( "value", "" );// Math.round( (
-														// Double.parseDouble(
-														// topic.split( "_-_"
-														// )[1] ) * 100 ) / 100
-														// ) );
+					topicproportions.put( "value", Math.round( ( Double.parseDouble( topic.split( "_-_" )[1] ) * 100 ) / 100 ) );
+
 				topicleveldetail.add( topicproportions );
 			}
 
@@ -155,6 +152,9 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 				similarAuthorListPaging.add( similarAuthor );
 			}
 		}
+
+		// put author in response
+		responseMap.put( "author", createAuthorMap( author ) );
 
 		// put similarAuthor to responseMap
 		responseMap.put( "countTotal", similarAuthorList.size() );
@@ -180,13 +180,13 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 	List<String> authortopicWords = new ArrayList<String>();
 	for (String entity : similarEntities){
 		if(entity.split("->")[0].equals(author.getId()))
-			authortopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author", entity.split("->")[0], 10, 10, 10,  palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), false ).keySet());
+				authortopicWords = new ArrayList<String>( palmAnalytics.getNGrams().runweightedTopicComposition( path, "Authors", entity.split( "->" )[0], 10, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria( path, "Authors", author.getId().toString() ), false ).keySet() );
 	}
 	
 	// run for each of the entities of the list the weightedTopic Composition
 	for (String entity : similarEntities){
 		if(!entity.split("->")[0].equals(author.getId())){		
-			List<String> similartopicWords = new ArrayList<String>(palmAnalytics.getNGrams().runweightedTopicComposition(path,"Author", entity.split("->")[0], 10, 10, 10,  palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), false ).keySet());
+				List<String> similartopicWords = new ArrayList<String>( palmAnalytics.getNGrams().runweightedTopicComposition( path, "Authors", entity.split( "->" )[0], 10, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria( path, "Authors", author.getId().toString() ), false ).keySet() );
 			
 			Map<String, Object> similarAuthorMap = new LinkedHashMap<String, Object>();
 
@@ -284,4 +284,28 @@ private HashMap<String, Double> comparePhraseTopicLevel(List<String> authortopic
 	return result;
 }
 
+	private Map<String, Object> createAuthorMap( Author author )
+	{
+		Map<String, Object> authorMap = new HashMap<String, Object>();
+
+		authorMap.put( "id", author.getId() );
+		authorMap.put( "name", author.getName() );
+		authorMap.put( "isAdded", author.isAdded() );
+
+		if ( author.getInstitution() != null )
+		{
+			Map<String, String> affiliationData = new HashMap<String, String>();
+
+			affiliationData.put( "institution", author.getInstitution().getName() );
+
+			if ( author.getInstitution().getLocation() != null )
+			{
+				affiliationData.put( "country", author.getInstitution().getLocation().getCountry().getName() );
+			}
+			authorMap.put( "aff", affiliationData );
+		}
+		authorMap.put( "hindex", author.getHindex() );
+
+		return authorMap;
+	}
 }

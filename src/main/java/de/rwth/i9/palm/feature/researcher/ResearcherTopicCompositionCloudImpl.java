@@ -35,7 +35,7 @@ public class ResearcherTopicCompositionCloudImpl implements ResearcherTopicCompo
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Author", author.getId().toString(), 5, 5, 5,  palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), true );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Authors", author.getId().toString(), 5, 5, 5, palmAnalytics.getNGrams().dateCheckCriteria( path, "Authors", author.getId().toString() ), true );
 
 		if ( topiccomposition.isEmpty() != true )
 		{
@@ -76,7 +76,7 @@ public class ResearcherTopicCompositionCloudImpl implements ResearcherTopicCompo
 
 		// algorithm result
 		HashMap<String, Double> topiccomposition = new LinkedHashMap<String, Double>();
-		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Author", author.getId().toString(), 10, 10, 10,  palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), false );
+		topiccomposition = palmAnalytics.getNGrams().runweightedTopicComposition( path, "Authors", author.getId().toString(), 10, 10, 10, palmAnalytics.getNGrams().dateCheckCriteria( path, "Authors", author.getId().toString() ), false );
 
 		if ( topiccomposition.isEmpty() != true )
 		{

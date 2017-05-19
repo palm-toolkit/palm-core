@@ -402,7 +402,7 @@ public class ExploreController
 		}
 
 		// get coauthor calculation
-		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult ) );
+		responseMap.putAll( researcherFeature.getResearcherCoauthor().getResearcherCoAuthorMap( author, startPage, maxresult, 20 ) );
 
 		graphFeature.graphData( author );
 

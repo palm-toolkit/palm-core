@@ -529,7 +529,7 @@ public class TopicModelingService
 			try
 			{
 				//topicNgrams = palmAnalytics.getNGrams().getTopTopicUnigramsDocument( palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId().toString() ), -1, 0.0, 5, 5, true );
-				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Author", 20, 10, 7, false, palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), true );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Authors", 20, 10, 7, false, palmAnalytics.getNGrams().dateCheckCriteria( path, "Authors", author.getId().toString() ), true );
 				
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 			{
@@ -593,9 +593,9 @@ public class TopicModelingService
 				Map<String, List<String>> topicNgrams = null;
 				try
 				{
-					// topicNgrams =
-					// palmAnalytics.getNGrams().getTopicNgramsDocument( i -
-					// 2005, -1, 0.0, 11, 5, true );
+					
+					topicNgrams = palmAnalytics.getNGrams().getTopicNgramsDocument( palmAnalytics.getNGrams().createModel( path, "Authors", author.getId(), 20 ), i - 2005, -1, 0.0, 11, 5, true );
+
 
 					// add into termValueMap
 					// termValueMap.put(palmAnalytics.getDynamicTopicModel().getListTopics(
@@ -641,7 +641,12 @@ public class TopicModelingService
 				// palmAnalytics.getNGrams().getTopTopicNgramsDocument(
 				// palmAnalytics.getNGrams().maptoRealDatabaseID( author.getId()
 				// ), -1, 0.0, 5, 5, true );
-				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Author", 20, 10, 5, false, palmAnalytics.getNGrams().dateCheckCriteria(path, "Author", author.getId().toString()), false );
+				// topicNgrams = palmAnalytics.getNGrams().runTopicComposition(
+				// author.getId().toString(), path, "Author", 20, 10, 5, false,
+				// palmAnalytics.getNGrams().dateCheckCriteria(path, "Author",
+				// author.getId().toString()), false );
+				topicNgrams = palmAnalytics.getNGrams().runTopicComposition( author.getId().toString(), path, "Authors", 20, 10, 5, false, palmAnalytics.getNGrams().dateCheckCriteria( path, "Authors", author.getId().toString() ), false );
+
 				for ( Entry<String, List<String>> topicngrams : topicNgrams.entrySet() )
 					{
 					for ( String topicproportion : topicngrams.getValue() )
