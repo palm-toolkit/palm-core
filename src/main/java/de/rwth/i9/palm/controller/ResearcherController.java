@@ -749,7 +749,7 @@ public class ResearcherController
 		if ( startPage == null )
 			startPage = 0;
 		if ( maxresult == null )
-			maxresult = 10;
+			maxresult = 30;
 
 		// get author
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );
@@ -794,7 +794,7 @@ public class ResearcherController
 		if ( startPage == null )
 			startPage = 0;
 		if ( maxresult == null )
-			maxresult = 10;
+			maxresult = 30;
 
 		// get author
 		Author author = persistenceStrategy.getAuthorDAO().getById( authorId );

@@ -37,7 +37,7 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 
 		List<String> similarAuthors = new ArrayList<String>();
 		
-		similarAuthors = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), path, "Authors", 20, 10, 3, false );
+		similarAuthors = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), path, "Authors", 50, maxresult, 3, false );
 
 		// Prepare set of similarAuthor HashSet;
 		Set<String> similarauthorSet = new HashSet<String>();
@@ -65,6 +65,12 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 				similarAuthorMap.put( "affiliation", persistenceStrategy.getAuthorDAO().getById( similarAuthor.split( "->" )[0] ).getInstitution().getName() );
 			if ( persistenceStrategy.getAuthorDAO().getById( similarAuthor.split( "->" )[0] ).getPhotoUrl() != null )
 				similarAuthorMap.put( "photo", persistenceStrategy.getAuthorDAO().getById( similarAuthor.split( "->" )[0] ).getPhotoUrl() );
+			if ( persistenceStrategy.getAuthorDAO().getById( similarAuthor.split( "->" )[0] ).getAcademicStatus() != null )
+				similarAuthorMap.put( "status", persistenceStrategy.getAuthorDAO().getById( similarAuthor.split( "->" )[0] ).getAcademicStatus() );
+
+			similarAuthorMap.put( "citedBy", persistenceStrategy.getAuthorDAO().getById( similarAuthor.split( "->" )[0] ).getCitedBy() );
+			similarAuthorMap.put( "publicationsNumber", persistenceStrategy.getAuthorDAO().getById( similarAuthor.split( "->" )[0] ).getNoPublication() );
+			similarAuthorMap.put( "hindex", persistenceStrategy.getAuthorDAO().getById( similarAuthor.split( "->" )[0] ).getHindex() );
 			similarAuthorMap.put( "isAdded", persistenceStrategy.getAuthorDAO().getById( similarAuthor.split( "->" )[0] ).isAdded() );
 			similarAuthorMap.put( "similarity", similarAuthor.split( "->" )[1] );
 
@@ -86,6 +92,9 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 
 		// remove unnecessary result
 
+		// put author in response
+		responseMap.put( "author", createAuthorMap( author ) );
+
 		// put similarAuthor to responseMap
 		responseMap.put( "countTotal", similarAuthorList.size() );
 		responseMap.put( "count", similarAuthorListPaging.size() );
@@ -101,7 +110,7 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
 		Map<String, List<String>> similarAuthors = new LinkedHashMap<String, List<String>>();
-		similarAuthors = palmAnalytics.getNGrams().runSimilarEntitiesTopicLevel( author.getId().toString(), path, "Authors", 50, 10, 3, false );
+		similarAuthors = palmAnalytics.getNGrams().runSimilarEntitiesTopicLevel( author.getId().toString(), path, "Authors", 50, maxresult, 3, false );
 
 		// get the id, degree of similarity, topics proportions
 		// put them into the map
@@ -121,8 +130,14 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 				similarAuthorMap.put( "affiliation", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getInstitution().getName() );
 			if ( persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getPhotoUrl() != null )
 				similarAuthorMap.put( "photo", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getPhotoUrl() );
-			similarAuthorMap.put( "isAdded", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).isAdded() );
-			similarAuthorMap.put( "similarity", similar.getKey().split( "->" )[1] );
+				if ( persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getAcademicStatus() != null )
+					similarAuthorMap.put( "status", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getAcademicStatus() );
+
+				similarAuthorMap.put( "citedBy", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getCitedBy() );
+				similarAuthorMap.put( "publicationsNumber", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getNoPublication() );
+				similarAuthorMap.put( "hindex", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).getHindex() );
+				similarAuthorMap.put( "isAdded", persistenceStrategy.getAuthorDAO().getById( similar.getKey().split( "->" )[0] ).isAdded() );
+				similarAuthorMap.put( "similarity", similar.getKey().split( "->" )[1] );
 
 			// construct the map for the list of topics
 			List<Object> topicleveldetail = new ArrayList<Object>();
@@ -145,6 +160,7 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 		List<Map<String, Object>> similarAuthorListPaging = new ArrayList<Map<String, Object>>();
 
 		int position = 0;
+		System.out.println( "similarAuthorList.size() = " + similarAuthorList.size() );
 		for ( Map<String, Object> similarAuthor : similarAuthorList )
 		{
 			if ( position >= startPage && similarAuthorListPaging.size() < maxresult )
@@ -172,7 +188,7 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 	
 	// find the list of similar authors
 	List<String> similarEntities = new ArrayList<String>();
-	similarEntities = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), path, "Authors", 50, 10, 3, false );
+		similarEntities = palmAnalytics.getNGrams().runSimilarEntities( author.getId().toString(), path, "Authors", 50, maxresult, 3, false );
 	
 	List<Map<String, Object>> similarAuthorList = new ArrayList<Map<String, Object>>();
 	
@@ -197,7 +213,13 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 				similarAuthorMap.put( "affiliation", persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).getInstitution().getName() );
 			if ( persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).getPhotoUrl() != null )
 				similarAuthorMap.put( "photo", persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).getPhotoUrl() );
-			similarAuthorMap.put( "isAdded", persistenceStrategy.getAuthorDAO().getById( entity.split("->")[0] ).isAdded() );
+				if ( persistenceStrategy.getAuthorDAO().getById( entity.split( "->" )[0] ).getAcademicStatus() != null )
+					similarAuthorMap.put( "status", persistenceStrategy.getAuthorDAO().getById( entity.split( "->" )[0] ).getAcademicStatus() );
+
+				similarAuthorMap.put( "citedBy", persistenceStrategy.getAuthorDAO().getById( entity.split( "->" )[0] ).getCitedBy() );
+				similarAuthorMap.put( "publicationsNumber", persistenceStrategy.getAuthorDAO().getById( entity.split( "->" )[0] ).getNoPublication() );
+				similarAuthorMap.put( "hindex", persistenceStrategy.getAuthorDAO().getById( entity.split( "->" )[0] ).getHindex() );
+				similarAuthorMap.put( "isAdded", persistenceStrategy.getAuthorDAO().getById( entity.split( "->" )[0] ).isAdded() );
 			
 			// return a HashMap with the similar words and similarity degree 
 			HashMap<String, Double> similarDetail = comparePhraseTopicLevel(authortopicWords,similartopicWords );
@@ -237,6 +259,9 @@ public Map<String, Object> getResearcherSimilarAuthorTopicLevelRevised( Author a
 			similarAuthorListPaging.add( similarAuthor );
 		}
 	}
+
+		// put author in response
+		responseMap.put( "author", createAuthorMap( author ) );
 
 	// put similarAuthor to responseMap
 	responseMap.put( "countTotal", similarAuthorList.size() );
@@ -291,6 +316,9 @@ private HashMap<String, Double> comparePhraseTopicLevel(List<String> authortopic
 		authorMap.put( "id", author.getId() );
 		authorMap.put( "name", author.getName() );
 		authorMap.put( "isAdded", author.isAdded() );
+
+		if ( author.getPhotoUrl() != null )
+			authorMap.put( "photo", author.getPhotoUrl() );
 
 		if ( author.getInstitution() != null )
 		{
