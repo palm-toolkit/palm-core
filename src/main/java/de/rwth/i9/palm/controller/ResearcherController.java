@@ -515,7 +515,8 @@ public class ResearcherController
 			final HttpServletResponse response)
 	{	
 		if( startPage == null ) startPage = 0;
-		if( maxresult == null ) maxresult = 10;
+		if ( maxresult == null )
+			maxresult = 15;
 		return researcherFeature.getResearcherTopPublication().getTopPublicationListByAuthorId( authorId, startPage, maxresult );
 	}
 

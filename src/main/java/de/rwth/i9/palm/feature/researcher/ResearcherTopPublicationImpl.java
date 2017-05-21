@@ -84,6 +84,7 @@ public class ResearcherTopPublicationImpl implements ResearcherTopPublication
 				Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
 				authorMap.put( "id", author.getId() );
 				authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
+				authorMap.put( "hindex", author.getHindex() );
 				if ( author.getInstitution() != null )
 					authorMap.put( "aff", author.getInstitution().getName() );
 
