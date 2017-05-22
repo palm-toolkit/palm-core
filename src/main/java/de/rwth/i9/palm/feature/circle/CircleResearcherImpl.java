@@ -7,16 +7,22 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.text.WordUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.helper.comparator.AuthorByNaturalOrderComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Circle;
+import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
+@Component
 public class CircleResearcherImpl implements CircleResearcher
 {
+	@Autowired
+	private PersistenceStrategy persistenceStrategy;
 
 	@Override
-	public Map<String, Object> getCircleResearcherMap( Circle circle )
+	public Map<String, Object> getCircleResearcherMap( Circle circle, Integer yearMin, Integer yearMax, Integer maxresult )
 	{
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
 
@@ -29,7 +35,13 @@ public class CircleResearcherImpl implements CircleResearcher
 		}
 
 		List<Author> authors = new ArrayList<Author>();
-		authors.addAll( circle.getAuthors() );
+		if ( yearMin == 0 && yearMax == 0 )
+			authors.addAll( circle.getAuthors() );
+		else
+		{
+			Map<String, Object> authorsMap = persistenceStrategy.getCircleDAO().getCircleMembersByPublishingPeriod( circle, yearMin, yearMax, maxresult );
+			authors = (List<Author>) authorsMap.get( "authors" );
+		}
 
 		Collections.sort( authors, new AuthorByNaturalOrderComparator() );
 
@@ -46,6 +58,9 @@ public class CircleResearcherImpl implements CircleResearcher
 				researcherMap.put( "aff", researcher.getInstitution().getName() );
 			if ( researcher.getCitedBy() > 0 )
 				researcherMap.put( "citedBy", researcher.getCitedBy() );
+
+			if ( researcher.getHindex() > 0 )
+				researcherMap.put( "hindex", researcher.getHindex() );
 
 			if ( researcher.getPublicationAuthors() != null )
 				researcherMap.put( "publicationsNumber", researcher.getNoPublication() );

@@ -277,6 +277,9 @@ public class CircleController
 	public @ResponseBody Map<String, Object> getCircleResearcher( 
 			@RequestParam( value = "id", required = false ) final String circleid, 
 			@RequestParam( value = "uri", required = false ) final String uri, 
+			@RequestParam( value = "yearMin", required = false ) Integer yearMin,
+			@RequestParam( value = "yearMax", required = false ) Integer yearMax,
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			final HttpServletResponse response)
 	{
 		// create JSON mapper for response
@@ -296,10 +299,15 @@ public class CircleController
 			responseMap.put( "statusMessage", "circle not found in database" );
 			return responseMap;
 		}
-
+		if ( maxresult == null )
+			maxresult = 50;
+		if ( yearMin == null )
+			yearMin = 0;
+		if ( yearMax == null )
+			yearMax = 0;
 		// get coauthor calculation
 		responseMap.put( "status", "ok" );
-		responseMap.putAll( circleFeature.getCircleResearcher().getCircleResearcherMap( circle ) );
+		responseMap.putAll( circleFeature.getCircleResearcher().getCircleResearcherMap( circle, yearMin, yearMax, maxresult ) );
 
 		return responseMap;
 	}
@@ -310,7 +318,8 @@ public class CircleController
 			@RequestParam( value = "id", required = false ) final String circleid,
 			@RequestParam( value = "uri", required = false ) final String uri, 
 			@RequestParam( value = "query", required = false ) String query, 
-			@RequestParam( value = "year", required = false ) String year, 
+			@RequestParam( value = "year", required = false ) String year,
+			@RequestParam( value = "yearMin", required = false ) Integer yearMin, @RequestParam( value = "yearMax", required = false ) Integer yearMax,
 			@RequestParam( value = "startPage", required = false ) Integer startPage,
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult,
 			@RequestParam( value = "orderBy", required = false ) String orderBy,
@@ -340,13 +349,20 @@ public class CircleController
 		responseMap.put( "circle", circleFeature.getCircleDetail().getCircleDetailById( circleid, false, false ).get( "circle" ) );
 		
 		if ( query == null ) 		query 	  = "";
-		if ( year == null )			year 	  = "all";
 		if ( startPage == null )	startPage = 0;
 		if ( maxresult == null )	maxresult = 50;
 		if ( orderBy == null )		orderBy   = "date";
+		if ( year == null )
+			year = "all";
+		if ( yearMin == null )
+			yearMin = 0;
+		if ( yearMax == null )
+			yearMax = 0;
 		
-		responseMap.putAll( circleFeature.getCirclePublication().getCirclePublicationByCircleId( circleid, query, year, startPage, maxresult, orderBy ) );
-
+		if ( yearMin != 0 && yearMax != 0 )
+			responseMap.putAll( circleFeature.getCirclePublication().getCirclePublicationByCircleIdAndTimePeriod( circleid, query, yearMin, yearMax, startPage, maxresult, orderBy ) );
+		else
+			responseMap.putAll( circleFeature.getCirclePublication().getCirclePublicationByCircleId( circleid, query, year, startPage, maxresult, orderBy ) );
 		return responseMap;
 	}
 
@@ -356,7 +372,12 @@ public class CircleController
 			@RequestParam( value = "id", required = false ) final String circleid,
 			@RequestParam( value = "uri", required = false ) final String uri, 
 			@RequestParam( value = "author_id", required = false ) String author_id,
-			@RequestParam( value = "query", required = false ) String query, @RequestParam( value = "year", required = false ) String year, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "orderBy", required = false ) String orderBy,
+			@RequestParam( value = "query", required = false ) String query,	
+			@RequestParam( value = "yearMin", required = false ) Integer yearMin,
+			@RequestParam( value = "yearMax", required = false ) Integer yearMax,		
+			@RequestParam( value = "startPage", required = false ) Integer startPage, 		
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 		
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
 			final HttpServletResponse response)
 	{
 		// create JSON mapper for response
@@ -383,8 +404,10 @@ public class CircleController
 		
 		if ( query == null )
 			query = "";
-		if ( year == null )
-			year = "all";
+		if ( yearMin == null )
+			yearMin = 0;
+		if ( yearMax == null )
+			yearMax = 0;
 		if ( startPage == null )
 			startPage = 0;
 		if ( maxresult == null )
@@ -394,7 +417,7 @@ public class CircleController
 		if ( author_id == null )
 			author_id = "";
 		
-		responseMap.putAll( circleFeature.getCirclePublication().getCircleMemberPublication( circleid, author_id, query, year, startPage, maxresult, orderBy ) );
+		responseMap.putAll( circleFeature.getCirclePublication().getCircleMemberPublication( circleid, author_id, query, yearMin, yearMax, startPage, maxresult, orderBy ) );
 
 		return responseMap;
 	}
