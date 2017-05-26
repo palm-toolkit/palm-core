@@ -458,11 +458,25 @@ public class CirclePublicationImpl implements CirclePublication
 		}
 
 		List<Publication> publications = null;
+		List<Map<String, Object>> citationRatePerYearMap = new ArrayList<Map<String, Object>>();
+
 		// get publication list
 		if ( !query.equals( "" ) || yearMin != 0 || yearMax != 0 || startPage != null || maxresult != null || memberCircle != null )
 		{
 			Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( query, "all", targetCircle, memberCircle, startPage, maxresult, yearMin, yearMax, orderBy );
 			publications = (List<Publication>) publicationsMap.get( "publications" );
+
+			List<Object[]> citationRatePerYearList = (List<Object[]>) publicationsMap.get( "citationRate" );
+
+			for ( Object[] objList : citationRatePerYearList )
+			{
+				Map<String, Object> paperCitationMap = new LinkedHashMap<String, Object>();
+				paperCitationMap.put( "year", objList[0] );
+				paperCitationMap.put( "citationCount", objList[1] );
+				paperCitationMap.put( "paperCount", objList[2] );
+
+				citationRatePerYearMap.add( paperCitationMap );
+			}
 		}
 		else
 		{
@@ -470,6 +484,9 @@ public class CirclePublicationImpl implements CirclePublication
 			// sort by date
 			Collections.sort( publications, new PublicationByDateComparator() );
 		}
+
+		// citation rate per year
+		responseMap.put( "citationRate", citationRatePerYearMap );
 
 		// get available year
 		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByCircle( targetCircle, "DESC" ) );
@@ -573,6 +590,7 @@ public class CirclePublicationImpl implements CirclePublication
 
 			publicationList.add( publicationMap );
 		}
+
 		responseMap.put( "count", publicationList.size() );
 		responseMap.put( "publications", publicationList );
 
