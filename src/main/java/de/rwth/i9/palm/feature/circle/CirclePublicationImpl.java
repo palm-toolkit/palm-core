@@ -135,6 +135,8 @@ public class CirclePublicationImpl implements CirclePublication
 		{
 			responseMap.put( "status", "error" );
 			responseMap.put( "message", "Error - circle not found" );
+			if ( query != null && !query.equals( "" ) )
+				responseMap.put( "query", query );
 			return responseMap;
 		}
 
@@ -143,6 +145,8 @@ public class CirclePublicationImpl implements CirclePublication
 		targetCircleMap.put( "name", targetCircle.getName() );
 		responseMap.put( "circle", targetCircleMap );
 		responseMap.put( "totalPublication", targetCircle.getPublications().size() );
+		if ( query != null && !query.equals( "" ) )
+			responseMap.put( "query", query );
 
 		if ( targetCircle.getPublications() == null || targetCircle.getPublications().isEmpty() )
 		{
@@ -177,8 +181,6 @@ public class CirclePublicationImpl implements CirclePublication
 
 		responseMap.put( "status", "ok" );
 
-		if ( query != null && !query.equals( "" ) )
-			responseMap.put( "query", query );
 		responseMap.put( "year", year );
 
 		if ( maxresult != null )
@@ -285,6 +287,8 @@ public class CirclePublicationImpl implements CirclePublication
 		{
 			responseMap.put( "status", "error" );
 			responseMap.put( "message", "Error - circle not found" );
+			if ( query != null && !query.equals( "" ) )
+				responseMap.put( "query", query );
 			return responseMap;
 		}
 
@@ -293,6 +297,8 @@ public class CirclePublicationImpl implements CirclePublication
 		targetCircleMap.put( "name", targetCircle.getName() );
 		responseMap.put( "circle", targetCircleMap );
 		responseMap.put( "totalPublication", targetCircle.getPublications().size() );
+		if ( query != null && !query.equals( "" ) )
+			responseMap.put( "query", query );
 
 		if ( targetCircle.getPublications() == null || targetCircle.getPublications().isEmpty() )
 		{
@@ -327,8 +333,6 @@ public class CirclePublicationImpl implements CirclePublication
 
 		responseMap.put( "status", "ok" );
 
-		if ( query != null && !query.equals( "" ) )
-			responseMap.put( "query", query );
 		responseMap.put( "yearMin", yearMin );
 		responseMap.put( "yearMax", yearMax );
 
@@ -468,15 +472,16 @@ public class CirclePublicationImpl implements CirclePublication
 
 			List<Object[]> citationRatePerYearList = (List<Object[]>) publicationsMap.get( "citationRate" );
 
-			for ( Object[] objList : citationRatePerYearList )
-			{
-				Map<String, Object> paperCitationMap = new LinkedHashMap<String, Object>();
-				paperCitationMap.put( "year", objList[0] );
-				paperCitationMap.put( "citationCount", objList[1] );
-				paperCitationMap.put( "paperCount", objList[2] );
+			if ( citationRatePerYearList != null && citationRatePerYearList.size() != 0 )
+				for ( Object[] objList : citationRatePerYearList )
+				{
+					Map<String, Object> paperCitationMap = new LinkedHashMap<String, Object>();
+					paperCitationMap.put( "year", objList[0] );
+					paperCitationMap.put( "citationCount", objList[1] );
+					paperCitationMap.put( "paperCount", objList[2] );
 
-				citationRatePerYearMap.add( paperCitationMap );
-			}
+					citationRatePerYearMap.add( paperCitationMap );
+				}
 		}
 		else
 		{

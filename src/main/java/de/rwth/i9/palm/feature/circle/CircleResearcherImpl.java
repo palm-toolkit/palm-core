@@ -55,7 +55,7 @@ public class CircleResearcherImpl implements CircleResearcher
 			if ( researcher.getAcademicStatus() != null )
 				researcherMap.put( "status", researcher.getAcademicStatus() );
 			if ( researcher.getInstitution() != null )
-				researcherMap.put( "aff", researcher.getInstitution().getName() );
+				researcherMap.put( "affiliation", researcher.getInstitution().getName() );
 			if ( researcher.getCitedBy() > 0 )
 				researcherMap.put( "citedBy", researcher.getCitedBy() );
 
