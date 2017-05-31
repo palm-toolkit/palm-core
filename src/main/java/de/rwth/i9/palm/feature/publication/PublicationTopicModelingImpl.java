@@ -66,8 +66,8 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		List<String> resultsngrams;
 		try
 		{
-			unigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true, false ).get( publicationId );
-			ngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Author-Test", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false, false ).get( publicationId );
+			unigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Authors", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true, false ).get( publicationId );
+			ngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Authors", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false, false ).get( publicationId );
 
 			// get the top 10 topics from the merged topics
 			resultsunigrams = extractTopTopics( unigrams, 10 );
@@ -145,15 +145,16 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		// method used to get the top topics (in this case 5)
 		unigrams = extractTopTopics(unigrams,5);
 		
-		for ( String topics : unigrams){
-			
-			List<Object> termvalueUnigram = new ArrayList<Object>();
-			termvalueUnigram.add( topics.split( "_-_" )[0] );
-			termvalueUnigram.add( Double.parseDouble( topics.split( "_-_" )[1] ) );
+		for ( String topics : unigrams )
+		{
+			// List<Object> termvalueUnigram = new ArrayList<Object>();
+			Map<String, Object> termvalueUnigram = new LinkedHashMap<String, Object>();
+			termvalueUnigram.put( "term", topics.split( "_-_" )[0] );
+			termvalueUnigram.put( "value", Double.parseDouble( topics.split( "_-_" )[1] ) );
 			termValueResultunigrams.add( termvalueUnigram );
 		}
 		
-		algorithmResultUniGrams.put( "termvalue", termValueResultunigrams );
+		algorithmResultUniGrams.put( "termvalues", termValueResultunigrams );
 
 		// add the unigrams into the topicModel list
 		topicModel.add( algorithmResultUniGrams );
@@ -165,12 +166,13 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		ngrams = extractTopTopics(ngrams,5);
 		
 		for ( String topics : ngrams){
-			List<Object> termvalueNgram = new ArrayList<Object>();
-			termvalueNgram.add( topics.split( "_-_" )[0] );
-			termvalueNgram.add( Double.parseDouble( topics.split( "_-_" )[1] ) );
+			// List<Object> termvalueNgram = new ArrayList<Object>();
+			Map<String, Object> termvalueNgram = new LinkedHashMap<String, Object>();
+			termvalueNgram.put( "term", topics.split( "_-_" )[0] );
+			termvalueNgram.put( "value", Double.parseDouble( topics.split( "_-_" )[1] ) );
 			termValueResultngrams.add( termvalueNgram );
 		}
-		algorithmResultNGrams.put( "termvalue", termValueResultngrams );
+		algorithmResultNGrams.put( "termvalues", termValueResultngrams );
 		// add the ngrams into the topicModel list
 		topicModel.add( algorithmResultNGrams );
 
@@ -204,9 +206,13 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 					index = i;
 				}
 			}
-			temporalMax = topic + "_-_" + max;
-			result.add( temporalMax );
-			topics.remove( index );
+			if ( index != -1 )
+			{
+				temporalMax = topic + "_-_" + max;
+				result.add( temporalMax );
+				topics.remove( index );
+			}
+
 			N--;
 		}
 		return result;

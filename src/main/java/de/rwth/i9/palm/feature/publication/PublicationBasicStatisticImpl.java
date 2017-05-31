@@ -88,6 +88,8 @@ public class PublicationBasicStatisticImpl implements PublicationBasicStatistic
 
 		if ( publication.getEvent() != null )
 		{
+
+			System.out.println( "EVENT NOT NULL: " + publication.getTitle() );
 			Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
 			eventMap.put( "id", publication.getEvent().getId() );
 			eventMap.put( "name", publication.getEvent().getEventGroup().getName() );

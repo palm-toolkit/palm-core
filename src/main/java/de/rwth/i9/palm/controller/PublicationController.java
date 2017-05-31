@@ -293,9 +293,56 @@ public class PublicationController
 	public @ResponseBody Map<String, Object> getPublicationBasicInformationAndTopics( @RequestParam( value = "id", required = false ) final String id, @RequestParam( value = "uri", required = false ) final String uri, final HttpServletResponse response ) throws InterruptedException, IOException, ExecutionException, URISyntaxException
 	{
 
+		// basic info selected paper
 		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
-		responseMap.put( "basicinfo", publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id ) );
-		responseMap.put( "topics", getPublicationTopic( id, null, null, response ) );
+		Map<String, Object> publicationMap = publicationFeature.getPublicationBasicStatistic().getPublicationBasicStatisticById( id );
+
+		if ( publicationMap.isEmpty() )
+		{
+			responseMap.put( "status", "error" );
+			return responseMap;
+		}
+
+		responseMap.put( "status", "ok" );
+		responseMap.put( "basicinfo", publicationMap );
+
+
+		// topics selected paper
+		Map<String, Object> topics = publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( id, null, null );
+		if ( topics.get( "status" ) != "ok" )
+			topics = publicationFeature.getPublicationTopicModeling().getTopicComposition( id, true );
+
+		responseMap.put( "topics", topics );
+
+		// publications and topics in the same venue
+		List<Map<String, Object>> publicationsList = new ArrayList<Map<String, Object>>();
+		Publication pub = persistenceStrategy.getPublicationDAO().getById( id );
+
+		if ( pub.getEvent() != null )
+		{
+			Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( "", "all", null, pub.getEvent(), null, 15, "all", "citation" );
+			List<Publication> publications = (List<Publication>) publicationsMap.get( "publications" );
+
+			if ( publications.isEmpty() )
+				responseMap.put( "publications", new ArrayList<Publication>() );
+			else
+			{
+				for ( Publication publ : publications )
+				{
+					Map<String, Object> publTopics = publicationFeature.getPublicationMining().getPublicationExtractedTopicsById( publ.getId(), null, null );
+					if ( publTopics.get( "status" ) != "ok" )
+						publTopics = publicationFeature.getPublicationTopicModeling().getTopicComposition( publ.getId(), true );
+
+					Map<String, Object> publMap = publicationFeature.getPublicationSearch().printElementAsJsonOutput( publ );
+					if ( !publMap.isEmpty() )
+						publMap.put( "topics", publTopics );
+
+					publicationsList.add( publMap );
+				}
+			}
+
+		}
+		responseMap.put( "publications", publicationsList );
 
 		// check whether publication is already booked or not
 		User user = securityService.getUser();

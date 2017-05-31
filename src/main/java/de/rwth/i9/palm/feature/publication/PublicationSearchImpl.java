@@ -138,4 +138,80 @@ public class PublicationSearchImpl implements PublicationSearch
 		return responseMap;
 	}
 
+	@Override
+	public Map<String, Object> printElementAsJsonOutput( Publication publication )
+	{
+		// preparing data format
+		DateFormat dateFormat = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
+
+		Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
+		publicationMap.put( "id", publication.getId() );
+
+		if ( publication.getPublicationType() != null )
+		{
+			String publicationType = publication.getPublicationType().toString();
+			publicationType = publicationType.substring( 0, 1 ).toUpperCase() + publicationType.toLowerCase().substring( 1 );
+			publicationMap.put( "type", publicationType );
+		}
+
+		publicationMap.put( "title", publication.getTitle() );
+		if ( publication.getCitedBy() > 0 )
+			publicationMap.put( "cited", Integer.toString( publication.getCitedBy() ) );
+
+		if ( publication.getPublicationDate() != null )
+			publicationMap.put( "date published", dateFormat.format( publication.getPublicationDate() ) );
+
+		List<Object> authorObject = new ArrayList<Object>();
+
+		for ( Author author : publication.getCoAuthors() )
+		{
+			Map<String, Object> authorMap = new LinkedHashMap<String, Object>();
+			authorMap.put( "id", author.getId() );
+			authorMap.put( "name", WordUtils.capitalize( author.getName() ) );
+
+			if ( author.getInstitution() != null )
+				authorMap.put( "aff", author.getInstitution().getName() );
+
+			if ( author.getPhotoUrl() != null )
+				authorMap.put( "photo", author.getPhotoUrl() );
+
+			authorMap.put( "isAdded", author.isAdded() );
+
+			authorObject.add( authorMap );
+		}
+		publicationMap.put( "authors", authorObject );
+
+		if ( publication.getPublicationDate() != null )
+		{
+			SimpleDateFormat sdf = new SimpleDateFormat( publication.getPublicationDateFormat() );
+			publicationMap.put( "date", sdf.format( publication.getPublicationDate() ) );
+		}
+
+		if ( publication.getLanguage() != null )
+			publicationMap.put( "language", publication.getLanguage() );
+
+		if ( publication.getCitedBy() != 0 )
+			publicationMap.put( "cited", publication.getCitedBy() );
+
+		if ( publication.getEvent() != null )
+		{
+			Map<String, Object> eventMap = new LinkedHashMap<String, Object>();
+			eventMap.put( "id", publication.getEvent().getId() );
+			String eventName = publication.getEvent().getEventGroup().getName();
+			if ( publication.getEvent().getEventGroup().getNotation() != null && !publication.getEvent().getEventGroup().getNotation().isEmpty() && !publication.getEvent().getEventGroup().getNotation().equals( eventName ) )
+				eventName += " - " + publication.getEvent().getEventGroup().getNotation() + ",";
+			eventMap.put( "name", eventName );
+			eventMap.put( "isAdded", publication.getEvent().isAdded() );
+			publicationMap.put( "event", eventMap );
+		}
+
+		if ( publication.getAdditionalInformation() != null )
+			publicationMap.putAll( publication.getAdditionalInformationAsMap() );
+
+		if ( publication.getStartPage() > 0 )
+			publicationMap.put( "pages", publication.getStartPage() + " - " + publication.getEndPage() );
+
+		return publicationMap;
+	}
+
 }
