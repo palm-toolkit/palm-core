@@ -140,7 +140,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		
 		List<Object> termValueResultunigrams = new ArrayList<Object>();
 		// loop over all the results of algorithm and put the elements in List
-		List<String> unigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Authors", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, true, false ).get( publicationId );
+		List<String> unigrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Authors", extractCoauthros( publicationId ), publicationId, 15, 15, 5, true, true, false ).get( publicationId );
 		
 		// method used to get the top topics (in this case 5)
 		unigrams = extractTopTopics(unigrams,5);
@@ -160,7 +160,7 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 		topicModel.add( algorithmResultUniGrams );
 		
 		List<Object> termValueResultngrams = new ArrayList<Object>();
-		List<String> ngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Authors", extractCoauthros( publicationId ), publicationId, 10, 10, 5, true, false, false ).get( publicationId );
+		List<String> ngrams = palmAnalytics.getNGrams().runTopicsFromListofEntities( path, "Authors", extractCoauthros( publicationId ), publicationId, 15, 15, 5, true, false, false ).get( publicationId );
 		
 		// method used to get the top topics (in this case 5)
 		ngrams = extractTopTopics(ngrams,5);
