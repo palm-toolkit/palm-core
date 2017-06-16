@@ -526,7 +526,7 @@ public class ResearcherController
 	public @ResponseBody Map<String, Object> papersByTopicAndAuthor( 
 			@ModelAttribute("model") ModelMap model,
 			@RequestParam( value = "id", required = false ) final String authorId, 
-			@RequestParam( value = "topic", required = false ) final String  topic, 
+			@RequestParam( value = "topic", required = false ) final String topic, 
 			@RequestParam( value = "startPage", required = false ) Integer startPage, 
 			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
 			final HttpServletResponse response) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ParseException, ExecutionException
@@ -541,7 +541,7 @@ public class ResearcherController
 		}if ( startPage == null )
 			startPage = 0;
 		if ( maxresult == null )
-			maxresult = 30;
+			maxresult = 100;
 			
 		List<Map<String, Object>> listTopicPapers = new ArrayList<Map<String, Object>>();
 		ObjectMapper mapper =new ObjectMapper();		
@@ -549,15 +549,8 @@ public class ResearcherController
 			JsonNode jsonNode = mapper.readTree(topic);
 			if (jsonNode.isArray()) {
 			    for (JsonNode objNode : jsonNode) {
-					Map<String, Object> element = new LinkedHashMap<String, Object>();
-			    	element.put("name", objNode.get("name").toString());
-			    	element.put("value", objNode.get("value").toString());
-			    	
-			    	List<Map<String, Object>> papersOnTopic = new ArrayList<Map<String, Object>>();
-			    	papersOnTopic = (List<Map<String, Object>>)researcherFeature.getResearcherTopPublication().getTopPublicationListByAuthorId( authorId, startPage, maxresult ).get("publications");
-			    	
-			    	element.put("papers", papersOnTopic);
-			        listTopicPapers.add(element);
+					listTopicPapers = (List<Map<String, Object>>) researcherFeature.getResearcherPublication().getPublicationListByAuthorIdAndTopic( authorId, objNode.get( "name" ).toString(), "", "all", startPage, maxresult, "date" ).get( "publications" );
+
 			    }
 			}
 		} catch (IOException e) {
