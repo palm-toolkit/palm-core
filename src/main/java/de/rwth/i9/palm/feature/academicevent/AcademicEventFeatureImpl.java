@@ -11,6 +11,9 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 	private EventInterest eventInterest;
 
 	@Autowired( required = false )
+	private EventTopicModeling eventTopicModeling;
+
+	@Autowired( required = false )
 	private EventMining eventMining;
 
 	@Autowired( required = false )
@@ -18,6 +21,9 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 
 	@Autowired( required = false )
 	private EventSearch eventSearch;
+
+	@Autowired( required = false )
+	private EventTopResearcher eventTopResearcher;
 
 	@Override
 	public EventBasicStatistic getEventBasicStatistic()
@@ -35,6 +41,15 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 			this.eventInterest = new EventInterestImpl();
 
 		return this.eventInterest;
+	}
+
+	@Override
+	public EventTopicModeling getEventTopicModeling()
+	{
+		if ( this.eventTopicModeling == null )
+			this.eventTopicModeling = new EventTopicModelingImpl();
+
+		return this.eventTopicModeling;
 	}
 
 	@Override
@@ -62,5 +77,13 @@ public class AcademicEventFeatureImpl implements AcademicEventFeature
 			this.eventSearch = new EventSearchImpl();
 
 		return this.eventSearch;
+	}
+
+	@Override
+	public EventTopResearcher getEventResearcher()
+	{
+		if ( this.eventTopResearcher == null )
+			this.eventTopResearcher = new EventTopResearcherImpl();
+		return this.eventTopResearcher;
 	}
 }

@@ -8,4 +8,5 @@ package de.rwth.i9.palm.feature.user;
 public interface UserFeature
 {
 	public UserBookmark getUserBookmark();
+	public UserPublication getUserPublication();
 }

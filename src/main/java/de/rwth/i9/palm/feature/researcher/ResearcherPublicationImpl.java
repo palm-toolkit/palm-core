@@ -117,13 +117,11 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			}
 			publicationMap.put( "coauthor", coathorList );
 
-			// if ( publication.getKeywordText() != null )
-			// publicationMap.put( "keyword", publication.getKeywordText() );
-
 			if ( publication.getPublicationDate() != null )
 			{
 				SimpleDateFormat sdf = new SimpleDateFormat( publication.getPublicationDateFormat() );
 				publicationMap.put( "date", sdf.format( publication.getPublicationDate() ) );
+				publicationMap.put( "dateFormat", publication.getPublicationDateFormat() );
 			}
 
 			if ( publication.getLanguage() != null )

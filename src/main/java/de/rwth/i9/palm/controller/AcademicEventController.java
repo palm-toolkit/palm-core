@@ -1,8 +1,11 @@
 package de.rwth.i9.palm.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,7 @@ import de.rwth.i9.palm.model.WidgetStatus;
 import de.rwth.i9.palm.model.WidgetType;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 import de.rwth.i9.palm.service.SecurityService;
+import de.rwth.i9.palm.util.IdentifierFactory;
 
 @Controller
 @RequestMapping( value = "/venue" )
@@ -256,6 +260,191 @@ public class AcademicEventController
 		return academicEventFeature.getEventInterest().getEventInterestById( eventId, isReplaceExistingResult );
 	}
 
+	/**
+	 * 
+	 * @param conferenceId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping( value = "/topicComposition", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicComposition( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
+	{
+		if ( conferenceId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return academicEventFeature.getEventTopicModeling().getStaticTopicModelingNgrams( conferenceId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param conferenceId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping( value = "/topicCompositionEventGroup", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicCompositionEventGroup( @RequestParam( value = "id", required = false ) final String conferenceId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
+	{
+		if ( conferenceId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+			return academicEventFeature.getEventTopicModeling().getStaticTopicModelingNgramsEventGroup( conferenceId, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException 
+	 */
+	@RequestMapping( value = "/topicCompositionUniCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get event
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelUniCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException 
+	 */
+	@RequestMapping( value = "/topicCompositionNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get event
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelNCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 * @throws IOException 
+	 */
+	@RequestMapping( value = "/similarEventList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getSimilarEventList( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response) throws IOException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( eventId == null || eventId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "eventId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get event
+		Event eventgroup = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( eventgroup == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "event not found in database" );
+			return responseMap;
+		}
+
+		// get recommended events based on calculations
+		responseMap.putAll( academicEventFeature.getEventTopicModeling().getSimilarEvents( eventgroup, startPage, maxresult ) );
+
+		return responseMap;
+	}
+
+	/**
+	 * Get Similar eventMap of given event
+	 * 
+	 * @param eventId
+	 * @param startPage
+	 * @param maxresult
+	 * @param response
+	 * @return
+	 * @throws IOException 
+	 */
+	@RequestMapping( value = "/topicEvolution", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getTopicEvolution( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "startPage", required = false ) Integer startPage, @RequestParam( value = "maxresult", required = false ) Integer maxresult, final HttpServletResponse response) throws IOException
+	{
+		// create JSON mapper for response
+		Map<String, Object> responseMap = new LinkedHashMap<String, Object>();
+		if ( eventId == null || eventId.equals( "" ) )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "eventId null" );
+			return responseMap;
+		}
+
+		if ( startPage == null )
+			startPage = 0;
+		if ( maxresult == null )
+			maxresult = 10;
+
+		// get event
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( event == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "event not found in database" );
+			return responseMap;
+		}
+
+		// get recommended events based on calculations
+		responseMap.putAll( academicEventFeature.getEventTopicModeling().getEventGroupTopicEvolutionTest( event ) );
+
+		return responseMap;
+	}
+
+
+
 	@RequestMapping( value = "/publicationList", method = RequestMethod.GET )
 	@Transactional
 	public @ResponseBody Map<String, Object> getPublicationList( 
@@ -265,6 +454,22 @@ public class AcademicEventController
 			final HttpServletResponse response)
 	{
 		return academicEventFeature.getEventPublication().getPublicationListByEventId( eventId, query, publicationId );
+	}
+
+	@RequestMapping( value = "/publicationTopList", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getTopPublicationList( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "publicationId", required = false ) final String publicationId, @RequestParam( value = "pid", required = false ) String pid, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "orderBy", required = false ) String orderBy,
+
+			final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+	{
+		if ( maxresult == null )
+			maxresult = 10;
+		if ( orderBy == null )
+			orderBy = "citation";
+		if ( pid == null )
+			pid = IdentifierFactory.getNextDefaultIdentifier();
+
+		return academicEventFeature.getEventPublication().getPublicationTopListByEventId( eventId, pid, maxresult, orderBy );
 	}
 
 	@RequestMapping( value = "/autocomplete", method = RequestMethod.GET )
@@ -319,4 +524,143 @@ public class AcademicEventController
 		}
 	}
 
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException 
+	 */
+	@RequestMapping( value = "/topicCompositionEventGroupUniCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloudUnigrams( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get author
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelEventGroupUniCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws IOException 
+	 */
+	@RequestMapping( value = "/topicCompositionEventGroupNCloud", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventGroupTopicCompositionCloud( @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "updateResult", required = false ) final String updateResult, final HttpServletResponse response) throws IOException
+	{
+		if ( eventId != null )
+		{
+			boolean isReplaceExistingResult = false;
+			if ( updateResult != null && updateResult.equals( "yes" ) )
+				isReplaceExistingResult = true;
+
+			// get author
+			Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+			return academicEventFeature.getEventTopicModeling().getTopicModelEventGroupNCloud( event, isReplaceExistingResult );
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
+	 * @throws IOException
+	 */
+	@RequestMapping( value = "/researchers", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventResearchers( @RequestParam( value = "query", required = false ) String query, @RequestParam( value = "id", required = false ) final String eventId, @RequestParam( value = "publicationId", required = false ) final String publicationId, @RequestParam( value = "pid", required = false ) String pid, @RequestParam( value = "maxresult", required = false ) Integer maxresult, @RequestParam( value = "orderBy", required = false ) String orderBy, final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+
+	{
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+
+		// get venue
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( event == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "researcher not found in database" );
+			return responseMap;
+		}
+
+		if ( query == null )
+			query = "";
+
+		if ( orderBy == null )
+			orderBy = "nrPublications";
+
+		responseMap.putAll( academicEventFeature.getEventResearcher().getResearcherListByEventId( query, eventId, pid, maxresult, orderBy ) );
+		return responseMap;
+	}
+
+	/**
+	 * 
+	 * @param eventId
+	 * @param updateResult
+	 * @param response
+	 * @return
+	 * @throws ExecutionException
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
+	 * @throws IOException
+	 */
+	@RequestMapping( value = "/topResearchers", method = RequestMethod.GET )
+	@Transactional
+	public @ResponseBody Map<String, Object> getEventTopResearchers( 
+			@RequestParam( value = "query", required = false ) String query,
+			@RequestParam( value = "id", required = false ) final String eventId, 
+			@RequestParam( value = "publicationId", required = false ) final String publicationId,
+			@RequestParam( value = "pid", required = false ) String pid, 
+			@RequestParam( value = "maxresult", required = false ) Integer maxresult, 
+			@RequestParam( value = "orderBy", required = false ) String orderBy,
+			final HttpServletResponse response ) throws UnsupportedEncodingException, InterruptedException, URISyntaxException, ExecutionException
+
+	{
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		
+		// get venue
+		Event event = persistenceStrategy.getEventDAO().getById( eventId );
+
+		if ( event == null )
+		{
+			responseMap.put( "status", "error" );
+			responseMap.put( "statusMessage", "researcher not found in database" );
+			return responseMap;
+		}
+		
+		if ( query == null )
+			query = "";
+
+		if ( orderBy == null )
+			orderBy = "nrPublications";
+		
+		if ( maxresult == null )
+			maxresult = 20;
+
+		responseMap.putAll( academicEventFeature.getEventResearcher().getResearcherListByEventId( query, eventId, pid, maxresult, orderBy ) );
+		return responseMap;
+	}
 }

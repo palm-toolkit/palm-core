@@ -75,6 +75,21 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 			eachAuthorMap.put( "aliases", authorListNode.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).first().select( "td" ).get( 1 ).text() );
 			// get author affiliation
 			eachAuthorMap.put( "affiliation", authorListNode.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" ).get( 1 ).select( "td" ).get( 1 ).text() );
+
+			Document authDocument = PublicationCollectionHelper.getDocumentWithJsoup( authorListNode.select( "a" ).first().absUrl( "href" ), 5000 );
+
+			if ( authDocument != null )
+			{
+				Elements authorDetailsNodes = authDocument.select( HtmlSelectorConstant.CSX_AUTHOR_ROW_DETAIL ).select( "tr" );
+
+				if ( authorDetailsNodes.size() != 0 )
+				{
+					// get author citations
+					eachAuthorMap.put( "citedby", authorDetailsNodes.get( 1 ).select( "td" ).get( 1 ).text() );
+					// get author hindex
+					eachAuthorMap.put( "hindex", authorDetailsNodes.get( 2 ).select( "td" ).get( 1 ).text() );
+				}
+			}
 			authorList.add( eachAuthorMap );
 		}
 
@@ -133,7 +148,7 @@ public class CiteseerXPublicationCollection extends PublicationCollection
 				{
 					if ( venueAndYear.substring( venueAndYear.length() - 4 ).matches( "^\\d{4}" ) )
 					{
-						publicationDetails.put( "date", venueAndYear.substring( venueAndYear.length() - 4 ) );
+						publicationDetails.put( "datePublished", venueAndYear.substring( venueAndYear.length() - 4 ) );
 						if ( venueAndYear.length() > 10 )
 							publicationDetails.put( "eventName", venueAndYear.substring( 0, venueAndYear.length() - 4 ).replace( "-", "" ).trim() );
 					}

@@ -9,8 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,9 +80,9 @@ public class MendeleyPublicationCollection extends PublicationCollection
 
 		if ( resultsNode.isArray() )
 			for ( JsonNode publicationNode : resultsNode )
-				authorList.add( extractAuthorDetail( publicationNode ) );
+				authorList.add( extractAuthorDetail( publicationNode, tokenProperty ) );
 		else
-			authorList.add( extractAuthorDetail( resultsNode ) );
+			authorList.add( extractAuthorDetail( resultsNode, tokenProperty ) );
 
 		return authorList;
 	}
@@ -89,10 +92,41 @@ public class MendeleyPublicationCollection extends PublicationCollection
 	 * 
 	 * @param authorNode
 	 * @return
+	 * @throws IOException
+	 * @throws ClientProtocolException
 	 */
-	private static Map<String, String> extractAuthorDetail( JsonNode authorNode )
+	private static Map<String, String> extractAuthorDetail( JsonNode authorNode, SourceProperty tokenProperty ) throws ClientProtocolException, IOException
 	{
 		Map<String, String> authorDetailMap = new LinkedHashMap<String, String>();
+
+		if ( !authorNode.path( "link" ).isMissingNode() )
+		{
+			String authURL = authorNode.path( "link" ).textValue();
+			try
+			{
+				Document document = PublicationCollectionHelper.getDocumentWithJsoup( authURL, 1000 );
+				if ( document != null )
+				{
+					Elements hindexRowList = document.select( HtmlSelectorConstant.MDY_AUTHOR_STATISTICS_ROW_DETAIL ).select( ".stat-hindex" );
+					if ( hindexRowList != null && hindexRowList.size() > 0 )
+					{
+						String hindex = hindexRowList.first().select( ".number" ).text();
+						authorDetailMap.put( "hindex", hindex );
+					}
+
+					Elements citationsRowList = document.select( HtmlSelectorConstant.MDY_AUTHOR_STATISTICS_ROW_DETAIL ).select( ".stat-citations" );
+					if ( citationsRowList != null && citationsRowList.size() > 0 )
+					{
+						String citedBy = citationsRowList.first().select( ".number" ).text();
+						authorDetailMap.put( "citedby", citedBy );
+					}
+				}
+			}
+			catch ( Exception e )
+			{
+				e.printStackTrace();
+			}
+		}
 		if ( !authorNode.path( "display_name" ).isMissingNode() )
 			authorDetailMap.put( "name", authorNode.path( "display_name" ).textValue() );
 		if ( !authorNode.path( "last_name" ).isMissingNode() )
@@ -114,7 +148,7 @@ public class MendeleyPublicationCollection extends PublicationCollection
 				authorDetailMap.put( "institutionCountry", institutionNode.path( "country" ).textValue() );
 		}
 		if ( !authorNode.path( "research_interests" ).isMissingNode() )
-			authorDetailMap.put( "researchInterests", authorNode.path( "esearch_interests" ).textValue() );
+			authorDetailMap.put( "researchInterests", authorNode.path( "research_interests" ).textValue() );
 		if ( !authorNode.path( "academic_status" ).isMissingNode() )
 			authorDetailMap.put( "academicStatus", authorNode.path( "academic_status" ).textValue() );
 		if ( !authorNode.path( "discipline" ).isMissingNode() )

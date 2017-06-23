@@ -27,6 +27,9 @@ public class PublicationFeatureImpl implements PublicationFeature
 
 	@Autowired( required = false )
 	private PublicationSimilar publicationSimilar;
+	
+	@Autowired( required = false )
+	private PublicationTopicModeling publicationTopicModeling;
 
 	@Override
 	public PublicationApi getPublicationApi()
@@ -98,5 +101,13 @@ public class PublicationFeatureImpl implements PublicationFeature
 			this.publicationSimilar = new PublicationSimilarImpl();
 
 		return this.publicationSimilar;
+	}
+
+	@Override
+	public PublicationTopicModeling getPublicationTopicModeling() {
+		if ( this.publicationTopicModeling == null )
+			this.publicationTopicModeling = new PublicationTopicModelingImpl();
+
+		return this.publicationTopicModeling;
 	}
 }

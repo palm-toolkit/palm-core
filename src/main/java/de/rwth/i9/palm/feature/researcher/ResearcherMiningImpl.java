@@ -80,7 +80,10 @@ public class ResearcherMiningImpl implements ResearcherMining
 
 		// get author from database
 		if ( author == null )
+		{
+			Timestamp reqDate = this.getTargetAuthor( responseMap, id, name, uri, affiliation ).getRequestDate();
 			author = this.getTargetAuthor( responseMap, id, name, uri, affiliation );
+		}
 
 		if ( author == null )
 		{
@@ -186,6 +189,9 @@ public class ResearcherMiningImpl implements ResearcherMining
 			authorMap.put( "aff", targetAuthor.getInstitution().getName() );
 		if ( targetAuthor.getCitedBy() > 0 )
 			authorMap.put( "citedBy", targetAuthor.getCitedBy() );
+
+		if ( targetAuthor.getHindex() > 0 )
+			authorMap.put( "hindex", targetAuthor.getHindex() );
 
 		if ( targetAuthor.getPublicationAuthors() != null )
 			authorMap.put( "publicationsNumber", targetAuthor.getPublicationAuthors().size() );

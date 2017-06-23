@@ -201,6 +201,13 @@ public class ResearcherCollectionService
 				String institution = "";
 				String academicStatus = "";
 				String otherDetail = "";
+				String photo = mergedAuthor.get( "photo" );
+				String citedby = mergedAuthor.get( "citedBy" );
+				String discipline = mergedAuthor.get( "discipline" );
+				String hindex = mergedAuthor.get( "hindex" );
+				String aliases = mergedAuthor.get( "aliases" );
+				String source = mergedAuthor.get( "source" );
+				String url = mergedAuthor.get( "url" );
 
 				String affliliation = mergedAuthor.get( "affiliation" );
 				// looking for university
@@ -282,12 +289,11 @@ public class ResearcherCollectionService
 				}
 
 				// author alias if exist
-				if ( mergedAuthor.get( "aliases" ) != null )
+				if ( aliases != null )
 				{
-					String authorAliasesString = mergedAuthor.get( "aliases" );
 					// remove '[...]' sign at start and end.
-					authorAliasesString = authorAliasesString.substring( 1, authorAliasesString.length() - 1 );
-					for ( String authorAliasString : authorAliasesString.split( "," ) )
+					aliases = aliases.substring( 1, aliases.length() - 1 );
+					for ( String authorAliasString : aliases.split( "," ) )
 					{
 						authorAliasString = authorAliasString.toLowerCase().replace( ".", "" ).trim();
 						if ( !name.equals( authorAliasString ) )
@@ -299,26 +305,33 @@ public class ResearcherCollectionService
 						}
 					}
 				}
-				String photo = mergedAuthor.get( "photo" );
+
 				if ( photo != null )
 					author.setPhotoUrl( photo );
 
 				if ( !otherDetail.equals( "" ) )
 					author.setOtherDetail( otherDetail );
-
-				if ( mergedAuthor.get( "citedby" ) != null )
-					author.setCitedBy( Integer.parseInt( mergedAuthor.get( "citedby" ) ) );
+				// Number of citations
+				if ( citedby != null )
+					author.setCitedBy( Integer.parseInt( citedby ) );
 
 				// TODO, specific to mendeley add adacemic_status and
 				// discipline/field
 
+				if ( discipline != null )
+					author.setAcademicStatus( discipline );
+
+				// H-index
+				if ( hindex != null )
+					author.setHindex( Integer.parseInt( hindex ) );
+
 				// insert source
 				Set<AuthorSource> authorSources = new LinkedHashSet<AuthorSource>();
 
-				if ( mergedAuthor.get( "source" ) != null && mergedAuthor.get( "url" ) != null )
+				if ( source != null && url != null )
 				{
-					String[] sources = mergedAuthor.get( "source" ).split( " " );
-					String[] sourceUrls = mergedAuthor.get( "url" ).split( " " );
+					String[] sources = source.split( " " );
+					String[] sourceUrls = url.split( " " );
 					// checking for duplication
 					Set<String> registeredSourceUlr = new HashSet<String>();
 					//log.info( "\nRESEARCHER COLLECTION SERVICE" );

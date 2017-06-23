@@ -45,11 +45,13 @@ import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.gephi.statistics.plugin.GraphDistance;
 import org.openide.util.Lookup;
+import org.springframework.stereotype.Component;
 
 import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
 
+@Component
 public class GraphFeatureImpl implements GraphFeature
 {
 	@Override
@@ -100,7 +102,7 @@ public class GraphFeatureImpl implements GraphFeature
 			if ( coAuthor.getPhotoUrl() != null )
 				coAuthorMap.put( "photo", coAuthor.getPhotoUrl() );
 			coAuthorMap.put( "isAdded", coAuthor.isAdded() );
-			coAuthorMap.put( "coautorTimes", coAuthorCollaborationCountMap.get( coAuthor.getId() ) );
+			coAuthorMap.put( "coauthorTimes", coAuthorCollaborationCountMap.get( coAuthor.getId() ) );
 
 			// add into list
 			coAuthorList.add( coAuthorMap );

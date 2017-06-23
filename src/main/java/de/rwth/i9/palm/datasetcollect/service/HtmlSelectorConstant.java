@@ -14,6 +14,7 @@ public class HtmlSelectorConstant
 	public static final String GS_PUBLICATION_COAUTHOR_AND_VENUE = ".gs_gray";
 	public static final String GS_PUBLICATION_NOCITATION = ".gsc_a_c";
 	public static final String GS_PUBLICATION_DATE = ".gsc_a_y";
+	public static final String GS_INDICES_ROW_LIST = "#gsc_rsb_st tr";
 
 	// third phase get the publication details
 	public static final String GS_PUBLICATION_DETAIL_CONTAINER = "#gs_ccl";
@@ -60,4 +61,9 @@ public class HtmlSelectorConstant
 	public static final String DBLP_PUBLICATION_DETAIL_VENUE = "#docVenue";
 	public static final String DBLP_PUBLICATION_DETAIL_ABSTRACT = "#abstract";
 	public static final String DBLP_PUBLICATION_DETAIL_CITATION = "#citations";
+
+	// ================ MENDELEY ===================
+	// first phase get the author list
+	public static final String MDY_AUTHOR_ROW_DETAIL = ".summary-left";
+	public static final String MDY_AUTHOR_STATISTICS_ROW_DETAIL = ".statistics-content";
 }
