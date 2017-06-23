@@ -758,6 +758,7 @@ public class ResearcherController
 		// get recommended authors based on calculations
 		responseMap.putAll( researcherFeature.getResearcherSimilarauthor().getResearcherSimilarAuthorTopicLevelMap( author, startPage, maxresult ) );
 
+		// response
 		return responseMap;
 	}
 	
