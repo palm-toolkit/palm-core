@@ -10,18 +10,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import de.rwth.i9.palm.helper.comparator.AuthorInterestProfileByProfileNameLengthComparator;
 import de.rwth.i9.palm.helper.comparator.CoAuthorByNumberOfCollaborationsAndNameComparator;
 import de.rwth.i9.palm.helper.comparator.PublicationMapByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorInterest;
 import de.rwth.i9.palm.model.AuthorInterestProfile;
+import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Interest;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.PublicationTopic;
+import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
+@Component
 public class ResearcherCoauthorImpl implements ResearcherCoauthor
 {
+	@Autowired
+	private PersistenceStrategy persistenceStrategy;
+
 	@Override
 	public Map<String, Object> getResearcherCoAuthorMap( Author author, int startPage, int maxCoauthorsResult, int maxauthorInterestResult )
 	{
@@ -88,6 +97,23 @@ public class ResearcherCoauthorImpl implements ResearcherCoauthor
 				
 				if (coAuthor.getInstitution().getLocation() != null){
 					affiliationData.put("country", coAuthor.getInstitution().getLocation().getCountry().getName());
+					affiliationData.put( "url", coAuthor.getInstitution().getUrl() );
+				}
+				else
+				{
+					String institution_name = coAuthor.getInstitution().getName().replaceAll( " (?i)university", "" );
+					institution_name = institution_name.replaceAll( "(?i)university ", "" );
+
+					List<Institution> institutions = persistenceStrategy.getInstitutionDAO().getByName( institution_name );
+
+					for ( int i = 0; i < institutions.size(); i++ )
+						if ( institutions.get( i ).getLocation() != null )
+							if ( institutions.get( i ).getLocation().getCountry().getName() != null )
+							{
+								affiliationData.put( "country", institutions.get( i ).getLocation().getCountry().getName() );
+								affiliationData.put( "url", institutions.get( i ).getUrl() );
+								break;
+							}
 				}
 							
 				coAuthorMap.put( "aff", affiliationData );

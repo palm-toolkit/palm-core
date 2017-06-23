@@ -39,6 +39,7 @@ import de.rwth.i9.palm.feature.researcher.ResearcherFeature;
 import de.rwth.i9.palm.helper.TemplateHelper;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.AuthorSource;
+import de.rwth.i9.palm.model.Institution;
 import de.rwth.i9.palm.model.Publication;
 import de.rwth.i9.palm.model.User;
 import de.rwth.i9.palm.model.UserAuthorBookmark;
@@ -623,7 +624,25 @@ public class ResearcherController
 			
 			if (author.getInstitution().getLocation() != null){
 				affiliationData.put("country", author.getInstitution().getLocation().getCountry().getName());
-			}						
+				affiliationData.put( "url", author.getInstitution().getUrl() );
+			}
+			else
+			{
+				String institution_name = author.getInstitution().getName().replaceAll( " (?i)university", "" );
+				institution_name = institution_name.replaceAll( "(?i)university ", "" );
+
+				List<Institution> institutions = persistenceStrategy.getInstitutionDAO().getByName( institution_name );
+
+				for ( int i = 0; i < institutions.size(); i++ )
+					if ( institutions.get( i ).getLocation() != null )
+						if ( institutions.get( i ).getLocation().getCountry().getName() != null )
+						{
+							affiliationData.put( "country", institutions.get( i ).getLocation().getCountry().getName() );
+							affiliationData.put( "url", institutions.get( i ).getUrl() );
+							break;
+						}
+			}
+
 			authorMap.put( "aff", affiliationData );
 		}
 		authorMap.put( "hindex", author.getHindex() );

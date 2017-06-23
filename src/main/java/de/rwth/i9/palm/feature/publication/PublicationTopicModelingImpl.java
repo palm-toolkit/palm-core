@@ -187,35 +187,40 @@ public class PublicationTopicModelingImpl implements PublicationTopicModeling
 	// composed elements
 	private List<String> extractTopTopics( List<String> topics, int maxResult )
 	{
-		List<String> result = new ArrayList<String>( topics.size() );
-		int N = maxResult;
-		// loop to get the top elements
-		while ( N > 0 )
+		if ( topics != null )
 		{
-			double max = -1;
-			String temporalMax;
-			String topic = "";
-			int index = -1;
-			for ( int i = 0; i < topics.size(); i++ )
+			List<String> result = new ArrayList<String>( topics.size() );
+			int N = maxResult;
+			// loop to get the top elements
+			while ( N > 0 )
 			{
-
-				if ( Double.parseDouble( topics.get( i ).split( "_-_" )[1] ) >= max )
+				double max = -1;
+				String temporalMax;
+				String topic = "";
+				int index = -1;
+				for ( int i = 0; i < topics.size(); i++ )
 				{
-					max = Double.parseDouble( topics.get( i ).split( "_-_" )[1] );
-					topic = topics.get( i ).split( "_-_" )[0];
-					index = i;
-				}
-			}
-			if ( index != -1 )
-			{
-				temporalMax = topic + "_-_" + max;
-				result.add( temporalMax );
-				topics.remove( index );
-			}
 
-			N--;
+					if ( Double.parseDouble( topics.get( i ).split( "_-_" )[1] ) >= max )
+					{
+						max = Double.parseDouble( topics.get( i ).split( "_-_" )[1] );
+						topic = topics.get( i ).split( "_-_" )[0];
+						index = i;
+					}
+				}
+				if ( index != -1 )
+				{
+					temporalMax = topic + "_-_" + max;
+					result.add( temporalMax );
+					topics.remove( index );
+				}
+
+				N--;
+			}
+			return result;
 		}
-		return result;
+		else
+			return new ArrayList<String>();
 	}
 
 	@Override
