@@ -17,7 +17,6 @@ import de.rwth.i9.palm.analytics.util.TopicMiningConstants;
 import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
-import de.rwth.i9.palm.model.PublicationAuthor;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -266,7 +265,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 
 			for ( String topicNode : publicationTopics.keySet() )
 			{
-				if ( topics.indexOf( topicNode ) >= 0 )
+				System.out.println( "topics:" + topics + " topic:" + String.join( "_", topicNode.split( " " ) ) );
+				if ( topics.indexOf( String.join( "_", topicNode.split( " " ) ) ) >= 0 )
 				{
 					topicsPaper.add( topicNode );
 				}
