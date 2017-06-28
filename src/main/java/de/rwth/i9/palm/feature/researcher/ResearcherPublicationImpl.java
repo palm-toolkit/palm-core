@@ -268,7 +268,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				System.out.println( "topics:" + topics + " topic:" + String.join( "_", topicNode.split( " " ) ) );
 				if ( topics.indexOf( String.join( "_", topicNode.split( " " ) ) ) >= 0 )
 				{
-					topicsPaper.add( topicNode );
+					topicsPaper.add( topics );
 				}
 			}
 
