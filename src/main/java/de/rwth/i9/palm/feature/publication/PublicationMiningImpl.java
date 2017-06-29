@@ -128,7 +128,7 @@ public class PublicationMiningImpl implements PublicationMining
 		}
 
 		// put publicationTopicList into responseMap
-		responseMap.put( "topics", publicationTopicList );
+		responseMap.put( "topicModel", publicationTopicList );
 
 		return responseMap;
 	}
