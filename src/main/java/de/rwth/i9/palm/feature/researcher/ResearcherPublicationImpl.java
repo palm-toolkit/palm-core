@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import de.rwth.i9.palm.analytics.util.TopicMiningConstants;
 import de.rwth.i9.palm.helper.comparator.PublicationByDateComparator;
 import de.rwth.i9.palm.model.Author;
 import de.rwth.i9.palm.model.Publication;
+import de.rwth.i9.palm.model.PublicationAuthor;
 import de.rwth.i9.palm.persistence.PersistenceStrategy;
 
 @Component
@@ -203,35 +205,8 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 		responseMap.put( "author", targetAuthorMap );
 		responseMap.put( "totalPublication", targetAuthor.getPublications().size() );
 
-		if ( targetAuthor.getPublications() == null || targetAuthor.getPublications().isEmpty() )
-		{
-			responseMap.put( "status", "error" );
-			responseMap.put( "message", "Error - author contain no publications" );
-			return responseMap;
-		}
-
-		List<Publication> publications = null;
-		// get publication list
-		// if ( !query.equals( "" ) || !year.equals( "all" ) || startPage !=
-		// null || maxresult != null )
-		// {
-			if ( !query.isEmpty() )
-				responseMap.put( "query", "query" );
-		Map<String, Object> publicationsMap = persistenceStrategy.getPublicationDAO().getPublicationWithPaging( query, "all", targetAuthor, null, startPage, maxresult, year, orderBy );
-			publications = (List<Publication>) publicationsMap.get( "publications" );
-		// }
-		// else
-		// {
-		// publications = new ArrayList<Publication>(
-		// targetAuthor.getPublications() );
-		// // sort by date
-		// Collections.sort( publications, new PublicationByDateComparator() );
-		// }
-
-
-		// get available year
-		responseMap.put( "years", persistenceStrategy.getPublicationDAO().getDistinctPublicationYearByAuthor( targetAuthor, "DESC" ) );
-
+		Set<Publication> publications = targetAuthor.getPublications();
+		
 		if ( publications == null || publications.isEmpty() )
 		{
 			responseMap.put( "status", "ok" );
@@ -256,21 +231,24 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 			Map<String, Object> publicationMap = new LinkedHashMap<String, Object>();
 
 			List<String> coauthorIds = new ArrayList<String>();
-			// for ( PublicationAuthor a : publication.getPublicationAuthors() )
-			// coauthorIds.add( a.getAuthor().getId() );
-			coauthorIds.add( targetAuthor.getId() );
+			for ( PublicationAuthor a : publication.getPublicationAuthors() )
+				coauthorIds.add( a.getAuthor().getId() );
+		
 			HashMap<String, Double> publicationTopics = palmAnalytics.getNGrams().runweightedTopicCompositionforPublications( path, "Authors", publication.getId(), coauthorIds, 5, 5, 5, true, false );
 
 			List<String> topicsPaper = new ArrayList<String>();
 
 			for ( String topicNode : publicationTopics.keySet() )
 			{
-				System.out.println( "topics:" + topics + " topic:" + String.join( "_", topicNode.split( " " ) ) );
-				if ( topics.indexOf( String.join( "_", topicNode.split( " " ) ) ) >= 0 )
+				System.out.println( "Clicked topics:" + topics + " Found topic:" + topicNode );
+				if ( topics.indexOf( topicNode ) >= 0 )
 				{
 					topicsPaper.add( topics );
 				}
 			}
+
+			if ( topicsPaper.size() == 0 )
+				continue;
 
 			publicationMap.put( "top", topicsPaper );
 
@@ -345,6 +323,7 @@ public class ResearcherPublicationImpl implements ResearcherPublication
 				publicationMap.put( "contentExist", true );
 			else
 				publicationMap.put( "contentExist", false );
+
 			publicationList.add( publicationMap );
 		}
 		responseMap.put( "count", publicationList.size() );

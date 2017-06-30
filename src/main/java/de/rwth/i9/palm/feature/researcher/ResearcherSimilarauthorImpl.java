@@ -153,7 +153,7 @@ public class ResearcherSimilarauthorImpl implements ResearcherSimilarauthor
 			for ( String topic : similar.getValue() )
 			{
 				Map<String, Object> topicproportions = new LinkedHashMap<String, Object>();
-				topicproportions.put( "name", topic.split( "_-_" )[0] );
+					topicproportions.put( "name", topic.split( "_-_" )[0].replace( " ", "," ).replace( "_", " " ) );
 					topicproportions.put( "value", Math.round( ( Double.parseDouble( topic.split( "_-_" )[1] ) * 100 ) / 100 ) );
 
 				topicleveldetail.add( topicproportions );

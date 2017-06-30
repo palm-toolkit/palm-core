@@ -545,12 +545,14 @@ public class ResearcherController
 			maxresult = 100;
 			
 		List<Map<String, Object>> listTopicPapers = new ArrayList<Map<String, Object>>();
+		Map<String, List<Map<String, Object>>> list = new HashMap<String, List<Map<String, Object>>>();
 		ObjectMapper mapper =new ObjectMapper();		
 		try {
 			JsonNode jsonNode = mapper.readTree(topic);
 			if (jsonNode.isArray()) {
 			    for (JsonNode objNode : jsonNode) {
 					listTopicPapers = (List<Map<String, Object>>) researcherFeature.getResearcherPublication().getPublicationListByAuthorIdAndTopic( authorId, objNode.get( "name" ).toString(), "", "all", startPage, maxresult, "date" ).get( "publications" );
+					list.put( objNode.get( "name" ).toString(), listTopicPapers );
 
 			    }
 			}
@@ -558,7 +560,7 @@ public class ResearcherController
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		responseMap.put("topicPapers", listTopicPapers);
+		responseMap.put( "topic_paper", list );
 
 		model.addAttribute("data", listTopicPapers);
 		return responseMap;
