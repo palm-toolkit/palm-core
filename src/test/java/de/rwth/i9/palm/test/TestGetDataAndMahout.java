@@ -85,7 +85,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 
 	@Test
-	@Ignore
 	public void testGetDataFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 0 - Fetch All Authors from database ==========" );
@@ -111,7 +110,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 	
 	@Test
-	@Ignore
 	public void testcreateAuthorDirectories() throws IOException
 	{
 		System.out.println( "\n========== TEST 1 - Create Architecture for the Author-Test Collection ==========" );
@@ -145,7 +143,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for each Author-Test from database ==========" );
@@ -169,7 +166,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	}
 	
 	@Test
-	@Ignore
 	public void testcreateAuthorDirectoriesYearly() throws IOException
 	{
 		System.out.println( "\n========== TEST 3 - Create Architecture for the Author-Year-Test Collection Yearly ==========" );
@@ -206,7 +202,6 @@ public class TestGetDataAndMahout extends AbstractTransactionalJUnit4SpringConte
 	
 	
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabaseOnSpecificYear() throws IOException
 	{
 		System.out.println( "\n========== TEST 4 - Fetch publications per Author-Year-Test from database ==========" );

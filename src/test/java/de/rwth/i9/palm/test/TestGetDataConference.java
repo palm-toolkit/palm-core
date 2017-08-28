@@ -7,7 +7,6 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	String path = TopicMiningConstants.USER_DESKTOP_PATH;
 
 	@Test
-	@Ignore
 	public void testGetEventPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 0 - Get Conferences publications ==========" );
@@ -64,7 +62,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 	
 	@Test
-	@Ignore
 	public void testGetEventGroupsPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 1 - Get Conferences publications ==========" );
@@ -89,7 +86,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 	
 	@Test
-	@Ignore
 	public void testcreateEntityDirectories() throws IOException
 	{
 		System.out.println( "\n========== TEST 2 - Create Architecture for Event-Test Collection ==========" );
@@ -124,7 +120,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 
 	@Test
-	@Ignore
 	public void testGetEventGroupPublicationsFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for Event-Test from database ==========" );
@@ -156,7 +151,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 	
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase6() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 2 - Fetch publications for each Author-Test from database ==========" );
@@ -183,7 +177,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 
 	@Test
-	@Ignore
 	public void testcreateEntityDirectoriesEventGroups() throws IOException
 	{
 		System.out.println( "\n========== TEST 3 - Create Architecture for EventGroups ==========" );
@@ -220,7 +213,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	
 
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabase() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 4 - Fetch publications per Eventgroups from database ==========" );
@@ -252,7 +244,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	}
 	
 	@Test
-	@Ignore
 	public void testcreateEntityDirectoriesEventGroupsClustered() throws IOException
 	{
 		System.out.println( "\n========== TEST 3 - Create Architecture for EventGroups ==========" );
@@ -288,7 +279,6 @@ public class TestGetDataConference extends AbstractTransactionalJUnit4SpringCont
 	
 
 	@Test
-	@Ignore
 	public void testGetDatabaseFromDatabaseConferenceClustered() throws FileNotFoundException, UnsupportedEncodingException
 	{
 		System.out.println( "\n========== TEST 4 - Fetch publications per Eventgroups from database ==========" );
