@@ -34,7 +34,9 @@ public class ResearcherTopicEvolutionImplTest implements ResearcherTopicEvolutio
 		HashMap<String, List<String>> topicevolution = new LinkedHashMap<String, List<String>>();
 
 		// getEvolutionofTopicOverTime( 0, 5, false );
-		topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "Year-Test", author.getId().toString(), 5, 5, 5, true, false, false );
+
+                // TODO: Method runDiscreteTopicEvolution does not exist.
+                //topicevolution = (HashMap<String, List<String>>) palmAnalytics.getNGrams().runDiscreteTopicEvolution( path, "Year-Test", author.getId().toString(), 5, 5, 5, true, false, false );
 		// Prepare set of similarAuthor HashSet;
 		List<LinkedHashMap<String, Object>> topicList = new ArrayList<LinkedHashMap<String, Object>>();
 		String[] colors = { "0efff8", "ff7f0e", "0eff7f", "ffa70e", "ff7f5a", "d4991c", "ad937c", "ff430e", "ff0e8e", "0e8eff" };

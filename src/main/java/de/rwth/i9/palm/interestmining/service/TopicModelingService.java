@@ -279,7 +279,10 @@ public class TopicModelingService
 			{
 				// link circle with circleTopicModelingProfile
 				circleTopicModelingProfile.setCircle( circle );
-				circle.addCircleTopicModelingProfiles( circleTopicModelingProfile );
+				
+                                // MODIFIED: Method does not exist
+                                //circle.addCircleTopicModelingProfiles( circleTopicModelingProfile );
+                                circle.addAuthorTopicModelingProfiles(circleTopicModelingProfile);
 			}
 		}
 
